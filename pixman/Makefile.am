@@ -7,4 +7,4 @@ libpixman_la_SOURCES =  \
 	 pixman-region.c
 
 libpixmanincludedir = $(includedir)/libcomp
-libpixmaninclude_HEADERS = libcomp.h
+libpixmaninclude_HEADERS = pixman.h
