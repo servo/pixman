@@ -45,6 +45,7 @@ SOFTWARE.
 ******************************************************************/
 /*
  * Copyright © 1998 Keith Packard
+ * Copyright   2007 Red Hat, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that
@@ -92,6 +93,10 @@ typedef unsigned __int64 uint64_t;
 #endif
 
 typedef int pixman_bool_t;
+typedef uint32_t pixman_fixed_t;
+typedef struct pixman_color pixman_color_t;
+typedef struct pixman_point_fixed pixman_point_fixed_t;
+typedef struct pixman_line_fixed pixman_line_fixed_t;
 
 #ifndef FALSE
 #define FALSE 0
@@ -100,6 +105,25 @@ typedef int pixman_bool_t;
 #ifndef TRUE
 #define TRUE 1
 #endif
+
+struct pixman_color
+{
+    uint16_t	red;
+    uint16_t    green;
+    uint16_t    blue;
+    uint16_t    alpha;
+};
+
+struct pixman_point_fixed
+{
+    pixman_fixed_t	x;
+    pixman_fixed_t	y;
+};
+
+struct pixman_line_fixed
+{
+    pixman_point_fixed_t	p1, p2;
+};
 
 /*
  * Regions
