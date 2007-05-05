@@ -1,3 +1,13 @@
+#include "pixman.h"
+
+#ifndef FALSE
+#define FALSE 0
+#endif
+
+#ifndef TRUE
+#define TRUE 1
+#endif
+
 typedef union  image image_t;
 typedef struct source_image source_image_t;
 typedef struct solid_fill solid_fill_t;

@@ -71,6 +71,9 @@ SOFTWARE.
 
 #include <config.h>
 
+/*
+ * Standard integers
+ */
 #if   HAVE_STDINT_H
 # include <stdint.h>
 #elif HAVE_INTTYPES_H
@@ -78,7 +81,6 @@ SOFTWARE.
 #elif HAVE_SYS_INT_TYPES_H
 # include <sys/int_types.h>
 #elif defined(_MSC_VER)
-
 typedef __int8 int8_t;
 typedef unsigned __int8 uint8_t;
 typedef __int16 int16_t;
@@ -87,24 +89,43 @@ typedef __int32 int32_t;
 typedef unsigned __int32 uint32_t;
 typedef __int64 int64_t;
 typedef unsigned __int64 uint64_t;
-
 #else
 #  error Cannot find definitions for fixed-width integral types (uint8_t, uint32_t, etc.)
 #endif
 
+/*
+ * Boolean
+ */
 typedef int pixman_bool_t;
-typedef uint32_t pixman_fixed_t;
+
+/*
+ * Fixpoint numbers
+ */
+typedef uint64_t		pixman_fixed_32_32_t;
+typedef pixman_fixed_32_32_t	pixman_fixed_48_16_t;
+typedef uint32_t		pixman_fixed_1_31_t;
+typedef uint32_t		pixman_fixed_1_16_t;
+typedef int32_t			pixman_fixed_16_16_t;
+typedef pixman_fixed_16_16_t	pixman_fixed_t;
+
+#define pixman_fixed_e			((pixman_fixed) 1)
+#define pixman_fixed_1			(pixman_int_to_fixed(1))
+#define pixman_fixed_1_minus_e		(pixman_fixed_1 - pixman_fixed_e)
+#define pixman_fixed_to_int(f)		((int) ((f) >> 16))
+#define pixman_int_to_fixed(i)		((pixman_fixed) ((i) << 16))
+#define pixman_fixed_to_double(f)	(double) ((f) / (double) pixman_fixed_1)
+#define pixman_fixed_frac(f)		((f) & pixman_fixed_1_minus_e)
+#define pixman_fixed_floor(f)		((f) & ~pixman_fixed_1_minus_e)
+#define pixman_fixed_ceil(f)		pixman_fixed_floor ((f) + pixman_fixed_1_minus_e)
+#define pixman_fixed_fraction(f)	((f) & pixman_fixed_1_minus_e)
+#define pixman_fixed_mod_2(f)		((f) & (pixman_fixed1 | pixman_fixed_1_minus_e))
+
+/*
+ * Misc structs
+ */
 typedef struct pixman_color pixman_color_t;
 typedef struct pixman_point_fixed pixman_point_fixed_t;
 typedef struct pixman_line_fixed pixman_line_fixed_t;
-
-#ifndef FALSE
-#define FALSE 0
-#endif
-
-#ifndef TRUE
-#define TRUE 1
-#endif
 
 struct pixman_color
 {
@@ -278,17 +299,43 @@ typedef enum {
 typedef struct
 {
     /* All of this struct is considered private to libcomp */
-    unsigned char	reserved [64];
+    unsigned char	reserved [128];
 } pixman_image_t;
 
-void pixman_image_init      (pixman_image_t       *image,
-			     pixman_format_code_t  format,
-			     int                   width,
-			     int                   height,
-			     uint8_t              *bits,
-			     int                   rowstride); /* in bytes */
-void pixman_set_clip_region (pixman_image_t       *image,
-			     pixman_region16_t    *region);
+void pixman_image_init_solid_fill       (pixman_image_t       *image,
+					 pixman_color_t       *color,
+					 int                  *error);
+void pixman_image_init_linear_gradient  (pixman_image_t       *image,
+					 pixman_point_fixed_t *p1,
+					 pixman_point_fixed_t *p2,
+					 int                   n_stops,
+					 pixman_fixed_t       *stops,
+					 pixman_color_t       *colors,
+					 int                  *error);
+void pixman_image_init_radial_gradient  (pixman_image_t       *image,
+					 pixman_point_fixed_t *inner,
+					 pixman_point_fixed_t *outer,
+					 pixman_fixed_t        inner_radius,
+					 pixman_fixed_t        outer_radius,
+					 int                   n_stops,
+					 pixman_fixed_t       *stops,
+					 pixman_color_t       *colors,
+					 int                  *error);
+void pixman_image_init_conical_gradient (pixman_image_t       *image,
+					 pixman_point_fixed_t *center,
+					 pixman_fixed_t        angle,
+					 int                   n_stops,
+					 pixman_fixed_t       *stops,
+					 pixman_color_t       *colors,
+					 int                  *error);
+void pixman_image_init_bits             (pixman_image_t       *image,
+					 pixman_format_code_t  format,
+					 int                   width,
+					 int                   height,
+					 uint8_t              *bits,
+					 int                   rowstride);
+void pixman_image_set_clip_region       (pixman_image_t       *image,
+					 pixman_region16_t    *region);
 
 
 #endif /* PIXMAN_H__ */

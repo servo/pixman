@@ -48,6 +48,8 @@ SOFTWARE.
 #include <stdlib.h>
 #include <limits.h>
 #include <string.h>
+
+#include "pixman-private.h"
 #include "pixman.h"
 
 struct pixman_region16_data {

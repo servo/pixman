@@ -1,4 +1,6 @@
 /*
+ *
+ * Copyright © 2000 SuSE, Inc.
  * Copyright © 2007 Red Hat, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -11,45 +13,18 @@
  * suitability of this software for any purpose.  It is provided "as is"
  * without express or implied warranty.
  *
- * RED HAT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING ALL
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL RED HAT
+ * SuSE DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING ALL
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL SuSE
  * BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * Author:  Soren Sandmann, Red Hat, Inc.
  */
 
 #include <stdlib.h>
 
 #include "pixman.h"
 #include "pixman-private.h"
-
-void
-pixman_image_init_bits (pixman_image_t         *image,
-			pixman_format_code_t    format,
-			int                     width,
-			int                     height,
-			uint8_t		       *bits,
-			int			rowstride)
-{
-    image_t *img = (image_t *)image;
-
-    img->type = BITS;
-    img->bits.format = format;
-    img->bits.width = width;
-    img->bits.height = height;
-    img->bits.bits = bits;
-    img->bits.rowstride = rowstride;
-}
-
-void
-pixman_set_clip_region (pixman_image_t    *image,
-			pixman_region16_t *region)
-{
-    
-}
 
 enum
 {
@@ -68,7 +43,7 @@ init_gradient (gradient_t     *gradient,
 	       int	       stop_count,
 	       pixman_fixed_t *stop_points,
 	       pixman_color_t *stop_colors,
-	       int *error)
+	       int            *error)
 {
     int i;
     pixman_fixed_t dpos;
@@ -220,6 +195,31 @@ pixman_image_init_conical_gradient (pixman_image_t *image,
     priv->type = CONICAL;
     conical->center = *center;
     conical->angle = angle;
+}
+
+void
+pixman_image_init_bits (pixman_image_t         *image,
+			pixman_format_code_t    format,
+			int                     width,
+			int                     height,
+			uint8_t		       *bits,
+			int			rowstride)
+{
+    image_t *img = (image_t *)image;
+
+    img->type = BITS;
+    img->bits.format = format;
+    img->bits.width = width;
+    img->bits.height = height;
+    img->bits.bits = bits;
+    img->bits.rowstride = rowstride;
+}
+
+void
+pixman_image_set_clip_region (pixman_image_t    *image,
+			      pixman_region16_t *region)
+{
+    
 }
 
 #define SCANLINE_BUFFER_LENGTH 1024
