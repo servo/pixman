@@ -2,4 +2,3 @@
 # Run this to generate all the initial makefiles, etc.
 
 autoreconf --force -i
-./configure $*
