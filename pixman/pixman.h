@@ -112,7 +112,7 @@ typedef pixman_fixed_16_16_t	pixman_fixed_t;
 #define pixman_fixed_1			(pixman_int_to_fixed(1))
 #define pixman_fixed_1_minus_e		(pixman_fixed_1 - pixman_fixed_e)
 #define pixman_fixed_to_int(f)		((int) ((f) >> 16))
-#define pixman_int_to_fixed(i)		((pixman_fixed) ((i) << 16))
+#define pixman_int_to_fixed(i)		((pixman_fixed_t) ((i) << 16))
 #define pixman_fixed_to_double(f)	(double) ((f) / (double) pixman_fixed_1)
 #define pixman_fixed_frac(f)		((f) & pixman_fixed_1_minus_e)
 #define pixman_fixed_floor(f)		((f) & ~pixman_fixed_1_minus_e)
@@ -126,6 +126,8 @@ typedef pixman_fixed_16_16_t	pixman_fixed_t;
 typedef struct pixman_color pixman_color_t;
 typedef struct pixman_point_fixed pixman_point_fixed_t;
 typedef struct pixman_line_fixed pixman_line_fixed_t;
+typedef struct pixman_vector pixman_vector_t;
+typedef struct pixman_transform pixman_transform_t;
 
 struct pixman_color
 {
@@ -145,6 +147,53 @@ struct pixman_line_fixed
 {
     pixman_point_fixed_t	p1, p2;
 };
+
+struct pixman_vector
+{
+    pixman_fixed_t	vector[3];
+};
+
+struct pixman_transform
+{
+    pixman_fixed_t	matrix[3][3];
+};
+
+/* Don't blame me, blame XRender */
+typedef enum
+{
+    PIXMAN_REPEAT_NONE,
+    PIXMAN_REPEAT_NORMAL,
+    PIXMAN_REPEAT_PAD,
+    PIXMAN_REPEAT_REFLECT
+} pixman_repeat_t;
+
+typedef enum
+{
+    PIXMAN_FILTER_FAST,
+    PIXMAN_FILTER_GOOD,
+    PIXMAN_FILTER_BEST,
+    PIXMAN_FILTER_NEAREST,
+    PIXMAN_FILTER_BILINEAR,
+    PIXMAN_FILTER_CONVOLUTION
+} pixman_filter_t;
+
+typedef enum
+{
+    PIXMAN_OP_CLEAR,
+    PIXMAN_OP_SRC,
+    PIXMAN_OP_DST,
+    PIXMAN_OP_OVER,
+    PIXMAN_OP_OVER_REVERSE,
+    PIXMAN_OP_IN,
+    PIXMAN_OP_IN_REVERSE,
+    PIXMAN_OP_OUT,
+    PIXMAN_OP_OUT_REVERSE,
+    PIXMAN_OP_ATOP,
+    PIXMAN_OP_ATOP_REVERSE,
+    PIXMAN_OP_XOR,
+    PIXMAN_OP_ADD,
+    PIXMAN_OP_SATURATE
+} pixman_op_t;
 
 /*
  * Regions
@@ -172,45 +221,66 @@ typedef enum
 } pixman_region_overlap_t;
 
 /* creation/destruction */
-void pixman_region_init              (pixman_region16_t *region);
-void pixman_region_init_rect         (pixman_region16_t *region,
-				      int                x,
-				      int                y,
-				      unsigned int       width,
-				      unsigned int       height);
-void pixman_region_init_with_extents (pixman_region16_t *region,
-				      pixman_box16_t    *extents);
-void pixman_region_fini              (pixman_region16_t *region);
+void                    pixman_region_init              (pixman_region16_t *region);
+void                    pixman_region_init_rect         (pixman_region16_t *region,
+							 int                x,
+							 int                y,
+							 unsigned int       width,
+							 unsigned int       height);
+void                    pixman_region_init_with_extents (pixman_region16_t *region,
+							 pixman_box16_t    *extents);
+void                    pixman_region_fini              (pixman_region16_t *region);
 
 /* manipulation */
-void          pixman_region_translate  (pixman_region16_t *region,
-					int                x,
-					int                y);
-pixman_bool_t pixman_region_copy       (pixman_region16_t *dest,
-					pixman_region16_t *source);
-pixman_bool_t pixman_region_intersect  (pixman_region16_t *newReg,
-					pixman_region16_t *reg1,
-					pixman_region16_t *reg2);
-pixman_bool_t pixman_region_union      (pixman_region16_t *newReg,
-					pixman_region16_t *reg1,
-					pixman_region16_t *reg2);
-pixman_bool_t pixman_region_union_rect (pixman_region16_t *dest,
-					pixman_region16_t *source,
-					int                x,
-					int                y,
-					unsigned int       width,
-					unsigned int       height);
-pixman_bool_t pixman_region_subtract   (pixman_region16_t *regD,
-					pixman_region16_t *regM,
-					pixman_region16_t *regS);
-pixman_bool_t pixman_region_inverse    (pixman_region16_t *newReg,
-					pixman_region16_t *reg1,
-					pixman_box16_t    *invRect);
-
+void                    pixman_region_translate  (pixman_region16_t *region,
+						  int                x,
+						  int                y);
+pixman_bool_t           pixman_region_copy       (pixman_region16_t *dest,
+						  pixman_region16_t *source);
+pixman_bool_t           pixman_region_intersect  (pixman_region16_t *newReg,
+						  pixman_region16_t *reg1,
+						  pixman_region16_t *reg2);
+pixman_bool_t           pixman_region_union      (pixman_region16_t *newReg,
+						  pixman_region16_t *reg1,
+						  pixman_region16_t *reg2);
+pixman_bool_t           pixman_region_union_rect (pixman_region16_t *dest,
+						  pixman_region16_t *source,
+						  int                x,
+						  int                y,
+						  unsigned int       width,
+						  unsigned int       height);
+pixman_bool_t           pixman_region_subtract   (pixman_region16_t *regD,
+						  pixman_region16_t *regM,
+						  pixman_region16_t *regS);
+pixman_bool_t           pixman_region_inverse    (pixman_region16_t *newReg,
+						  pixman_region16_t *reg1,
+						  pixman_box16_t    *invRect);
+pixman_bool_t           pixman_region_contains_point (pixman_region16_t *region, int x, int y, pixman_box16_t *box);
+pixman_region_overlap_t pixman_region_contains_rectangle (pixman_region16_t *pixman_region16_t, pixman_box16_t *prect);
+pixman_bool_t           pixman_region_not_empty (pixman_region16_t *region);
+pixman_box16_t *        pixman_region_extents (pixman_region16_t *region);
+int                     pixman_region_n_rects (pixman_region16_t *region);
+const pixman_box16_t *  pixman_region_rectangles (pixman_region16_t *region,
+						  int		    *n_rects);
 
 /*
  * Images
  */
+typedef struct pixman_indexed	pixman_indexed_t;
+
+#define PIXMAN_MAX_INDEXED  256 /* XXX depth must be <= 8 */
+
+#if PIXMAN_MAX_INDEXED <= 256
+typedef uint8_t pixman_index_type;
+#endif
+
+struct pixman_indexed
+{
+    pixman_bool_t       color;
+    uint32_t		rgba[PIXMAN_MAX_INDEXED];
+    pixman_index_type	ent[32768];
+};
+
 /*
  * While the protocol is generous in format support, the
  * sample implementation allows only packed RGB and GBR
@@ -218,9 +288,9 @@ pixman_bool_t pixman_region_inverse    (pixman_region16_t *newReg,
  */
 #define PIXMAN_FORMAT(bpp,type,a,r,g,b)	(((bpp) << 24) |  \
 					 ((type) << 16) | \
-					 ((a) << 12) | \
-					 ((r) << 8) | \
-					 ((g) << 4) | \
+					 ((a) << 12) |	  \
+					 ((r) << 8) |	  \
+					 ((g) << 4) |	  \
 					 ((b)))
 
 #define PIXMAN_FORMAT_BPP(f)	(((f) >> 24)       )
@@ -243,57 +313,57 @@ pixman_bool_t pixman_region_inverse    (pixman_region16_t *newReg,
 
 /* 32bpp formats */
 typedef enum {
-   PIXMAN_a8r8g8b8 =	PIXMAN_FORMAT(32,PIXMAN_TYPE_ARGB,8,8,8,8),
-   PIXMAN_x8r8g8b8 =	PIXMAN_FORMAT(32,PIXMAN_TYPE_ARGB,0,8,8,8),
-   PIXMAN_a8b8g8r8 =	PIXMAN_FORMAT(32,PIXMAN_TYPE_ABGR,8,8,8,8),
-   PIXMAN_x8b8g8r8 =	PIXMAN_FORMAT(32,PIXMAN_TYPE_ABGR,0,8,8,8),
-
+    PIXMAN_a8r8g8b8 =	PIXMAN_FORMAT(32,PIXMAN_TYPE_ARGB,8,8,8,8),
+    PIXMAN_x8r8g8b8 =	PIXMAN_FORMAT(32,PIXMAN_TYPE_ARGB,0,8,8,8),
+    PIXMAN_a8b8g8r8 =	PIXMAN_FORMAT(32,PIXMAN_TYPE_ABGR,8,8,8,8),
+    PIXMAN_x8b8g8r8 =	PIXMAN_FORMAT(32,PIXMAN_TYPE_ABGR,0,8,8,8),
+    
 /* 24bpp formats */
-   PIXMAN_r8g8b8 =	PIXMAN_FORMAT(24,PIXMAN_TYPE_ARGB,0,8,8,8),
-   PIXMAN_b8g8r8 =	PIXMAN_FORMAT(24,PIXMAN_TYPE_ABGR,0,8,8,8),
-
+    PIXMAN_r8g8b8 =	PIXMAN_FORMAT(24,PIXMAN_TYPE_ARGB,0,8,8,8),
+    PIXMAN_b8g8r8 =	PIXMAN_FORMAT(24,PIXMAN_TYPE_ABGR,0,8,8,8),
+    
 /* 16bpp formats */
-   PIXMAN_r5g6b5 =	PIXMAN_FORMAT(16,PIXMAN_TYPE_ARGB,0,5,6,5),
-   PIXMAN_b5g6r5 =	PIXMAN_FORMAT(16,PIXMAN_TYPE_ABGR,0,5,6,5),
-
-   PIXMAN_a1r5g5b5 =	PIXMAN_FORMAT(16,PIXMAN_TYPE_ARGB,1,5,5,5),
-   PIXMAN_x1r5g5b5 =	PIXMAN_FORMAT(16,PIXMAN_TYPE_ARGB,0,5,5,5),
-   PIXMAN_a1b5g5r5 =	PIXMAN_FORMAT(16,PIXMAN_TYPE_ABGR,1,5,5,5),
-   PIXMAN_x1b5g5r5 =	PIXMAN_FORMAT(16,PIXMAN_TYPE_ABGR,0,5,5,5),
-   PIXMAN_a4r4g4b4 =	PIXMAN_FORMAT(16,PIXMAN_TYPE_ARGB,4,4,4,4),
-   PIXMAN_x4r4g4b4 =	PIXMAN_FORMAT(16,PIXMAN_TYPE_ARGB,0,4,4,4),
-   PIXMAN_a4b4g4r4 =	PIXMAN_FORMAT(16,PIXMAN_TYPE_ABGR,4,4,4,4),
-   PIXMAN_x4b4g4r4 =	PIXMAN_FORMAT(16,PIXMAN_TYPE_ABGR,0,4,4,4),
-
+    PIXMAN_r5g6b5 =	PIXMAN_FORMAT(16,PIXMAN_TYPE_ARGB,0,5,6,5),
+    PIXMAN_b5g6r5 =	PIXMAN_FORMAT(16,PIXMAN_TYPE_ABGR,0,5,6,5),
+    
+    PIXMAN_a1r5g5b5 =	PIXMAN_FORMAT(16,PIXMAN_TYPE_ARGB,1,5,5,5),
+    PIXMAN_x1r5g5b5 =	PIXMAN_FORMAT(16,PIXMAN_TYPE_ARGB,0,5,5,5),
+    PIXMAN_a1b5g5r5 =	PIXMAN_FORMAT(16,PIXMAN_TYPE_ABGR,1,5,5,5),
+    PIXMAN_x1b5g5r5 =	PIXMAN_FORMAT(16,PIXMAN_TYPE_ABGR,0,5,5,5),
+    PIXMAN_a4r4g4b4 =	PIXMAN_FORMAT(16,PIXMAN_TYPE_ARGB,4,4,4,4),
+    PIXMAN_x4r4g4b4 =	PIXMAN_FORMAT(16,PIXMAN_TYPE_ARGB,0,4,4,4),
+    PIXMAN_a4b4g4r4 =	PIXMAN_FORMAT(16,PIXMAN_TYPE_ABGR,4,4,4,4),
+    PIXMAN_x4b4g4r4 =	PIXMAN_FORMAT(16,PIXMAN_TYPE_ABGR,0,4,4,4),
+    
 /* 8bpp formats */
-   PIXMAN_a8 =		PIXMAN_FORMAT(8,PIXMAN_TYPE_A,8,0,0,0),
-   PIXMAN_r3g3b2 =	PIXMAN_FORMAT(8,PIXMAN_TYPE_ARGB,0,3,3,2),
-   PIXMAN_b2g3r3 =	PIXMAN_FORMAT(8,PIXMAN_TYPE_ABGR,0,3,3,2),
-   PIXMAN_a2r2g2b2 =	PIXMAN_FORMAT(8,PIXMAN_TYPE_ARGB,2,2,2,2),
-   PIXMAN_a2b2g2r2 =	PIXMAN_FORMAT(8,PIXMAN_TYPE_ABGR,2,2,2,2),
-
-   PIXMAN_c8 =		PIXMAN_FORMAT(8,PIXMAN_TYPE_COLOR,0,0,0,0),
-   PIXMAN_g8 =		PIXMAN_FORMAT(8,PIXMAN_TYPE_GRAY,0,0,0,0),
-
-   PIXMAN_x4a4 =	PIXMAN_FORMAT(8,PIXMAN_TYPE_A,4,0,0,0),
-				    
-   PIXMAN_x4c4 =	PIXMAN_FORMAT(8,PIXMAN_TYPE_COLOR,0,0,0,0),
-   PIXMAN_x4g4 =	PIXMAN_FORMAT(8,PIXMAN_TYPE_GRAY,0,0,0,0),
-
+    PIXMAN_a8 =		PIXMAN_FORMAT(8,PIXMAN_TYPE_A,8,0,0,0),
+    PIXMAN_r3g3b2 =	PIXMAN_FORMAT(8,PIXMAN_TYPE_ARGB,0,3,3,2),
+    PIXMAN_b2g3r3 =	PIXMAN_FORMAT(8,PIXMAN_TYPE_ABGR,0,3,3,2),
+    PIXMAN_a2r2g2b2 =	PIXMAN_FORMAT(8,PIXMAN_TYPE_ARGB,2,2,2,2),
+    PIXMAN_a2b2g2r2 =	PIXMAN_FORMAT(8,PIXMAN_TYPE_ABGR,2,2,2,2),
+    
+    PIXMAN_c8 =		PIXMAN_FORMAT(8,PIXMAN_TYPE_COLOR,0,0,0,0),
+    PIXMAN_g8 =		PIXMAN_FORMAT(8,PIXMAN_TYPE_GRAY,0,0,0,0),
+    
+    PIXMAN_x4a4 =	PIXMAN_FORMAT(8,PIXMAN_TYPE_A,4,0,0,0),
+    
+    PIXMAN_x4c4 =	PIXMAN_FORMAT(8,PIXMAN_TYPE_COLOR,0,0,0,0),
+    PIXMAN_x4g4 =	PIXMAN_FORMAT(8,PIXMAN_TYPE_GRAY,0,0,0,0),
+    
 /* 4bpp formats */
-   PIXMAN_a4 =		PIXMAN_FORMAT(4,PIXMAN_TYPE_A,4,0,0,0),
-   PIXMAN_r1g2b1 =	PIXMAN_FORMAT(4,PIXMAN_TYPE_ARGB,0,1,2,1),
-   PIXMAN_b1g2r1 =	PIXMAN_FORMAT(4,PIXMAN_TYPE_ABGR,0,1,2,1),
-   PIXMAN_a1r1g1b1 =	PIXMAN_FORMAT(4,PIXMAN_TYPE_ARGB,1,1,1,1),
-   PIXMAN_a1b1g1r1 =	PIXMAN_FORMAT(4,PIXMAN_TYPE_ABGR,1,1,1,1),
-				    
-   PIXMAN_c4 =		PIXMAN_FORMAT(4,PIXMAN_TYPE_COLOR,0,0,0,0),
-   PIXMAN_g4 =		PIXMAN_FORMAT(4,PIXMAN_TYPE_GRAY,0,0,0,0),
-
+    PIXMAN_a4 =		PIXMAN_FORMAT(4,PIXMAN_TYPE_A,4,0,0,0),
+    PIXMAN_r1g2b1 =	PIXMAN_FORMAT(4,PIXMAN_TYPE_ARGB,0,1,2,1),
+    PIXMAN_b1g2r1 =	PIXMAN_FORMAT(4,PIXMAN_TYPE_ABGR,0,1,2,1),
+    PIXMAN_a1r1g1b1 =	PIXMAN_FORMAT(4,PIXMAN_TYPE_ARGB,1,1,1,1),
+    PIXMAN_a1b1g1r1 =	PIXMAN_FORMAT(4,PIXMAN_TYPE_ABGR,1,1,1,1),
+    
+    PIXMAN_c4 =		PIXMAN_FORMAT(4,PIXMAN_TYPE_COLOR,0,0,0,0),
+    PIXMAN_g4 =		PIXMAN_FORMAT(4,PIXMAN_TYPE_GRAY,0,0,0,0),
+    
 /* 1bpp formats */
-   PIXMAN_a1 =		PIXMAN_FORMAT(1,PIXMAN_TYPE_A,1,0,0,0),
-
-   PIXMAN_g1 =		PIXMAN_FORMAT(1,PIXMAN_TYPE_GRAY,0,0,0,0),
+    PIXMAN_a1 =		PIXMAN_FORMAT(1,PIXMAN_TYPE_A,1,0,0,0),
+    
+    PIXMAN_g1 =		PIXMAN_FORMAT(1,PIXMAN_TYPE_GRAY,0,0,0,0),
 } pixman_format_code_t;
 
 typedef struct
@@ -332,10 +402,23 @@ void pixman_image_init_bits             (pixman_image_t       *image,
 					 pixman_format_code_t  format,
 					 int                   width,
 					 int                   height,
-					 uint8_t              *bits,
-					 int                   rowstride);
+					 uint32_t             *bits,
+					 int                   rowstride); /* in bytes */
 void pixman_image_set_clip_region       (pixman_image_t       *image,
 					 pixman_region16_t    *region);
+void pixman_image_composite		(pixman_op_t	       op,
+					 pixman_image_t	      *src,
+					 pixman_image_t	      *mask,
+					 pixman_image_t	      *dest,
+					 int		       src_x,
+					 int		       src_y,
+					 int		       mask_x,
+					 int		       mask_y,
+					 int			dest_x,
+					 int			dest_y,
+					 int			width,
+					 int			height);
+
 
 
 #endif /* PIXMAN_H__ */

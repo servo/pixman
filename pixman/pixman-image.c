@@ -33,8 +33,22 @@ enum
 };
 
 static void
+init_common (image_common_t *common)
+{
+    common->transform = NULL;
+    common->clip_region = NULL;
+    common->repeat = PIXMAN_REPEAT_NONE;
+    common->filter = PIXMAN_FILTER_NEAREST;
+    common->filter_params = NULL;
+    common->filter_nparams = 0;
+    common->alpha_map = NULL;
+    common->component_alpha = FALSE;
+}
+
+static void
 init_source_image (source_image_t *image)
 {
+    init_common (&image->common);
     image->class = SOURCE_IMAGE_CLASS_UNKNOWN;
 }
 
@@ -103,6 +117,9 @@ pixman_image_init_solid_fill (pixman_image_t *image,
 			      int            *error)
 {
     image_t *priv = (image_t *)image;
+    
+    init_source_image (&priv->solid.common);
+    
     priv->type = SOLID;
     priv->solid.color = color_to_uint32 (color);
 }
@@ -202,17 +219,25 @@ pixman_image_init_bits (pixman_image_t         *image,
 			pixman_format_code_t    format,
 			int                     width,
 			int                     height,
-			uint8_t		       *bits,
+			uint32_t	       *bits,
 			int			rowstride)
 {
     image_t *img = (image_t *)image;
 
+    init_common (&img->common);
+
+    if (rowstride & 0x3)
+    {
+	/* we should probably spew some warning here */
+    }
+    
     img->type = BITS;
     img->bits.format = format;
     img->bits.width = width;
     img->bits.height = height;
     img->bits.bits = bits;
-    img->bits.rowstride = rowstride;
+    img->bits.rowstride = rowstride / 4; /* we store it in number of uint32_t's */
+    img->bits.indexed = NULL;
 }
 
 void

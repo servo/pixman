@@ -341,7 +341,7 @@ pixman_region_fini (pixman_region16_t *region)
 }
 
 int
-pixman_region_num_rects (pixman_region16_t *region)
+pixman_region_n_rects (pixman_region16_t *region)
 {
     return PIXREGION_NUM_RECTS (region);
 }
@@ -1973,7 +1973,7 @@ pixman_region_inverse(pixman_region16_t * 	  newReg,       /* Destination region
  *   that doesn't overlap the box at all and partIn is false)
  */
 
-int
+pixman_region_overlap_t
 pixman_region_contains_rectangle(pixman_region16_t *  region,
 				 pixman_box16_t *     prect)
 {

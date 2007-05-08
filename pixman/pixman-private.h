@@ -8,7 +8,29 @@
 #define TRUE 1
 #endif
 
+/* FIXME - the types and structures below should be give proper names
+ */
+
+#define FASTCALL
+typedef FASTCALL void (*CombineMaskU) (uint32_t *src, const uint32_t *mask, int width);
+typedef FASTCALL void (*CombineFuncU) (uint32_t *dest, const uint32_t *src, int width);
+typedef FASTCALL void (*CombineFuncC) (uint32_t *dest, uint32_t *src, uint32_t *mask, int width);
+
+typedef struct _FbComposeFunctions {
+    CombineFuncU *combineU;
+    CombineFuncC *combineC;
+    CombineMaskU combineMaskU;
+} FbComposeFunctions;
+
+
+#define fbGetDrawable 
+
+
+/* end */
+
+
 typedef union  image image_t;
+typedef struct image_common image_common_t;
 typedef struct source_image source_image_t;
 typedef struct solid_fill solid_fill_t;
 typedef struct gradient gradient_t;
@@ -20,6 +42,7 @@ typedef struct radial_gradient radial_gradient_t;
 typedef struct bits_image bits_image_t;
 typedef struct gradient_stop gradient_stop_t;
 typedef struct circle circle_t;
+typedef struct point point_t;
 
 typedef enum
 {
@@ -30,11 +53,7 @@ typedef enum
     SOLID
 } image_type_t;
 
-struct gradient_stop
-{
-    pixman_fixed_t x;
-    pixman_color_t color;
-};
+#define IS_SOURCE_IMAGE(img)     (((image_common_t *)img)->type > BITS)
 
 typedef enum
 {
@@ -43,9 +62,34 @@ typedef enum
     SOURCE_IMAGE_CLASS_VERTICAL
 } source_pict_class_t;
 
-struct source_image
+struct point
+{
+    int16_t x, y;
+};
+
+struct image_common
 {
     image_type_t	type;
+    pixman_transform_t *transform;
+    pixman_region16_t  *clip_region;
+    pixman_repeat_t	repeat;
+    pixman_filter_t	filter;
+    pixman_fixed_t     *filter_params;
+    int			filter_nparams;
+    bits_image_t       *alpha_map;
+    point_t		alpha_origin;
+    pixman_bool_t	component_alpha;
+};
+
+struct gradient_stop
+{
+    pixman_fixed_t x;
+    pixman_color_t color;
+};
+
+struct source_image
+{
+    image_common_t	common;
     unsigned int	class;		/* FIXME: should be an enum */
 };
 
@@ -100,17 +144,19 @@ struct conical_gradient
 
 struct bits_image
 {
-    image_type_t		type;
+    image_common_t		common;
     pixman_format_code_t	format;
+    pixman_indexed_t	       *indexed;
     int				width;
     int				height;
-    uint8_t *			bits;
+    uint32_t *			bits;
     int				rowstride; /* in bytes */
 };
 
 union image
 {
     image_type_t		type;
+    image_common_t		common;
     bits_image_t		bits;
     linear_gradient_t		linear;
     conical_gradient_t		conical;
