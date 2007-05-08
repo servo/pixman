@@ -1,5 +1,4 @@
 /*
- *
  * Copyright © 2000 SuSE, Inc.
  * Copyright © 2007 Red Hat, Inc.
  *
@@ -328,7 +327,6 @@ pixman_image_set_component_alpha   (pixman_image_t       *image,
 
     priv->common.component_alpha = component_alpha;
 }
-
 
 
 #define SCANLINE_BUFFER_LENGTH 2048

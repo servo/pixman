@@ -7,5 +7,5 @@ Name: Pixman
 Description: The pixman library
 Version: @PACKAGE_VERSION@
 Cflags: -I${includedir} @DEP_CFLAGS@
-Libs: -L${libdir} -llibcomp @DEP_LIBS@
+Libs: -L${libdir} -lpixman @DEP_LIBS@
 
