@@ -374,6 +374,7 @@ typedef struct
     unsigned char	reserved [128];
 } pixman_image_t;
 
+/* Initialize */
 void pixman_image_init_solid_fill       (pixman_image_t       *image,
 					 pixman_color_t       *color,
 					 int                  *error);
@@ -405,9 +406,27 @@ void pixman_image_init_bits             (pixman_image_t       *image,
 					 int                   width,
 					 int                   height,
 					 uint32_t             *bits,
-					 int                   rowstride); /* in bytes */
+					 int                   rowstride_bytes);
+/* Set properties */
 void pixman_image_set_clip_region       (pixman_image_t       *image,
 					 pixman_region16_t    *region);
+void pixman_image_set_transform         (pixman_image_t       *image,
+					 pixman_transform_t   *transform);
+void pixman_image_set_repeat            (pixman_image_t       *image,
+					 pixman_repeat_t       repeat);
+void pixman_image_set_filter            (pixman_image_t       *image,
+					 pixman_filter_t       filter);
+void pixman_image_set_filter_params     (pixman_image_t       *image,
+					 pixman_fixed_t       *params,
+					 int                   n_params);
+void pixman_image_set_alpha_map         (pixman_image_t       *image,
+					 pixman_image_t       *alpha_map,
+					 int16_t               x,
+					 int16_t               y);
+void pixman_image_set_component_alpha   (pixman_image_t       *image,
+					 pixman_bool_t         component_alpha);
+
+/* Composite */
 void pixman_image_composite		(pixman_op_t	       op,
 					 pixman_image_t	      *src,
 					 pixman_image_t	      *mask,

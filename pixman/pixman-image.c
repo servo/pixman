@@ -41,7 +41,7 @@ init_common (image_common_t *common)
     common->repeat = PIXMAN_REPEAT_NONE;
     common->filter = PIXMAN_FILTER_NEAREST;
     common->filter_params = NULL;
-    common->filter_nparams = 0;
+    common->n_filter_params = 0;
     common->alpha_map = NULL;
     common->component_alpha = FALSE;
 }
@@ -257,8 +257,79 @@ void
 pixman_image_set_clip_region (pixman_image_t    *image,
 			      pixman_region16_t *region)
 {
-    
+    image_t *priv = (image_t *)image;
+
+    priv->common.clip_region = region;
 }
+
+void
+pixman_image_set_transform         (pixman_image_t       *image,
+				    pixman_transform_t   *transform)
+{
+    image_t *priv = (image_t *)image;
+
+    priv->common.transform = transform;
+}
+
+void
+pixman_image_set_repeat            (pixman_image_t       *image,
+				    pixman_repeat_t       repeat)
+{
+    image_t *priv = (image_t *)image;
+
+    priv->common.repeat = repeat;
+}
+
+void
+pixman_image_set_filter            (pixman_image_t       *image,
+				    pixman_filter_t       filter)
+{
+    image_t *priv = (image_t *)image;
+
+    priv->common.filter = filter;
+}
+
+void
+pixman_image_set_filter_params     (pixman_image_t       *image,
+				    pixman_fixed_t       *params,
+				    int                   n_params)
+{
+    image_t *priv = (image_t *)image;
+
+    priv->common.filter_params = params;
+    priv->common.n_filter_params = n_params;
+}
+
+void
+pixman_image_set_alpha_map         (pixman_image_t       *image,
+				    pixman_image_t       *alpha_map,
+				    int16_t               x,
+				    int16_t               y)
+{
+    image_t *priv = (image_t *)image;
+    image_t *alpha_priv = (image_t *)alpha_map;
+
+    if (alpha_priv && alpha_priv->type != BITS)
+    {
+	priv->common.alpha_map = NULL;
+	return;
+    }
+    
+    priv->common.alpha_map = (bits_image_t *)alpha_map;
+    priv->common.alpha_origin.x = x;
+    priv->common.alpha_origin.y = y;
+}
+
+void
+pixman_image_set_component_alpha   (pixman_image_t       *image,
+				    pixman_bool_t         component_alpha)
+{
+    image_t *priv = (image_t *)image;
+
+    priv->common.component_alpha = component_alpha;
+}
+
+
 
 #define SCANLINE_BUFFER_LENGTH 2048
 

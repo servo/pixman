@@ -83,12 +83,12 @@ struct point
 struct image_common
 {
     image_type_t	type;
-    pixman_transform_t *transform;
     pixman_region16_t  *clip_region;
+    pixman_transform_t *transform;
     pixman_repeat_t	repeat;
     pixman_filter_t	filter;
     pixman_fixed_t     *filter_params;
-    int			filter_nparams;
+    int			n_filter_params;
     bits_image_t       *alpha_map;
     point_t		alpha_origin;
     pixman_bool_t	component_alpha;
@@ -177,8 +177,12 @@ union image
     solid_fill_t		solid;
 };
 
-int PictureTransformPoint3d (pixman_transform_t *trans, pixman_vector_t *vector);
-void fbCompositeRect (const FbComposeData *data, uint32_t *scanline_buffer);
+int PictureTransformPoint3d (pixman_transform_t *trans,
+			     pixman_vector_t *vector);
+void fbCompositeRect (const FbComposeData *data,
+		      uint32_t *scanline_buffer);
+
+
 
 
 
