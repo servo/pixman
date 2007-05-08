@@ -9,5 +9,5 @@ libpixman_la_SOURCES =    \
 	 pixman-image.c   \
 	 pixman-compose.c
 
-libpixmanincludedir = $(includedir)/libcomp
+libpixmanincludedir = $(includedir)/pixman
 libpixmaninclude_HEADERS = pixman.h
