@@ -69,7 +69,11 @@ SOFTWARE.
 #ifndef PIXMAN_H__
 #define PIXMAN_H__
 
-#include <config.h>
+/* FIXME: bad hack to avoid including config.h in
+ * an installed header. This should probably be donw
+ * with an installed pixman-config.h header
+ */
+#define HAVE_STDINT_H 1
 
 /*
  * Standard integers
