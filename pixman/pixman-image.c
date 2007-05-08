@@ -22,6 +22,7 @@
  */
 
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "pixman.h"
 #include "pixman-private.h"
@@ -238,6 +239,18 @@ pixman_image_init_bits (pixman_image_t         *image,
     img->bits.bits = bits;
     img->bits.rowstride = rowstride / 4; /* we store it in number of uint32_t's */
     img->bits.indexed = NULL;
+
+    if (sizeof (pixman_image_t) < sizeof (image_t))
+    {
+	fprintf (stderr, "BUG in pixman: sizeof pixman_image_t < sizeof (image_t)\n");
+	exit (1);
+    }
+    else
+    {
+	fprintf (stderr, "sizeof pixman_image_t: %d\n", sizeof (pixman_image_t));
+	fprintf (stderr, "sizeof image_t: %d\n", sizeof (image_t));
+    }
+    
 }
 
 void
