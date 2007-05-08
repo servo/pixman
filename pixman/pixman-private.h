@@ -177,6 +177,7 @@ union image
     solid_fill_t		solid;
 };
 
+int PictureTransformPoint3d (pixman_transform_t *trans, pixman_vector_t *vector);
 void fbCompositeRect (const FbComposeData *data, uint32_t *scanline_buffer);
 
 

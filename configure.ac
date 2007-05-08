@@ -47,6 +47,7 @@ if test "x$GCC" = "xyes"; then
 AC_SUBST(DEP_CFLAGS)
 AC_SUBST(DEP_LIBS)
 		  
-AC_OUTPUT([Makefile
+AC_OUTPUT([pixman.pc
+           Makefile
 	   pixman/Makefile
-           pixman.pc])
+	   test/Makefile])

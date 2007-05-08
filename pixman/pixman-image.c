@@ -248,7 +248,7 @@ pixman_image_set_clip_region (pixman_image_t    *image,
 }
 
 #define SCANLINE_BUFFER_LENGTH 2048
- 
+
 void
 pixman_image_composite (pixman_op_t	 op,
 			pixman_image_t	*src_img,

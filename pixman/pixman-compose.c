@@ -45,7 +45,34 @@
  */
 #define INLINE inline
 
-int PictureTransformPoint3d (pixman_transform_t *trans, pixman_vector_t *vector);
+int
+PictureTransformPoint3d (pixman_transform_t *transform,
+			 pixman_vector_t *vector)
+{
+    pixman_vector_t		result;
+    int				i, j;
+    pixman_fixed_32_32_t	partial;
+    pixman_fixed_48_16_t	v;
+
+    for (j = 0; j < 3; j++)
+    {
+	v = 0;
+	for (i = 0; i < 3; i++)
+	{
+	    partial = ((pixman_fixed_48_16_t) transform->matrix[j][i] *
+		       (pixman_fixed_48_16_t) vector->vector[i]);
+	    v += partial >> 16;
+	}
+	if (v > pixman_max_fixed_48_16 || v < pixman_min_fixed_48_16)
+	    return FALSE;
+	result.vector[j] = (pixman_fixed_48_16_t) v;
+    }
+    if (!result.vector[2])
+	return FALSE;
+    *vector = result;
+    return TRUE;
+}
+
 
 #ifdef FB_ACCESS_WRAPPER
 

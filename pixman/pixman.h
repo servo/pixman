@@ -119,6 +119,8 @@ typedef pixman_fixed_16_16_t	pixman_fixed_t;
 #define pixman_fixed_ceil(f)		pixman_fixed_floor ((f) + pixman_fixed_1_minus_e)
 #define pixman_fixed_fraction(f)	((f) & pixman_fixed_1_minus_e)
 #define pixman_fixed_mod_2(f)		((f) & (pixman_fixed1 | pixman_fixed_1_minus_e))
+#define pixman_max_fixed_48_16		((pixman_fixed_48_16_t) 0x7fffffff)
+#define pixman_min_fixed_48_16		(-((pixman_fixed_48_16_t) 1 << 31))
 
 /*
  * Misc structs
