@@ -344,21 +344,6 @@ int PictureTransformPoint3d (pixman_transform_t *trans, pixman_vector_t *vector)
 
 #define div_255(x) (((x) + 0x80 + (((x) + 0x80) >> 8)) >> 8)
 
-typedef struct _FbComposeData {
-    uint8_t	 op;
-    image_t	*src;
-    image_t	*mask;
-    image_t	*dest;
-    int16_t	 xSrc;
-    int16_t	 ySrc;
-    int16_t	 xMask;
-    int16_t	 yMask;
-    int16_t	 xDest;
-    int16_t	 yDest;
-    uint16_t	 width;
-    uint16_t	 height;
-} FbComposeData;
-
 /*   End of stuff added to get it to compile
  */ 
 

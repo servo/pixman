@@ -8,27 +8,6 @@
 #define TRUE 1
 #endif
 
-/* FIXME - the types and structures below should be give proper names
- */
-
-#define FASTCALL
-typedef FASTCALL void (*CombineMaskU) (uint32_t *src, const uint32_t *mask, int width);
-typedef FASTCALL void (*CombineFuncU) (uint32_t *dest, const uint32_t *src, int width);
-typedef FASTCALL void (*CombineFuncC) (uint32_t *dest, uint32_t *src, uint32_t *mask, int width);
-
-typedef struct _FbComposeFunctions {
-    CombineFuncU *combineU;
-    CombineFuncC *combineC;
-    CombineMaskU combineMaskU;
-} FbComposeFunctions;
-
-
-#define fbGetDrawable 
-
-
-/* end */
-
-
 typedef union  image image_t;
 typedef struct image_common image_common_t;
 typedef struct source_image source_image_t;
@@ -43,6 +22,40 @@ typedef struct bits_image bits_image_t;
 typedef struct gradient_stop gradient_stop_t;
 typedef struct circle circle_t;
 typedef struct point point_t;
+
+/* FIXME - the types and structures below should be give proper names
+ */
+
+#define FASTCALL
+typedef FASTCALL void (*CombineMaskU) (uint32_t *src, const uint32_t *mask, int width);
+typedef FASTCALL void (*CombineFuncU) (uint32_t *dest, const uint32_t *src, int width);
+typedef FASTCALL void (*CombineFuncC) (uint32_t *dest, uint32_t *src, uint32_t *mask, int width);
+
+typedef struct _FbComposeFunctions {
+    CombineFuncU *combineU;
+    CombineFuncC *combineC;
+    CombineMaskU combineMaskU;
+} FbComposeFunctions;
+
+typedef struct _FbComposeData {
+    uint8_t	 op;
+    image_t	*src;
+    image_t	*mask;
+    image_t	*dest;
+    int16_t	 xSrc;
+    int16_t	 ySrc;
+    int16_t	 xMask;
+    int16_t	 yMask;
+    int16_t	 xDest;
+    int16_t	 yDest;
+    uint16_t	 width;
+    uint16_t	 height;
+} FbComposeData;
+
+#define fbGetDrawable 
+
+
+/* end */
 
 typedef enum
 {
@@ -164,6 +177,7 @@ union image
     solid_fill_t		solid;
 };
 
+void fbCompositeRect (const FbComposeData *data, uint32_t *scanline_buffer);
 
 
 

@@ -247,36 +247,49 @@ pixman_image_set_clip_region (pixman_image_t    *image,
     
 }
 
-#define SCANLINE_BUFFER_LENGTH 1024
-
+#define SCANLINE_BUFFER_LENGTH 2048
+ 
 void
-pixman_composite (pixman_image_t	*src_img,
-		  pixman_image_t	*mask_img,
-		  pixman_image_t	*dest_img,
-		  int			 src_x,
-		  int			 src_y,
-		  int			 mask_x,
-		  int			 mask_y,
-		  int			 dest_x,
-		  int			 dset_y,
-		  int			 width,
-		  int			 height)
+pixman_image_composite (pixman_op_t	 op,
+			pixman_image_t	*src_img,
+			pixman_image_t	*mask_img,
+			pixman_image_t	*dest_img,
+			int		 src_x,
+			int		 src_y,
+			int		 mask_x,
+			int		 mask_y,
+			int		 dest_x,
+			int		 dest_y,
+			int		 width,
+			int		 height)
 {
-    image_t *src = (image_t *) src;
-    image_t *mask = (image_t *) mask;
-    image_t *dest = (image_t *) dest;
-
+    FbComposeData compose_data;
     uint32_t _scanline_buffer[SCANLINE_BUFFER_LENGTH * 3];
     uint32_t *scanline_buffer = _scanline_buffer;
 
     if (width > SCANLINE_BUFFER_LENGTH)
+    {
 	scanline_buffer = (uint32_t *)malloc (width * 3 * sizeof (uint32_t));
 
-    if (!scanline_buffer)
-	return;
+	if (!scanline_buffer)
+	    return;
+    }
+    
+    compose_data.op = op;
+    compose_data.src = (image_t *)src_img;
+    compose_data.mask = (image_t *)mask_img;
+    compose_data.dest = (image_t *)dest_img;
+    compose_data.xSrc = src_x;
+    compose_data.ySrc = src_y;
+    compose_data.xMask = mask_x;
+    compose_data.yMask = mask_y;
+    compose_data.xDest = dest_x;
+    compose_data.yDest = dest_y;
+    compose_data.width = width;
+    compose_data.height = height;
 
-    
-    
+    fbCompositeRect (&compose_data, scanline_buffer);
+
     if (scanline_buffer != _scanline_buffer)
 	free (scanline_buffer);
 }
