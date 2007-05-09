@@ -1,10 +1,9 @@
-#include <stdlib.h>
 #include <stdio.h>
-#include "pixman.h"
-
+#include <stdlib.h>
+#include <pixman/pixman.h>
 #include <gtk/gtk.h>
 
-static GdkPixbuf *
+GdkPixbuf *
 pixbuf_from_argb32 (uint32_t *bits,
 		    int width,
 		    int height,
@@ -21,11 +20,14 @@ pixbuf_from_argb32 (uint32_t *bits,
 	for (w = 0; w < width; ++w)
 	{
 	    uint32_t argb = bits[h * stride + w];
-	    guint32 rgba;
+	    guint32 abgr;
 
-	    rgba = (argb << 8) | (argb >> 24);
+	    abgr = (argb & 0xff000000) |
+		(argb & 0xff) << 16 |
+		(argb & 0x00ff00) |
+		(argb & 0xff0000) >> 16;
 
-	    p_bits[h * (p_stride / 4) + w] = rgba;
+	    p_bits[h * (p_stride / 4) + w] = abgr;
 	}
     }
 
@@ -66,47 +68,47 @@ show_window (uint32_t *bits, int w, int h, int stride)
 int
 main (int argc, char **argv)
 {
-    uint32_t *src = malloc (10 * 10 * 4);
-    uint32_t *dest = malloc (10 * 10 * 4);
+#define WIDTH 100
+#define HEIGHT 100
+    
+    uint32_t *dest = malloc (WIDTH * HEIGHT * 4);
     pixman_image_t *src_img;
     pixman_image_t *dest_img;
-    int i, j;
-    gtk_init (&argc, &argv);
-
-    for (i = 0; i < 10 * 10; ++i)
-	src[i] = 0x7f7f0000; /* red */
-
-    for (i = 0; i < 10 * 10; ++i)
-	dest[i] = 0x7f0000ff; /* blue */
-    
-    src_img = pixman_image_create_bits (PIXMAN_a8r8g8b8,
-					10, 10,
-					src,
-					10 * 4);
-    
-    dest_img = pixman_image_create_bits (PIXMAN_a8r8g8b8,
-					 10, 10,
-					 dest,
-					 10 * 4);
-
-    pixman_image_composite (PIXMAN_OP_OVER, src_img, NULL, dest_img,
-			    0, 0, 0, 0, 0, 0, 10, 10);
-
-    for (i = 0; i < 10; ++i)
+    int i;
+    pixman_gradient_stop_t stops[2] =
     {
-	for (j = 0; j < 10; ++j)
-	    g_print ("%x, ", dest[i * 10 + j]);
-	g_print ("\n");
-    }
+	{ 0.0, { 0xffff, 0x0000, 0x0000, 0xffff } },
+	{ 1.0, { 0xffff, 0xffff, 0x0000, 0xffff } }
+    };
+    pixman_point_fixed_t p1 = { 0, 0 };
+    pixman_point_fixed_t p2 = { pixman_int_to_fixed (WIDTH),
+				pixman_int_to_fixed (HEIGHT) };
+
+    gtk_init (&argc, &argv);
     
-    show_window (dest, 10, 10, 10);
+    for (i = 0; i < WIDTH * HEIGHT; ++i)
+	dest[i] = 0x3f0000ff; /* pale blue */
+
+    dest_img = pixman_image_create_bits (PIXMAN_a8r8g8b8,
+					 WIDTH, HEIGHT, 
+					 dest,
+					 WIDTH * 4);
+
+    src_img = pixman_image_create_linear_gradient  (&p1, &p2,
+						    stops, 2);
+    
+    pixman_image_composite (PIXMAN_OP_OVER, src_img, NULL, dest_img,
+			    0, 0, 0, 0, 0, 0, WIDTH, HEIGHT);
+
+    printf ("0, 0: %x\n", dest[0]);
+    printf ("10, 10: %x\n", dest[10 * 10 + 10]);
+    printf ("w, h: %x\n", dest[(HEIGHT - 1) * 100 + (WIDTH - 1)]);
+
+    show_window (dest, WIDTH, HEIGHT, WIDTH);
     
     pixman_image_unref (src_img);
     pixman_image_unref (dest_img);
-    free (src);
     free (dest);
 
-
-    
     return 0;
 }
