@@ -31,5 +31,8 @@ main ()
     pixman_image_composite (PIXMAN_OP_OVER, src_img, NULL, dest_img,
 			    0, 0, 0, 0, 0, 0, 10, 10);
 
+    pixman_image_unref (src_img);
+    pixman_image_unref (dest_img);
+    
     return 0;
 }

@@ -76,7 +76,7 @@ color_to_uint32 (const pixman_color_t *color)
 static pixman_image_t *
 allocate_image (void)
 {
-    pixman_image_t *image = malloc (sizeof (pixman_image_t *));
+    pixman_image_t *image = malloc (sizeof (pixman_image_t));
 
     if (image)
     {
@@ -154,7 +154,7 @@ pixman_image_create_linear_gradient (pixman_point_fixed_t         *p1,
     pixman_image_t *image;
     linear_gradient_t *linear;
 
-    return_val_if_fail (n_stops < 2, NULL);
+    return_val_if_fail (n_stops >= 2, NULL);
     
     image = allocate_image();
     
@@ -189,7 +189,7 @@ pixman_image_create_radial_gradient (pixman_point_fixed_t         *inner,
     pixman_image_t *image;
     radial_gradient_t *radial;
 
-    return_val_if_fail (n_stops < 2, NULL);
+    return_val_if_fail (n_stops >= 2, NULL);
     
     image = allocate_image();
 
@@ -282,7 +282,7 @@ pixman_image_set_clip_region (pixman_image_t    *image,
 {
     image_common_t *common = (image_common_t *)image;
 
-    if (!region)
+    if (region)
     {
 	pixman_region_copy (&common->clip_region, region);
     }
@@ -407,6 +407,9 @@ pixman_image_composite (pixman_op_t	 op,
     uint32_t _scanline_buffer[SCANLINE_BUFFER_LENGTH * 3];
     uint32_t *scanline_buffer = _scanline_buffer;
 
+    return_if_fail (src_img != NULL);
+    return_if_fail (dest_img != NULL);
+    
     if (width > SCANLINE_BUFFER_LENGTH)
     {
 	scanline_buffer = (uint32_t *)malloc (width * 3 * sizeof (uint32_t));
@@ -428,7 +431,7 @@ pixman_image_composite (pixman_op_t	 op,
     compose_data.width = width;
     compose_data.height = height;
 
-    fbCompositeRect (&compose_data, scanline_buffer);
+    pixmanCompositeRect (&compose_data, scanline_buffer);
 
     if (scanline_buffer != _scanline_buffer)
 	free (scanline_buffer);
