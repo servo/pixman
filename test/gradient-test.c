@@ -77,8 +77,8 @@ main (int argc, char **argv)
     int i;
     pixman_gradient_stop_t stops[2] =
     {
-	{ 0.0, { 0xffff, 0x0000, 0x0000, 0xffff } },
-	{ 1.0, { 0xffff, 0xffff, 0x0000, 0xffff } }
+	{ pixman_int_to_fixed (0), { 0xffff, 0x0000, 0x0000, 0xffff } },
+	{ pixman_int_to_fixed (1), { 0xffff, 0xffff, 0x0000, 0xffff } }
     };
     pixman_point_fixed_t p1 = { 0, 0 };
     pixman_point_fixed_t p2 = { pixman_int_to_fixed (WIDTH),
