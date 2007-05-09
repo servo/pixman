@@ -272,7 +272,9 @@ const pixman_box16_t *  pixman_region_rectangles (pixman_region16_t *region,
 /*
  * Images
  */
+typedef union pixman_image pixman_image_t;
 typedef struct pixman_indexed	pixman_indexed_t;
+
 
 #define PIXMAN_MAX_INDEXED  256 /* XXX depth must be <= 8 */
 
@@ -372,77 +374,73 @@ typedef enum {
     PIXMAN_g1 =		PIXMAN_FORMAT(1,PIXMAN_TYPE_GRAY,0,0,0,0),
 } pixman_format_code_t;
 
-typedef struct
-{
-    /* All of this struct is considered private to libcomp */
-    unsigned char	reserved [128];
-} pixman_image_t;
+/* Constructors */
+pixman_image_t *pixman_image_create_solid_fill       (pixman_color_t       *color,
+						      int		   *error);
+pixman_image_t *pixman_image_create_linear_gradient  (pixman_point_fixed_t *p1,
+						      pixman_point_fixed_t *p2,
+						      int                   n_stops,
+						      pixman_fixed_t       *stops,
+						      pixman_color_t       *colors,
+						      int		   *error);
+pixman_image_t *pixman_image_create_radial_gradient  (pixman_point_fixed_t *inner,
+						      pixman_point_fixed_t *outer,
+						      pixman_fixed_t        inner_radius,
+						      pixman_fixed_t        outer_radius,
+						      int                   n_stops,
+						      pixman_fixed_t       *stops,
+						      pixman_color_t       *colors,
+						      int                  *error);
+pixman_image_t *pixman_image_create_conical_gradient (pixman_point_fixed_t *center,
+						      pixman_fixed_t        angle,
+						      int                   n_stops,
+						      pixman_fixed_t       *stops,
+						      pixman_color_t       *colors,
+						      int		   *error);
+pixman_image_t *pixman_image_create_bits             (pixman_format_code_t  format,
+						      int                   width,
+						      int                   height,
+						      uint32_t             *bits,
+						      int                   rowstride_bytes,
+						      int		   *error);
 
-/* Initialize */
-void pixman_image_init_solid_fill       (pixman_image_t       *image,
-					 pixman_color_t       *color,
-					 int                  *error);
-void pixman_image_init_linear_gradient  (pixman_image_t       *image,
-					 pixman_point_fixed_t *p1,
-					 pixman_point_fixed_t *p2,
-					 int                   n_stops,
-					 pixman_fixed_t       *stops,
-					 pixman_color_t       *colors,
-					 int                  *error);
-void pixman_image_init_radial_gradient  (pixman_image_t       *image,
-					 pixman_point_fixed_t *inner,
-					 pixman_point_fixed_t *outer,
-					 pixman_fixed_t        inner_radius,
-					 pixman_fixed_t        outer_radius,
-					 int                   n_stops,
-					 pixman_fixed_t       *stops,
-					 pixman_color_t       *colors,
-					 int                  *error);
-void pixman_image_init_conical_gradient (pixman_image_t       *image,
-					 pixman_point_fixed_t *center,
-					 pixman_fixed_t        angle,
-					 int                   n_stops,
-					 pixman_fixed_t       *stops,
-					 pixman_color_t       *colors,
-					 int                  *error);
-void pixman_image_init_bits             (pixman_image_t       *image,
-					 pixman_format_code_t  format,
-					 int                   width,
-					 int                   height,
-					 uint32_t             *bits,
-					 int                   rowstride_bytes);
+/* Destructor */
+void		pixman_image_destroy		     (pixman_image_t	   *image);
+
 /* Set properties */
-void pixman_image_set_clip_region       (pixman_image_t       *image,
-					 pixman_region16_t    *region);
-void pixman_image_set_transform         (pixman_image_t       *image,
-					 pixman_transform_t   *transform);
-void pixman_image_set_repeat            (pixman_image_t       *image,
-					 pixman_repeat_t       repeat);
-void pixman_image_set_filter            (pixman_image_t       *image,
-					 pixman_filter_t       filter);
-void pixman_image_set_filter_params     (pixman_image_t       *image,
-					 pixman_fixed_t       *params,
-					 int                   n_params);
-void pixman_image_set_alpha_map         (pixman_image_t       *image,
-					 pixman_image_t       *alpha_map,
-					 int16_t               x,
-					 int16_t               y);
-void pixman_image_set_component_alpha   (pixman_image_t       *image,
-					 pixman_bool_t         component_alpha);
+void            pixman_image_set_clip_region         (pixman_image_t       *image,
+						      pixman_region16_t    *region);
+void            pixman_image_set_transform           (pixman_image_t       *image,
+						      pixman_transform_t   *transform);
+void            pixman_image_set_repeat              (pixman_image_t       *image,
+						      pixman_repeat_t       repeat);
+void            pixman_image_set_filter              (pixman_image_t       *image,
+						      pixman_filter_t       filter);
+void            pixman_image_set_filter_params       (pixman_image_t       *image,
+						      pixman_fixed_t       *params,
+						      int                   n_params);
+void            pixman_image_set_alpha_map           (pixman_image_t       *image,
+						      pixman_image_t       *alpha_map,
+						      int16_t               x,
+						      int16_t               y);
+void            pixman_image_set_component_alpha     (pixman_image_t       *image,
+						      pixman_bool_t         component_alpha);
 
 /* Composite */
-void pixman_image_composite		(pixman_op_t	       op,
-					 pixman_image_t	      *src,
-					 pixman_image_t	      *mask,
-					 pixman_image_t	      *dest,
-					 int		       src_x,
-					 int		       src_y,
-					 int		       mask_x,
-					 int		       mask_y,
-					 int			dest_x,
-					 int			dest_y,
-					 int			width,
-					 int			height);
+void            pixman_image_composite               (pixman_op_t           op,
+						      pixman_image_t       *src,
+						      pixman_image_t       *mask,
+						      pixman_image_t       *dest,
+						      int                   src_x,
+						      int                   src_y,
+						      int                   mask_x,
+						      int                   mask_y,
+						      int                   dest_x,
+						      int                   dest_y,
+						      int                   width,
+						      int                   height);
+
+
 
 
 

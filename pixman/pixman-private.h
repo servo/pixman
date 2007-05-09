@@ -8,7 +8,6 @@
 #define TRUE 1
 #endif
 
-typedef union  image image_t;
 typedef struct image_common image_common_t;
 typedef struct source_image source_image_t;
 typedef struct solid_fill solid_fill_t;
@@ -39,9 +38,9 @@ typedef struct _FbComposeFunctions {
 
 typedef struct _FbComposeData {
     uint8_t	 op;
-    image_t	*src;
-    image_t	*mask;
-    image_t	*dest;
+    pixman_image_t	*src;
+    pixman_image_t	*mask;
+    pixman_image_t	*dest;
     int16_t	 xSrc;
     int16_t	 ySrc;
     int16_t	 xMask;
@@ -166,7 +165,7 @@ struct bits_image
     int				rowstride; /* in bytes */
 };
 
-union image
+union pixman_image
 {
     image_type_t		type;
     image_common_t		common;

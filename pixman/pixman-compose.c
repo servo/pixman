@@ -4377,8 +4377,9 @@ static void fbStoreExternalAlpha(bits_image_t * pict, int x, int y, int width, u
     fbFinishAccess (pict->pDrawable);
 }
 
-typedef void (*scanStoreProc)(image_t * , int , int , int , uint32_t *);
-typedef void (*scanFetchProc)(image_t * , int , int , int , uint32_t * , uint32_t *, uint32_t);
+typedef void (*scanStoreProc)(pixman_image_t *, int, int, int, uint32_t *);
+typedef void (*scanFetchProc)(pixman_image_t *, int, int, int, uint32_t *,
+			      uint32_t *, uint32_t);
 
 void
 fbCompositeRect (const FbComposeData *data, uint32_t *scanline_buffer)
