@@ -380,8 +380,7 @@ typedef enum {
 } pixman_format_code_t;
 
 /* Constructors */
-pixman_image_t *pixman_image_create_solid_fill       (pixman_color_t               *color,
-						      int                          *error);
+pixman_image_t *pixman_image_create_solid_fill       (pixman_color_t               *color);
 pixman_image_t *pixman_image_create_linear_gradient  (pixman_point_fixed_t         *p1,
 						      pixman_point_fixed_t         *p2,
 						      const pixman_gradient_stop_t *stops,

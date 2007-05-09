@@ -131,8 +131,7 @@ pixman_image_unref (pixman_image_t *image)
 
 /* Constructors */
 pixman_image_t *
-pixman_image_create_solid_fill (pixman_color_t *color,
-				int            *error)
+pixman_image_create_solid_fill (pixman_color_t *color)
 {
     pixman_image_t *img = allocate_image();
     if (!img)
