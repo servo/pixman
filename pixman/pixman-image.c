@@ -98,7 +98,7 @@ allocate_image (void)
 
 /* Ref Counting */
 pixman_image_t *
-pixman_image_ref		     (pixman_image_t	   *image)
+pixman_image_ref (pixman_image_t *image)
 {
     image->common.ref_count++;
 
@@ -106,7 +106,7 @@ pixman_image_ref		     (pixman_image_t	   *image)
 }
 
 void
-pixman_image_unref		     (pixman_image_t	   *image)
+pixman_image_unref (pixman_image_t *image)
 {
     image->common.ref_count--;
 
@@ -147,10 +147,10 @@ pixman_image_create_solid_fill (pixman_color_t *color,
 }
 
 pixman_image_t *
-pixman_image_create_linear_gradient (pixman_point_fixed_t *p1,
-				     pixman_point_fixed_t *p2,
+pixman_image_create_linear_gradient (pixman_point_fixed_t         *p1,
+				     pixman_point_fixed_t         *p2,
 				     const pixman_gradient_stop_t *stops,
-				     int                   n_stops)
+				     int                           n_stops)
 {
     pixman_image_t *image;
     linear_gradient_t *linear;
@@ -180,12 +180,12 @@ pixman_image_create_linear_gradient (pixman_point_fixed_t *p1,
 
 
 pixman_image_t *
-pixman_image_create_radial_gradient (pixman_point_fixed_t *inner,
-				     pixman_point_fixed_t *outer,
-				     pixman_fixed_t inner_radius,
-				     pixman_fixed_t outer_radius,
+pixman_image_create_radial_gradient (pixman_point_fixed_t         *inner,
+				     pixman_point_fixed_t         *outer,
+				     pixman_fixed_t                inner_radius,
+				     pixman_fixed_t                outer_radius,
 				     const pixman_gradient_stop_t *stops,
-				     int             n_stops)
+				     int                           n_stops)
 {
     pixman_image_t *image;
     radial_gradient_t *radial;
@@ -219,7 +219,7 @@ pixman_image_create_radial_gradient (pixman_point_fixed_t *inner,
     radial->A = (radial->cdx * radial->cdx
 		 + radial->cdy * radial->cdy
 		 - radial->dr  * radial->dr);
-
+    
     return image;
 }
 
@@ -295,8 +295,8 @@ pixman_image_set_clip_region (pixman_image_t    *image,
 }
 
 void
-pixman_image_set_transform         (pixman_image_t       *image,
-				    const pixman_transform_t   *transform)
+pixman_image_set_transform (pixman_image_t           *image,
+			    const pixman_transform_t *transform)
 {
     image_common_t *common = (image_common_t *)image;
 
@@ -321,17 +321,17 @@ pixman_image_set_transform         (pixman_image_t       *image,
 }
 
 void
-pixman_image_set_repeat            (pixman_image_t       *image,
-				    pixman_repeat_t       repeat)
+pixman_image_set_repeat (pixman_image_t  *image,
+			 pixman_repeat_t  repeat)
 {
     image->common.repeat = repeat;
 }
 
 void
-pixman_image_set_filter            (pixman_image_t       *image,
-				    pixman_filter_t       filter,
-				    const pixman_fixed_t *params,
-				    int			  n_params)
+pixman_image_set_filter (pixman_image_t       *image,
+			 pixman_filter_t       filter,
+			 const pixman_fixed_t *params,
+			 int		       n_params)
 {
     image_common_t *common = (image_common_t *)image;
     
@@ -356,10 +356,10 @@ pixman_image_set_filter            (pixman_image_t       *image,
 }
 
 void
-pixman_image_set_alpha_map         (pixman_image_t       *image,
-				    pixman_image_t       *alpha_map,
-				    int16_t               x,
-				    int16_t               y)
+pixman_image_set_alpha_map (pixman_image_t *image,
+			    pixman_image_t *alpha_map,
+			    int16_t         x,
+			    int16_t         y)
 {
     image_common_t *common = (image_common_t *)image;
     
