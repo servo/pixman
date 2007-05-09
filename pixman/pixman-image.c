@@ -22,6 +22,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "pixman.h"
 #include "pixman-private.h"
@@ -52,53 +53,28 @@ init_source_image (source_image_t *image)
     image->class = SOURCE_IMAGE_CLASS_UNKNOWN;
 }
 
-static void
+static pixman_bool_t
 init_gradient (gradient_t     *gradient,
-	       int	       stop_count,
-	       pixman_fixed_t *stop_points,
-	       pixman_color_t *stop_colors,
-	       int            *error)
+	       const pixman_gradient_stop_t *stops,
+	       int	       n_stops)
 {
-    int i;
-    pixman_fixed_t dpos;
-
-    if (stop_count <= 0)
-    {
-        *error = PIXMAN_BAD_VALUE;
-        return;
-    }
+    return_val_if_fail (n_stops > 0, FALSE);
 
     init_source_image (&gradient->common);
-    
-    dpos = -1;
-    for (i = 0; i < stop_count; ++i)
-    {
-        if (stop_points[i] < dpos || stop_points[i] > (1<<16))
-	{
-            *error = PIXMAN_BAD_VALUE;
-            return;
-        }
-        dpos = stop_points[i];
-    }
 
-    gradient->stops = malloc (stop_count * sizeof (gradient_stop_t));
+    gradient->stops = malloc (n_stops * sizeof (pixman_gradient_stop_t));
     if (!gradient->stops)
-    {
-        *error = PIXMAN_BAD_ALLOC;
-        return;
-    }
+	return FALSE;
 
-    gradient->n_stops = stop_count;
-
-    for (i = 0; i < stop_count; ++i)
-    {
-        gradient->stops[i].x = stop_points[i];
-        gradient->stops[i].color = stop_colors[i];
-    }
+    memcpy (gradient->stops, stops, n_stops * sizeof (pixman_gradient_stop_t));
+    
+    gradient->n_stops = n_stops;
 
     gradient->stop_range = 0xffff;
     gradient->color_table = NULL;
     gradient->color_table_size = 0;
+
+    return TRUE;
 }
 
 static uint32_t
@@ -145,27 +121,26 @@ pixman_image_create_solid_fill (pixman_color_t *color,
 pixman_image_t *
 pixman_image_create_linear_gradient (pixman_point_fixed_t *p1,
 				     pixman_point_fixed_t *p2,
-				     int                   n_stops,
-				     pixman_fixed_t       *stops,
-				     pixman_color_t       *colors,
-				     int                  *error)
+				     const pixman_gradient_stop_t *stops,
+				     int                   n_stops)
 {
-    pixman_image_t *image = allocate_image();
-    linear_gradient_t *linear = &image->linear;
+    pixman_image_t *image;
+    linear_gradient_t *linear;
 
+    return_val_if_fail (n_stops < 2, NULL);
+    
+    image = allocate_image();
+    
     if (!image)
+	return NULL;
+
+    linear = &image->linear;
+    
+    if (!init_gradient (&linear->common, stops, n_stops))
     {
-	*error = PIXMAN_BAD_ALLOC;
+	free (image);
 	return NULL;
     }
-    
-    if (n_stops < 2)
-    {
-        *error = PIXMAN_BAD_VALUE;
-        return NULL;
-    }
-    
-    init_gradient (&linear->common, n_stops, stops, colors, error);
 
     linear->p1 = *p1;
     linear->p2 = *p2;
@@ -181,27 +156,26 @@ pixman_image_create_radial_gradient (pixman_point_fixed_t *inner,
 				     pixman_point_fixed_t *outer,
 				     pixman_fixed_t inner_radius,
 				     pixman_fixed_t outer_radius,
-				     int             n_stops,
-				     pixman_fixed_t *stops,
-				     pixman_color_t *colors,
-				     int            *error)
+				     const pixman_gradient_stop_t *stops,
+				     int             n_stops)
 {
-    pixman_image_t *image = allocate_image();
-    radial_gradient_t *radial = &image->radial;
+    pixman_image_t *image;
+    radial_gradient_t *radial;
+
+    return_val_if_fail (n_stops < 2, NULL);
+    
+    image = allocate_image();
 
     if (!image)
-    {
-	*error = PIXMAN_BAD_ALLOC;
 	return NULL;
-    }
-    
-    if (n_stops < 2)
-    {
-        *error = PIXMAN_BAD_VALUE;
-	return NULL;
-    }
 
-    init_gradient (&radial->common, n_stops, stops, colors, error);
+    radial = &image->radial;
+
+    if (!init_gradient (&radial->common, stops, n_stops))
+    {
+	free (image);
+	return NULL;
+    }
 
     image->type = RADIAL;
     
@@ -211,12 +185,12 @@ pixman_image_create_radial_gradient (pixman_point_fixed_t *inner,
     radial->c2.x = outer->x;
     radial->c2.y = outer->y;
     radial->c2.radius = outer_radius;
-    radial->cdx = (radial->c2.x - radial->c1.x) / 65536.;
-    radial->cdy = (radial->c2.y - radial->c1.y) / 65536.;
-    radial->dr = (radial->c2.radius - radial->c1.radius) / 65536.;
-    radial->A = (  radial->cdx * radial->cdx
-		   + radial->cdy * radial->cdy
-		   - radial->dr  * radial->dr);
+    radial->cdx = pixman_fixed_to_double (radial->c2.x - radial->c1.x);
+    radial->cdy = pixman_fixed_to_double (radial->c2.y - radial->c1.y);
+    radial->dr = pixman_fixed_to_double (radial->c2.radius - radial->c1.radius);
+    radial->A = (radial->cdx * radial->cdx
+		 + radial->cdy * radial->cdy
+		 - radial->dr  * radial->dr);
 
     return image;
 }
@@ -224,27 +198,22 @@ pixman_image_create_radial_gradient (pixman_point_fixed_t *inner,
 pixman_image_t *
 pixman_image_create_conical_gradient (pixman_point_fixed_t *center,
 				      pixman_fixed_t angle,
-				      int n_stops,
-				      pixman_fixed_t *stops,
-				      pixman_color_t *colors,
-				      int	     *error)
+				      const pixman_gradient_stop_t *stops,
+				      int n_stops)
 {
     pixman_image_t *image = allocate_image();
-    conical_gradient_t *conical = &image->conical;
+    conical_gradient_t *conical;
 
     if (!image)
-    {
-	*error = PIXMAN_BAD_ALLOC;
 	return NULL;
-    }
-    
-    if (n_stops < 2)
-    {
-	*error = PIXMAN_BAD_VALUE;
-	return NULL;
-    }
 
-    init_gradient (&conical->common, n_stops, stops, colors, error);
+    conical = &image->conical;
+    
+    if (!init_gradient (&conical->common, stops, n_stops))
+    {
+	free (image);
+	return NULL;
+    }
 
     image->type = CONICAL;
     conical->center = *center;
@@ -254,27 +223,22 @@ pixman_image_create_conical_gradient (pixman_point_fixed_t *center,
 }
 
 pixman_image_t *
-pixman_image_create_bits (pixman_format_code_t    format,
-			  int                     width,
-			  int                     height,
+pixman_image_create_bits (pixman_format_code_t  format,
+			  int                   width,
+			  int                   height,
 			  uint32_t	       *bits,
-			  int			rowstride,
-			  int		       *error)
+			  int			rowstride)
 {
-    pixman_image_t *image = allocate_image();
+    pixman_image_t *image;
+
+    return_val_if_fail ((rowstride & 0x3) == 0, NULL); /* must be a multiple of 4 */
+
+    image = allocate_image();
 
     if (!image)
-    {
-	*error = PIXMAN_BAD_ALLOC;
 	return NULL;
-    }
     
     init_common (&image->common);
-
-    if (rowstride & 0x3)
-    {
-	/* we should probably spew some warning here */
-    }
     
     image->type = BITS;
     image->bits.format = format;

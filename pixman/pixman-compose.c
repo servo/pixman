@@ -3153,7 +3153,7 @@ typedef struct
     int32_t       right_x;
     int32_t       stepper;
     
-    gradient_stop_t	*stops;
+    pixman_gradient_stop_t	*stops;
     int                      num_stops;
     unsigned int             spread;
     
@@ -3186,7 +3186,7 @@ _gradient_walker_reset (GradientWalker  *walker,
     int32_t                  x, left_x, right_x;
     pixman_color_t          *left_c, *right_c;
     int                      n, count = walker->num_stops;
-    gradient_stop_t *      stops = walker->stops;
+    pixman_gradient_stop_t *      stops = walker->stops;
     
     static const pixman_color_t   transparent_black = { 0, 0, 0, 0 };
     

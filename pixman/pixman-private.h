@@ -8,6 +8,39 @@
 #define TRUE 1
 #endif
 
+#define DEBUG 1
+
+#if DEBUG
+
+#define return_if_fail(expr) {							\
+	do									\
+	{									\
+	    if (!(expr))							\
+	    {									\
+		fprintf(stderr, "In %s: %s failed\n", __FUNCTION__, #expr);	\
+		return;								\
+	    }									\
+	}									\
+	while (0)
+
+#define return_val_if_fail(expr, retval) 					\
+	do									\
+	{									\
+	    if (!(expr))							\
+	    {									\
+		fprintf(stderr, "In %s: %s failed\n", __FUNCTION__, #expr);	\
+		return (retval);						\
+	    }									\
+	}									\
+	while (0)
+
+#else
+
+#define return_if_fail(expr)
+#define return_val_if_fail(expr, retval)
+
+#endif
+
 typedef struct image_common image_common_t;
 typedef struct source_image source_image_t;
 typedef struct solid_fill solid_fill_t;
@@ -18,7 +51,6 @@ typedef struct vertical_gradient vertical_gradient_t;
 typedef struct conical_gradient conical_gradient_t;
 typedef struct radial_gradient radial_gradient_t;
 typedef struct bits_image bits_image_t;
-typedef struct gradient_stop gradient_stop_t;
 typedef struct circle circle_t;
 typedef struct point point_t;
 
@@ -93,12 +125,6 @@ struct image_common
     pixman_bool_t	component_alpha;
 };
 
-struct gradient_stop
-{
-    pixman_fixed_t x;
-    pixman_color_t color;
-};
-
 struct source_image
 {
     image_common_t	common;
@@ -113,12 +139,12 @@ struct solid_fill
     
 struct gradient
 {
-    source_image_t	common;
-    int			n_stops;
-    gradient_stop_t *	stops;
-    int			stop_range;
-    uint32_t *		color_table;
-    int			color_table_size;
+    source_image_t		common;
+    int				n_stops;
+    pixman_gradient_stop_t *	stops;
+    int				stop_range;
+    uint32_t *			color_table;
+    int				color_table_size;
 };
 
 struct linear_gradient

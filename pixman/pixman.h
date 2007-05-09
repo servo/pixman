@@ -272,9 +272,14 @@ const pixman_box16_t *  pixman_region_rectangles (pixman_region16_t *region,
 /*
  * Images
  */
-typedef union pixman_image pixman_image_t;
-typedef struct pixman_indexed	pixman_indexed_t;
+typedef  union pixman_image		pixman_image_t;
+typedef struct pixman_indexed		pixman_indexed_t;
+typedef struct pixman_gradient_stop	pixman_gradient_stop_t;
 
+struct pixman_gradient_stop {
+    pixman_fixed_t x;
+    pixman_color_t      color;
+};
 
 #define PIXMAN_MAX_INDEXED  256 /* XXX depth must be <= 8 */
 
@@ -378,31 +383,24 @@ typedef enum {
 pixman_image_t *pixman_image_create_solid_fill       (pixman_color_t       *color,
 						      int		   *error);
 pixman_image_t *pixman_image_create_linear_gradient  (pixman_point_fixed_t *p1,
-						      pixman_point_fixed_t *p2,
-						      int                   n_stops,
-						      pixman_fixed_t       *stops,
-						      pixman_color_t       *colors,
-						      int		   *error);
+						      pixman_point_fixed_t *p2,	
+						      const pixman_gradient_stop_t *stops,
+						      int                   n_stops);
 pixman_image_t *pixman_image_create_radial_gradient  (pixman_point_fixed_t *inner,
 						      pixman_point_fixed_t *outer,
 						      pixman_fixed_t        inner_radius,
 						      pixman_fixed_t        outer_radius,
-						      int                   n_stops,
-						      pixman_fixed_t       *stops,
-						      pixman_color_t       *colors,
-						      int                  *error);
+						      const pixman_gradient_stop_t *stops,
+						      int                   n_stops);
 pixman_image_t *pixman_image_create_conical_gradient (pixman_point_fixed_t *center,
 						      pixman_fixed_t        angle,
-						      int                   n_stops,
-						      pixman_fixed_t       *stops,
-						      pixman_color_t       *colors,
-						      int		   *error);
+						      const pixman_gradient_stop_t *stops,
+						      int                   n_stops);
 pixman_image_t *pixman_image_create_bits             (pixman_format_code_t  format,
 						      int                   width,
 						      int                   height,
 						      uint32_t             *bits,
-						      int                   rowstride_bytes,
-						      int		   *error);
+						      int                   rowstride_bytes);
 
 /* Destructor */
 void		pixman_image_destroy		     (pixman_image_t	   *image);
