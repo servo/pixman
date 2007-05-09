@@ -411,7 +411,7 @@ pixman_rect_alloc (pixman_region16_t * region, int n)
 }
 
 pixman_bool_t
-pixman_region_copy(pixman_region16_t *dst, pixman_region16_t *src)
+pixman_region_copy (pixman_region16_t *dst, pixman_region16_t *src)
 {
     good(dst);
     good(src);

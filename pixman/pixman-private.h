@@ -12,7 +12,7 @@
 
 #if DEBUG
 
-#define return_if_fail(expr) {							\
+#define return_if_fail(expr)							\
 	do									\
 	{									\
 	    if (!(expr))							\
@@ -114,7 +114,8 @@ struct point
 struct image_common
 {
     image_type_t	type;
-    pixman_region16_t  *clip_region;
+    int32_t		ref_count;
+    pixman_region16_t   clip_region;
     pixman_transform_t *transform;
     pixman_repeat_t	repeat;
     pixman_filter_t	filter;

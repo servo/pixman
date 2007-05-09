@@ -380,63 +380,70 @@ typedef enum {
 } pixman_format_code_t;
 
 /* Constructors */
-pixman_image_t *pixman_image_create_solid_fill       (pixman_color_t       *color,
-						      int		   *error);
-pixman_image_t *pixman_image_create_linear_gradient  (pixman_point_fixed_t *p1,
-						      pixman_point_fixed_t *p2,	
+pixman_image_t *pixman_image_create_solid_fill       (pixman_color_t               *color,
+						      int                          *error);
+pixman_image_t *pixman_image_create_linear_gradient  (pixman_point_fixed_t         *p1,
+						      pixman_point_fixed_t         *p2,
 						      const pixman_gradient_stop_t *stops,
-						      int                   n_stops);
-pixman_image_t *pixman_image_create_radial_gradient  (pixman_point_fixed_t *inner,
-						      pixman_point_fixed_t *outer,
-						      pixman_fixed_t        inner_radius,
-						      pixman_fixed_t        outer_radius,
+						      int                           n_stops);
+pixman_image_t *pixman_image_create_radial_gradient  (pixman_point_fixed_t         *inner,
+						      pixman_point_fixed_t         *outer,
+						      pixman_fixed_t                inner_radius,
+						      pixman_fixed_t                outer_radius,
 						      const pixman_gradient_stop_t *stops,
-						      int                   n_stops);
-pixman_image_t *pixman_image_create_conical_gradient (pixman_point_fixed_t *center,
-						      pixman_fixed_t        angle,
+						      int                           n_stops);
+pixman_image_t *pixman_image_create_conical_gradient (pixman_point_fixed_t         *center,
+						      pixman_fixed_t                angle,
 						      const pixman_gradient_stop_t *stops,
-						      int                   n_stops);
-pixman_image_t *pixman_image_create_bits             (pixman_format_code_t  format,
-						      int                   width,
-						      int                   height,
-						      uint32_t             *bits,
-						      int                   rowstride_bytes);
+						      int                           n_stops);
+pixman_image_t *pixman_image_create_bits             (pixman_format_code_t          format,
+						      int                           width,
+						      int                           height,
+						      uint32_t                     *bits,
+						      int                           rowstride_bytes);
 
 /* Destructor */
-void		pixman_image_destroy		     (pixman_image_t	   *image);
+pixman_image_t *pixman_image_ref                     (pixman_image_t               *image);
+void            pixman_image_unref                   (pixman_image_t               *image);
+
 
 /* Set properties */
-void            pixman_image_set_clip_region         (pixman_image_t       *image,
-						      pixman_region16_t    *region);
-void            pixman_image_set_transform           (pixman_image_t       *image,
-						      pixman_transform_t   *transform);
-void            pixman_image_set_repeat              (pixman_image_t       *image,
-						      pixman_repeat_t       repeat);
-void            pixman_image_set_filter              (pixman_image_t       *image,
-						      pixman_filter_t       filter);
-void            pixman_image_set_filter_params       (pixman_image_t       *image,
-						      pixman_fixed_t       *params,
-						      int                   n_params);
-void            pixman_image_set_alpha_map           (pixman_image_t       *image,
-						      pixman_image_t       *alpha_map,
-						      int16_t               x,
-						      int16_t               y);
-void            pixman_image_set_component_alpha     (pixman_image_t       *image,
-						      pixman_bool_t         component_alpha);
+void            pixman_image_set_clip_region         (pixman_image_t               *image,
+						      pixman_region16_t            *region);
+void            pixman_image_set_transform           (pixman_image_t               *image,
+						      const pixman_transform_t     *transform);
+void            pixman_image_set_repeat              (pixman_image_t               *image,
+						      pixman_repeat_t               repeat);
+void            pixman_image_set_filter              (pixman_image_t               *image,
+						      pixman_filter_t               filter,
+						      const pixman_fixed_t         *filter_params,
+						      int                           n_filter_params);
+void            pixman_image_set_filter_params       (pixman_image_t               *image,
+						      pixman_fixed_t               *params,
+						      int                           n_params);
+void            pixman_image_set_alpha_map           (pixman_image_t               *image,
+						      pixman_image_t               *alpha_map,
+						      int16_t                       x,
+						      int16_t                       y);
+void            pixman_image_set_component_alpha     (pixman_image_t               *image,
+						      pixman_bool_t                 component_alpha);
+
 
 /* Composite */
-void            pixman_image_composite               (pixman_op_t           op,
-						      pixman_image_t       *src,
-						      pixman_image_t       *mask,
-						      pixman_image_t       *dest,
-						      int                   src_x,
-						      int                   src_y,
-						      int                   mask_x,
-						      int                   mask_y,
-						      int                   dest_x,
-						      int                   dest_y,
-						      int                   width,
-						      int                   height);
+void            pixman_image_composite               (pixman_op_t                   op,
+						      pixman_image_t               *src,
+						      pixman_image_t               *mask,
+						      pixman_image_t               *dest,
+						      int                           src_x,
+						      int                           src_y,
+						      int                           mask_x,
+						      int                           mask_y,
+						      int                           dest_x,
+						      int                           dest_y,
+						      int                           width,
+						      int                           height);
+
+
 
 
 
