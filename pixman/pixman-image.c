@@ -130,7 +130,6 @@ pixman_image_unref		     (pixman_image_t	   *image)
 }
 
 /* Constructors */
-
 pixman_image_t *
 pixman_image_create_solid_fill (pixman_color_t *color,
 				int            *error)
@@ -284,16 +283,41 @@ pixman_image_set_clip_region (pixman_image_t    *image,
 {
     image_common_t *common = (image_common_t *)image;
 
-    pixman_region_copy (&common->clip_region, region);
+    if (!region)
+    {
+	pixman_region_copy (&common->clip_region, region);
+    }
+    else
+    {
+	pixman_region_fini (&common->clip_region);
+	pixman_region_init (&common->clip_region);
+    }
 }
 
 void
 pixman_image_set_transform         (pixman_image_t       *image,
 				    const pixman_transform_t   *transform)
 {
-    image->common.transform = malloc (sizeof (pixman_transform_t));
-    if (image->common.transform)
-	*(image->common.transform) = *transform;
+    image_common_t *common = (image_common_t *)image;
+
+    if (common->transform == transform)
+	return;
+
+    if (common->transform)
+	free (common->transform);
+
+    if (transform)
+    {
+	common->transform = malloc (sizeof (pixman_transform_t));
+	if (!common->transform)
+	    return;
+
+	*common->transform = *transform;
+    }
+    else
+    {
+	common->transform = NULL;
+    }
 }
 
 void
@@ -316,8 +340,16 @@ pixman_image_set_filter            (pixman_image_t       *image,
 	if (common->filter_params)
 	    free (common->filter_params);
 
-	common->filter_params = malloc (n_params * sizeof (pixman_fixed_t));
-	memcpy (common->filter_params, params, n_params * sizeof (pixman_fixed_t));
+	if (params)
+	{
+	    common->filter_params = malloc (n_params * sizeof (pixman_fixed_t));
+	    memcpy (common->filter_params, params, n_params * sizeof (pixman_fixed_t));
+	}
+	else
+	{
+	    common->filter_params = NULL;
+	    n_params = 0;
+	}
     }
     
     common->n_filter_params = n_params;
@@ -338,7 +370,10 @@ pixman_image_set_alpha_map         (pixman_image_t       *image,
 	if (common->alpha_map)
 	    pixman_image_unref ((pixman_image_t *)common->alpha_map);
 
-	common->alpha_map = (bits_image_t *)pixman_image_ref (alpha_map);
+	if (alpha_map)
+	    common->alpha_map = (bits_image_t *)pixman_image_ref (alpha_map);
+	else
+	    common->alpha_map = NULL;
     }
 
     common->alpha_origin.x = x;
