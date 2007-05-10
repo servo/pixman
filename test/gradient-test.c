@@ -86,7 +86,7 @@ main (int argc, char **argv)
     pixman_transform_t trans = {
 	{ { pixman_double_to_fixed (2), pixman_double_to_fixed (0.5), pixman_double_to_fixed (-100), },
 	  { pixman_double_to_fixed (0), pixman_double_to_fixed (2), pixman_double_to_fixed (0), },
-	  { pixman_double_to_fixed (0), pixman_double_to_fixed (0.005), pixman_double_to_fixed (1.0) } 
+	  { pixman_double_to_fixed (0), pixman_double_to_fixed (0.004990), pixman_double_to_fixed (1.0) } 
 	}
     };
 
@@ -95,6 +95,11 @@ main (int argc, char **argv)
 	  { 0, pixman_fixed_1, 0 },
 	  { 0, 0, pixman_fixed_1 } }
     };
+
+    pixman_point_fixed_t c_inner;
+    pixman_point_fixed_t c_outer;
+    pixman_fixed_t r_inner;
+    pixman_fixed_t r_outer;
     
     gtk_init (&argc, &argv);
     
@@ -105,11 +110,24 @@ main (int argc, char **argv)
 					 WIDTH, HEIGHT, 
 					 dest,
 					 WIDTH * 4);
+
+    c_inner.x = pixman_double_to_fixed (50.0);
+    c_inner.y = pixman_double_to_fixed (50.0);
+    c_outer.x = pixman_double_to_fixed (50.0);
+    c_outer.y = pixman_double_to_fixed (50.0);
+    r_inner = 0;
+    r_outer = pixman_double_to_fixed (50.0);
     
+    src_img = pixman_image_create_radial_gradient (&c_inner, &c_outer,
+						   r_inner, r_outer,
+						   stops, 2);
+    
+#if 0
     src_img = pixman_image_create_linear_gradient  (&p1, &p2,
 						    stops, 2);
     
-    pixman_image_set_transform (src_img, &id);
+#endif
+    pixman_image_set_transform (src_img, &trans);
     
     pixman_image_composite (PIXMAN_OP_OVER, src_img, NULL, dest_img,
 			    0, 0, 0, 0, 0, 0, WIDTH, HEIGHT);
