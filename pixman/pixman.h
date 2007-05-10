@@ -105,7 +105,7 @@ typedef int pixman_bool_t;
 /*
  * Fixpoint numbers
  */
-typedef uint64_t		pixman_fixed_32_32_t;
+typedef int64_t			pixman_fixed_32_32_t;
 typedef pixman_fixed_32_32_t	pixman_fixed_48_16_t;
 typedef uint32_t		pixman_fixed_1_31_t;
 typedef uint32_t		pixman_fixed_1_16_t;
