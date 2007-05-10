@@ -46,7 +46,7 @@
 #define INLINE inline
 
 int
-PictureTransformPoint3d (pixman_transform_t *transform,
+pixmanTransformPoint3d (pixman_transform_t *transform,
 			 pixman_vector_t *vector)
 {
     pixman_vector_t		result;
@@ -420,7 +420,7 @@ SourcePictureClassify (source_image_t *pict,
 	    
 	    if (pict->common.transform)
 	    {
-		if (!PictureTransformPoint3d (pict->common.transform, &v))
+		if (!pixmanTransformPoint3d (pict->common.transform, &v))
 		    return SOURCE_IMAGE_CLASS_UNKNOWN;
 	    }
 	    
@@ -3365,7 +3365,7 @@ _gradient_walker_pixel (GradientWalker  *walker,
     return (color | (t1 & 0xff00ff) | (t2 & 0xff00));
 }
 
-static void fbFetchSourcePict(source_image_t * pict, int x, int y, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
+static void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
 {
 #if 0
     SourcePictPtr   pGradient = pict->pSourcePict;
@@ -3399,7 +3399,7 @@ static void fbFetchSourcePict(source_image_t * pict, int x, int y, int width, ui
         v.vector[1] = pixman_int_to_fixed(y) + pixman_fixed_1/2;
         v.vector[2] = pixman_fixed_1;
         if (pict->common.transform) {
-            if (!PictureTransformPoint3d (pict->common.transform, &v))
+            if (!pixmanTransformPoint3d (pict->common.transform, &v))
                 return;
             unit.vector[0] = pict->common.transform->matrix[0][0];
             unit.vector[1] = pict->common.transform->matrix[1][0];
@@ -3637,7 +3637,7 @@ static void fbFetchSourcePict(source_image_t * pict, int x, int y, int width, ui
             v.vector[0] = pixman_int_to_fixed(x) + pixman_fixed_1/2;
             v.vector[1] = pixman_int_to_fixed(y) + pixman_fixed_1/2;
             v.vector[2] = pixman_fixed_1;
-            if (!PictureTransformPoint3d (pict->common.transform, &v))
+            if (!pixmanTransformPoint3d (pict->common.transform, &v))
                 return;
 	    
             cx = pict->common.transform->matrix[0][0]/65536.;
@@ -3816,7 +3816,7 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
     /* when using convolution filters one might get here without a transform */
     if (pict->common.transform)
     {
-        if (!PictureTransformPoint3d (pict->common.transform, &v))
+        if (!pixmanTransformPoint3d (pict->common.transform, &v))
 	{
             fbFinishAccess (pict->pDrawable);
             return;
@@ -4399,7 +4399,7 @@ pixmanCompositeRect (const FbComposeData *data, uint32_t *scanline_buffer)
         fetchSrc = NULL;
     else if (IS_SOURCE_IMAGE (data->src))
     {
-	fetchSrc = (scanFetchProc)fbFetchSourcePict;
+	fetchSrc = (scanFetchProc)pixmanFetchSourcePict;
 	srcClass = SourcePictureClassify ((source_image_t *)data->src,
 					  data->xSrc, data->ySrc,
 					  data->width, data->height);
@@ -4437,7 +4437,7 @@ pixmanCompositeRect (const FbComposeData *data, uint32_t *scanline_buffer)
     {
 	if (IS_SOURCE_IMAGE (data->mask))
 	{
-	    fetchMask = (scanFetchProc)fbFetchSourcePict;
+	    fetchMask = (scanFetchProc)pixmanFetchSourcePict;
 	}
 	else
 	{
