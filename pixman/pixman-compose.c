@@ -45,35 +45,6 @@
  */
 #define INLINE inline
 
-int
-pixmanTransformPoint3d (pixman_transform_t *transform,
-			 pixman_vector_t *vector)
-{
-    pixman_vector_t		result;
-    int				i, j;
-    pixman_fixed_32_32_t	partial;
-    pixman_fixed_48_16_t	v;
-
-    for (j = 0; j < 3; j++)
-    {
-	v = 0;
-	for (i = 0; i < 3; i++)
-	{
-	    partial = ((pixman_fixed_48_16_t) transform->matrix[j][i] *
-		       (pixman_fixed_48_16_t) vector->vector[i]);
-	    v += partial >> 16;
-	}
-	if (v > pixman_max_fixed_48_16 || v < pixman_min_fixed_48_16)
-	    return FALSE;
-	result.vector[j] = (pixman_fixed_48_16_t) v;
-    }
-    if (!result.vector[2])
-	return FALSE;
-    *vector = result;
-    return TRUE;
-}
-
-
 #ifdef FB_ACCESS_WRAPPER
 
 #include "wfbrename.h"
@@ -420,7 +391,7 @@ SourcePictureClassify (source_image_t *pict,
 	    
 	    if (pict->common.transform)
 	    {
-		if (!pixmanTransformPoint3d (pict->common.transform, &v))
+		if (!pixman_transform_point_3d (pict->common.transform, &v))
 		    return SOURCE_IMAGE_CLASS_UNKNOWN;
 	    }
 	    
@@ -3399,7 +3370,7 @@ static void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width
         v.vector[1] = pixman_int_to_fixed(y) + pixman_fixed_1/2;
         v.vector[2] = pixman_fixed_1;
         if (pict->common.transform) {
-            if (!pixmanTransformPoint3d (pict->common.transform, &v))
+            if (!pixman_transform_point_3d (pict->common.transform, &v))
                 return;
             unit.vector[0] = pict->common.transform->matrix[0][0];
             unit.vector[1] = pict->common.transform->matrix[1][0];
@@ -3637,7 +3608,7 @@ static void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width
             v.vector[0] = pixman_int_to_fixed(x) + pixman_fixed_1/2;
             v.vector[1] = pixman_int_to_fixed(y) + pixman_fixed_1/2;
             v.vector[2] = pixman_fixed_1;
-            if (!pixmanTransformPoint3d (pict->common.transform, &v))
+            if (!pixman_transform_point_3d (pict->common.transform, &v))
                 return;
 	    
             cx = pict->common.transform->matrix[0][0]/65536.;
@@ -3816,7 +3787,7 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
     /* when using convolution filters one might get here without a transform */
     if (pict->common.transform)
     {
-        if (!pixmanTransformPoint3d (pict->common.transform, &v))
+        if (!pixman_transform_point_3d (pict->common.transform, &v))
 	{
             fbFinishAccess (pict->pDrawable);
             return;

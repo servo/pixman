@@ -203,14 +203,8 @@ union pixman_image
     solid_fill_t		solid;
 };
 
-int pixmanTransformPoint3d (pixman_transform_t *trans,
-			     pixman_vector_t *vector);
 void pixmanCompositeRect (const FbComposeData *data,
 			  uint32_t *scanline_buffer);
-
-
-
-
 
 #if 0
 typedef struct _Picture {

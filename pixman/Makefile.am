@@ -7,7 +7,8 @@ libpixman_la_SOURCES =    \
 	 pixman-region.c  \
 	 pixman-private.h \
 	 pixman-image.c   \
-	 pixman-compose.c
+	 pixman-compose.c \
+	 pixman-utils.c
 
 libpixmanincludedir = $(includedir)/pixman
 libpixmaninclude_HEADERS = pixman.h
