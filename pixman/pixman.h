@@ -118,6 +118,7 @@ typedef pixman_fixed_16_16_t	pixman_fixed_t;
 #define pixman_fixed_to_int(f)		((int) ((f) >> 16))
 #define pixman_int_to_fixed(i)		((pixman_fixed_t) ((i) << 16))
 #define pixman_fixed_to_double(f)	(double) ((f) / (double) pixman_fixed_1)
+#define pixman_double_to_fixed(d)	((pixman_fixed_t) ((d) * 65536.0))
 #define pixman_fixed_frac(f)		((f) & pixman_fixed_1_minus_e)
 #define pixman_fixed_floor(f)		((f) & ~pixman_fixed_1_minus_e)
 #define pixman_fixed_ceil(f)		pixman_fixed_floor ((f) + pixman_fixed_1_minus_e)
