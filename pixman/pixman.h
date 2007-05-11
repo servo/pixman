@@ -94,7 +94,7 @@ typedef unsigned __int32 uint32_t;
 typedef __int64 int64_t;
 typedef unsigned __int64 uint64_t;
 #else
-#  error Cannot find definitions for fixed-width integral types (uint8_t, uint32_t, etc.)
+# error Cannot find definitions for fixed-width integral types (uint8_t, uint32_t, etc.)
 #endif
 
 /*
@@ -211,6 +211,12 @@ typedef enum
 typedef struct pixman_region16_data	pixman_region16_data_t;
 typedef struct pixman_box16		pixman_box16_t;
 typedef struct pixman_region16		pixman_region16_t;
+
+struct pixman_region16_data {
+    long		size;
+    long		numRects;
+/*  pixman_box16_t	rects[size];   in memory but not explicitly declared */
+};
 
 struct pixman_box16
 {

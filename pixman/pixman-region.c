@@ -52,12 +52,6 @@ SOFTWARE.
 #include "pixman-private.h"
 #include "pixman.h"
 
-struct pixman_region16_data {
-    long		size;
-    long		numRects;
-/*  pixman_box16_t	rects[size];   in memory but not explicitly declared */
-};
-
 typedef struct pixman_region16_point {
     int x, y;
 } pixman_region16_point_t;
