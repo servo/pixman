@@ -285,6 +285,8 @@ pixman_box16_t *        pixman_region_extents (pixman_region16_t *region);
 int                     pixman_region_n_rects (pixman_region16_t *region);
 const pixman_box16_t *  pixman_region_rectangles (pixman_region16_t *region,
 						  int		    *n_rects);
+pixman_bool_t		pixman_region_equal (pixman_region16_t *region1,
+					     pixman_region16_t *region2);
 
 /*
  * Images

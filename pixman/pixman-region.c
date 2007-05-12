@@ -229,6 +229,32 @@ if (((numRects) < ((reg)->data->size >> 1)) && ((reg)->data->size > 50)) \
     }									 \
 }
 
+pixman_bool_t
+pixman_region_equal(reg1, reg2)
+    pixman_region16_t * reg1;
+    pixman_region16_t * reg2;
+{
+    int i;
+    pixman_box16_t *rects1;
+    pixman_box16_t *rects2;
+
+    if (reg1->extents.x1 != reg2->extents.x1) return FALSE;
+    if (reg1->extents.x2 != reg2->extents.x2) return FALSE;
+    if (reg1->extents.y1 != reg2->extents.y1) return FALSE;
+    if (reg1->extents.y2 != reg2->extents.y2) return FALSE;
+    if (PIXREGION_NUM_RECTS(reg1) != PIXREGION_NUM_RECTS(reg2)) return FALSE;
+
+    rects1 = PIXREGION_RECTS(reg1);
+    rects2 = PIXREGION_RECTS(reg2);
+    for (i = 0; i != PIXREGION_NUM_RECTS(reg1); i++) {
+	if (rects1[i].x1 != rects2[i].x1) return FALSE;
+	if (rects1[i].x2 != rects2[i].x2) return FALSE;
+	if (rects1[i].y1 != rects2[i].y1) return FALSE;
+	if (rects1[i].y2 != rects2[i].y2) return FALSE;
+    }
+    return TRUE;
+}
+
 #ifdef DEBUG_PIXREGION
 static int
 pixman_region16_print(rgn)
@@ -249,31 +275,6 @@ pixman_region16_print(rgn)
 	     rects[i].x1, rects[i].y1, rects[i].x2, rects[i].y2);
     ErrorF("\n");
     return(num);
-}
-
-static pixman_bool_t
-pixman_region16_tsEqual(reg1, reg2)
-    pixman_region16_t * reg1;
-    pixman_region16_t * reg2;
-{
-    int i;
-    pixman_box16_t * rects1, rects2;
-
-    if (reg1->extents.x1 != reg2->extents.x1) return FALSE;
-    if (reg1->extents.x2 != reg2->extents.x2) return FALSE;
-    if (reg1->extents.y1 != reg2->extents.y1) return FALSE;
-    if (reg1->extents.y2 != reg2->extents.y2) return FALSE;
-    if (PIXREGION_NUM_RECTS(reg1) != PIXREGION_NUM_RECTS(reg2)) return FALSE;
-
-    rects1 = PIXREGION_RECTS(reg1);
-    rects2 = PIXREGION_RECTS(reg2);
-    for (i = 0; i != PIXREGION_NUM_RECTS(reg1); i++) {
-	if (rects1[i].x1 != rects2[i].x1) return FALSE;
-	if (rects1[i].x2 != rects2[i].x2) return FALSE;
-	if (rects1[i].y1 != rects2[i].y1) return FALSE;
-	if (rects1[i].y2 != rects2[i].y2) return FALSE;
-    }
-    return TRUE;
 }
 
 static pixman_bool_t
