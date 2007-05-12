@@ -277,52 +277,6 @@ pixman_region16_print(rgn)
     return(num);
 }
 
-static pixman_bool_t
-pixman_region16_valid(reg)
-    pixman_region16_t * reg;
-{
-    int i, numRects;
-
-    if ((reg->extents.x1 > reg->extents.x2) ||
-	(reg->extents.y1 > reg->extents.y2))
-	return FALSE;
-    numRects = PIXREGION_NUM_RECTS(reg);
-    if (!numRects)
-	return ((reg->extents.x1 == reg->extents.x2) &&
-		(reg->extents.y1 == reg->extents.y2) &&
-		(reg->data->size || (reg->data == &pixman_region_emptyData)));
-    else if (numRects == 1)
-	return (!reg->data);
-    else
-    {
-	pixman_box16_t * pboxP, pboxN;
-	pixman_box16_t box;
-
-	pboxP = PIXREGION_RECTS(reg);
-	box = *pboxP;
-	box.y2 = pboxP[numRects-1].y2;
-	pboxN = pboxP + 1;
-	for (i = numRects; --i > 0; pboxP++, pboxN++)
-	{
-	    if ((pboxN->x1 >= pboxN->x2) ||
-		(pboxN->y1 >= pboxN->y2))
-		return FALSE;
-	    if (pboxN->x1 < box.x1)
-	        box.x1 = pboxN->x1;
-	    if (pboxN->x2 > box.x2)
-		box.x2 = pboxN->x2;
-	    if ((pboxN->y1 < pboxP->y1) ||
-		((pboxN->y1 == pboxP->y1) &&
-		 ((pboxN->x1 < pboxP->x2) || (pboxN->y2 != pboxP->y2))))
-		return FALSE;
-	}
-	return ((box.x1 == reg->extents.x1) &&
-		(box.x2 == reg->extents.x2) &&
-		(box.y1 == reg->extents.y1) &&
-		(box.y2 == reg->extents.y2));
-    }
-}
-
 #endif /* DEBUG_PIXREGION */
 
 void
@@ -2549,3 +2503,51 @@ pixman_region16_find_max_band(pixman_region16_t * prgn)
     return (nMaxBand);
 }
 #endif /* XXX_DO_WE_NEED_THIS */
+
+
+pixman_bool_t
+pixman_region_selfcheck (reg)
+    pixman_region16_t * reg;
+{
+    int i, numRects;
+
+    if ((reg->extents.x1 > reg->extents.x2) ||
+	(reg->extents.y1 > reg->extents.y2))
+	return FALSE;
+    numRects = PIXREGION_NUM_RECTS(reg);
+    if (!numRects)
+	return ((reg->extents.x1 == reg->extents.x2) &&
+		(reg->extents.y1 == reg->extents.y2) &&
+		(reg->data->size || (reg->data == pixman_region_emptyData)));
+    else if (numRects == 1)
+	return (!reg->data);
+    else
+    {
+	pixman_box16_t * pboxP, * pboxN;
+	pixman_box16_t box;
+
+	pboxP = PIXREGION_RECTS(reg);
+	box = *pboxP;
+	box.y2 = pboxP[numRects-1].y2;
+	pboxN = pboxP + 1;
+	for (i = numRects; --i > 0; pboxP++, pboxN++)
+	{
+	    if ((pboxN->x1 >= pboxN->x2) ||
+		(pboxN->y1 >= pboxN->y2))
+		return FALSE;
+	    if (pboxN->x1 < box.x1)
+	        box.x1 = pboxN->x1;
+	    if (pboxN->x2 > box.x2)
+		box.x2 = pboxN->x2;
+	    if ((pboxN->y1 < pboxP->y1) ||
+		((pboxN->y1 == pboxP->y1) &&
+		 ((pboxN->x1 < pboxP->x2) || (pboxN->y2 != pboxP->y2))))
+		return FALSE;
+	}
+	return ((box.x1 == reg->extents.x1) &&
+		(box.x2 == reg->extents.x2) &&
+		(box.y1 == reg->extents.y1) &&
+		(box.y2 == reg->extents.y2));
+    }
+}
+
