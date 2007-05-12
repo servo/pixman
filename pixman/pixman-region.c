@@ -79,7 +79,7 @@ typedef struct pixman_region16_point {
 #define assert(expr)
 #endif
 
-#define good(reg) assert(pixman_region16_valid(reg))
+#define good(reg) assert(pixman_region_selfcheck(reg))
 
 #undef MIN
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
@@ -1595,89 +1595,6 @@ bail:
     free (ri);
     return pixman_break (badreg);
 }
-
-/* XXX: Need to fix this to not use any X data structure
-pixman_region16_t *
-pixman_region_rectsToRegion(nrects, prect, ctype)
-    int			nrects;
-    xRectangle	*prect;
-    int			ctype;
-{
-    pixman_region16_t *	region;
-    pixman_region16_data_t *	pData;
-    pixman_box16_t *	box;
-    int        i;
-    int			x1, y1, x2, y2;
-
-    region = pixman_region_create(NullBox, 0);
-    if (PIXREGION_NAR (region))
-	return region;
-    if (!nrects)
-	return region;
-    if (nrects == 1)
-    {
-	x1 = prect->x;
-	y1 = prect->y;
-	if ((x2 = x1 + (int) prect->width) > SHRT_MAX)
-	    x2 = SHRT_MAX;
-	if ((y2 = y1 + (int) prect->height) > SHRT_MAX)
-	    y2 = SHRT_MAX;
-	if (x1 != x2 && y1 != y2)
-	{
-	    region->extents.x1 = x1;
-	    region->extents.y1 = y1;
-	    region->extents.x2 = x2;
-	    region->extents.y2 = y2;
-	    region->data = (pixman_region16_data_t *)NULL;
-	}
-	return region;
-    }
-    pData = allocData(nrects);
-    if (!pData)
-    {
-	pixman_break (region);
-	return region;
-    }
-    box = (pixman_box16_t *) (pData + 1);
-    for (i = nrects; --i >= 0; prect++)
-    {
-	x1 = prect->x;
-	y1 = prect->y;
-	if ((x2 = x1 + (int) prect->width) > SHRT_MAX)
-	    x2 = SHRT_MAX;
-	if ((y2 = y1 + (int) prect->height) > SHRT_MAX)
-	    y2 = SHRT_MAX;
-	if (x1 != x2 && y1 != y2)
-	{
-	    box->x1 = x1;
-	    box->y1 = y1;
-	    box->x2 = x2;
-	    box->y2 = y2;
-	    box++;
-	}
-    }
-    if (box != (pixman_box16_t *) (pData + 1))
-    {
-	pData->size = nrects;
-	pData->numRects = box - (pixman_box16_t *) (pData + 1);
-    	region->data = pData;
-    	if (ctype != CT_YXBANDED)
-    	{
-	    int overlap;
-	    region->extents.x1 = region->extents.x2 = 0;
-	    pixman_region_validate(region, &overlap);
-    	}
-    	else
-	    pixman_set_extents(region);
-    	good(region);
-    }
-    else
-    {
-	free (pData);
-    }
-    return region;
-}
-*/
 
 /*======================================================================
  * 	    	  Region Subtraction

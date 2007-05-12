@@ -210,12 +210,19 @@ typedef enum
  */
 typedef struct pixman_region16_data	pixman_region16_data_t;
 typedef struct pixman_box16		pixman_box16_t;
+typedef struct pixman_rectangle16	pixman_rectangle16_t;
 typedef struct pixman_region16		pixman_region16_t;
 
 struct pixman_region16_data {
     long		size;
     long		numRects;
 /*  pixman_box16_t	rects[size];   in memory but not explicitly declared */
+};
+
+struct pixman_rectangle16
+{
+    int16_t x, y;
+    uint16_t width, height;
 };
 
 struct pixman_box16
@@ -288,6 +295,7 @@ const pixman_box16_t *  pixman_region_rectangles (pixman_region16_t *region,
 pixman_bool_t		pixman_region_equal (pixman_region16_t *region1,
 					     pixman_region16_t *region2);
 pixman_bool_t		pixman_region_selfcheck (pixman_region16_t *region);
+void			pixman_region_reset(pixman_region16_t *region, pixman_box16_t *box);
 
 /*
  * Images
