@@ -58,7 +58,7 @@ typedef struct pixman_region16_point {
 
 #define PIXREGION_NIL(reg) ((reg)->data && !(reg)->data->numRects)
 /* not a region */
-#define PIXREGION_NAR(reg)	((reg)->data == &pixman_brokendata)
+#define PIXREGION_NAR(reg)	((reg)->data == pixman_brokendata)
 #define PIXREGION_NUM_RECTS(reg) ((reg)->data ? (reg)->data->numRects : 1)
 #define PIXREGION_SIZE(reg) ((reg)->data ? (reg)->data->size : 0)
 #define PIXREGION_RECTS(reg) ((reg)->data ? (pixman_box16_t *)((reg)->data + 1) \
@@ -86,9 +86,31 @@ typedef struct pixman_region16_point {
 #undef MAX
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 
-static pixman_box16_t pixman_region_emptyBox = {0, 0, 0, 0};
-static pixman_region16_data_t pixman_region_emptyData = {0, 0};
-static pixman_region16_data_t  pixman_brokendata = {0, 0};
+static const pixman_box16_t _pixman_region_emptyBox = {0, 0, 0, 0};
+static const pixman_region16_data_t _pixman_region_emptyData = {0, 0};
+static const pixman_region16_data_t _pixman_brokendata = {0, 0};
+
+static pixman_box16_t *pixman_region_emptyBox = (pixman_box16_t *)&_pixman_region_emptyBox;
+static pixman_region16_data_t *pixman_region_emptyData = (pixman_region16_data_t *)&_pixman_region_emptyData;
+static pixman_region16_data_t *pixman_brokendata = (pixman_region16_data_t *)&_pixman_brokendata;
+
+/* This function exists only to make it possible to preserve the X ABI - it should
+ * go away at first opportunity.
+ *
+ * The problem is that the X ABI exports the three structs and has used
+ * them through macros. So the X server calls this function with
+ * the addresses of those structs which makes the existing code continue to
+ * work.
+ */
+void
+pixman_region_set_static_pointers (pixman_box16_t *empty_box,
+				   pixman_region16_data_t *empty_data,
+				   pixman_region16_data_t *broken_data)
+{
+    pixman_region_emptyBox = empty_box;
+    pixman_region_emptyData = empty_data;
+    pixman_brokendata = broken_data;
+}
 
 static pixman_bool_t
 pixman_break (pixman_region16_t *pReg);
@@ -305,8 +327,8 @@ pixman_region16_valid(reg)
 void
 pixman_region_init (pixman_region16_t *region)
 {
-    region->extents = pixman_region_emptyBox;
-    region->data = &pixman_region_emptyData;
+    region->extents = *pixman_region_emptyBox;
+    region->data = pixman_region_emptyData;
 }
 
 void
@@ -360,8 +382,8 @@ static pixman_bool_t
 pixman_break (pixman_region16_t *region)
 {
     freeData (region);
-    region->extents = pixman_region_emptyBox;
-    region->data = &pixman_brokendata;
+    region->extents = *pixman_region_emptyBox;
+    region->data = pixman_brokendata;
     return FALSE;
 }
 
@@ -686,14 +708,14 @@ pixman_op(
 	((newReg == reg2) && (numRects > 1)))
     {
 	oldData = newReg->data;
-	newReg->data = &pixman_region_emptyData;
+	newReg->data = pixman_region_emptyData;
     }
     /* guess at new size */
     if (numRects > newSize)
 	newSize = numRects;
     newSize <<= 1;
     if (!newReg->data)
-	newReg->data = &pixman_region_emptyData;
+	newReg->data = pixman_region_emptyData;
     else if (newReg->data->size)
 	newReg->data->numRects = 0;
     if (newSize > newReg->data->size) {
@@ -833,7 +855,7 @@ pixman_op(
     if (!(numRects = newReg->data->numRects))
     {
 	freeData(newReg);
-	newReg->data = &pixman_region_emptyData;
+	newReg->data = pixman_region_emptyData;
     }
     else if (numRects == 1)
     {
@@ -986,11 +1008,11 @@ pixman_region_intersect (pixman_region16_t * 	newReg,
 	newReg->extents.y2 = newReg->extents.y1;
 	if (PIXREGION_NAR(reg1) || PIXREGION_NAR(reg2))
 	{
-	    newReg->data = &pixman_brokendata;
+	    newReg->data = pixman_brokendata;
 	    return FALSE;
 	}
 	else
-	    newReg->data = &pixman_region_emptyData;
+	    newReg->data = pixman_region_emptyData;
     }
     else if (!reg1->data && !reg2->data)
     {
@@ -1255,7 +1277,7 @@ pixman_region_append (pixman_region16_t * dstrgn,
     if (PIXREGION_NAR(rgn))
 	return pixman_break (dstrgn);
 
-    if (!rgn->data && (dstrgn->data == &pixman_region_emptyData))
+    if (!rgn->data && (dstrgn->data == pixman_region_emptyData))
     {
 	dstrgn->extents = rgn->extents;
 	dstrgn->data = (pixman_region16_data_t *)NULL;
@@ -1867,7 +1889,7 @@ pixman_region_subtract(pixman_region16_t *	regD,
 	freeData(regD);
 	regD->extents.x2 = regD->extents.x1;
 	regD->extents.y2 = regD->extents.y1;
-	regD->data = &pixman_region_emptyData;
+	regD->data = pixman_region_emptyData;
 	return TRUE;
     }
 
@@ -2103,7 +2125,7 @@ pixman_region_translate (pixman_region16_t * region, int x, int y)
 	region->extents.x2 = region->extents.x1;
 	region->extents.y2 = region->extents.y1;
 	freeData(region);
-	region->data = &pixman_region_emptyData;
+	region->data = pixman_region_emptyData;
 	return;
     }
     if (x1 < SHRT_MIN)
@@ -2251,7 +2273,7 @@ pixman_region_empty(pixman_region16_t * region)
     freeData(region);
     region->extents.x2 = region->extents.x1;
     region->extents.y2 = region->extents.y1;
-    region->data = &pixman_region_emptyData;
+    region->data = pixman_region_emptyData;
 }
 
 pixman_box16_t *

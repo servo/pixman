@@ -236,6 +236,13 @@ typedef enum
     PIXMAN_REGION_PART
 } pixman_region_overlap_t;
 
+/* This function exists only to make it possible to preserve the X ABI - it should
+ * go away at first opportunity.
+ */
+void		        pixman_region_set_static_pointers (pixman_box16_t *empty_box,
+							   pixman_region16_data_t *empty_data,
+							   pixman_region16_data_t *broken_data);
+
 /* creation/destruction */
 void                    pixman_region_init              (pixman_region16_t *region);
 void                    pixman_region_init_rect         (pixman_region16_t *region,
