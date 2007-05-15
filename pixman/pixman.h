@@ -69,22 +69,14 @@ SOFTWARE.
 #ifndef PIXMAN_H__
 #define PIXMAN_H__
 
-/* FIXME: bad hack to avoid including config.h in
- * an installed header. This should probably be donw
- * with an installed pixman-config.h header
- */
-#define HAVE_STDINT_H 1
-
 /*
  * Standard integers
  */
-#if   HAVE_STDINT_H
-# include <stdint.h>
-#elif HAVE_INTTYPES_H
-# include <inttypes.h>
-#elif HAVE_SYS_INT_TYPES_H
-# include <sys/int_types.h>
-#elif defined(_MSC_VER)
+#if defined (__SVR4) && defined (__sun)
+#  include <sys/int_types.h>
+#elif defined (__OpenBSSD__)
+#  include <inttypes.h>
+#elif defined (_MSC_VER)
 typedef __int8 int8_t;
 typedef unsigned __int8 uint8_t;
 typedef __int16 int16_t;
@@ -94,7 +86,7 @@ typedef unsigned __int32 uint32_t;
 typedef __int64 int64_t;
 typedef unsigned __int64 uint64_t;
 #else
-# error Cannot find definitions for fixed-width integral types (uint8_t, uint32_t, etc.)
+#  include <stdint.h>
 #endif
 
 /*
