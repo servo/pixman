@@ -42,7 +42,11 @@ if test "x$GCC" = "xyes"; then
   *) CFLAGS="$CFLAGS -Wall" ;;
   esac fi changequote([,])dnl
 
+PKG_CHECK_MODULES(GTK, [gtk+-2.0], [HAVE_GTK=yes], [HAVE_GTK=no])
+AM_CONDITIONAL(HAVE_GTK, [test "x$HAVE_GTK" = xyes])
 
+AC_SUBST(GTK_CFLAGS)
+AC_SUBST(GTK_LIBS)
 AC_SUBST(DEP_CFLAGS)
 AC_SUBST(DEP_LIBS)
 		  
