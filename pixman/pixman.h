@@ -104,7 +104,7 @@ typedef uint32_t		pixman_fixed_1_16_t;
 typedef int32_t			pixman_fixed_16_16_t;
 typedef pixman_fixed_16_16_t	pixman_fixed_t;
 
-#define pixman_fixed_e			((pixman_fixed) 1)
+#define pixman_fixed_e			((pixman_fixed_t) 1)
 #define pixman_fixed_1			(pixman_int_to_fixed(1))
 #define pixman_fixed_1_minus_e		(pixman_fixed_1 - pixman_fixed_e)
 #define pixman_fixed_to_int(f)		((int) ((f) >> 16))
@@ -298,7 +298,7 @@ typedef struct pixman_gradient_stop	pixman_gradient_stop_t;
 
 struct pixman_gradient_stop {
     pixman_fixed_t x;
-    pixman_color_t      color;
+    pixman_color_t color;
 };
 
 #define PIXMAN_MAX_INDEXED  256 /* XXX depth must be <= 8 */
@@ -449,7 +449,7 @@ void            pixman_image_set_component_alpha     (pixman_image_t            
 
 
 /* Composite */
-void            pixman_image_composite               (pixman_op_t                   op,
+void            pixman_image_composite_rect          (pixman_op_t                   op,
 						      pixman_image_t               *src,
 						      pixman_image_t               *mask,
 						      pixman_image_t               *dest,

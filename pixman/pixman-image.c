@@ -77,7 +77,7 @@ static pixman_image_t *
 allocate_image (void)
 {
     pixman_image_t *image = malloc (sizeof (pixman_image_t));
-
+    
     if (image)
     {
 	image_common_t *common = &image->common;
@@ -108,12 +108,12 @@ pixman_image_ref (pixman_image_t *image)
 void
 pixman_image_unref (pixman_image_t *image)
 {
-    image->common.ref_count--;
+    image_common_t *common = (image_common_t *)image;
 
-    if (image->common.ref_count == 0)
+    common->ref_count--;
+
+    if (common->ref_count == 0)
     {
-	image_common_t *common = (image_common_t *)image;
-
 	pixman_region_fini (&common->clip_region);
 
 	if (common->transform)
@@ -125,6 +125,10 @@ pixman_image_unref (pixman_image_t *image)
 	if (common->alpha_map)
 	    pixman_image_unref ((pixman_image_t *)common->alpha_map);
 
+#if 0
+	memset (image, 0xaa, sizeof (pixman_image_t));
+#endif
+	
 	free (image);
     }
 }
@@ -390,18 +394,18 @@ pixman_image_set_component_alpha   (pixman_image_t       *image,
 #define SCANLINE_BUFFER_LENGTH 2048
 
 void
-pixman_image_composite (pixman_op_t	 op,
-			pixman_image_t	*src_img,
-			pixman_image_t	*mask_img,
-			pixman_image_t	*dest_img,
-			int		 src_x,
-			int		 src_y,
-			int		 mask_x,
-			int		 mask_y,
-			int		 dest_x,
-			int		 dest_y,
-			int		 width,
-			int		 height)
+pixman_image_composite_rect (pixman_op_t	 op,
+			     pixman_image_t	*src_img,
+			     pixman_image_t	*mask_img,
+			     pixman_image_t	*dest_img,
+			     int		 src_x,
+			     int		 src_y,
+			     int		 mask_x,
+			     int		 mask_y,
+			     int		 dest_x,
+			     int		 dest_y,
+			     int		 width,
+			     int		 height)
 {
     FbComposeData compose_data;
     uint32_t _scanline_buffer[SCANLINE_BUFFER_LENGTH * 3];

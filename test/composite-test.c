@@ -89,8 +89,8 @@ main (int argc, char **argv)
 					 dest,
 					 10 * 4);
 
-    pixman_image_composite (PIXMAN_OP_OVER, src_img, NULL, dest_img,
-			    0, 0, 0, 0, 0, 0, 10, 10);
+    pixman_image_composite_rect (PIXMAN_OP_OVER, src_img, NULL, dest_img,
+				 0, 0, 0, 0, 0, 0, 10, 10);
 
     for (i = 0; i < 10; ++i)
     {
