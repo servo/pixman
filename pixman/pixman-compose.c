@@ -1175,19 +1175,22 @@ static fetchPixelProc fetchPixelProcForPicture (bits_image_t * pict)
  * All the store functions
  */
 
-typedef FASTCALL void (*storeProc) (uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed);
+typedef FASTCALL void (*storeProc) (pixman_image_t *image,
+				    uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed);
 
 #define Splita(v)	uint32_t	a = ((v) >> 24), r = ((v) >> 16) & 0xff, g = ((v) >> 8) & 0xff, b = (v) & 0xff
 #define Split(v)	uint32_t	r = ((v) >> 16) & 0xff, g = ((v) >> 8) & 0xff, b = (v) & 0xff
 
 static FASTCALL void
-fbStore_a8r8g8b8 (uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+fbStore_a8r8g8b8 (pixman_image_t *image,
+		  uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
 {
     MEMCPY_WRAPPED(((uint32_t *)bits) + x, values, width*sizeof(uint32_t));
 }
 
 static FASTCALL void
-fbStore_x8r8g8b8 (uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+fbStore_x8r8g8b8 (pixman_image_t *image,
+		  uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
 {
     int i;
     uint32_t *pixel = (uint32_t *)bits + x;
@@ -1196,7 +1199,8 @@ fbStore_x8r8g8b8 (uint32_t *bits, const uint32_t *values, int x, int width, pixm
 }
 
 static FASTCALL void
-fbStore_a8b8g8r8 (uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+fbStore_a8b8g8r8 (pixman_image_t *image,
+		  uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
 {
     int i;
     uint32_t *pixel = (uint32_t *)bits + x;
@@ -1205,7 +1209,8 @@ fbStore_a8b8g8r8 (uint32_t *bits, const uint32_t *values, int x, int width, pixm
 }
 
 static FASTCALL void
-fbStore_x8b8g8r8 (uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+fbStore_x8b8g8r8 (pixman_image_t *image,
+		  uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
 {
     int i;
     uint32_t *pixel = (uint32_t *)bits + x;
@@ -1214,7 +1219,8 @@ fbStore_x8b8g8r8 (uint32_t *bits, const uint32_t *values, int x, int width, pixm
 }
 
 static FASTCALL void
-fbStore_r8g8b8 (uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+fbStore_r8g8b8 (pixman_image_t *image,
+		uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
 {
     int i;
     uint8_t *pixel = ((uint8_t *) bits) + 3*x;
@@ -1225,7 +1231,8 @@ fbStore_r8g8b8 (uint32_t *bits, const uint32_t *values, int x, int width, pixman
 }
 
 static FASTCALL void
-fbStore_b8g8r8 (uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+fbStore_b8g8r8 (pixman_image_t *image,
+		uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
 {
     int i;
     uint8_t *pixel = ((uint8_t *) bits) + 3*x;
@@ -1244,7 +1251,8 @@ fbStore_b8g8r8 (uint32_t *bits, const uint32_t *values, int x, int width, pixman
 }
 
 static FASTCALL void
-fbStore_r5g6b5 (uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+fbStore_r5g6b5 (pixman_image_t *image,
+		uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
 {
     int i;
     uint16_t *pixel = ((uint16_t *) bits) + x;
@@ -1257,7 +1265,8 @@ fbStore_r5g6b5 (uint32_t *bits, const uint32_t *values, int x, int width, pixman
 }
 
 static FASTCALL void
-fbStore_b5g6r5 (uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+fbStore_b5g6r5 (pixman_image_t *image,
+		uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
 {
     int i;
     uint16_t  *pixel = ((uint16_t *) bits) + x;
@@ -1270,7 +1279,8 @@ fbStore_b5g6r5 (uint32_t *bits, const uint32_t *values, int x, int width, pixman
 }
 
 static FASTCALL void
-fbStore_a1r5g5b5 (uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+fbStore_a1r5g5b5 (pixman_image_t *image,
+		  uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
 {
     int i;
     uint16_t  *pixel = ((uint16_t *) bits) + x;
@@ -1284,7 +1294,8 @@ fbStore_a1r5g5b5 (uint32_t *bits, const uint32_t *values, int x, int width, pixm
 }
 
 static FASTCALL void
-fbStore_x1r5g5b5 (uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+fbStore_x1r5g5b5 (pixman_image_t *image,
+		  uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
 {
     int i;
     uint16_t  *pixel = ((uint16_t *) bits) + x;
@@ -1297,7 +1308,8 @@ fbStore_x1r5g5b5 (uint32_t *bits, const uint32_t *values, int x, int width, pixm
 }
 
 static FASTCALL void
-fbStore_a1b5g5r5 (uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+fbStore_a1b5g5r5 (pixman_image_t *image,
+		  uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
 {
     int i;
     uint16_t  *pixel = ((uint16_t *) bits) + x;
@@ -1311,7 +1323,8 @@ fbStore_a1b5g5r5 (uint32_t *bits, const uint32_t *values, int x, int width, pixm
 }
 
 static FASTCALL void
-fbStore_x1b5g5r5 (uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+fbStore_x1b5g5r5 (pixman_image_t *image,
+		  uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
 {
     int i;
     uint16_t  *pixel = ((uint16_t *) bits) + x;
@@ -1324,7 +1337,8 @@ fbStore_x1b5g5r5 (uint32_t *bits, const uint32_t *values, int x, int width, pixm
 }
 
 static FASTCALL void
-fbStore_a4r4g4b4 (uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+fbStore_a4r4g4b4 (pixman_image_t *image,
+		  uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
 {
     int i;
     uint16_t  *pixel = ((uint16_t *) bits) + x;
@@ -1338,7 +1352,8 @@ fbStore_a4r4g4b4 (uint32_t *bits, const uint32_t *values, int x, int width, pixm
 }
 
 static FASTCALL void
-fbStore_x4r4g4b4 (uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+fbStore_x4r4g4b4 (pixman_image_t *image,
+		  uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
 {
     int i;
     uint16_t  *pixel = ((uint16_t *) bits) + x;
@@ -1351,7 +1366,8 @@ fbStore_x4r4g4b4 (uint32_t *bits, const uint32_t *values, int x, int width, pixm
 }
 
 static FASTCALL void
-fbStore_a4b4g4r4 (uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+fbStore_a4b4g4r4 (pixman_image_t *image,
+		  uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
 {
     int i;
     uint16_t  *pixel = ((uint16_t *) bits) + x;
@@ -1365,7 +1381,8 @@ fbStore_a4b4g4r4 (uint32_t *bits, const uint32_t *values, int x, int width, pixm
 }
 
 static FASTCALL void
-fbStore_x4b4g4r4 (uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+fbStore_x4b4g4r4 (pixman_image_t *image,
+		  uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
 {
     int i;
     uint16_t  *pixel = ((uint16_t *) bits) + x;
@@ -1378,7 +1395,8 @@ fbStore_x4b4g4r4 (uint32_t *bits, const uint32_t *values, int x, int width, pixm
 }
 
 static FASTCALL void
-fbStore_a8 (uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+fbStore_a8 (pixman_image_t *image,
+	    uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
 {
     int i;
     uint8_t   *pixel = ((uint8_t *) bits) + x;
@@ -1388,7 +1406,8 @@ fbStore_a8 (uint32_t *bits, const uint32_t *values, int x, int width, pixman_ind
 }
 
 static FASTCALL void
-fbStore_r3g3b2 (uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+fbStore_r3g3b2 (pixman_image_t *image,
+		uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
 {
     int i;
     uint8_t   *pixel = ((uint8_t *) bits) + x;
@@ -1401,7 +1420,8 @@ fbStore_r3g3b2 (uint32_t *bits, const uint32_t *values, int x, int width, pixman
 }
 
 static FASTCALL void
-fbStore_b2g3r3 (uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+fbStore_b2g3r3 (pixman_image_t *image,
+		uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
 {
     int i;
     uint8_t   *pixel = ((uint8_t *) bits) + x;
@@ -1414,7 +1434,8 @@ fbStore_b2g3r3 (uint32_t *bits, const uint32_t *values, int x, int width, pixman
 }
 
 static FASTCALL void
-fbStore_a2r2g2b2 (uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+fbStore_a2r2g2b2 (pixman_image_t *image,
+		  uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
 {
     int i;
     uint8_t   *pixel = ((uint8_t *) bits) + x;
@@ -1428,7 +1449,8 @@ fbStore_a2r2g2b2 (uint32_t *bits, const uint32_t *values, int x, int width, pixm
 }
 
 static FASTCALL void
-fbStore_c8 (uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+fbStore_c8 (pixman_image_t *image,
+	    uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
 {
     int i;
     uint8_t   *pixel = ((uint8_t *) bits) + x;
@@ -1438,7 +1460,8 @@ fbStore_c8 (uint32_t *bits, const uint32_t *values, int x, int width, pixman_ind
 }
 
 static FASTCALL void
-fbStore_x4a4 (uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+fbStore_x4a4 (pixman_image_t *image,
+	      uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
 {
     int i;
     uint8_t   *pixel = ((uint8_t *) bits) + x;
@@ -1459,7 +1482,8 @@ fbStore_x4a4 (uint32_t *bits, const uint32_t *values, int x, int width, pixman_i
 #endif
 
 static FASTCALL void
-fbStore_a4 (uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+fbStore_a4 (pixman_image_t *image,
+	    uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
 {
     int i;
     for (i = 0; i < width; ++i) {
@@ -1468,7 +1492,8 @@ fbStore_a4 (uint32_t *bits, const uint32_t *values, int x, int width, pixman_ind
 }
 
 static FASTCALL void
-fbStore_r1g2b1 (uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+fbStore_r1g2b1 (pixman_image_t *image,
+		uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
 {
     int i;
     for (i = 0; i < width; ++i) {
@@ -1483,7 +1508,8 @@ fbStore_r1g2b1 (uint32_t *bits, const uint32_t *values, int x, int width, pixman
 }
 
 static FASTCALL void
-fbStore_b1g2r1 (uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+fbStore_b1g2r1 (pixman_image_t *image,
+		uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
 {
     int i;
     for (i = 0; i < width; ++i) {
@@ -1498,7 +1524,8 @@ fbStore_b1g2r1 (uint32_t *bits, const uint32_t *values, int x, int width, pixman
 }
 
 static FASTCALL void
-fbStore_a1r1g1b1 (uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+fbStore_a1r1g1b1 (pixman_image_t *image,
+		  uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
 {
     int i;
     for (i = 0; i < width; ++i) {
@@ -1513,7 +1540,8 @@ fbStore_a1r1g1b1 (uint32_t *bits, const uint32_t *values, int x, int width, pixm
 }
 
 static FASTCALL void
-fbStore_a1b1g1r1 (uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+fbStore_a1b1g1r1 (pixman_image_t *image,
+		  uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
 {
     int i;
     for (i = 0; i < width; ++i) {
@@ -1528,7 +1556,8 @@ fbStore_a1b1g1r1 (uint32_t *bits, const uint32_t *values, int x, int width, pixm
 }
 
 static FASTCALL void
-fbStore_c4 (uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+fbStore_c4 (pixman_image_t *image,
+	    uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
 {
     int i;
     for (i = 0; i < width; ++i) {
@@ -1558,7 +1587,8 @@ fbStore_c4 (uint32_t *bits, const uint32_t *values, int x, int width, pixman_ind
 			 FbStipLeft(FB_STIP_ALLONES,(FB_STIP_UNIT - ((x)+(w))) & FB_STIP_MASK))
 
 static FASTCALL void
-fbStore_a1 (uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+fbStore_a1 (pixman_image_t *image,
+	    uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
 {
     int i;
     for (i = 0; i < width; ++i) {
@@ -1571,7 +1601,8 @@ fbStore_a1 (uint32_t *bits, const uint32_t *values, int x, int width, pixman_ind
 }
 
 static FASTCALL void
-fbStore_g1 (uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+fbStore_g1 (pixman_image_t *image,
+	    uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
 {
     int i;
     for (i = 0; i < width; ++i) {
@@ -4094,7 +4125,7 @@ static void fbStore(bits_image_t * pict, int x, int y, int width, uint32_t *buff
     bits = pict->bits;
     stride = pict->rowstride;
     bits += y*stride;
-    store(bits, buffer, x, width, indexed);
+    store((pixman_image_t *)pict, bits, buffer, x, width, indexed);
     fbFinishAccess (pict->pDrawable);
 }
 
@@ -4130,8 +4161,9 @@ static void fbStoreExternalAlpha(bits_image_t * pict, int x, int y, int width, u
     alpha_bits += (ay - pict->common.alpha_origin.y)*astride;
     
     
-    store(bits, buffer, x, width, indexed);
-    astore(alpha_bits, buffer, ax - pict->common.alpha_origin.x, width, aindexed);
+    store((pixman_image_t *)pict, bits, buffer, x, width, indexed);
+    astore((pixman_image_t *)pict->common.alpha_map,
+	   alpha_bits, buffer, ax - pict->common.alpha_origin.x, width, aindexed);
     
     fbFinishAccess (pict->alpha_map->pDrawable);
     fbFinishAccess (pict->pDrawable);
