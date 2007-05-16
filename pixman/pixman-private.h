@@ -500,3 +500,82 @@ typedef struct _Picture {
 } PictureRec;
 #endif
 
+
+/* FIXME: the (void)__read_func hides lots of warnings (which is what they
+ * are supposed to do), but some of them are real. For example the one
+ * where Fetch4 doesn't have a READ
+ */
+
+/* Framebuffer access support macros */
+#define ACCESS_MEM(code)						\
+    do {								\
+	const image_common_t *const __com =				\
+	    (image_common_t *)image;					\
+									\
+	if (__com->read_func || __com->write_func)			\
+	{								\
+	    const int __do_access = 1;					\
+	    const pixman_read_memory_func_t __read_func =		\
+		__com->read_func;					\
+	    const pixman_write_memory_func_t __write_func =		\
+		__com->write_func;					\
+	    (void)__read_func;						\
+	    (void)__write_func;						\
+	    (void)__do_access;						\
+	    								\
+	    {code}							\
+	}								\
+	else								\
+	{								\
+	    const int __do_access = 0;					\
+	    const pixman_read_memory_func_t __read_func = NULL;		\
+	    const pixman_write_memory_func_t __write_func = NULL;	\
+	    (void)__read_func;						\
+	    (void)__write_func;						\
+	    (void)__do_access;						\
+									\
+	    {code}							\
+	}								\
+    } while (0)
+
+#define READ(ptr)							\
+    (__do_access? __read_func ((ptr), sizeof(*(ptr))) : (*(ptr)))
+
+#define WRITE(ptr, val)							\
+    (__do_access?							\
+     __write_func ((ptr), (val), sizeof(*(ptr)))			\
+     : ((void)(*(ptr) = (val))))
+
+#define MEMCPY_WRAPPED(dst, src, size)					\
+    do	{								\
+	if (__do_access)						\
+	{								\
+	    size_t _i;							\
+	    uint8_t *_dst = (uint8_t*)(dst), *_src = (uint8_t*)(src);	\
+	    for(_i = 0; _i < size; _i++) {				\
+		WRITE(_dst +_i, READ(_src + _i));			\
+	    }								\
+	}								\
+	else								\
+	{								\
+	    memcpy((dst), (src), (size));				\
+	}								\
+    } while (0)
+	
+#define MEMSET_WRAPPED(dst, val, size)					\
+    do {								\
+	if (__do_access)						\
+	{								\
+	    size_t _i;							\
+	    uint8_t *_dst = (uint8_t*)(dst);				\
+	    for(_i = 0; _i < size; _i++) {				\
+		WRITE(_dst +_i, (val));					\
+	    }								\
+	}								\
+	else								\
+	{								\
+	    memset ((dst), (val), (size));				\
+	}								\
+    } while (0)
+
+#define fbFinishAccess(x) 
