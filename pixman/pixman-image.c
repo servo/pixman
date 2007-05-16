@@ -91,6 +91,8 @@ allocate_image (void)
 	common->alpha_map = NULL;
 	common->component_alpha = FALSE;
 	common->ref_count = 1;
+	common->read_func = NULL;
+	common->write_func = NULL;
     }
 
     return image;
@@ -392,6 +394,17 @@ pixman_image_set_component_alpha   (pixman_image_t       *image,
 
 
 #define SCANLINE_BUFFER_LENGTH 2048
+
+void
+pixman_image_set_accessors (pixman_image_t             *image,
+			    pixman_read_memory_func_t	read_func,
+			    pixman_write_memory_func_t	write_func)
+{
+    return_if_fail (image != NULL);
+
+    image->common.read_func = read_func;
+    image->common.write_func = write_func;
+}
 
 void
 pixman_image_composite_rect (pixman_op_t	 op,

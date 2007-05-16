@@ -113,17 +113,19 @@ struct point
 
 struct image_common
 {
-    image_type_t	type;
-    int32_t		ref_count;
-    pixman_region16_t   clip_region;
-    pixman_transform_t *transform;
-    pixman_repeat_t	repeat;
-    pixman_filter_t	filter;
-    pixman_fixed_t     *filter_params;
-    int			n_filter_params;
-    bits_image_t       *alpha_map;
-    point_t		alpha_origin;
-    pixman_bool_t	component_alpha;
+    image_type_t		type;
+    int32_t			ref_count;
+    pixman_region16_t		clip_region;
+    pixman_transform_t	       *transform;
+    pixman_repeat_t		repeat;
+    pixman_filter_t		filter;
+    pixman_fixed_t	       *filter_params;
+    int				n_filter_params;
+    bits_image_t	       *alpha_map;
+    point_t			alpha_origin;
+    pixman_bool_t		component_alpha;
+    pixman_read_memory_func_t	read_func;
+    pixman_write_memory_func_t	write_func;
 };
 
 struct source_image

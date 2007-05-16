@@ -296,6 +296,9 @@ typedef  union pixman_image		pixman_image_t;
 typedef struct pixman_indexed		pixman_indexed_t;
 typedef struct pixman_gradient_stop	pixman_gradient_stop_t;
 
+typedef uint32_t (* pixman_read_memory_func_t) (const void *src, int size);
+typedef void     (* pixman_write_memory_func_t) (void *dst, uint32_t value, int size);
+
 struct pixman_gradient_stop {
     pixman_fixed_t x;
     pixman_color_t color;
@@ -446,7 +449,9 @@ void            pixman_image_set_alpha_map           (pixman_image_t            
 						      int16_t                       y);
 void            pixman_image_set_component_alpha     (pixman_image_t               *image,
 						      pixman_bool_t                 component_alpha);
-
+void		pixman_image_set_accessors	     (pixman_image_t		   *image,
+						      pixman_read_memory_func_t	    read_func,
+						      pixman_write_memory_func_t    write_func);
 
 /* Composite */
 void            pixman_image_composite_rect          (pixman_op_t                   op,
@@ -461,11 +466,5 @@ void            pixman_image_composite_rect          (pixman_op_t               
 						      int                           dest_y,
 						      int                           width,
 						      int                           height);
-
-
-
-
-
-
 
 #endif /* PIXMAN_H__ */
