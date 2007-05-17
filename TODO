@@ -1,0 +1,18 @@
+  - Remove the warning suppression in the ACCESS_MEM macro and fix the
+    warnings that are real
+
+  - It probably makes sense to move the more strange X region API
+    into pixman as well, but guarded with PIXMAN_XORG_COMPATIBILITY
+
+  - Go through things marked FIXME
+
+  - Reinstate the FbBits conditional typedef? At the moment we don't
+    even have the FbBits type; we just use uint32_t everywhere.
+
+    Keith says in bug 2335:
+
+        The 64-bit code in fb (pixman) is probably broken; it hasn't been
+        used in quite some time as PCI (and AGP) is 32-bits wide, so
+        doing things 64-bits at a time is a net loss.  To quickly fix
+        this, I suggest just using 32-bit datatypes by setting
+        IC_SHIFT to 5 for all machines.
