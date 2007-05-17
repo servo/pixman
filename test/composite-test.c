@@ -76,7 +76,7 @@ reader (const void *src, int size)
     case 2:
 	return *(uint16_t *)src;
     case 4:
-	return *(uint16_t *)src;
+	return *(uint32_t *)src;
     default:
 	g_assert_not_reached();
     }
