@@ -127,6 +127,9 @@ pixman_image_unref (pixman_image_t *image)
 	if (common->alpha_map)
 	    pixman_image_unref ((pixman_image_t *)common->alpha_map);
 
+	if (image->type == BITS && image->bits.indexed)
+	    free (image->bits.indexed);
+	
 #if 0
 	memset (image, 0xaa, sizeof (pixman_image_t));
 #endif

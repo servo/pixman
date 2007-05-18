@@ -16,3 +16,5 @@
         doing things 64-bits at a time is a net loss.  To quickly fix
         this, I suggest just using 32-bit datatypes by setting
         IC_SHIFT to 5 for all machines.
+
+  - Test if pseudo color still works
