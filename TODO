@@ -6,6 +6,36 @@
 
   - Go through things marked FIXME
 
+  - Test if pseudo color still works. It does, but it also shows that
+    copying a pixman_indexed_t on every composite operation is not
+    going to fly. So, for now set_indexed() does not copy the 
+    indexed table. 
+
+    Also just the malloc() to allocate a pixman image shows up pretty
+    high.
+
+    Options include
+
+      - Make all the setters not copy their arguments
+
+      - Possibly combined with going back to the stack allocated 
+        approach that we already use for regions.
+
+      - Keep a cached pixman_image_t around for every picture. It would
+        have to be kept uptodate every time something changes about the
+        picture.
+
+      - Break the X server ABI and simply have the releveant parameter
+        stored in the pixman image. This would have the additional benefits
+        that:
+
+          - We can get rid of the annoying repeat field which is duplicated
+            elsewhere.
+
+          - We can use pixman_color_t and pixman_gradient_stop_t
+            etc. instead of the types that are defined in
+            renderproto.h
+
   - Reinstate the FbBits conditional typedef? At the moment we don't
     even have the FbBits type; we just use uint32_t everywhere.
 
@@ -16,5 +46,3 @@
         doing things 64-bits at a time is a net loss.  To quickly fix
         this, I suggest just using 32-bit datatypes by setting
         IC_SHIFT to 5 for all machines.
-
-  - Test if pseudo color still works

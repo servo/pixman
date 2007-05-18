@@ -127,8 +127,10 @@ pixman_image_unref (pixman_image_t *image)
 	if (common->alpha_map)
 	    pixman_image_unref ((pixman_image_t *)common->alpha_map);
 
+#if 0
 	if (image->type == BITS && image->bits.indexed)
 	    free (image->bits.indexed);
+#endif
 	
 #if 0
 	memset (image, 0xaa, sizeof (pixman_image_t));
@@ -267,7 +269,9 @@ pixman_image_create_bits (pixman_format_code_t  format,
 {
     pixman_image_t *image;
 
-    return_val_if_fail ((rowstride & 0x3) == 0, NULL); /* must be a multiple of 4 */
+    return_val_if_fail ((rowstride & 0x3) == 0, NULL); /* must be a
+							* multiple of 4
+							*/
 
     image = allocate_image();
 
@@ -279,7 +283,9 @@ pixman_image_create_bits (pixman_format_code_t  format,
     image->bits.width = width;
     image->bits.height = height;
     image->bits.bits = bits;
-    image->bits.rowstride = rowstride / 4; /* we store it in number of uint32_t's */
+    image->bits.rowstride = rowstride / 4; /* we store it in number
+					    * of uint32_t's
+					    */
     image->bits.indexed = NULL;
 
     return image;
@@ -363,24 +369,17 @@ pixman_image_set_filter (pixman_image_t       *image,
     common->n_filter_params = n_params;
 }
 
+/* Unlike all the other property setters, this function does not
+ * copy the content of indexed. Doing this copying is simply
+ * way, way too expensive.
+ */
 void
 pixman_image_set_indexed (pixman_image_t	 *image,
 			  const pixman_indexed_t *indexed)
 {
     bits_image_t *bits = (bits_image_t *)image;
 
-    if (bits->indexed == indexed)
-	return;
-
-    if (bits->indexed)
-	free (bits->indexed);
-    
-    bits->indexed = malloc (sizeof (pixman_indexed_t));
-
-    if (!bits->indexed)
-	return;
-
-    memcpy (bits->indexed, indexed, sizeof (pixman_indexed_t));
+    bits->indexed = indexed;
 }
 
 void
