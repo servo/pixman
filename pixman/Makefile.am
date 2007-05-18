@@ -8,6 +8,7 @@ libpixman_la_SOURCES =    \
 	 pixman-private.h \
 	 pixman-image.c   \
 	 pixman-compose.c \
+	 pixman-pict.c	  \
 	 pixman-utils.c
 
 libpixmanincludedir = $(includedir)/pixman

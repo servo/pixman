@@ -429,25 +429,25 @@ pixman_image_set_accessors (pixman_image_t             *image,
 }
 
 void
-pixman_image_composite_rect (pixman_op_t	 op,
-			     pixman_image_t	*src_img,
-			     pixman_image_t	*mask_img,
-			     pixman_image_t	*dest_img,
-			     int		 src_x,
-			     int		 src_y,
-			     int		 mask_x,
-			     int		 mask_y,
-			     int		 dest_x,
-			     int		 dest_y,
-			     int		 width,
-			     int		 height)
+pixman_image_composite_rect  (pixman_op_t                   op,
+			      pixman_image_t               *src,
+			      pixman_image_t               *mask,
+			      pixman_image_t               *dest,
+			      int16_t                       src_x,
+			      int16_t                       src_y,
+			      int16_t                       mask_x,
+			      int16_t                       mask_y,
+			      int16_t                       dest_x,
+			      int16_t                       dest_y,
+			      uint16_t                      width,
+			      uint16_t                      height)
 {
     FbComposeData compose_data;
     uint32_t _scanline_buffer[SCANLINE_BUFFER_LENGTH * 3];
     uint32_t *scanline_buffer = _scanline_buffer;
 
-    return_if_fail (src_img != NULL);
-    return_if_fail (dest_img != NULL);
+    return_if_fail (src != NULL);
+    return_if_fail (dest != NULL);
     
     if (width > SCANLINE_BUFFER_LENGTH)
     {
@@ -458,9 +458,9 @@ pixman_image_composite_rect (pixman_op_t	 op,
     }
     
     compose_data.op = op;
-    compose_data.src = src_img;
-    compose_data.mask = mask_img;
-    compose_data.dest = dest_img;
+    compose_data.src = src;
+    compose_data.mask = mask;
+    compose_data.dest = dest;
     compose_data.xSrc = src_x;
     compose_data.ySrc = src_y;
     compose_data.xMask = mask_x;

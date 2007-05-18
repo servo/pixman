@@ -337,6 +337,10 @@ struct pixman_indexed
 #define PIXMAN_FORMAT_B(f)	(((f)      ) & 0x0f)
 #define PIXMAN_FORMAT_RGB(f)	(((f)      ) & 0xfff)
 #define PIXMAN_FORMAT_VIS(f)	(((f)      ) & 0xffff)
+#define PIXMAN_FORMAT_DEPTH(f)	(PIXMAN_FORMAT_A(f) +	\
+				 PIXMAN_FORMAT_R(f) +	\
+				 PIXMAN_FORMAT_G(f) +	\
+				 PIXMAN_FORMAT_B(f))
 
 #define PIXMAN_TYPE_OTHER	0
 #define PIXMAN_TYPE_A	1
@@ -460,13 +464,13 @@ void            pixman_image_composite_rect          (pixman_op_t               
 						      pixman_image_t               *src,
 						      pixman_image_t               *mask,
 						      pixman_image_t               *dest,
-						      int                           src_x,
-						      int                           src_y,
-						      int                           mask_x,
-						      int                           mask_y,
-						      int                           dest_x,
-						      int                           dest_y,
-						      int                           width,
-						      int                           height);
+						      int16_t                       src_x,
+						      int16_t                       src_y,
+						      int16_t                       mask_x,
+						      int16_t                       mask_y,
+						      int16_t                       dest_x,
+						      int16_t                       dest_y,
+						      uint16_t                      width,
+						      uint16_t                      height);
 
 #endif /* PIXMAN_H__ */
