@@ -452,6 +452,8 @@ void            pixman_image_set_component_alpha     (pixman_image_t            
 void		pixman_image_set_accessors	     (pixman_image_t		   *image,
 						      pixman_read_memory_func_t	    read_func,
 						      pixman_write_memory_func_t    write_func);
+void		pixman_image_set_indexed	     (pixman_image_t		   *image,
+						      const pixman_indexed_t	   *indexed);
 
 /* Composite */
 void            pixman_image_composite_rect          (pixman_op_t                   op,

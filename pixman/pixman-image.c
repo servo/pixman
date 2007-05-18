@@ -361,6 +361,26 @@ pixman_image_set_filter (pixman_image_t       *image,
 }
 
 void
+pixman_image_set_indexed (pixman_image_t	 *image,
+			  const pixman_indexed_t *indexed)
+{
+    bits_image_t *bits = (bits_image_t *)image;
+
+    if (bits->indexed == indexed)
+	return;
+
+    if (bits->indexed)
+	free (bits->indexed);
+    
+    bits->indexed = malloc (sizeof (pixman_indexed_t));
+
+    if (!bits->indexed)
+	return;
+
+    memcpy (bits->indexed, indexed, sizeof (pixman_indexed_t));
+}
+
+void
 pixman_image_set_alpha_map (pixman_image_t *image,
 			    pixman_image_t *alpha_map,
 			    int16_t         x,
