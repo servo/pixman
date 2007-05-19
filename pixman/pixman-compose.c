@@ -117,7 +117,7 @@ typedef FASTCALL void (*fetchProc)(pixman_image_t *image,
 				   const uint32_t *bits,
 				   int x, int width,
 				   uint32_t *buffer,
-				   pixman_indexed_t * indexed);
+				   const pixman_indexed_t * indexed);
 
 /*
  * All of the fetch functions
@@ -125,7 +125,7 @@ typedef FASTCALL void (*fetchProc)(pixman_image_t *image,
 
 static FASTCALL void
 fbFetch_a8r8g8b8 (pixman_image_t *image,
-		  const uint32_t *bits, int x, int width, uint32_t *buffer, pixman_indexed_t * indexed)
+		  const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	MEMCPY_WRAPPED(buffer, (const uint32_t *)bits + x,
@@ -135,7 +135,7 @@ fbFetch_a8r8g8b8 (pixman_image_t *image,
 
 static FASTCALL void
 fbFetch_x8r8g8b8 (pixman_image_t *image,
-		  const uint32_t *bits, int x, int width, uint32_t *buffer, pixman_indexed_t * indexed)
+		  const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
 {
     const uint32_t *pixel = (const uint32_t *)bits + x;
     const uint32_t *end = pixel + width;
@@ -147,7 +147,7 @@ fbFetch_x8r8g8b8 (pixman_image_t *image,
 
 static FASTCALL void
 fbFetch_a8b8g8r8 (pixman_image_t *image,
-		  const uint32_t *bits, int x, int width, uint32_t *buffer, pixman_indexed_t * indexed)
+		  const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
 {
     const uint32_t *pixel = (uint32_t *)bits + x;
     const uint32_t *end = pixel + width;
@@ -162,7 +162,7 @@ fbFetch_a8b8g8r8 (pixman_image_t *image,
 
 static FASTCALL void
 fbFetch_x8b8g8r8 (pixman_image_t *image,
-		  const uint32_t *bits, int x, int width, uint32_t *buffer, pixman_indexed_t * indexed)
+		  const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
 {
     const uint32_t *pixel = (uint32_t *)bits + x;
     const uint32_t *end = pixel + width;
@@ -178,7 +178,7 @@ fbFetch_x8b8g8r8 (pixman_image_t *image,
 
 static FASTCALL void
 fbFetch_r8g8b8 (pixman_image_t *image,
-		const uint32_t *bits, int x, int width, uint32_t *buffer, pixman_indexed_t * indexed)
+		const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
 {
     const uint8_t *pixel = (const uint8_t *)bits + 3*x;
     const uint8_t *end = pixel + 3*width;
@@ -192,7 +192,7 @@ fbFetch_r8g8b8 (pixman_image_t *image,
 
 static FASTCALL void
 fbFetch_b8g8r8 (pixman_image_t *image,
-		const uint32_t *bits, int x, int width, uint32_t *buffer, pixman_indexed_t * indexed)
+		const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
 {
     const uint8_t *pixel = (const uint8_t *)bits + 3*x;
     const uint8_t *end = pixel + 3*width;
@@ -215,7 +215,7 @@ fbFetch_b8g8r8 (pixman_image_t *image,
 static FASTCALL void
 fbFetch_r5g6b5 (pixman_image_t *image,
 		const uint32_t *bits, int x, int width, uint32_t *buffer,
-		pixman_indexed_t * indexed)
+		const pixman_indexed_t * indexed)
 {
     const uint16_t *pixel = (const uint16_t *)bits + x;
     const uint16_t *end = pixel + width;
@@ -234,7 +234,7 @@ fbFetch_r5g6b5 (pixman_image_t *image,
 static FASTCALL void
 fbFetch_b5g6r5 (pixman_image_t *image,
 		const uint32_t *bits, int x, int width, uint32_t *buffer,
-		pixman_indexed_t * indexed)
+		const pixman_indexed_t * indexed)
 {
     uint32_t  r,g,b;
     
@@ -252,7 +252,7 @@ fbFetch_b5g6r5 (pixman_image_t *image,
 
 static FASTCALL void
 fbFetch_a1r5g5b5 (pixman_image_t *image,
-		  const uint32_t *bits, int x, int width, uint32_t *buffer, pixman_indexed_t * indexed)
+		  const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
 {
     uint32_t  r,g,b, a;
     
@@ -272,7 +272,7 @@ fbFetch_a1r5g5b5 (pixman_image_t *image,
 
 static FASTCALL void
 fbFetch_x1r5g5b5 (pixman_image_t *image,
-		  const uint32_t *bits, int x, int width, uint32_t *buffer, pixman_indexed_t * indexed)
+		  const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
 {
     uint32_t  r,g,b;
     
@@ -291,7 +291,7 @@ fbFetch_x1r5g5b5 (pixman_image_t *image,
 
 static FASTCALL void
 fbFetch_a1b5g5r5 (pixman_image_t *image,
-		  const uint32_t *bits, int x, int width, uint32_t *buffer, pixman_indexed_t * indexed)
+		  const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
 {
     uint32_t  r,g,b, a;
     
@@ -311,7 +311,7 @@ fbFetch_a1b5g5r5 (pixman_image_t *image,
 
 static FASTCALL void
 fbFetch_x1b5g5r5 (pixman_image_t *image,
-		  const uint32_t *bits, int x, int width, uint32_t *buffer, pixman_indexed_t * indexed)
+		  const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
 {
     uint32_t  r,g,b;
     
@@ -330,7 +330,7 @@ fbFetch_x1b5g5r5 (pixman_image_t *image,
 
 static FASTCALL void
 fbFetch_a4r4g4b4 (pixman_image_t *image,
-		  const uint32_t *bits, int x, int width, uint32_t *buffer, pixman_indexed_t * indexed)
+		  const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
 {
     uint32_t  r,g,b, a;
     ACCESS_MEM (
@@ -349,7 +349,7 @@ fbFetch_a4r4g4b4 (pixman_image_t *image,
 
 static FASTCALL void
 fbFetch_x4r4g4b4 (pixman_image_t *image,
-		  const uint32_t *bits, int x, int width, uint32_t *buffer, pixman_indexed_t * indexed)
+		  const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
 {
     uint32_t  r,g,b;
     
@@ -368,7 +368,7 @@ fbFetch_x4r4g4b4 (pixman_image_t *image,
 
 static FASTCALL void
 fbFetch_a4b4g4r4 (pixman_image_t *image,
-		  const uint32_t *bits, int x, int width, uint32_t *buffer, pixman_indexed_t * indexed)
+		  const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
 {
     uint32_t  r,g,b, a;
     
@@ -388,7 +388,7 @@ fbFetch_a4b4g4r4 (pixman_image_t *image,
 
 static FASTCALL void
 fbFetch_x4b4g4r4 (pixman_image_t *image,
-		  const uint32_t *bits, int x, int width, uint32_t *buffer, pixman_indexed_t * indexed)
+		  const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
 {
     uint32_t  r,g,b;
     
@@ -407,7 +407,7 @@ fbFetch_x4b4g4r4 (pixman_image_t *image,
 
 static FASTCALL void
 fbFetch_a8 (pixman_image_t *image,
-	    const uint32_t *bits, int x, int width, uint32_t *buffer, pixman_indexed_t * indexed)
+	    const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	const uint8_t *pixel = (const uint8_t *)bits + x;
@@ -419,7 +419,7 @@ fbFetch_a8 (pixman_image_t *image,
 
 static FASTCALL void
 fbFetch_r3g3b2 (pixman_image_t *image,
-		const uint32_t *bits, int x, int width, uint32_t *buffer, pixman_indexed_t * indexed)
+		const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
 {
     uint32_t  r,g,b;
     
@@ -441,7 +441,7 @@ fbFetch_r3g3b2 (pixman_image_t *image,
 
 static FASTCALL void
 fbFetch_b2g3r3 (pixman_image_t *image,
-		const uint32_t *bits, int x, int width, uint32_t *buffer, pixman_indexed_t * indexed)
+		const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
 {
     uint32_t  r,g,b;
     
@@ -465,7 +465,7 @@ fbFetch_b2g3r3 (pixman_image_t *image,
 
 static FASTCALL void
 fbFetch_a2r2g2b2 (pixman_image_t *image,
-		  const uint32_t *bits, int x, int width, uint32_t *buffer, pixman_indexed_t * indexed)
+		  const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
 {
     uint32_t   a,r,g,b;
     ACCESS_MEM (
@@ -484,7 +484,7 @@ fbFetch_a2r2g2b2 (pixman_image_t *image,
 
 static FASTCALL void
 fbFetch_a2b2g2r2 (pixman_image_t *image,
-		  const uint32_t *bits, int x, int width, uint32_t *buffer, pixman_indexed_t * indexed)
+		  const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
 {
     uint32_t   a,r,g,b;
     ACCESS_MEM (
@@ -503,7 +503,7 @@ fbFetch_a2b2g2r2 (pixman_image_t *image,
 
 static FASTCALL void
 fbFetch_c8 (pixman_image_t *image,
-	    const uint32_t *bits, int x, int width, uint32_t *buffer, pixman_indexed_t * indexed)
+	    const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	const uint8_t *pixel = (const uint8_t *)bits + x;
@@ -516,7 +516,7 @@ fbFetch_c8 (pixman_image_t *image,
 
 static FASTCALL void
 fbFetch_x4a4 (pixman_image_t *image,
-	      const uint32_t *bits, int x, int width, uint32_t *buffer, pixman_indexed_t * indexed)
+	      const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	const uint8_t *pixel = (const uint8_t *)bits + x;
@@ -536,7 +536,7 @@ fbFetch_x4a4 (pixman_image_t *image,
 
 static FASTCALL void
 fbFetch_a4 (pixman_image_t *image,
-	    const uint32_t *bits, int x, int width, uint32_t *buffer, pixman_indexed_t * indexed)
+	    const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	int i;
@@ -550,7 +550,7 @@ fbFetch_a4 (pixman_image_t *image,
 
 static FASTCALL void
 fbFetch_r1g2b1 (pixman_image_t *image,
-		const uint32_t *bits, int x, int width, uint32_t *buffer, pixman_indexed_t * indexed)
+		const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
 {
     uint32_t  r,g,b;
     ACCESS_MEM (
@@ -567,7 +567,7 @@ fbFetch_r1g2b1 (pixman_image_t *image,
 
 static FASTCALL void
 fbFetch_b1g2r1 (pixman_image_t *image,
-		const uint32_t *bits, int x, int width, uint32_t *buffer, pixman_indexed_t * indexed)
+		const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
 {
     uint32_t  r,g,b;
     ACCESS_MEM (
@@ -584,7 +584,7 @@ fbFetch_b1g2r1 (pixman_image_t *image,
 
 static FASTCALL void
 fbFetch_a1r1g1b1 (pixman_image_t *image,
-		  const uint32_t *bits, int x, int width, uint32_t *buffer, pixman_indexed_t * indexed)
+		  const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
 {
     uint32_t  a,r,g,b;
     ACCESS_MEM (
@@ -602,7 +602,7 @@ fbFetch_a1r1g1b1 (pixman_image_t *image,
 
 static FASTCALL void
 fbFetch_a1b1g1r1 (pixman_image_t *image,
-		  const uint32_t *bits, int x, int width, uint32_t *buffer, pixman_indexed_t * indexed)
+		  const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
 {
     uint32_t  a,r,g,b;
     ACCESS_MEM (
@@ -620,7 +620,7 @@ fbFetch_a1b1g1r1 (pixman_image_t *image,
 
 static FASTCALL void
 fbFetch_c4 (pixman_image_t *image,
-	    const uint32_t *bits, int x, int width, uint32_t *buffer, pixman_indexed_t * indexed)
+	    const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	int i;
@@ -634,7 +634,7 @@ fbFetch_c4 (pixman_image_t *image,
 
 static FASTCALL void
 fbFetch_a1 (pixman_image_t *image,
-	    const uint32_t *bits, int x, int width, uint32_t *buffer, pixman_indexed_t * indexed)
+	    const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	int i;
@@ -656,7 +656,7 @@ fbFetch_a1 (pixman_image_t *image,
 
 static FASTCALL void
 fbFetch_g1 (pixman_image_t *image,
-	    const uint32_t *bits, int x, int width, uint32_t *buffer, pixman_indexed_t * indexed)
+	    const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	int i;
@@ -731,11 +731,11 @@ static fetchProc fetchProcForPicture (bits_image_t * pict)
 
 typedef FASTCALL uint32_t (*fetchPixelProc)(pixman_image_t *image,
 					    const uint32_t *bits, int offset,
-					    pixman_indexed_t * indexed);
+					    const pixman_indexed_t * indexed);
 
 static FASTCALL uint32_t
 fbFetchPixel_a8r8g8b8 (pixman_image_t *image,
-		       const uint32_t *bits, int offset, pixman_indexed_t * indexed)
+		       const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	return READ((uint32_t *)bits + offset);
@@ -744,7 +744,7 @@ fbFetchPixel_a8r8g8b8 (pixman_image_t *image,
 
 static FASTCALL uint32_t
 fbFetchPixel_x8r8g8b8 (pixman_image_t *image,
-		       const uint32_t *bits, int offset, pixman_indexed_t * indexed)
+		       const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	return READ((uint32_t *)bits + offset) | 0xff000000;
@@ -753,7 +753,7 @@ fbFetchPixel_x8r8g8b8 (pixman_image_t *image,
 
 static FASTCALL uint32_t
 fbFetchPixel_a8b8g8r8 (pixman_image_t *image,
-		       const uint32_t *bits, int offset, pixman_indexed_t * indexed)
+		       const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	uint32_t  pixel = READ((uint32_t *)bits + offset);
@@ -767,7 +767,7 @@ fbFetchPixel_a8b8g8r8 (pixman_image_t *image,
 
 static FASTCALL uint32_t
 fbFetchPixel_x8b8g8r8 (pixman_image_t *image,
-		       const uint32_t *bits, int offset, pixman_indexed_t * indexed)
+		       const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	uint32_t  pixel = READ((uint32_t *)bits + offset);
@@ -781,7 +781,7 @@ fbFetchPixel_x8b8g8r8 (pixman_image_t *image,
 
 static FASTCALL uint32_t
 fbFetchPixel_r8g8b8 (pixman_image_t *image,
-		     const uint32_t *bits, int offset, pixman_indexed_t * indexed)
+		     const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	uint8_t   *pixel = ((uint8_t *) bits) + (offset*3);
@@ -801,7 +801,7 @@ fbFetchPixel_r8g8b8 (pixman_image_t *image,
 
 static FASTCALL uint32_t
 fbFetchPixel_b8g8r8 (pixman_image_t *image,
-		     const uint32_t *bits, int offset, pixman_indexed_t * indexed)
+		     const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	uint8_t   *pixel = ((uint8_t *) bits) + (offset*3);
@@ -821,7 +821,7 @@ fbFetchPixel_b8g8r8 (pixman_image_t *image,
 
 static FASTCALL uint32_t
 fbFetchPixel_r5g6b5 (pixman_image_t *image,
-		     const uint32_t *bits, int offset, pixman_indexed_t * indexed)
+		     const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
 {
     uint32_t  r,g,b;
     ACCESS_MEM (
@@ -836,7 +836,7 @@ fbFetchPixel_r5g6b5 (pixman_image_t *image,
 
 static FASTCALL uint32_t
 fbFetchPixel_b5g6r5 (pixman_image_t *image,
-		     const uint32_t *bits, int offset, pixman_indexed_t * indexed)
+		     const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
 {
     uint32_t  r,g,b;
     ACCESS_MEM (
@@ -851,7 +851,7 @@ fbFetchPixel_b5g6r5 (pixman_image_t *image,
 
 static FASTCALL uint32_t
 fbFetchPixel_a1r5g5b5 (pixman_image_t *image,
-		       const uint32_t *bits, int offset, pixman_indexed_t * indexed)
+		       const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
 {
     uint32_t  a,r,g,b;
     ACCESS_MEM (
@@ -867,7 +867,7 @@ fbFetchPixel_a1r5g5b5 (pixman_image_t *image,
 
 static FASTCALL uint32_t
 fbFetchPixel_x1r5g5b5 (pixman_image_t *image,
-		       const uint32_t *bits, int offset, pixman_indexed_t * indexed)
+		       const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
 {
     uint32_t  r,g,b;
     ACCESS_MEM (
@@ -882,7 +882,7 @@ fbFetchPixel_x1r5g5b5 (pixman_image_t *image,
 
 static FASTCALL uint32_t
 fbFetchPixel_a1b5g5r5 (pixman_image_t *image,
-		       const uint32_t *bits, int offset, pixman_indexed_t * indexed)
+		       const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
 {
     uint32_t  a,r,g,b;
     ACCESS_MEM (
@@ -898,7 +898,7 @@ fbFetchPixel_a1b5g5r5 (pixman_image_t *image,
 
 static FASTCALL uint32_t
 fbFetchPixel_x1b5g5r5 (pixman_image_t *image,
-		       const uint32_t *bits, int offset, pixman_indexed_t * indexed)
+		       const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
 {
     uint32_t  r,g,b;
     ACCESS_MEM (
@@ -913,7 +913,7 @@ fbFetchPixel_x1b5g5r5 (pixman_image_t *image,
 
 static FASTCALL uint32_t
 fbFetchPixel_a4r4g4b4 (pixman_image_t *image,
-		       const uint32_t *bits, int offset, pixman_indexed_t * indexed)
+		       const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
 {
     uint32_t  a,r,g,b;
     ACCESS_MEM (
@@ -929,7 +929,7 @@ fbFetchPixel_a4r4g4b4 (pixman_image_t *image,
 
 static FASTCALL uint32_t
 fbFetchPixel_x4r4g4b4 (pixman_image_t *image,
-		       const uint32_t *bits, int offset, pixman_indexed_t * indexed)
+		       const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
 {
     uint32_t  r,g,b;
     ACCESS_MEM (
@@ -944,7 +944,7 @@ fbFetchPixel_x4r4g4b4 (pixman_image_t *image,
 
 static FASTCALL uint32_t
 fbFetchPixel_a4b4g4r4 (pixman_image_t *image,
-		       const uint32_t *bits, int offset, pixman_indexed_t * indexed)
+		       const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
 {
     uint32_t  a,r,g,b;
     ACCESS_MEM (
@@ -960,7 +960,7 @@ fbFetchPixel_a4b4g4r4 (pixman_image_t *image,
 
 static FASTCALL uint32_t
 fbFetchPixel_x4b4g4r4 (pixman_image_t *image,
-		       const uint32_t *bits, int offset, pixman_indexed_t * indexed)
+		       const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
 {
     uint32_t  r,g,b;
     ACCESS_MEM (
@@ -975,7 +975,7 @@ fbFetchPixel_x4b4g4r4 (pixman_image_t *image,
 
 static FASTCALL uint32_t
 fbFetchPixel_a8 (pixman_image_t *image,
-		 const uint32_t *bits, int offset, pixman_indexed_t * indexed)
+		 const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	uint32_t   pixel = READ((uint8_t *) bits + offset);
@@ -986,7 +986,7 @@ fbFetchPixel_a8 (pixman_image_t *image,
 
 static FASTCALL uint32_t
 fbFetchPixel_r3g3b2 (pixman_image_t *image,
-		     const uint32_t *bits, int offset, pixman_indexed_t * indexed)
+		     const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
 {
     uint32_t  r,g,b;
     ACCESS_MEM (
@@ -1004,7 +1004,7 @@ fbFetchPixel_r3g3b2 (pixman_image_t *image,
 
 static FASTCALL uint32_t
 fbFetchPixel_b2g3r3 (pixman_image_t *image,
-		     const uint32_t *bits, int offset, pixman_indexed_t * indexed)
+		     const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
 {
     uint32_t  r,g,b;
     ACCESS_MEM (
@@ -1024,7 +1024,7 @@ fbFetchPixel_b2g3r3 (pixman_image_t *image,
 
 static FASTCALL uint32_t
 fbFetchPixel_a2r2g2b2 (pixman_image_t *image,
-		       const uint32_t *bits, int offset, pixman_indexed_t * indexed)
+		       const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
 {
     uint32_t   a,r,g,b;
     ACCESS_MEM (
@@ -1040,7 +1040,7 @@ fbFetchPixel_a2r2g2b2 (pixman_image_t *image,
 
 static FASTCALL uint32_t
 fbFetchPixel_a2b2g2r2 (pixman_image_t *image,
-		       const uint32_t *bits, int offset, pixman_indexed_t * indexed)
+		       const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
 {
     uint32_t   a,r,g,b;
     ACCESS_MEM (
@@ -1056,7 +1056,7 @@ fbFetchPixel_a2b2g2r2 (pixman_image_t *image,
 
 static FASTCALL uint32_t
 fbFetchPixel_c8 (pixman_image_t *image,
-		 const uint32_t *bits, int offset, pixman_indexed_t * indexed)
+		 const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	uint32_t   pixel = READ((uint8_t *) bits + offset);
@@ -1066,7 +1066,7 @@ fbFetchPixel_c8 (pixman_image_t *image,
 
 static FASTCALL uint32_t
 fbFetchPixel_x4a4 (pixman_image_t *image,
-		   const uint32_t *bits, int offset, pixman_indexed_t * indexed)
+		   const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	uint32_t   pixel = READ((uint8_t *) bits + offset);
@@ -1084,7 +1084,7 @@ fbFetchPixel_x4a4 (pixman_image_t *image,
 
 static FASTCALL uint32_t
 fbFetchPixel_a4 (pixman_image_t *image,
-		 const uint32_t *bits, int offset, pixman_indexed_t * indexed)
+		 const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	uint32_t  pixel = Fetch4(bits, offset);
@@ -1096,7 +1096,7 @@ fbFetchPixel_a4 (pixman_image_t *image,
 
 static FASTCALL uint32_t
 fbFetchPixel_r1g2b1 (pixman_image_t *image,
-		     const uint32_t *bits, int offset, pixman_indexed_t * indexed)
+		     const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
 {
     uint32_t  r,g,b;
     ACCESS_MEM (
@@ -1111,7 +1111,7 @@ fbFetchPixel_r1g2b1 (pixman_image_t *image,
 
 static FASTCALL uint32_t
 fbFetchPixel_b1g2r1 (pixman_image_t *image,
-		     const uint32_t *bits, int offset, pixman_indexed_t * indexed)
+		     const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
 {
     uint32_t  r,g,b;
     ACCESS_MEM (
@@ -1126,7 +1126,7 @@ fbFetchPixel_b1g2r1 (pixman_image_t *image,
 
 static FASTCALL uint32_t
 fbFetchPixel_a1r1g1b1 (pixman_image_t *image,
-		       const uint32_t *bits, int offset, pixman_indexed_t * indexed)
+		       const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
 {
     uint32_t  a,r,g,b;
     ACCESS_MEM (
@@ -1142,7 +1142,7 @@ fbFetchPixel_a1r1g1b1 (pixman_image_t *image,
 
 static FASTCALL uint32_t
 fbFetchPixel_a1b1g1r1 (pixman_image_t *image,
-		       const uint32_t *bits, int offset, pixman_indexed_t * indexed)
+		       const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
 {
     uint32_t  a,r,g,b;
     ACCESS_MEM (
@@ -1158,7 +1158,7 @@ fbFetchPixel_a1b1g1r1 (pixman_image_t *image,
 
 static FASTCALL uint32_t
 fbFetchPixel_c4 (pixman_image_t *image,
-		 const uint32_t *bits, int offset, pixman_indexed_t * indexed)
+		 const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	uint32_t  pixel = Fetch4(bits, offset);
@@ -1170,7 +1170,7 @@ fbFetchPixel_c4 (pixman_image_t *image,
 
 static FASTCALL uint32_t
 fbFetchPixel_a1 (pixman_image_t *image,
-		 const uint32_t *bits, int offset, pixman_indexed_t * indexed)
+		 const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	uint32_t  pixel = ((uint32_t *)bits)[offset >> 5];
@@ -1190,7 +1190,7 @@ fbFetchPixel_a1 (pixman_image_t *image,
 
 static FASTCALL uint32_t
 fbFetchPixel_g1 (pixman_image_t *image,
-		 const uint32_t *bits, int offset, pixman_indexed_t * indexed)
+		 const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	uint32_t pixel = ((uint32_t *)bits)[offset >> 5];
@@ -1264,14 +1264,14 @@ static fetchPixelProc fetchPixelProcForPicture (bits_image_t * pict)
  */
 
 typedef FASTCALL void (*storeProc) (pixman_image_t *image,
-				    uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed);
+				    uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed);
 
 #define Splita(v)	uint32_t	a = ((v) >> 24), r = ((v) >> 16) & 0xff, g = ((v) >> 8) & 0xff, b = (v) & 0xff
 #define Split(v)	uint32_t	r = ((v) >> 16) & 0xff, g = ((v) >> 8) & 0xff, b = (v) & 0xff
 
 static FASTCALL void
 fbStore_a8r8g8b8 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	MEMCPY_WRAPPED(((uint32_t *)bits) + x, values, width*sizeof(uint32_t));
@@ -1280,7 +1280,7 @@ fbStore_a8r8g8b8 (pixman_image_t *image,
 
 static FASTCALL void
 fbStore_x8r8g8b8 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	int i;
@@ -1292,7 +1292,7 @@ fbStore_x8r8g8b8 (pixman_image_t *image,
 
 static FASTCALL void
 fbStore_a8b8g8r8 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	int i;
@@ -1304,7 +1304,7 @@ fbStore_a8b8g8r8 (pixman_image_t *image,
 
 static FASTCALL void
 fbStore_x8b8g8r8 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	int i;
@@ -1317,7 +1317,7 @@ fbStore_x8b8g8r8 (pixman_image_t *image,
 static FASTCALL void
 fbStore_r8g8b8 (pixman_image_t *image,
 		uint32_t *bits, const uint32_t *values, int x, int width,
-		pixman_indexed_t * indexed)
+		const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	int i;
@@ -1331,7 +1331,7 @@ fbStore_r8g8b8 (pixman_image_t *image,
 
 static FASTCALL void
 fbStore_b8g8r8 (pixman_image_t *image,
-		uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+		uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	int i;
@@ -1353,7 +1353,7 @@ fbStore_b8g8r8 (pixman_image_t *image,
 
 static FASTCALL void
 fbStore_r5g6b5 (pixman_image_t *image,
-		uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+		uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	int i;
@@ -1368,7 +1368,7 @@ fbStore_r5g6b5 (pixman_image_t *image,
 
 static FASTCALL void
 fbStore_b5g6r5 (pixman_image_t *image,
-		uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+		uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	int i;
@@ -1383,7 +1383,7 @@ fbStore_b5g6r5 (pixman_image_t *image,
 
 static FASTCALL void
 fbStore_a1r5g5b5 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	int i;
@@ -1399,7 +1399,7 @@ fbStore_a1r5g5b5 (pixman_image_t *image,
 
 static FASTCALL void
 fbStore_x1r5g5b5 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	int i;
@@ -1414,7 +1414,7 @@ fbStore_x1r5g5b5 (pixman_image_t *image,
 
 static FASTCALL void
 fbStore_a1b5g5r5 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	int i;
@@ -1430,7 +1430,7 @@ fbStore_a1b5g5r5 (pixman_image_t *image,
 
 static FASTCALL void
 fbStore_x1b5g5r5 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	int i;
@@ -1445,7 +1445,7 @@ fbStore_x1b5g5r5 (pixman_image_t *image,
 
 static FASTCALL void
 fbStore_a4r4g4b4 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	int i;
@@ -1461,7 +1461,7 @@ fbStore_a4r4g4b4 (pixman_image_t *image,
 
 static FASTCALL void
 fbStore_x4r4g4b4 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	int i;
@@ -1476,7 +1476,7 @@ fbStore_x4r4g4b4 (pixman_image_t *image,
 
 static FASTCALL void
 fbStore_a4b4g4r4 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	int i;
@@ -1492,7 +1492,7 @@ fbStore_a4b4g4r4 (pixman_image_t *image,
 
 static FASTCALL void
 fbStore_x4b4g4r4 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	int i;
@@ -1507,7 +1507,7 @@ fbStore_x4b4g4r4 (pixman_image_t *image,
 
 static FASTCALL void
 fbStore_a8 (pixman_image_t *image,
-	    uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+	    uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	int i;
@@ -1519,7 +1519,7 @@ fbStore_a8 (pixman_image_t *image,
 
 static FASTCALL void
 fbStore_r3g3b2 (pixman_image_t *image,
-		uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+		uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	int i;
@@ -1534,7 +1534,7 @@ fbStore_r3g3b2 (pixman_image_t *image,
 
 static FASTCALL void
 fbStore_b2g3r3 (pixman_image_t *image,
-		uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+		uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	int i;
@@ -1549,7 +1549,7 @@ fbStore_b2g3r3 (pixman_image_t *image,
 
 static FASTCALL void
 fbStore_a2r2g2b2 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	int i;
@@ -1565,7 +1565,7 @@ fbStore_a2r2g2b2 (pixman_image_t *image,
 
 static FASTCALL void
 fbStore_c8 (pixman_image_t *image,
-	    uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+	    uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	int i;
@@ -1577,7 +1577,7 @@ fbStore_c8 (pixman_image_t *image,
 
 static FASTCALL void
 fbStore_x4a4 (pixman_image_t *image,
-	      uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+	      uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	int i;
@@ -1600,7 +1600,7 @@ fbStore_x4a4 (pixman_image_t *image,
 
 static FASTCALL void
 fbStore_a4 (pixman_image_t *image,
-	    uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+	    uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	int i;
@@ -1611,7 +1611,7 @@ fbStore_a4 (pixman_image_t *image,
 
 static FASTCALL void
 fbStore_r1g2b1 (pixman_image_t *image,
-		uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+		uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	int i;
@@ -1628,7 +1628,7 @@ fbStore_r1g2b1 (pixman_image_t *image,
 
 static FASTCALL void
 fbStore_b1g2r1 (pixman_image_t *image,
-		uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+		uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	int i;
@@ -1645,7 +1645,7 @@ fbStore_b1g2r1 (pixman_image_t *image,
 
 static FASTCALL void
 fbStore_a1r1g1b1 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	int i;
@@ -1662,7 +1662,7 @@ fbStore_a1r1g1b1 (pixman_image_t *image,
 
 static FASTCALL void
 fbStore_a1b1g1r1 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	int i;
@@ -1679,7 +1679,7 @@ fbStore_a1b1g1r1 (pixman_image_t *image,
 
 static FASTCALL void
 fbStore_c4 (pixman_image_t *image,
-	    uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+	    uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	int i;
@@ -1711,7 +1711,7 @@ fbStore_c4 (pixman_image_t *image,
 
 static FASTCALL void
 fbStore_a1 (pixman_image_t *image,
-	    uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+	    uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	int i;
@@ -1726,7 +1726,7 @@ fbStore_a1 (pixman_image_t *image,
 
 static FASTCALL void
 fbStore_g1 (pixman_image_t *image,
-	    uint32_t *bits, const uint32_t *values, int x, int width, pixman_indexed_t * indexed)
+	    uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
 {
     ACCESS_MEM (
 	int i;
@@ -3027,7 +3027,7 @@ static void fbFetchSolid(bits_image_t * pict, int x, int y, int width, uint32_t 
     uint32_t color;
     uint32_t *end;
     fetchPixelProc fetch = fetchPixelProcForPicture(pict);
-    pixman_indexed_t * indexed = pict->indexed;
+    const pixman_indexed_t * indexed = pict->indexed;
     
     bits = pict->bits;
     
@@ -3044,7 +3044,7 @@ static void fbFetch(bits_image_t * pict, int x, int y, int width, uint32_t *buff
     uint32_t *bits;
     uint32_t stride;
     fetchProc fetch = fetchProcForPicture(pict);
-    pixman_indexed_t * indexed = pict->indexed;
+    const pixman_indexed_t * indexed = pict->indexed;
     
     bits = pict->bits;
     stride = pict->rowstride;
@@ -3715,7 +3715,7 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
     pixman_vector_t  unit;
     int         i;
     pixman_box16_t box;
-    pixman_indexed_t * indexed = (pixman_indexed_t *) pict->indexed;
+    const pixman_indexed_t * indexed = pict->indexed;
     pixman_bool_t affine = TRUE;
     
     fetch = fetchPixelProcForPicture(pict);
@@ -4244,7 +4244,7 @@ static void fbStore(bits_image_t * pict, int x, int y, int width, uint32_t *buff
     uint32_t *bits;
     uint32_t stride;
     storeProc store = storeProcForPicture(pict);
-    pixman_indexed_t * indexed = (pixman_indexed_t *) pict->indexed;
+    const pixman_indexed_t * indexed = pict->indexed;
     
     bits = pict->bits;
     stride = pict->rowstride;
@@ -4260,8 +4260,8 @@ static void fbStoreExternalAlpha(bits_image_t * pict, int x, int y, int width, u
     int ax, ay;
     storeProc store;
     storeProc astore;
-    pixman_indexed_t * indexed = (pixman_indexed_t *) pict->indexed;
-    pixman_indexed_t * aindexed;
+    const pixman_indexed_t * indexed = pict->indexed;
+    const pixman_indexed_t * aindexed;
     
     if (!pict->common.alpha_map) {
         fbStore(pict, x, y, width, buffer);

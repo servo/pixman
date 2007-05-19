@@ -193,7 +193,7 @@ struct bits_image
 {
     image_common_t		common;
     pixman_format_code_t	format;
-    pixman_indexed_t	       *indexed;
+    const pixman_indexed_t     *indexed;
     int				width;
     int				height;
     uint32_t *			bits;
@@ -469,51 +469,6 @@ void pixmanCompositeRect (const FbComposeData *data,
 
 #define div_255(x) (((x) + 0x80 + (((x) + 0x80) >> 8)) >> 8)
 
-#if 0
-typedef struct _Picture {
-    DrawablePtr	    pDrawable;
-    PictFormatPtr   pFormat;
-    PictFormatShort format;	    /* PICT_FORMAT */
-    int		    refcnt;
-    CARD32	    id;
-    PicturePtr	    pNext;	    /* chain on same drawable */
-
-    unsigned int    repeat : 1;
-    unsigned int    graphicsExposures : 1;
-    unsigned int    subWindowMode : 1;
-    unsigned int    polyEdge : 1;
-    unsigned int    polyMode : 1;
-    unsigned int    freeCompClip : 1;
-    unsigned int    clientClipType : 2;
-    unsigned int    componentAlpha : 1;
-    unsigned int    repeatType : 2;
-    unsigned int    unused : 21;
-
-    PicturePtr	    alphaMap;
-    DDXPointRec	    alphaOrigin;
-
-    DDXPointRec	    clipOrigin;
-    pointer	    clientClip;
-
-    Atom	    dither;
-
-    unsigned long   stateChanges;
-    unsigned long   serialNumber;
-
-    RegionPtr	    pCompositeClip;
-
-    DevUnion	    *devPrivates;
-
-    PictTransform   *transform;
-
-    int		    filter;
-    xFixed	    *filter_params;
-    int		    filter_nparams;
-    SourcePictPtr   pSourcePict;
-} PictureRec;
-#endif
-
-
 /* FIXME: the (void)__read_func hides lots of warnings (which is what they
  * are supposed to do), but some of them are real. For example the one
  * where Fetch4 doesn't have a READ
@@ -522,46 +477,46 @@ typedef struct _Picture {
 /* Framebuffer access support macros */
 #define ACCESS_MEM(code)						\
     do {								\
-	const image_common_t *const __com =				\
+	const image_common_t *const com__ =				\
 	    (image_common_t *)image;					\
 									\
-	if (__com->read_func || __com->write_func)			\
+	if (!com__->read_func && !com__->write_func)			\
 	{								\
-	    const int __do_access = 1;					\
-	    const pixman_read_memory_func_t __read_func =		\
-		__com->read_func;					\
-	    const pixman_write_memory_func_t __write_func =		\
-		__com->write_func;					\
-	    (void)__read_func;						\
-	    (void)__write_func;						\
-	    (void)__do_access;						\
-	    								\
+	    const int do_access__ = 0;					\
+	    const pixman_read_memory_func_t read_func__ = NULL;		\
+	    const pixman_write_memory_func_t write_func__ = NULL;	\
+	    (void)read_func__;						\
+	    (void)write_func__;						\
+	    (void)do_access__;						\
+									\
 	    {code}							\
 	}								\
 	else								\
 	{								\
-	    const int __do_access = 0;					\
-	    const pixman_read_memory_func_t __read_func = NULL;		\
-	    const pixman_write_memory_func_t __write_func = NULL;	\
-	    (void)__read_func;						\
-	    (void)__write_func;						\
-	    (void)__do_access;						\
-									\
+	    const int do_access__ = 1;					\
+	    const pixman_read_memory_func_t read_func__ =		\
+		com__->read_func;					\
+	    const pixman_write_memory_func_t write_func__ =		\
+		com__->write_func;					\
+	    (void)read_func__;						\
+	    (void)write_func__;						\
+	    (void)do_access__;						\
+	    								\
 	    {code}							\
 	}								\
     } while (0)
 
 #define READ(ptr)							\
-    (__do_access? __read_func ((ptr), sizeof(*(ptr))) : (*(ptr)))
+    (do_access__? read_func__ ((ptr), sizeof(*(ptr))) : (*(ptr)))
 
 #define WRITE(ptr, val)							\
-    (__do_access?							\
-     __write_func ((ptr), (val), sizeof(*(ptr)))			\
+    (do_access__?							\
+     write_func__ ((ptr), (val), sizeof(*(ptr)))			\
      : ((void)(*(ptr) = (val))))
 
 #define MEMCPY_WRAPPED(dst, src, size)					\
     do	{								\
-	if (__do_access)						\
+	if (do_access__)						\
 	{								\
 	    size_t _i;							\
 	    uint8_t *_dst = (uint8_t*)(dst), *_src = (uint8_t*)(src);	\
@@ -577,7 +532,7 @@ typedef struct _Picture {
 	
 #define MEMSET_WRAPPED(dst, val, size)					\
     do {								\
-	if (__do_access)						\
+	if (do_access__)						\
 	{								\
 	    size_t _i;							\
 	    uint8_t *_dst = (uint8_t*)(dst);				\
