@@ -31,6 +31,7 @@
 #include <string.h>
 #include <math.h>
 #include <assert.h>
+#include <limits.h>
 
 #include "pixman-private.h"
 
