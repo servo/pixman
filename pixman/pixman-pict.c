@@ -1055,8 +1055,30 @@ pixman_walk_composite_region (pixman_op_t op,
 static pixman_bool_t
 can_get_solid (pixman_image_t *image)
 {
-    /* FIXME */
-    return FALSE;
+    if (image->type != BITS	||
+	image->bits.width != 1	||
+	image->bits.height != 1)
+    {
+	return FALSE;
+    }
+
+    if (image->common.repeat != PIXMAN_REPEAT_NORMAL)
+	return FALSE;
+
+    switch (image->bits.format)
+    {
+    case PIXMAN_a8r8g8b8:
+    case PIXMAN_x8r8g8b8:
+    case PIXMAN_a8b8g8r8:
+    case PIXMAN_x8b8g8r8:
+    case PIXMAN_r8g8b8:
+    case PIXMAN_b8g8r8:
+    case PIXMAN_r5g6b5:
+    case PIXMAN_b5g6r5:
+	return TRUE;
+    default:
+	return FALSE;
+    }
 }
 
 void
