@@ -10,6 +10,14 @@
 
 #define DEBUG 1
 
+#if defined (__GNUC__)
+#  define FUNC     ((const char*) (__PRETTY_FUNCTION__))
+#elif defined (__sun) || (defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L)
+#  define FUNC     ((const char*) (__func__))
+#else
+#  define FUNC     ((const char*) ("???"))
+#endif
+
 #if DEBUG
 
 #define return_if_fail(expr)							\
@@ -17,7 +25,7 @@
 	{									\
 	    if (!(expr))							\
 	    {									\
-		fprintf(stderr, "In %s: %s failed\n", __FUNCTION__, #expr);	\
+		fprintf(stderr, "In %s: %s failed\n", FUNC, #expr);	\
 		return;								\
 	    }									\
 	}									\
@@ -28,7 +36,7 @@
 	{									\
 	    if (!(expr))							\
 	    {									\
-		fprintf(stderr, "In %s: %s failed\n", __FUNCTION__, #expr);	\
+		fprintf(stderr, "In %s: %s failed\n", FUNC, #expr);	\
 		return (retval);						\
 	    }									\
 	}									\
