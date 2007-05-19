@@ -66,11 +66,20 @@
 	    (res) |= 0xff000000;					\
     } while (0)
 
-#define FbFullMask(n)   ((n) == 32 ? (uint32_t)-1 : ((((uint32_t) 1) << n) - 1))
+#define fbComposeGetStart(pict,x,y,type,out_stride,line,mul) do {	\
+	uint32_t	*__bits__;					\
+	int		__stride__;					\
+	int		__bpp__;					\
+									\
+	__bits__ = pict->bits.bits;					\
+	__stride__ = pict->bits.rowstride;				\
+	__bpp__ = PIXMAN_FORMAT_BPP(pict->bits.format);			\
+	(out_stride) = __stride__ * sizeof (uint32_t) / sizeof (type);	\
+	(line) = ((type *) __bits__) +					\
+	    (out_stride) * (y) + (mul) * (x);				\
+    } while (0)
 
-/* FIXME: these are just stubs */
-#define fbComposeGetStart(a,b,c,d,e,f,g)
-#define fbGetDrawable(a,b,c,d,e,f)
+#define FbFullMask(n)   ((n) == 32 ? (uint32_t)-1 : ((((uint32_t) 1) << n) - 1))
 
 #undef READ
 #undef WRITE
