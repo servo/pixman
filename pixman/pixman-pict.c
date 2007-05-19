@@ -918,8 +918,6 @@ fbCompositeSolidMask_nx1xn (pixman_op_t op,
 #endif
 }
 
-# define mod(a,b)	((b) == 1 ? 0 : (a) >= 0 ? (a) % (b) : (b) - (-a) % (b))
-
 /*
  * Apply a constant alpha value in an over computation
  */
@@ -1013,9 +1011,6 @@ compute_composite_region (pixman_region16_t *region,
     return TRUE;
 }
 			  
-
-#define mod(a,b)	((b) == 1 ? 0 : (a) >= 0 ? (a) % (b) : (b) - (-a) % (b))
-
 static void
 pixman_walk_composite_region (pixman_op_t op,
 			      pixman_image_t * pSrc,
@@ -1059,13 +1054,13 @@ pixman_walk_composite_region (pixman_op_t op,
 	    x_dst = pbox->x1;
 	    if (maskRepeat)
 	    {
-		y_msk = mod (y_msk, pMask->bits.height);
+		y_msk = MOD (y_msk, pMask->bits.height);
 		if (h_this > pMask->bits.height - y_msk)
 		    h_this = pMask->bits.height - y_msk;
 	    }
 	    if (srcRepeat)
 	    {
-		y_src = mod (y_src, pSrc->bits.height);
+		y_src = MOD (y_src, pSrc->bits.height);
 		if (h_this > pSrc->bits.height - y_src)
 		    h_this = pSrc->bits.height - y_src;
 	    }
@@ -1074,13 +1069,13 @@ pixman_walk_composite_region (pixman_op_t op,
 		w_this = w;
 		if (maskRepeat)
 		{
-		    x_msk = mod (x_msk, pMask->bits.width);
+		    x_msk = MOD (x_msk, pMask->bits.width);
 		    if (w_this > pMask->bits.width - x_msk)
 			w_this = pMask->bits.width - x_msk;
 		}
 		if (srcRepeat)
 		{
-		    x_src = mod (x_src, pSrc->bits.width);
+		    x_src = MOD (x_src, pSrc->bits.width);
 		    if (w_this > pSrc->bits.width - x_src)
 			w_this = pSrc->bits.width - x_src;
 		}

@@ -25,7 +25,7 @@
         have to be kept uptodate every time something changes about the
         picture.
 
-      - Break the X server ABI and simply have the releveant parameter
+      - Break the X server ABI and simply have the relevant parameter
         stored in the pixman image. This would have the additional benefits
         that:
 

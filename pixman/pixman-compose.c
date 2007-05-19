@@ -109,8 +109,6 @@ SourcePictureClassify (source_image_t *pict,
     return pict->class;
 }
 
-#define mod(a,b)	((b) == 1 ? 0 : (a) >= 0 ? (a) % (b) : (b) - (-a) % (b))
-
 #define SCANLINE_BUFFER_LENGTH 2048
 
 typedef FASTCALL void (*fetchProc)(pixman_image_t *image,
@@ -3035,10 +3033,6 @@ static void fbFetch(bits_image_t * pict, int x, int y, int width, uint32_t *buff
     
     fetch((pixman_image_t *)pict, bits, x, width, buffer, indexed);
 }
-
-#define MOD(a,b) ((a) < 0 ? ((b) - ((-(a) - 1) % (b))) - 1 : (a) % (b))
-#define DIV(a,b) ((((a) < 0) == ((b) < 0)) ? (a) / (b) :		\
-		  ((a) - (b) + 1 - (((b) < 0) << 1)) / (b))
 
 typedef struct
 {
