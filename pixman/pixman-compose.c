@@ -1691,24 +1691,6 @@ fbStore_c4 (pixman_image_t *image,
 	});
 }
 
-#define LOG2_BITMAP_PAD 5
-#define FB_STIP_SHIFT	LOG2_BITMAP_PAD
-#define FB_STIP_UNIT	(1 << FB_STIP_SHIFT)
-#define FB_STIP_MASK	(FB_STIP_UNIT - 1)
-#define FB_STIP_ALLONES	((uint32_t) -1)
-
-#if BITMAP_BIT_ORDER == LSBFirst
-#define FbScrLeft(x,n)	((x) >> (n))
-#define FbScrRight(x,n)	((x) << (n))
-#else
-#define FbScrLeft(x,n)	((x) << (n))
-#define FbScrRight(x,n)	((x) >> (n))
-#endif
-#define FbStipLeft(x,n)	FbScrLeft(x,n)
-#define FbStipRight(x,n) FbScrRight(x,n)
-#define FbStipMask(x,w)	(FbStipRight(FB_STIP_ALLONES,(x) & FB_STIP_MASK) & \
-			 FbStipLeft(FB_STIP_ALLONES,(FB_STIP_UNIT - ((x)+(w))) & FB_STIP_MASK))
-
 static FASTCALL void
 fbStore_a1 (pixman_image_t *image,
 	    uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)

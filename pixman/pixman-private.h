@@ -20,26 +20,26 @@
 
 #if DEBUG
 
-#define return_if_fail(expr)							\
-	do									\
-	{									\
-	    if (!(expr))							\
-	    {									\
+#define return_if_fail(expr)						\
+	do								\
+	{								\
+	    if (!(expr))						\
+	    {								\
 		fprintf(stderr, "In %s: %s failed\n", FUNC, #expr);	\
-		return;								\
-	    }									\
-	}									\
+		return;							\
+	    }								\
+	}								\
 	while (0)
 
-#define return_val_if_fail(expr, retval) 					\
-	do									\
-	{									\
-	    if (!(expr))							\
-	    {									\
+#define return_val_if_fail(expr, retval) 				\
+	do								\
+	{								\
+	    if (!(expr))						\
+	    {								\
 		fprintf(stderr, "In %s: %s failed\n", FUNC, #expr);	\
-		return (retval);						\
-	    }									\
-	}									\
+		return (retval);					\
+	    }								\
+	}								\
 	while (0)
 
 #else
@@ -213,6 +213,27 @@ union pixman_image
 
 void pixmanCompositeRect (const FbComposeData *data,
 			  uint32_t *scanline_buffer);
+
+#define LOG2_BITMAP_PAD 5
+#define FB_STIP_SHIFT	LOG2_BITMAP_PAD
+#define FB_STIP_UNIT	(1 << FB_STIP_SHIFT)
+#define FB_STIP_MASK	(FB_STIP_UNIT - 1)
+#define FB_STIP_ALLONES	((uint32_t) -1)
+
+#if BITMAP_BIT_ORDER == LSBFirst
+#define FbScrLeft(x,n)	((x) >> (n))
+#define FbScrRight(x,n)	((x) << (n))
+#define FbLeftStipBits(x,n) ((x) & ((((uint32_t) 1) << (n)) - 1))
+#else
+#define FbScrLeft(x,n)	((x) << (n))
+#define FbScrRight(x,n)	((x) >> (n))
+#define FbLeftStipBits(x,n) ((x) >> (FB_STIP_UNIT - (n)))
+#endif
+
+#define FbStipLeft(x,n)	FbScrLeft(x,n)
+#define FbStipRight(x,n) FbScrRight(x,n)
+#define FbStipMask(x,w)	(FbStipRight(FB_STIP_ALLONES,(x) & FB_STIP_MASK) & \
+			 FbStipLeft(FB_STIP_ALLONES,(FB_STIP_UNIT - ((x)+(w))) & FB_STIP_MASK))
 
 #if IMAGE_BYTE_ORDER == MSBFirst
 #define Fetch24(a)  ((unsigned long) (a) & 1 ?			      \

@@ -26,11 +26,52 @@
 #include "pixman.h"
 #include "pixman-private.h"
 
+#define fbComposeGetSolid(img, res, fmt) do {				\
+	uint32_t	       *bits__   = (img)->bits.bits;		\
+	pixman_format_code_t	format__ = (img)->bits.format;		\
+									\
+	switch (PIXMAN_FORMAT_BPP((img)->bits.format))			\
+	{								\
+	case 32:							\
+	    (res) = READ((uint32_t *)bits__);				\
+	    break;							\
+	case 24:							\
+	    (res) = Fetch24 ((uint8_t *) bits__);			\
+	    break;							\
+	case 16:							\
+	    (res) = READ((uint16_t *) bits__);				\
+	    (res) = cvt0565to0888(res);					\
+	    break;							\
+	case 8:								\
+	    (res) = READ((uint8_t *) bits__);				\
+	    (res) = (res) << 24;					\
+	    break;							\
+	case 1:								\
+	    (res) = READ((uint32_t *) bits__);				\
+	    (res) = FbLeftStipBits((res),1) ? 0xff000000 : 0x00000000;	\
+	    break;							\
+	default:							\
+	    return;							\
+	}								\
+	/* If necessary, convert RGB <--> BGR. */			\
+	if (format__ != PIXMAN_FORMAT_TYPE(fmt))			\
+	{								\
+	    (res) = (((res) & 0xff000000) |				\
+		     (((res) & 0x00ff0000) >> 16) |			\
+		     (((res) & 0x0000ff00) >>  0) |			\
+		     (((res) & 0x000000ff) << 16));			\
+	}								\
+	/* manage missing src alpha */					\
+	if (!PIXMAN_FORMAT_A((img)->bits.format))			\
+	    (res) |= 0xff000000;					\
+    } while (0)
+
+#define FbFullMask(n)   ((n) == 32 ? (uint32_t)-1 : ((((uint32_t) 1) << n) - 1))
+
 /* FIXME: these are just stubs */
-#define fbComposeGetSolid(a,b,c)
 #define fbComposeGetStart(a,b,c,d,e,f,g)
 #define fbGetDrawable(a,b,c,d,e,f)
-#define FbFullMask(n)   ((n) == 32 ? (uint32_t)-1 : ((((uint32_t) 1) << n) - 1))
+
 #undef READ
 #undef WRITE
 #define READ(x) (*(x))
@@ -108,7 +149,7 @@ fbCompositeSolidMask_nx8x8888 (pixman_op_t      op,
     int		 dstStride, maskStride;
     uint16_t	 w;
 
-    fbComposeGetSolid(pSrc, src, pDst->format);
+    fbComposeGetSolid(pSrc, src, pDst->bits.format);
     
     dstMask = FbFullMask (PIXMAN_FORMAT_DEPTH (pDst->bits.format));
     srca = src >> 24;
@@ -170,7 +211,7 @@ fbCompositeSolidMask_nx8888x8888C (pixman_op_t op,
     uint16_t	w;
     uint32_t	m, n, o, p;
 
-    fbComposeGetSolid(pSrc, src, pDst->format);
+    fbComposeGetSolid(pSrc, src, pDst->bits.format);
 
     dstMask = FbFullMask (PIXMAN_FORMAT_DEPTH (pDst->bits.format));
     srca = src >> 24;
@@ -246,7 +287,7 @@ fbCompositeSolidMask_nx8x0888 (pixman_op_t op,
     int	dstStride, maskStride;
     uint16_t	w;
 
-    fbComposeGetSolid(pSrc, src, pDst->format);
+    fbComposeGetSolid(pSrc, src, pDst->bits.format);
 
     srca = src >> 24;
     if (src == 0)
@@ -311,7 +352,7 @@ fbCompositeSolidMask_nx8x0565 (pixman_op_t op,
     int	dstStride, maskStride;
     uint16_t	w;
 
-    fbComposeGetSolid(pSrc, src, pDst->format);
+    fbComposeGetSolid(pSrc, src, pDst->bits.format);
 
     srca = src >> 24;
     if (src == 0)
@@ -379,7 +420,7 @@ fbCompositeSolidMask_nx8888x0565C (pixman_op_t op,
     uint16_t	w;
     uint32_t	m, n, o;
 
-    fbComposeGetSolid(pSrc, src, pDst->format);
+    fbComposeGetSolid(pSrc, src, pDst->bits.format);
 
     srca = src >> 24;
     if (src == 0)
@@ -724,7 +765,7 @@ fbCompositeSrcAdd_8888x8x8 (pixman_op_t op,
 
     fbComposeGetStart (pDst, xDst, yDst, uint8_t, dstStride, dstLine, 1);
     fbComposeGetStart (pMask, xMask, yMask, uint8_t, maskStride, maskLine, 1);
-    fbComposeGetSolid (pSrc, src, pDst->format);
+    fbComposeGetSolid (pSrc, src, pDst->bits.format);
     sa = (src >> 24);
 
     while (height--)
@@ -830,7 +871,7 @@ fbCompositeSolidMask_nx1xn (pixman_op_t op,
     int		maskXoff, maskYoff;
     uint32_t	src;
 
-    fbComposeGetSolid(pSrc, src, pDst->format);
+    fbComposeGetSolid(pSrc, src, pDst->bits.format);
     fbGetStipDrawable (pMask->pDrawable, maskBits, maskStride, maskBpp, maskXoff, maskYoff);
     fbGetDrawable (pDst->pDrawable, dstBits, dstStride, dstBpp, dstXoff, dstYoff);
 
