@@ -471,7 +471,8 @@ void		pixman_image_composite               (pixman_op_t		    op,
 						      int16_t                       dest_x,
 						      int16_t                       dest_y,
 						      uint16_t                      width,
-						      uint16_t                      height);
+						      uint16_t                      height,
+    pixman_region16_t *reg);
 void            pixman_image_composite_rect          (pixman_op_t                   op,
 						      pixman_image_t               *src,
 						      pixman_image_t               *mask,

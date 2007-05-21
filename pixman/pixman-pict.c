@@ -1150,19 +1150,27 @@ pixman_walk_composite_region (pixman_op_t op,
 			      uint16_t height,
 			      pixman_bool_t srcRepeat,
 			      pixman_bool_t maskRepeat,
-			      CompositeFunc compositeRect)
+			      CompositeFunc compositeRect,
+			      pixman_region16_t *region)
 {
+#if 0
     pixman_region16_t region;
+#endif
     int		    n;
     const pixman_box16_t *pbox;
     int		    w, h, w_this, h_this;
     int		    x_msk, y_msk, x_src, y_src, x_dst, y_dst;
     
+#if 0
     if (!compute_composite_region (&region, pSrc, pMask, pDst, xSrc, ySrc,
 				   xMask, yMask, xDst, yDst, width, height))
+    {
+	fprinf ("blah\n");
         return;
+    }
+#endif
     
-    pbox = pixman_region_rectangles (&region, &n);
+    pbox = pixman_region_rectangles (region, &n);
     while (n--)
     {
 	h = pbox->y2 - pbox->y1;
@@ -1218,7 +1226,9 @@ pixman_walk_composite_region (pixman_op_t op,
 	}
 	pbox++;
     }
+#if 0
     pixman_region_fini (&region);
+#endif
 }
 
 static pixman_bool_t
@@ -1262,7 +1272,8 @@ pixman_image_composite (pixman_op_t      op,
 			int16_t      xDst,
 			int16_t      yDst,
 			uint16_t     width,
-			uint16_t     height)
+			uint16_t     height,
+			pixman_region16_t *region)
 {
     pixman_bool_t	    srcRepeat = pSrc->type == BITS && pSrc->common.repeat == PIXMAN_REPEAT_NORMAL;
     pixman_bool_t	    maskRepeat = FALSE;
@@ -1408,9 +1419,12 @@ pixman_image_composite (pixman_op_t      op,
 			{
 			    uint32_t src;
 
+#if 0
+			    /* FIXME */
 			    fbComposeGetSolid(pSrc, src, pDst->bits.format);
 			    if ((src & 0xff000000) == 0xff000000)
 				func = fbCompositeSolidMask_nx1xn;
+#endif
 			    break;
 			}
 			default:
@@ -1578,7 +1592,11 @@ pixman_image_composite (pixman_op_t      op,
 			func = fbCompositeCopyAreammx;
 		    else
 #endif
-			func = fbCompositeSrcSrc_nxn;
+#if 0
+		    /* FIXME */
+			func = fbCompositeSrcSrc_nxn
+#endif
+			    ;
 		}
 		else switch (pSrc->bits.format) {
 		case PIXMAN_a8r8g8b8:
@@ -1713,7 +1731,10 @@ pixman_image_composite (pixman_op_t      op,
 	    case PIXMAN_a1:
 		switch (pDst->bits.format) {
 		case PIXMAN_a1:
+#if 0
+		    /* FIXME */
 		    func = fbCompositeSrcAdd_1000x1000;
+#endif
 		    break;
 		default:
 		    break;
@@ -1779,7 +1800,11 @@ pixman_image_composite (pixman_op_t      op,
 		    func = fbCompositeCopyAreammx;
 		else
 #endif
-		    func = fbCompositeSrcSrc_nxn;
+		    /* FIXME */
+#if 0
+		    func = fbCompositeSrcSrc_nxn
+#endif
+			;
 	    }
 	}
 	break;
@@ -1824,5 +1849,5 @@ pixman_image_composite (pixman_op_t      op,
 
     pixman_walk_composite_region (op, pSrc, pMask, pDst, xSrc, ySrc,
 				  xMask, yMask, xDst, yDst, width, height,
-				  srcRepeat, maskRepeat, func);
+				  srcRepeat, maskRepeat, func, region);
 }
