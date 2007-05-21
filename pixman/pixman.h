@@ -460,6 +460,18 @@ void		pixman_image_set_indexed	     (pixman_image_t		   *image,
 						      const pixman_indexed_t	   *indexed);
 
 /* Composite */
+void		pixman_image_composite               (pixman_op_t		    op,
+						      pixman_image_t		   *src,
+						      pixman_image_t               *mask,
+						      pixman_image_t               *dest,
+						      int16_t                       src_x,
+						      int16_t                       src_y,
+						      int16_t                       mask_x,
+						      int16_t                       mask_y,
+						      int16_t                       dest_x,
+						      int16_t                       dest_y,
+						      uint16_t                      width,
+						      uint16_t                      height);
 void            pixman_image_composite_rect          (pixman_op_t                   op,
 						      pixman_image_t               *src,
 						      pixman_image_t               *mask,

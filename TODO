@@ -48,3 +48,11 @@
         IC_SHIFT to 5 for all machines.
 
 - Consider whether calling regions region16 is really such a great idea
+
+- Right now we _always_ have a clip region, which is empty by default.
+  Why does this work at all? It probably doesn't. The server
+  distinguishes two cases, one where nothing is clipped (CT_NONE), and
+  one where there is a clip region (CT_REGION).
+
+- The rectangles in a region probably shouldn't be returned const as
+  the X server will be changing them.
