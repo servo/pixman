@@ -22,6 +22,7 @@
  * Author:  Keith Packard, SuSE, Inc.
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include "pixman.h"
 #include "pixman-private.h"
@@ -54,9 +55,9 @@
 	    return;							\
 	}								\
 	/* If necessary, convert RGB <--> BGR. */			\
-	if (format__ != PIXMAN_FORMAT_TYPE(fmt))			\
+	if (PIXMAN_FORMAT_TYPE (format__) != PIXMAN_FORMAT_TYPE(fmt))	\
 	{								\
-	    (res) = (((res) & 0xff000000) |				\
+	    (res) = ((((res) & 0xff000000) >>  0) |			\
 		     (((res) & 0x00ff0000) >> 16) |			\
 		     (((res) & 0x0000ff00) >>  0) |			\
 		     (((res) & 0x000000ff) << 16));			\
@@ -159,7 +160,7 @@ fbCompositeSolidMask_nx8x8888 (pixman_op_t      op,
     uint16_t	 w;
 
     fbComposeGetSolid(pSrc, src, pDst->bits.format);
-    
+
     dstMask = FbFullMask (PIXMAN_FORMAT_DEPTH (pDst->bits.format));
     srca = src >> 24;
     if (src == 0)
