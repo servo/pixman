@@ -1317,7 +1317,10 @@ pixman_image_composite (pixman_op_t      op,
         && !srcTransform && !maskTransform
         && !maskAlphaMap && !srcAlphaMap && !dstAlphaMap
         && (pSrc->common.filter != PIXMAN_FILTER_CONVOLUTION)
-        && (!pMask || pMask->common.filter != PIXMAN_FILTER_CONVOLUTION))
+        && (!pMask || pMask->common.filter != PIXMAN_FILTER_CONVOLUTION)
+	&& !pSrc->common.read_func && !pSrc->common.write_func
+	&& !(pMask && pMask->common.read_func) && !(pMask && pMask->common.write_func)
+	&& !pDst->common.read_func && !pDst->common.write_func)
     switch (op) {
     case PIXMAN_OP_OVER:
 	if (pMask)
