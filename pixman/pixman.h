@@ -290,52 +290,6 @@ pixman_bool_t		pixman_region_selfcheck (pixman_region16_t *region);
 void			pixman_region_reset(pixman_region16_t *region, pixman_box16_t *box);
 
 /*
- * Trapezoids
- */
-typedef struct pixman_edge pixman_edge_t;
-
-/*
- * An edge structure.  This represents a single polygon edge
- * and can be quickly stepped across small or large gaps in the
- * sample grid
- */
-struct pixman_render_edge
-{
-    pixman_fixed_t	x;
-    pixman_fixed_t	e;
-    pixman_fixed_t   stepx;
-    pixman_fixed_t   signdx;
-    pixman_fixed_t   dy;
-    pixman_fixed_t   dx;
-
-    pixman_fixed_t   stepx_small;
-    pixman_fixed_t   stepx_big;
-    pixman_fixed_t   dx_small;
-    pixman_fixed_t   dx_big;
-};
-
-pixman_fixed_t pixman_sample_ceil_y        (pixman_fixed_t       y,
-					    int                  bpp);
-pixman_fixed_t pixman_sample_floor_y       (pixman_fixed_t       y,
-					    int                  bpp);
-void           pixman_edge_step            (pixman_edge_t       *e,
-					    int                  n);
-void           pixman_edge_init            (pixman_edge_t       *e,
-					    int                  bpp,
-					    pixman_fixed_t       y_start,
-					    pixman_fixed_t       x_top,
-					    pixman_fixed_t       y_top,
-					    pixman_fixed_t       x_bot,
-					    pixman_fixed_t       y_bot);
-void           pixman_line_fixed_edge_init (pixman_edge_t       *e,
-					    int                  bpp,
-					    pixman_fixed_t       y,
-					    pixman_line_fixed_t *line,
-					    int                  x_off,
-					    int                  y_off);
-
-
-/*
  * Images
  */
 typedef  union pixman_image		pixman_image_t;
@@ -531,5 +485,55 @@ void            pixman_image_composite_rect          (pixman_op_t               
 						      int16_t                       dest_y,
 						      uint16_t                      width,
 						      uint16_t                      height);
+
+/*
+ * Trapezoids
+ */
+typedef struct pixman_edge pixman_edge_t;
+
+/*
+ * An edge structure.  This represents a single polygon edge
+ * and can be quickly stepped across small or large gaps in the
+ * sample grid
+ */
+struct pixman_edge
+{
+    pixman_fixed_t	x;
+    pixman_fixed_t	e;
+    pixman_fixed_t   stepx;
+    pixman_fixed_t   signdx;
+    pixman_fixed_t   dy;
+    pixman_fixed_t   dx;
+
+    pixman_fixed_t   stepx_small;
+    pixman_fixed_t   stepx_big;
+    pixman_fixed_t   dx_small;
+    pixman_fixed_t   dx_big;
+};
+
+pixman_fixed_t pixman_sample_ceil_y        (pixman_fixed_t       y,
+					    int                  bpp);
+pixman_fixed_t pixman_sample_floor_y       (pixman_fixed_t       y,
+					    int                  bpp);
+void           pixman_edge_step            (pixman_edge_t       *e,
+					    int                  n);
+void           pixman_edge_init            (pixman_edge_t       *e,
+					    int                  bpp,
+					    pixman_fixed_t       y_start,
+					    pixman_fixed_t       x_top,
+					    pixman_fixed_t       y_top,
+					    pixman_fixed_t       x_bot,
+					    pixman_fixed_t       y_bot);
+void           pixman_line_fixed_edge_init (pixman_edge_t       *e,
+					    int                  bpp,
+					    pixman_fixed_t       y,
+					    pixman_line_fixed_t *line,
+					    int                  x_off,
+					    int                  y_off);
+void           pixman_rasterize_edges      (pixman_image_t *image,
+					    pixman_edge_t	*l,
+					    pixman_edge_t	*r,
+					    pixman_fixed_t	t,
+					    pixman_fixed_t	b);
 
 #endif /* PIXMAN_H__ */

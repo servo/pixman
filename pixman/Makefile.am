@@ -9,7 +9,9 @@ libpixman_la_SOURCES =    \
 	 pixman-image.c   \
 	 pixman-compose.c \
 	 pixman-pict.c	  \
-	 pixman-utils.c
+	 pixman-utils.c   \
+	 pixman-edge.c    \
+	 pixman-edge-imp.h
 
 
 if USE_MMX

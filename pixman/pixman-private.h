@@ -15,6 +15,9 @@
 #define TRUE 1
 #endif
 
+#define MSBFirst 0
+#define LSBFirst 1
+
 #ifdef WORDS_BIGENDIAN
 #  define IMAGE_BYTE_ORDER MSBFirst
 #  define BITMAP_BIT_ORDER MSBFirst
@@ -32,6 +35,14 @@
 #else
 #  define FUNC     ((const char*) ("???"))
 #endif
+
+
+#define FB_SHIFT    5
+#define FB_UNIT     (1 << FB_SHIFT)
+#define FB_HALFUNIT (1 << (FB_SHIFT-1))
+#define FB_MASK     (FB_UNIT - 1)
+#define FB_ALLONES  ((uint32_t) -1)
+    
 
 #if DEBUG
 
@@ -249,6 +260,26 @@ void pixmanCompositeRect (const FbComposeData *data,
 #define FbStipRight(x,n) FbScrRight(x,n)
 #define FbStipMask(x,w)	(FbStipRight(FB_STIP_ALLONES,(x) & FB_STIP_MASK) & \
 			 FbStipLeft(FB_STIP_ALLONES,(FB_STIP_UNIT - ((x)+(w))) & FB_STIP_MASK))
+
+#define FbLeftMask(x)       ( ((x) & FB_MASK) ? \
+			      FbScrRight(FB_ALLONES,(x) & FB_MASK) : 0)
+#define FbRightMask(x)      ( ((FB_UNIT - (x)) & FB_MASK) ? \
+			      FbScrLeft(FB_ALLONES,(FB_UNIT - (x)) & FB_MASK) : 0)
+
+#define FbMaskBits(x,w,l,n,r) {						\
+	n = (w); \
+	r = FbRightMask((x)+n); \
+	l = FbLeftMask(x); \
+	if (l) { \
+	    n -= FB_UNIT - ((x) & FB_MASK); \
+	    if (n < 0) { \
+		n = 0; \
+		l &= r; \
+		r = 0; \
+	    } \
+	} \
+	n >>= FB_SHIFT; \
+    }
 
 #if IMAGE_BYTE_ORDER == MSBFirst
 #define Fetch24(a)  ((unsigned long) (a) & 1 ?			      \
@@ -657,19 +688,19 @@ void pixmanCompositeRect (const FbComposeData *data,
 #define N_Y_FRAC(n)	((n) == 1 ? 1 : (1 << ((n)/2)) - 1)
 #define N_X_FRAC(n)	((1 << ((n)/2)) + 1)
 
-#define STEP_Y_SMALL(n)	(xFixed1 / N_Y_FRAC(n))
-#define STEP_Y_BIG(n)	(xFixed1 - (N_Y_FRAC(n) - 1) * STEP_Y_SMALL(n))
+#define STEP_Y_SMALL(n)	(pixman_fixed_1 / N_Y_FRAC(n))
+#define STEP_Y_BIG(n)	(pixman_fixed_1 - (N_Y_FRAC(n) - 1) * STEP_Y_SMALL(n))
 
 #define Y_FRAC_FIRST(n)	(STEP_Y_SMALL(n) / 2)
 #define Y_FRAC_LAST(n)	(Y_FRAC_FIRST(n) + (N_Y_FRAC(n) - 1) * STEP_Y_SMALL(n))
 
-#define STEP_X_SMALL(n)	(xFixed1 / N_X_FRAC(n))
-#define STEP_X_BIG(n)	(xFixed1 - (N_X_FRAC(n) - 1) * STEP_X_SMALL(n))
+#define STEP_X_SMALL(n)	(pixman_fixed_1 / N_X_FRAC(n))
+#define STEP_X_BIG(n)	(pixman_fixed_1 - (N_X_FRAC(n) - 1) * STEP_X_SMALL(n))
 
 #define X_FRAC_FIRST(n)	(STEP_X_SMALL(n) / 2)
 #define X_FRAC_LAST(n)	(X_FRAC_FIRST(n) + (N_X_FRAC(n) - 1) * STEP_X_SMALL(n))
 
-#define RenderSamplesX(x,n)	((n) == 1 ? 0 : (xFixedFrac (x) + X_FRAC_FIRST(n)) / STEP_X_SMALL(n))
+#define RenderSamplesX(x,n)	((n) == 1 ? 0 : (pixman_fixed_frac (x) + X_FRAC_FIRST(n)) / STEP_X_SMALL(n))
 
 /*
  * Step across a small sample grid gap
