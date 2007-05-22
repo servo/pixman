@@ -27,11 +27,9 @@ AM_INIT_AUTOMAKE([dist-bzip2])
 
 AM_CONFIG_HEADER(config.h)
 
-# Check for progs
 AC_PROG_CC
 AC_PROG_LIBTOOL
-
-# endianness
+AC_CHECK_FUNCS([getisax])
 AC_C_BIGENDIAN
 
 # Check for dependencies
