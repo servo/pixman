@@ -1,3 +1,7 @@
+#ifndef PACKAGE
+#  error config.h must be included before pixman-private.h
+#endif
+
 #ifndef PIXMAN_PRIVATE_H
 #define PIXMAN_PRIVATE_H
 

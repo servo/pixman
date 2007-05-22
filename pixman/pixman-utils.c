@@ -21,6 +21,7 @@
  * Author:  Keith Packard, SuSE, Inc.
  */
 
+#include <config.h>
 #include "pixman.h"
 #include "pixman-private.h"
 
