@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include "pixman.h"
 #include "pixman-private.h"
+#include "pixman-mmx.h"
 
 #define FbFullMask(n)   ((n) == 32 ? (uint32_t)-1 : ((((uint32_t) 1) << n) - 1))
 
@@ -1540,7 +1541,12 @@ pixman_image_composite (pixman_op_t      op,
 #ifdef USE_MMX
 		    if (fbHaveMMX() &&
 			(pSrc->bits.format == PIXMAN_x8r8g8b8 || pSrc->bits.format == PIXMAN_x8b8g8r8))
-			func = fbCompositeCopyAreammx;
+#if 0
+			/* FIXME */
+			
+			func = fbCompositeCopyAreammx
+#endif
+			    ;
 		    else
 #endif
 #if 0
@@ -1582,7 +1588,11 @@ pixman_image_composite (pixman_op_t      op,
 		    case PIXMAN_x8r8g8b8:
 #ifdef USE_MMX
 			if (fbHaveMMX())
-			    func = fbCompositeCopyAreammx;
+#if 0
+			    /* FIXME */
+			    func = fbCompositeCopyAreammx
+#endif
+				;
 #endif
 			break;
 		    default:
@@ -1594,7 +1604,11 @@ pixman_image_composite (pixman_op_t      op,
 		    case PIXMAN_x8b8g8r8:
 #ifdef USE_MMX
 			if (fbHaveMMX())
-			    func = fbCompositeCopyAreammx;
+#if 0
+			    /* FIXME */
+			    func = fbCompositeCopyAreammx
+#endif
+				;
 #endif
 			break;
 		    default:
@@ -1745,10 +1759,14 @@ pixman_image_composite (pixman_op_t      op,
 	    if (pSrc->bits.format == pDst->bits.format)
 	    {
 #ifdef USE_MMX
-		if (pSrc->pDrawable != pDst->pDrawable && fbHaveMMX() &&
+		if (pSrc->bits.bits != pDst->bits.bits && fbHaveMMX() &&
 		    (PIXMAN_FORMAT_BPP (pSrc->bits.format) == 16 ||
 		     PIXMAN_FORMAT_BPP (pSrc->bits.format) == 32))
-		    func = fbCompositeCopyAreammx;
+#if 0
+		    /* FIXME */
+		    func = fbCompositeCopyAreammx
+#endif
+			;
 		else
 #endif
 		    /* FIXME */
@@ -1768,7 +1786,7 @@ pixman_image_composite (pixman_op_t      op,
 	    if (fbHaveMMX())
 		func = fbCompositeIn_8x8mmx;
 	}
-	else if (srcRepeat && pMask && !pMask->componentAlpha &&
+	else if (srcRepeat && pMask && !pMask->common.component_alpha &&
 		 (pSrc->bits.format == PIXMAN_a8r8g8b8 ||
 		  pSrc->bits.format == PIXMAN_a8b8g8r8)   &&
 		 (pMask->bits.format == PIXMAN_a8)        &&
@@ -1802,3 +1820,204 @@ pixman_image_composite (pixman_op_t      op,
 				  xMask, yMask, xDst, yDst, width, height,
 				  srcRepeat, maskRepeat, func, region);
 }
+
+
+#ifdef USE_MMX
+/* The CPU detection code needs to be in a file not compiled with
+ * "-mmmx -msse", as gcc would generate CMOV instructions otherwise
+ * that would lead to SIGILL instructions on old CPUs that don't have
+ * it.
+ */
+#if !defined(__amd64__) && !defined(__x86_64__)
+
+#ifdef HAVE_GETISAX
+#include <sys/auxv.h>
+#endif
+
+enum CPUFeatures {
+    NoFeatures = 0,
+    MMX = 0x1,
+    MMX_Extensions = 0x2, 
+    SSE = 0x6,
+    SSE2 = 0x8,
+    CMOV = 0x10
+};
+
+static unsigned int detectCPUFeatures(void) {
+    unsigned int features = 0;
+    unsigned int result = 0;
+
+#ifdef HAVE_GETISAX
+    if (getisax(&result, 1)) {
+        if (result & AV_386_CMOV)
+            features |= CMOV;
+        if (result & AV_386_MMX)
+            features |= MMX;
+        if (result & AV_386_AMD_MMX)
+            features |= MMX_Extensions;
+        if (result & AV_386_SSE)
+            features |= SSE;
+        if (result & AV_386_SSE2)
+            features |= SSE2;
+    }
+#else
+    char vendor[13];
+#ifdef _MSC_VER
+    int vendor0 = 0, vendor1, vendor2;
+#endif
+    vendor[0] = 0;
+    vendor[12] = 0;
+
+#ifdef __GNUC__
+    /* see p. 118 of amd64 instruction set manual Vol3 */
+    /* We need to be careful about the handling of %ebx and
+     * %esp here. We can't declare either one as clobbered
+     * since they are special registers (%ebx is the "PIC
+     * register" holding an offset to global data, %esp the
+     * stack pointer), so we need to make sure they have their
+     * original values when we access the output operands.
+     */
+    __asm__ ("pushf\n"
+             "pop %%eax\n"
+             "mov %%eax, %%ecx\n"
+             "xor $0x00200000, %%eax\n"
+             "push %%eax\n"
+             "popf\n"
+             "pushf\n"
+             "pop %%eax\n"
+             "mov $0x0, %%edx\n"
+             "xor %%ecx, %%eax\n"
+             "jz 1f\n"
+
+             "mov $0x00000000, %%eax\n"
+	     "push %%ebx\n"
+             "cpuid\n"
+             "mov %%ebx, %%eax\n"
+	     "pop %%ebx\n"
+	     "mov %%eax, %1\n"
+             "mov %%edx, %2\n"
+             "mov %%ecx, %3\n"
+             "mov $0x00000001, %%eax\n"
+	     "push %%ebx\n"
+             "cpuid\n"
+	     "pop %%ebx\n"
+             "1:\n"
+             "mov %%edx, %0\n"
+             : "=r" (result), 
+               "=m" (vendor[0]), 
+               "=m" (vendor[4]), 
+               "=m" (vendor[8])
+             :
+             : "%eax", "%ecx", "%edx"
+        );
+
+#elif defined (_MSC_VER)
+
+    _asm {
+      pushfd
+      pop eax
+      mov ecx, eax
+      xor eax, 00200000h
+      push eax
+      popfd
+      pushfd
+      pop eax
+      mov edx, 0
+      xor eax, ecx
+      jz nocpuid
+
+      mov eax, 0
+      push ebx
+      cpuid
+      mov eax, ebx
+      pop ebx
+      mov vendor0, eax
+      mov vendor1, edx
+      mov vendor2, ecx
+      mov eax, 1
+      push ebx
+      cpuid
+      pop ebx
+    nocpuid:
+      mov result, edx
+    }
+    memmove (vendor+0, &vendor0, 4);
+    memmove (vendor+4, &vendor1, 4);
+    memmove (vendor+8, &vendor2, 4);
+
+#else
+#   error unsupported compiler
+#endif
+    
+    features = 0;
+    if (result) {
+        /* result now contains the standard feature bits */
+        if (result & (1 << 15))
+            features |= CMOV;
+        if (result & (1 << 23))
+            features |= MMX;
+        if (result & (1 << 25))
+            features |= SSE;
+        if (result & (1 << 26))
+            features |= SSE2;
+        if ((features & MMX) && !(features & SSE) &&
+            (strcmp(vendor, "AuthenticAMD") == 0 ||
+             strcmp(vendor, "Geode by NSC") == 0)) {
+            /* check for AMD MMX extensions */
+#ifdef __GNUC__
+            __asm__("push %%ebx\n"
+                    "mov $0x80000000, %%eax\n"
+                    "cpuid\n"
+                    "xor %%edx, %%edx\n"
+                    "cmp $0x1, %%eax\n"
+                    "jge 2f\n"
+                    "mov $0x80000001, %%eax\n"
+                    "cpuid\n"
+                    "2:\n"
+                    "pop %%ebx\n"
+                    "mov %%edx, %0\n"
+                    : "=r" (result)
+                    :
+                    : "%eax", "%ecx", "%edx"
+                );
+#elif defined _MSC_VER
+            _asm {
+              push ebx
+              mov eax, 80000000h
+              cpuid
+              xor edx, edx
+              cmp eax, 1
+              jge notamd
+              mov eax, 80000001h
+              cpuid
+            notamd:
+              pop ebx
+              mov result, edx
+            }
+#endif
+            if (result & (1<<22))
+                features |= MMX_Extensions;
+        }
+    }
+#endif /* HAVE_GETISAX */
+
+    return features;
+}
+
+pixman_bool_t
+fbHaveMMX (void)
+{
+    static pixman_bool_t initialized = FALSE;
+    static pixman_bool_t mmx_present;
+
+    if (!initialized)
+    {
+        unsigned int features = detectCPUFeatures();
+	mmx_present = (features & (MMX|MMX_Extensions)) == (MMX|MMX_Extensions);
+        initialized = TRUE;
+    }
+    
+    return mmx_present;
+}
+#endif /* __amd64__ */
+#endif 

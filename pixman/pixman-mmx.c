@@ -28,8 +28,6 @@
  *
  * Based on work by Owen Taylor
  */
-#define USE_MMX /* FIXME: do this in the build system */
-
 #ifdef HAVE_DIX_CONFIG_H
 #include <dix-config.h>
 #endif
@@ -877,37 +875,37 @@ mmxCombineAddC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 }
 
 /* FIXME: this should be reinstated after adding fbmmx to pixman */
-extern FbComposeFunctions composeFunctions;
+extern FbComposeFunctions pixman_composeFunctions;
 
 void fbComposeSetupMMX(void)
 {
     /* check if we have MMX support and initialize accordingly */
     if (fbHaveMMX()) {
-        composeFunctions.combineU[PIXMAN_OP_OVER] = mmxCombineOverU;
-        composeFunctions.combineU[PIXMAN_OP_OVER_REVERSE] = mmxCombineOverReverseU;
-        composeFunctions.combineU[PIXMAN_OP_IN] = mmxCombineInU;
-        composeFunctions.combineU[PIXMAN_OP_IN_REVERSE] = mmxCombineInReverseU;
-        composeFunctions.combineU[PIXMAN_OP_OUT] = mmxCombineOutU;
-        composeFunctions.combineU[PIXMAN_OP_OUT_REVERSE] = mmxCombineOutReverseU;
-        composeFunctions.combineU[PIXMAN_OP_ATOP] = mmxCombineAtopU;
-        composeFunctions.combineU[PIXMAN_OP_ATOP_REVERSE] = mmxCombineAtopReverseU;
-        composeFunctions.combineU[PIXMAN_OP_XOR] = mmxCombineXorU;
-        composeFunctions.combineU[PIXMAN_OP_ADD] = mmxCombineAddU;
-        composeFunctions.combineU[PIXMAN_OP_SATURATE] = mmxCombineSaturateU;
+        pixman_composeFunctions.combineU[PIXMAN_OP_OVER] = mmxCombineOverU;
+        pixman_composeFunctions.combineU[PIXMAN_OP_OVER_REVERSE] = mmxCombineOverReverseU;
+        pixman_composeFunctions.combineU[PIXMAN_OP_IN] = mmxCombineInU;
+        pixman_composeFunctions.combineU[PIXMAN_OP_IN_REVERSE] = mmxCombineInReverseU;
+        pixman_composeFunctions.combineU[PIXMAN_OP_OUT] = mmxCombineOutU;
+        pixman_composeFunctions.combineU[PIXMAN_OP_OUT_REVERSE] = mmxCombineOutReverseU;
+        pixman_composeFunctions.combineU[PIXMAN_OP_ATOP] = mmxCombineAtopU;
+        pixman_composeFunctions.combineU[PIXMAN_OP_ATOP_REVERSE] = mmxCombineAtopReverseU;
+        pixman_composeFunctions.combineU[PIXMAN_OP_XOR] = mmxCombineXorU;
+        pixman_composeFunctions.combineU[PIXMAN_OP_ADD] = mmxCombineAddU;
+        pixman_composeFunctions.combineU[PIXMAN_OP_SATURATE] = mmxCombineSaturateU;
 
-        composeFunctions.combineC[PIXMAN_OP_SRC] = mmxCombineSrcC;
-        composeFunctions.combineC[PIXMAN_OP_OVER] = mmxCombineOverC;
-        composeFunctions.combineC[PIXMAN_OP_OVER_REVERSE] = mmxCombineOverReverseC;
-        composeFunctions.combineC[PIXMAN_OP_IN] = mmxCombineInC;
-        composeFunctions.combineC[PIXMAN_OP_IN_REVERSE] = mmxCombineInReverseC;
-        composeFunctions.combineC[PIXMAN_OP_OUT] = mmxCombineOutC;
-        composeFunctions.combineC[PIXMAN_OP_OUT_REVERSE] = mmxCombineOutReverseC;
-        composeFunctions.combineC[PIXMAN_OP_ATOP] = mmxCombineAtopC;
-        composeFunctions.combineC[PIXMAN_OP_ATOP_REVERSE] = mmxCombineAtopReverseC;
-        composeFunctions.combineC[PIXMAN_OP_XOR] = mmxCombineXorC;
-        composeFunctions.combineC[PIXMAN_OP_ADD] = mmxCombineAddC;
+        pixman_composeFunctions.combineC[PIXMAN_OP_SRC] = mmxCombineSrcC;
+        pixman_composeFunctions.combineC[PIXMAN_OP_OVER] = mmxCombineOverC;
+        pixman_composeFunctions.combineC[PIXMAN_OP_OVER_REVERSE] = mmxCombineOverReverseC;
+        pixman_composeFunctions.combineC[PIXMAN_OP_IN] = mmxCombineInC;
+        pixman_composeFunctions.combineC[PIXMAN_OP_IN_REVERSE] = mmxCombineInReverseC;
+        pixman_composeFunctions.combineC[PIXMAN_OP_OUT] = mmxCombineOutC;
+        pixman_composeFunctions.combineC[PIXMAN_OP_OUT_REVERSE] = mmxCombineOutReverseC;
+        pixman_composeFunctions.combineC[PIXMAN_OP_ATOP] = mmxCombineAtopC;
+        pixman_composeFunctions.combineC[PIXMAN_OP_ATOP_REVERSE] = mmxCombineAtopReverseC;
+        pixman_composeFunctions.combineC[PIXMAN_OP_XOR] = mmxCombineXorC;
+        pixman_composeFunctions.combineC[PIXMAN_OP_ADD] = mmxCombineAddC;
 
-        composeFunctions.combineMaskU = mmxCombineMaskU;
+        pixman_composeFunctions.combineMaskU = mmxCombineMaskU;
     } 
 }
 
@@ -915,7 +913,7 @@ void fbComposeSetupMMX(void)
 /* ------------------ MMX code paths called from fbpict.c ----------------------- */
 
 void
-fbCompositeSolid_nx8888mmx (uint8_t	op,
+fbCompositeSolid_nx8888mmx (pixman_op_t op,
 			    pixman_image_t * pSrc,
 			    pixman_image_t * pMask,
 			    pixman_image_t * pDst,
@@ -993,7 +991,7 @@ fbCompositeSolid_nx8888mmx (uint8_t	op,
 }
 
 void
-fbCompositeSolid_nx0565mmx (uint8_t	op,
+fbCompositeSolid_nx0565mmx (pixman_op_t op,
 			    pixman_image_t * pSrc,
 			    pixman_image_t * pMask,
 			    pixman_image_t * pDst,
@@ -1078,7 +1076,7 @@ fbCompositeSolid_nx0565mmx (uint8_t	op,
 }
 
 void
-fbCompositeSolidMask_nx8888x8888Cmmx (uint8_t	op,
+fbCompositeSolidMask_nx8888x8888Cmmx (pixman_op_t op,
 				      pixman_image_t * pSrc,
 				      pixman_image_t * pMask,
 				      pixman_image_t * pDst,
@@ -1181,7 +1179,7 @@ fbCompositeSolidMask_nx8888x8888Cmmx (uint8_t	op,
 }
 
 void
-fbCompositeSrc_8888x8x8888mmx (uint8_t	op,
+fbCompositeSrc_8888x8x8888mmx (pixman_op_t op,
 			       pixman_image_t * pSrc,
 			       pixman_image_t * pMask,
 			       pixman_image_t * pDst,
@@ -1265,7 +1263,7 @@ fbCompositeSrc_8888x8x8888mmx (uint8_t	op,
 }
 
 void
-fbCompositeSrc_x888x8x8888mmx (uint8_t	op,
+fbCompositeSrc_x888x8x8888mmx (pixman_op_t op,
 			       pixman_image_t * pSrc,
 			       pixman_image_t * pMask,
 			       pixman_image_t * pDst,
@@ -1350,7 +1348,7 @@ fbCompositeSrc_x888x8x8888mmx (uint8_t	op,
 }
 
 void
-fbCompositeSrc_8888x8888mmx (uint8_t	op,
+fbCompositeSrc_8888x8888mmx (pixman_op_t op,
 			     pixman_image_t * pSrc,
 			     pixman_image_t * pMask,
 			     pixman_image_t * pDst,
@@ -1429,7 +1427,7 @@ fbCompositeSrc_8888x8888mmx (uint8_t	op,
 }
 
 void
-fbCompositeSrc_8888x0565mmx (uint8_t      op,
+fbCompositeSrc_8888x0565mmx (pixman_op_t op,
 			     pixman_image_t * pSrc,
 			     pixman_image_t * pMask,
 			     pixman_image_t * pDst,
@@ -1530,7 +1528,7 @@ fbCompositeSrc_8888x0565mmx (uint8_t      op,
 }
 
 void
-fbCompositeSolidMask_nx8x8888mmx (uint8_t      op,
+fbCompositeSolidMask_nx8x8888mmx (pixman_op_t op,
 				  pixman_image_t * pSrc,
 				  pixman_image_t * pMask,
 				  pixman_image_t * pDst,
@@ -1784,7 +1782,7 @@ fbSolidFillmmx (DrawablePtr	pDraw,
 #endif
 
 void
-fbCompositeSolidMaskSrc_nx8x8888mmx (uint8_t      op,
+fbCompositeSolidMaskSrc_nx8x8888mmx (pixman_op_t op,
 				     pixman_image_t * pSrc,
 				     pixman_image_t * pMask,
 				     pixman_image_t * pDst,
@@ -1917,7 +1915,7 @@ fbCompositeSolidMaskSrc_nx8x8888mmx (uint8_t      op,
 }
 
 void
-fbCompositeSolidMask_nx8x0565mmx (uint8_t      op,
+fbCompositeSolidMask_nx8x0565mmx (pixman_op_t op,
 				  pixman_image_t * pSrc,
 				  pixman_image_t * pMask,
 				  pixman_image_t * pDst,
@@ -2046,7 +2044,7 @@ fbCompositeSolidMask_nx8x0565mmx (uint8_t      op,
 }
 
 void
-fbCompositeSrc_8888RevNPx0565mmx (uint8_t      op,
+fbCompositeSrc_8888RevNPx0565mmx (pixman_op_t op,
 				  pixman_image_t * pSrc,
 				  pixman_image_t * pMask,
 				  pixman_image_t * pDst,
@@ -2167,7 +2165,7 @@ fbCompositeSrc_8888RevNPx0565mmx (uint8_t      op,
 /* "8888RevNP" is GdkPixbuf's format: ABGR, non premultiplied */
 
 void
-fbCompositeSrc_8888RevNPx8888mmx (uint8_t      op,
+fbCompositeSrc_8888RevNPx8888mmx (pixman_op_t op,
 				  pixman_image_t * pSrc,
 				  pixman_image_t * pMask,
 				  pixman_image_t * pDst,
@@ -2266,7 +2264,7 @@ fbCompositeSrc_8888RevNPx8888mmx (uint8_t      op,
 }
 
 void
-fbCompositeSolidMask_nx8888x0565Cmmx (uint8_t      op,
+fbCompositeSolidMask_nx8888x0565Cmmx (pixman_op_t op,
 				      pixman_image_t * pSrc,
 				      pixman_image_t * pMask,
 				      pixman_image_t * pDst,
@@ -2373,7 +2371,7 @@ fbCompositeSolidMask_nx8888x0565Cmmx (uint8_t      op,
 }
 
 void
-fbCompositeIn_nx8x8mmx (uint8_t	op,
+fbCompositeIn_nx8x8mmx (pixman_op_t op,
 			pixman_image_t * pSrc,
 			pixman_image_t * pMask,
 			pixman_image_t * pDst,
@@ -2457,7 +2455,7 @@ fbCompositeIn_nx8x8mmx (uint8_t	op,
 }
 
 void
-fbCompositeIn_8x8mmx (uint8_t	op,
+fbCompositeIn_8x8mmx (pixman_op_t op,
 		      pixman_image_t * pSrc,
 		      pixman_image_t * pMask,
 		      pixman_image_t * pDst,
@@ -2521,7 +2519,7 @@ fbCompositeIn_8x8mmx (uint8_t	op,
 }
 
 void
-fbCompositeSrcAdd_8888x8x8mmx (uint8_t   op,
+fbCompositeSrcAdd_8888x8x8mmx (pixman_op_t op,
 			       pixman_image_t * pSrc,
 			       pixman_image_t * pMask,
 			       pixman_image_t * pDst,
@@ -2599,7 +2597,7 @@ fbCompositeSrcAdd_8888x8x8mmx (uint8_t   op,
 }
 
 void
-fbCompositeSrcAdd_8000x8000mmx (uint8_t	op,
+fbCompositeSrcAdd_8000x8000mmx (pixman_op_t op,
 				pixman_image_t * pSrc,
 				pixman_image_t * pMask,
 				pixman_image_t * pDst,
@@ -2671,7 +2669,7 @@ fbCompositeSrcAdd_8000x8000mmx (uint8_t	op,
 }
 
 void
-fbCompositeSrcAdd_8888x8888mmx (uint8_t		op,
+fbCompositeSrcAdd_8888x8888mmx (pixman_op_t 	op,
 				pixman_image_t *	pSrc,
 				pixman_image_t *	pMask,
 				pixman_image_t *	 pDst,

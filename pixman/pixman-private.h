@@ -1,3 +1,6 @@
+#ifndef PIXMAN_PRIVATE_H
+#define PIXMAN_PRIVATE_H
+
 #include "pixman.h"
 
 #ifndef FALSE
@@ -632,3 +635,5 @@ void pixmanCompositeRect (const FbComposeData *data,
 	(line) = ((type *) __bits__) +					\
 	    (out_stride) * (y) + (mul) * (x);				\
     } while (0)
+
+#endif /* PIXMAN_PRIVATE_H */
