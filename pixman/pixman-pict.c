@@ -25,6 +25,7 @@
 #include <config.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "pixman.h"
 #include "pixman-private.h"
 #include "pixman-mmx.h"
@@ -1236,7 +1237,8 @@ pixman_image_composite (pixman_op_t      op,
 
 #ifdef USE_MMX
     static pixman_bool_t mmx_setup = FALSE;
-    if (!mmx_setup) {
+    if (!mmx_setup)
+    {
         fbComposeSetupMMX();
         mmx_setup = TRUE;
     }
