@@ -27,59 +27,6 @@
 #include "pixman.h"
 #include "pixman-private.h"
 
-#define fbComposeGetSolid(img, res, fmt) do {				\
-	uint32_t	       *bits__   = (img)->bits.bits;		\
-	pixman_format_code_t	format__ = (img)->bits.format;		\
-									\
-	switch (PIXMAN_FORMAT_BPP((img)->bits.format))			\
-	{								\
-	case 32:							\
-	    (res) = READ((uint32_t *)bits__);				\
-	    break;							\
-	case 24:							\
-	    (res) = Fetch24 ((uint8_t *) bits__);			\
-	    break;							\
-	case 16:							\
-	    (res) = READ((uint16_t *) bits__);				\
-	    (res) = cvt0565to0888(res);					\
-	    break;							\
-	case 8:								\
-	    (res) = READ((uint8_t *) bits__);				\
-	    (res) = (res) << 24;					\
-	    break;							\
-	case 1:								\
-	    (res) = READ((uint32_t *) bits__);				\
-	    (res) = FbLeftStipBits((res),1) ? 0xff000000 : 0x00000000;	\
-	    break;							\
-	default:							\
-	    return;							\
-	}								\
-	/* If necessary, convert RGB <--> BGR. */			\
-	if (PIXMAN_FORMAT_TYPE (format__) != PIXMAN_FORMAT_TYPE(fmt))	\
-	{								\
-	    (res) = ((((res) & 0xff000000) >>  0) |			\
-		     (((res) & 0x00ff0000) >> 16) |			\
-		     (((res) & 0x0000ff00) >>  0) |			\
-		     (((res) & 0x000000ff) << 16));			\
-	}								\
-	/* manage missing src alpha */					\
-	if (!PIXMAN_FORMAT_A((img)->bits.format))			\
-	    (res) |= 0xff000000;					\
-    } while (0)
-
-#define fbComposeGetStart(pict,x,y,type,out_stride,line,mul) do {	\
-	uint32_t	*__bits__;					\
-	int		__stride__;					\
-	int		__bpp__;					\
-									\
-	__bits__ = pict->bits.bits;					\
-	__stride__ = pict->bits.rowstride;				\
-	__bpp__ = PIXMAN_FORMAT_BPP(pict->bits.format);			\
-	(out_stride) = __stride__ * sizeof (uint32_t) / sizeof (type);	\
-	(line) = ((type *) __bits__) +					\
-	    (out_stride) * (y) + (mul) * (x);				\
-    } while (0)
-
 #define FbFullMask(n)   ((n) == 32 ? (uint32_t)-1 : ((((uint32_t) 1) << n) - 1))
 
 #undef READ
