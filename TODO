@@ -58,3 +58,5 @@
   the X server will be changing them.
 
 - Make sure the endian-ness macros are defined correctly.
+
+- Detect MMX code properly

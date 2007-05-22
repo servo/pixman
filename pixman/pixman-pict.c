@@ -945,8 +945,8 @@ fbCompositeSrcSrc_nxn  (pixman_op_t	   op,
 static __inline pixman_bool_t
 miClipPictureReg (pixman_region16_t *	pRegion,
 		  pixman_region16_t *	pClip,
-		  int		dx,
-		  int		dy)
+		  int			dx,
+		  int			dy)
 {
     if (pixman_region_n_rects(pRegion) == 1 &&
 	pixman_region_n_rects(pClip) == 1)
