@@ -15,6 +15,14 @@
 #define TRUE 1
 #endif
 
+#ifdef WORDS_BIGENDIAN
+#  define IMAGE_BYTE_ORDER MSBFirst
+#  define BITMAP_BIT_ORDER MSBFirst
+#else
+#  define IMAGE_BYTE_ORDER LSBFirst
+#  define BITMAP_BIT_ORDER LSBFirst
+#endif
+
 #define DEBUG 1
 
 #if defined (__GNUC__)
