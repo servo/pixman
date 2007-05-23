@@ -311,7 +311,7 @@ pixman_rasterize_edges (pixman_image_t *image,
  */
 
 pixman_fixed_t
-pixman_render_sample_ceil_y (pixman_fixed_t y, int n)
+pixman_sample_ceil_y (pixman_fixed_t y, int n)
 {
     pixman_fixed_t   f = pixman_fixed_frac(y);
     pixman_fixed_t   i = pixman_fixed_floor(y);

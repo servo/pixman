@@ -58,3 +58,7 @@
   the X server will be changing them.
 
 - Make sure the endian-ness macros are defined correctly.
+
+- Run cairo test suite; fix bugs
+	- one bug in source-scale-clip
+
