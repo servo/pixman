@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <pixman/pixman.h>
 #include <gtk/gtk.h>
+#include "pixman.h"
 
 GdkPixbuf *
 pixbuf_from_argb32 (uint32_t *bits,
