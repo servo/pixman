@@ -490,6 +490,9 @@ void            pixman_image_composite_rect          (pixman_op_t               
  * Trapezoids
  */
 typedef struct pixman_edge pixman_edge_t;
+typedef struct pixman_trapezoid pixman_trapezoid_t;
+typedef struct pixman_trap pixman_trap_t;
+typedef struct pixman_span_fix pixman_span_fix_t;
 
 /*
  * An edge structure.  This represents a single polygon edge
@@ -509,6 +512,29 @@ struct pixman_edge
     pixman_fixed_t   stepx_big;
     pixman_fixed_t   dx_small;
     pixman_fixed_t   dx_big;
+};
+
+struct pixman_trapezoid
+{
+    pixman_fixed_t  top, bottom;
+    pixman_line_fixed_t	left, right;
+};
+
+
+/* whether 't' is a well defined not obviously empty trapezoid */
+#define pixman_trapezoid_valid(t)				\
+    ((t)->left.p1.y != (t)->left.p2.y &&			   \
+     (t)->right.p1.y != (t)->right.p2.y &&			   \
+     (int) ((t)->bottom - (t)->top) > 0)
+
+struct pixman_span_fix
+{
+    pixman_fixed_t	l, r, y;
+};
+
+struct pixman_trap
+{
+    pixman_span_fix_t	top, bot;
 };
 
 pixman_fixed_t pixman_sample_ceil_y        (pixman_fixed_t       y,

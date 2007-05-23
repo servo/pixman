@@ -2,16 +2,17 @@ lib_LTLIBRARIES = libpixman.la
 
 libpixman_la_LIBADD = @DEP_LIBS@ -lm
 
-libpixman_la_SOURCES =    \
-	 pixman.h	  \
-	 pixman-region.c  \
-	 pixman-private.h \
-	 pixman-image.c   \
-	 pixman-compose.c \
-	 pixman-pict.c	  \
-	 pixman-utils.c   \
-	 pixman-edge.c    \
-	 pixman-edge-imp.h
+libpixman_la_SOURCES =		\
+	pixman.h		\
+	pixman-region.c		\
+	pixman-private.h	\
+	pixman-image.c		\
+	pixman-compose.c	\
+	pixman-pict.c		\
+	pixman-utils.c		\
+	pixman-edge.c		\
+	pixman-edge-imp.h	\
+	pixman-trap.c
 
 
 if USE_MMX
