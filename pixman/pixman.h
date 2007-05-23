@@ -556,10 +556,20 @@ void           pixman_line_fixed_edge_init (pixman_edge_t       *e,
 					    pixman_line_fixed_t *line,
 					    int                  x_off,
 					    int                  y_off);
-void           pixman_rasterize_edges      (pixman_image_t *image,
-					    pixman_edge_t	*l,
-					    pixman_edge_t	*r,
-					    pixman_fixed_t	t,
-					    pixman_fixed_t	b);
+void           pixman_rasterize_edges      (pixman_image_t      *image,
+					    pixman_edge_t       *l,
+					    pixman_edge_t       *r,
+					    pixman_fixed_t       t,
+					    pixman_fixed_t       b);
+void           pixman_add_traps            (pixman_image_t      *image,
+					    int16_t              x_off,
+					    int16_t              y_off,
+					    int                  ntrap,
+					    pixman_trap_t       *traps);
+void           pixman_rasterize_trapezoid  (pixman_image_t      *image,
+					    pixman_trapezoid_t  *trap,
+					    int                  x_off,
+					    int                  y_off);
+
 
 #endif /* PIXMAN_H__ */
