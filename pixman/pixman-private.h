@@ -223,7 +223,7 @@ struct bits_image
     int				width;
     int				height;
     uint32_t *			bits;
-    int				rowstride; /* in bytes */
+    int				rowstride; /* in number of uint32_t's */
 };
 
 union pixman_image
