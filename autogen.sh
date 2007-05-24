@@ -1,5 +1,12 @@
-#!/bin/sh
-# Run this to generate all the initial makefiles, etc.
+#! /bin/sh
 
-autoreconf --force -i
-./configure $*
+srcdir=`dirname $0`
+test -z "$srcdir" && srcdir=.
+
+ORIGDIR=`pwd`
+cd $srcdir
+
+autoreconf -v --install || exit 1
+cd $ORIGDIR || exit $?
+
+$srcdir/configure --enable-maintainer-mode "$@"
