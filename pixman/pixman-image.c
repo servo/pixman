@@ -351,8 +351,10 @@ pixman_image_set_filter (pixman_image_t       *image,
 {
     image_common_t *common = (image_common_t *)image;
     
-    if (params != common->filter_params)
+    if (params != common->filter_params || filter != common->filter)
     {
+	common->filter = filter;
+	
 	if (common->filter_params)
 	    free (common->filter_params);
 
