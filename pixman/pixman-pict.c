@@ -1137,7 +1137,7 @@ pixman_image_composite (pixman_op_t      op,
 			case PIXMAN_r5g6b5:
 			case PIXMAN_b5g6r5:
 #ifdef USE_MMX
-			    if (fbHaveMMX())
+			    if (pixman_have_mmx())
 				func = fbCompositeSolidMask_nx8x0565mmx;
 			    else
 #endif
@@ -1152,7 +1152,7 @@ pixman_image_composite (pixman_op_t      op,
 			case PIXMAN_a8b8g8r8:
 			case PIXMAN_x8b8g8r8:
 #ifdef USE_MMX
-			    if (fbHaveMMX())
+			    if (pixman_have_mmx())
 				func = fbCompositeSolidMask_nx8x8888mmx;
 			    else
 #endif
@@ -1168,7 +1168,7 @@ pixman_image_composite (pixman_op_t      op,
 			    case PIXMAN_a8r8g8b8:
 			    case PIXMAN_x8r8g8b8:
 #ifdef USE_MMX
-				if (fbHaveMMX())
+				if (pixman_have_mmx())
 				    func = fbCompositeSolidMask_nx8888x8888Cmmx;
 				else
 #endif
@@ -1176,7 +1176,7 @@ pixman_image_composite (pixman_op_t      op,
 				break;
 			    case PIXMAN_r5g6b5:
 #ifdef USE_MMX
-				if (fbHaveMMX())
+				if (pixman_have_mmx())
 				    func = fbCompositeSolidMask_nx8888x0565Cmmx;
 				else
 #endif
@@ -1193,7 +1193,7 @@ pixman_image_composite (pixman_op_t      op,
 			    case PIXMAN_a8b8g8r8:
 			    case PIXMAN_x8b8g8r8:
 #ifdef USE_MMX
-				if (fbHaveMMX())
+				if (pixman_have_mmx())
 				    func = fbCompositeSolidMask_nx8888x8888Cmmx;
 				else
 #endif
@@ -1201,7 +1201,7 @@ pixman_image_composite (pixman_op_t      op,
 				break;
 			    case PIXMAN_b5g6r5:
 #ifdef USE_MMX
-				if (fbHaveMMX())
+				if (pixman_have_mmx())
 				    func = fbCompositeSolidMask_nx8888x0565Cmmx;
 				else
 #endif
@@ -1261,13 +1261,13 @@ pixman_image_composite (pixman_op_t      op,
 			    case PIXMAN_a8r8g8b8:
 			    case PIXMAN_x8r8g8b8:
 #ifdef USE_MMX
-				if (fbHaveMMX())
+				if (pixman_have_mmx())
 				    func = fbCompositeSrc_8888RevNPx8888mmx;
 #endif
 				break;
 			    case PIXMAN_r5g6b5:
 #ifdef USE_MMX
-				if (fbHaveMMX())
+				if (pixman_have_mmx())
 				    func = fbCompositeSrc_8888RevNPx0565mmx;
 #endif
 				break;
@@ -1287,13 +1287,13 @@ pixman_image_composite (pixman_op_t      op,
 			    case PIXMAN_a8b8g8r8:
 			    case PIXMAN_x8b8g8r8:
 #ifdef USE_MMX
-				if (fbHaveMMX())
+				if (pixman_have_mmx())
 				    func = fbCompositeSrc_8888RevNPx8888mmx;
 #endif
 				break;
 			    case PIXMAN_r5g6b5:
 #ifdef USE_MMX
-				if (fbHaveMMX())
+				if (pixman_have_mmx())
 				    func = fbCompositeSrc_8888RevNPx0565mmx;
 #endif
 				break;
@@ -1319,25 +1319,25 @@ pixman_image_composite (pixman_op_t      op,
 		    case PIXMAN_x8r8g8b8:
 			if ((pDst->bits.format == PIXMAN_a8r8g8b8 ||
 			     pDst->bits.format == PIXMAN_x8r8g8b8) &&
-			    pMask->bits.format == PIXMAN_a8 && fbHaveMMX())
+			    pMask->bits.format == PIXMAN_a8 && pixman_have_mmx())
 			    func = fbCompositeSrc_x888x8x8888mmx;
 			break;
 		    case PIXMAN_x8b8g8r8:
 			if ((pDst->bits.format == PIXMAN_a8b8g8r8 ||
 			     pDst->bits.format == PIXMAN_x8b8g8r8) &&
-			    pMask->bits.format == PIXMAN_a8 && fbHaveMMX())
+			    pMask->bits.format == PIXMAN_a8 && pixman_have_mmx())
 			    func = fbCompositeSrc_x888x8x8888mmx;
 			break;
 		    case PIXMAN_a8r8g8b8:
 			if ((pDst->bits.format == PIXMAN_a8r8g8b8 ||
 			     pDst->bits.format == PIXMAN_x8r8g8b8) &&
-			    pMask->bits.format == PIXMAN_a8 && fbHaveMMX())
+			    pMask->bits.format == PIXMAN_a8 && pixman_have_mmx())
 			    func = fbCompositeSrc_8888x8x8888mmx;
 			break;
 		    case PIXMAN_a8b8g8r8:
 			if ((pDst->bits.format == PIXMAN_a8b8g8r8 ||
 			     pDst->bits.format == PIXMAN_x8b8g8r8) &&
-			    pMask->bits.format == PIXMAN_a8 && fbHaveMMX())
+			    pMask->bits.format == PIXMAN_a8 && pixman_have_mmx())
 			    func = fbCompositeSrc_8888x8x8888mmx;
 			break;
 #endif
@@ -1361,7 +1361,7 @@ pixman_image_composite (pixman_op_t      op,
 		    case PIXMAN_a8r8g8b8:
 		    case PIXMAN_x8r8g8b8:
 #ifdef USE_MMX
-			if (fbHaveMMX())
+			if (pixman_have_mmx())
 			{
 			    srcRepeat = FALSE;
 			    func = fbCompositeSolid_nx8888mmx;
@@ -1370,7 +1370,7 @@ pixman_image_composite (pixman_op_t      op,
 			break;
 		    case PIXMAN_r5g6b5:
 #ifdef USE_MMX
-			if (fbHaveMMX())
+			if (pixman_have_mmx())
 			{
 			    srcRepeat = FALSE;
 			    func = fbCompositeSolid_nx0565mmx;
@@ -1393,7 +1393,7 @@ pixman_image_composite (pixman_op_t      op,
 		if (pSrc->bits.format == pDst->bits.format && !PIXMAN_FORMAT_A(pSrc->bits.format))
 		{
 #ifdef USE_MMX
-		    if (fbHaveMMX() &&
+		    if (pixman_have_mmx() &&
 			(pSrc->bits.format == PIXMAN_x8r8g8b8 || pSrc->bits.format == PIXMAN_x8b8g8r8))
 			func = fbCompositeCopyAreammx;
 		    else
@@ -1410,7 +1410,7 @@ pixman_image_composite (pixman_op_t      op,
 		    case PIXMAN_a8r8g8b8:
 		    case PIXMAN_x8r8g8b8:
 #ifdef USE_MMX
-			if (fbHaveMMX())
+			if (pixman_have_mmx())
 			    func = fbCompositeSrc_8888x8888mmx;
 			else
 #endif
@@ -1421,7 +1421,7 @@ pixman_image_composite (pixman_op_t      op,
 			break;
 		    case PIXMAN_r5g6b5:
 #ifdef USE_MMX
-			if (fbHaveMMX())
+			if (pixman_have_mmx())
 			    func = fbCompositeSrc_8888x0565mmx;
 			else
 #endif
@@ -1436,7 +1436,7 @@ pixman_image_composite (pixman_op_t      op,
 		    case PIXMAN_a8r8g8b8:
 		    case PIXMAN_x8r8g8b8:
 #ifdef USE_MMX
-			if (fbHaveMMX())
+			if (pixman_have_mmx())
 			    func = fbCompositeCopyAreammx;
 #endif
 			break;
@@ -1448,7 +1448,7 @@ pixman_image_composite (pixman_op_t      op,
 		    case PIXMAN_a8b8g8r8:
 		    case PIXMAN_x8b8g8r8:
 #ifdef USE_MMX
-			if (fbHaveMMX())
+			if (pixman_have_mmx())
 			    func = fbCompositeCopyAreammx;
 #endif
 			break;
@@ -1461,7 +1461,7 @@ pixman_image_composite (pixman_op_t      op,
 		    case PIXMAN_a8b8g8r8:
 		    case PIXMAN_x8b8g8r8:
 #ifdef USE_MMX
-			if (fbHaveMMX())
+			if (pixman_have_mmx())
 			    func = fbCompositeSrc_8888x8888mmx;
 			else
 #endif
@@ -1472,7 +1472,7 @@ pixman_image_composite (pixman_op_t      op,
 			break;
 		    case PIXMAN_b5g6r5:
 #ifdef USE_MMX
-			if (fbHaveMMX())
+			if (pixman_have_mmx())
 			    func = fbCompositeSrc_8888x0565mmx;
 			else
 #endif
@@ -1496,7 +1496,7 @@ pixman_image_composite (pixman_op_t      op,
 		switch (pDst->bits.format) {
 		case PIXMAN_a8r8g8b8:
 #ifdef USE_MMX
-		    if (fbHaveMMX())
+		    if (pixman_have_mmx())
 			func = fbCompositeSrcAdd_8888x8888mmx;
 		    else
 #endif
@@ -1510,7 +1510,7 @@ pixman_image_composite (pixman_op_t      op,
 		switch (pDst->bits.format) {
 		case PIXMAN_a8b8g8r8:
 #ifdef USE_MMX
-		    if (fbHaveMMX())
+		    if (pixman_have_mmx())
 			func = fbCompositeSrcAdd_8888x8888mmx;
 		    else
 #endif
@@ -1524,7 +1524,7 @@ pixman_image_composite (pixman_op_t      op,
 		switch (pDst->bits.format) {
 		case PIXMAN_a8:
 #ifdef USE_MMX
-		    if (fbHaveMMX())
+		    if (pixman_have_mmx())
 			func = fbCompositeSrcAdd_8000x8000mmx;
 		    else
 #endif
@@ -1560,7 +1560,7 @@ pixman_image_composite (pixman_op_t      op,
 	    {
 		srcRepeat = FALSE;
 #ifdef USE_MMX
-		if (fbHaveMMX())
+		if (pixman_have_mmx())
 		    func = fbCompositeSrcAdd_8888x8x8mmx;
 		else
 #endif
@@ -1582,7 +1582,7 @@ pixman_image_composite (pixman_op_t      op,
 		    case PIXMAN_x8r8g8b8:
 		    case PIXMAN_a8b8g8r8:
 		    case PIXMAN_x8b8g8r8:
-			if (fbHaveMMX())
+			if (pixman_have_mmx())
 			{
 			    srcRepeat = FALSE;
 			    func = fbCompositeSolidMaskSrc_nx8x8888mmx;
@@ -1600,7 +1600,7 @@ pixman_image_composite (pixman_op_t      op,
 	    if (pSrc->bits.format == pDst->bits.format)
 	    {
 #ifdef USE_MMX
-		if (pSrc->bits.bits != pDst->bits.bits && fbHaveMMX() &&
+		if (pSrc->bits.bits != pDst->bits.bits && pixman_have_mmx() &&
 		    (PIXMAN_FORMAT_BPP (pSrc->bits.format) == 16 ||
 		     PIXMAN_FORMAT_BPP (pSrc->bits.format) == 32))
 		    func = fbCompositeCopyAreammx;
@@ -1620,7 +1620,7 @@ pixman_image_composite (pixman_op_t      op,
 	    pDst->bits.format == PIXMAN_a8 &&
 	    !pMask)
 	{
-	    if (fbHaveMMX())
+	    if (pixman_have_mmx())
 		func = fbCompositeIn_8x8mmx;
 	}
 	else if (srcRepeat && pMask && !pMask->common.component_alpha &&
@@ -1629,7 +1629,7 @@ pixman_image_composite (pixman_op_t      op,
 		 (pMask->bits.format == PIXMAN_a8)        &&
 		 pDst->bits.format == PIXMAN_a8)
 	{
-	    if (fbHaveMMX())
+	    if (pixman_have_mmx())
 	    {
 		srcRepeat = FALSE;
 		func = fbCompositeIn_nx8x8mmx;
@@ -1842,7 +1842,7 @@ static unsigned int detectCPUFeatures(void) {
 }
 
 pixman_bool_t
-fbHaveMMX (void)
+pixman_have_mmx (void)
 {
     static pixman_bool_t initialized = FALSE;
     static pixman_bool_t mmx_present;

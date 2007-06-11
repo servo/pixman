@@ -35,13 +35,13 @@
 #ifdef USE_MMX
 
 #if !defined(__amd64__) && !defined(__x86_64__)
-pixman_bool_t fbHaveMMX(void);
+pixman_bool_t pixman_have_mmx(void);
 #else
-#define fbHaveMMX() TRUE
+#define pixman_have_mmx() TRUE
 #endif
 
 #else
-#define fbHaveMMX() FALSE
+#define pixman_have_mmx() FALSE
 #endif
 
 #ifdef USE_MMX

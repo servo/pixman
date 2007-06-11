@@ -69,9 +69,12 @@ pixman_blt (uint32_t *src_bits,
 	    int width, int height)
 {
 #ifdef USE_MMX
-    return pixman_blt_mmx (src_bits, dst_bits, src_stride, dst_stride, src_bpp, dst_bpp,
-			   src_x, src_y, dst_x, dst_y, width, height);
-#else
-    return FALSE;
+    if (pixman_have_mmx())
+    {
+	return pixman_blt_mmx (src_bits, dst_bits, src_stride, dst_stride, src_bpp, dst_bpp,
+			       src_x, src_y, dst_x, dst_y, width, height);
+    }
+    else
 #endif
+	return FALSE;
 }
