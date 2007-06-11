@@ -942,150 +942,6 @@ fbCompositeSrcSrc_nxn  (pixman_op_t	   op,
 #endif
 }
 
-#define BOUND(v)        (int16_t) ((v) < INT16_MIN ? INT16_MIN : (v) > INT16_MAX ? INT16_MAX : (v))
-
-static __inline pixman_bool_t
-miClipPictureReg (pixman_region16_t *	pRegion,
-		  pixman_region16_t *	pClip,
-		  int			dx,
-		  int			dy)
-{
-    if (pixman_region_n_rects(pRegion) == 1 &&
-	pixman_region_n_rects(pClip) == 1)
-    {
-	pixman_box16_t *  pRbox = pixman_region_rectangles(pRegion, NULL);
-	pixman_box16_t *  pCbox = pixman_region_rectangles(pClip, NULL);
-	int	v;
-
-	if (pRbox->x1 < (v = pCbox->x1 + dx))
-	    pRbox->x1 = BOUND(v);
-	if (pRbox->x2 > (v = pCbox->x2 + dx))
-	    pRbox->x2 = BOUND(v);
-	if (pRbox->y1 < (v = pCbox->y1 + dy))
-	    pRbox->y1 = BOUND(v);
-	if (pRbox->y2 > (v = pCbox->y2 + dy))
-	    pRbox->y2 = BOUND(v);
-	if (pRbox->x1 >= pRbox->x2 ||
-	    pRbox->y1 >= pRbox->y2)
-	{
-	    pixman_region_init (pRegion);
-	}
-    }
-    else if (!pixman_region_not_empty (pClip))
-	return FALSE;
-    else
-    {
-	if (dx || dy)
-	    pixman_region_translate (pRegion, -dx, -dy);
-	if (!pixman_region_intersect (pRegion, pRegion, pClip))
-	    return FALSE;
-	if (dx || dy)
-	    pixman_region_translate(pRegion, dx, dy);
-    }
-    return pixman_region_not_empty (pRegion);
-}
-		  
-static __inline pixman_bool_t
-miClipPictureSrc (pixman_region16_t *	pRegion,
-		  pixman_image_t *	pPicture,
-		  int		dx,
-		  int		dy)
-{
-    /* XXX what to do with clipping from transformed pictures? */
-    if (pPicture->common.transform || pPicture->type != BITS)
-	return TRUE;
-    
-    return miClipPictureReg (pRegion,
-			     &pPicture->common.clip_region,
-			     dx,
-			     dy);
-}
-
-static pixman_bool_t
-compute_composite_region (pixman_region16_t *	pRegion,
-			  pixman_image_t *	pSrc,
-			  pixman_image_t *	pMask,
-			  pixman_image_t *	pDst,
-			  int16_t		xSrc,
-			  int16_t		ySrc,
-			  int16_t		xMask,
-			  int16_t		yMask,
-			  int16_t		xDst,
-			  int16_t		yDst,
-			  uint16_t	width,
-			  uint16_t	height)
-{
-    int		v;
-
-    pRegion->extents.x1 = xDst;
-    v = xDst + width;
-    pRegion->extents.x2 = BOUND(v);
-    pRegion->extents.y1 = yDst;
-    v = yDst + height;
-    pRegion->extents.y2 = BOUND(v);
-    pRegion->data = 0;
-    /* Check for empty operation */
-    if (pRegion->extents.x1 >= pRegion->extents.x2 ||
-	pRegion->extents.y1 >= pRegion->extents.y2)
-    {
-	pixman_region_init (pRegion);
-	return FALSE;
-    }
-    /* clip against dst */
-    if (!miClipPictureReg (pRegion, &pDst->common.clip_region, 0, 0))
-    {
-	pixman_region_fini (pRegion);
-	return FALSE;
-    }
-    if (pDst->common.alpha_map)
-    {
-	if (!miClipPictureReg (pRegion, &pDst->common.alpha_map->common.clip_region,
-			       -pDst->common.alpha_origin.x,
-			       -pDst->common.alpha_origin.y))
-	{
-	    pixman_region_fini (pRegion);
-	    return FALSE;
-	}
-    }
-    /* clip against src */
-    if (!miClipPictureSrc (pRegion, pSrc, xDst - xSrc, yDst - ySrc))
-    {
-	pixman_region_fini (pRegion);
-	return FALSE;
-    }
-    if (pSrc->common.alpha_map)
-    {
-	if (!miClipPictureSrc (pRegion, (pixman_image_t *)pSrc->common.alpha_map,
-			       xDst - (xSrc + pSrc->common.alpha_origin.x),
-			       yDst - (ySrc + pSrc->common.alpha_origin.y)))
-	{
-	    pixman_region_fini (pRegion);
-	    return FALSE;
-	}
-    }
-    /* clip against mask */
-    if (pMask)
-    {
-	if (!miClipPictureSrc (pRegion, pMask, xDst - xMask, yDst - yMask))
-	{
-	    pixman_region_fini (pRegion);
-	    return FALSE;
-	}	
-	if (pMask->common.alpha_map)
-	{
-	    if (!miClipPictureSrc (pRegion, (pixman_image_t *)pMask->common.alpha_map,
-				   xDst - (xMask + pMask->common.alpha_origin.x),
-				   yDst - (yMask + pMask->common.alpha_origin.y)))
-	    {
-		pixman_region_fini (pRegion);
-		return FALSE;
-	    }
-	}
-    }
-    
-    return TRUE;
-}
-			  
 static void
 pixman_walk_composite_region (pixman_op_t op,
 			      pixman_image_t * pSrc,
@@ -1101,25 +957,23 @@ pixman_walk_composite_region (pixman_op_t op,
 			      uint16_t height,
 			      pixman_bool_t srcRepeat,
 			      pixman_bool_t maskRepeat,
-			      CompositeFunc compositeRect,
-			      pixman_region16_t *region)
+			      CompositeFunc compositeRect)
 {
-#if 0
-    pixman_region16_t region;
-#endif
     int		    n;
     const pixman_box16_t *pbox;
     int		    w, h, w_this, h_this;
     int		    x_msk, y_msk, x_src, y_src, x_dst, y_dst;
-    
-#if 0
-    if (!compute_composite_region (&region, pSrc, pMask, pDst, xSrc, ySrc,
-				   xMask, yMask, xDst, yDst, width, height))
+    pixman_region16_t reg;
+    pixman_region16_t *region;
+
+    pixman_region_init (&reg);
+    if (!pixman_compute_composite_region (&reg, pSrc, pMask, pDst,
+					  xSrc, ySrc, xMask, yMask, xDst, yDst, width, height))
     {
-	fprinf ("blah\n");
-        return;
+	return;
     }
-#endif
+
+    region = &reg;
     
     pbox = pixman_region_rectangles (region, &n);
     while (n--)
@@ -1177,9 +1031,7 @@ pixman_walk_composite_region (pixman_op_t op,
 	}
 	pbox++;
     }
-#if 0
-    pixman_region_fini (&region);
-#endif
+    pixman_region_fini (&reg);
 }
 
 static pixman_bool_t
@@ -1223,8 +1075,7 @@ pixman_image_composite (pixman_op_t      op,
 			int16_t      xDst,
 			int16_t      yDst,
 			uint16_t     width,
-			uint16_t     height,
-			pixman_region16_t *region)
+			uint16_t     height)
 {
     pixman_bool_t	    srcRepeat = pSrc->type == BITS && pSrc->common.repeat == PIXMAN_REPEAT_NORMAL;
     pixman_bool_t	    maskRepeat = FALSE;
@@ -1234,7 +1085,7 @@ pixman_image_composite (pixman_op_t      op,
     pixman_bool_t	maskAlphaMap = FALSE;
     pixman_bool_t	dstAlphaMap = pDst->common.alpha_map != NULL;
     CompositeFunc   func = NULL;
-
+    
 #ifdef USE_MMX
     static pixman_bool_t mmx_setup = FALSE;
     if (!mmx_setup)
@@ -1821,7 +1672,7 @@ pixman_image_composite (pixman_op_t      op,
 
     pixman_walk_composite_region (op, pSrc, pMask, pDst, xSrc, ySrc,
 				  xMask, yMask, xDst, yDst, width, height,
-				  srcRepeat, maskRepeat, func, region);
+				  srcRepeat, maskRepeat, func);
 }
 
 

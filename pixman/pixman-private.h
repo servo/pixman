@@ -148,6 +148,7 @@ struct image_common
     image_type_t		type;
     int32_t			ref_count;
     pixman_region16_t		clip_region;
+    pixman_bool_t               has_client_clip;
     pixman_transform_t	       *transform;
     pixman_repeat_t		repeat;
     pixman_filter_t		filter;

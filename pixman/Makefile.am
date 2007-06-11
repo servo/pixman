@@ -12,8 +12,8 @@ libpixman_la_SOURCES =		\
 	pixman-utils.c		\
 	pixman-edge.c		\
 	pixman-edge-imp.h	\
-	pixman-trap.c
-
+	pixman-trap.c		\
+	pixman-compute-region.c
 
 if USE_MMX
 noinst_LTLIBRARIES = libpixman-mmx.la

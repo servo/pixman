@@ -85,6 +85,7 @@ allocate_image (void)
 	image_common_t *common = &image->common;
 	
 	pixman_region_init (&common->clip_region);
+	common->has_client_clip = FALSE;
 	common->transform = NULL;
 	common->repeat = PIXMAN_REPEAT_NONE;
 	common->filter = PIXMAN_FILTER_NEAREST;
@@ -308,6 +309,15 @@ pixman_image_set_clip_region (pixman_image_t    *image,
 	pixman_region_fini (&common->clip_region);
 	pixman_region_init (&common->clip_region);
     }
+}
+
+/* Sets whether the clip region includes a clip region set by the client
+ */
+void
+pixman_image_set_has_client_clip (pixman_image_t *image,
+				  pixman_bool_t	  client_clip)
+{
+    image->common.has_client_clip = client_clip;
 }
 
 void

@@ -49,6 +49,7 @@ SOFTWARE.
 #include <stdlib.h>
 #include <limits.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "pixman-private.h"
 #include "pixman.h"
@@ -256,8 +257,7 @@ pixman_region_equal(reg1, reg2)
     return TRUE;
 }
 
-#ifdef DEBUG_PIXREGION
-static int
+int
 pixman_region16_print(rgn)
     pixman_region16_t * rgn;
 {
@@ -268,17 +268,16 @@ pixman_region16_print(rgn)
     num = PIXREGION_NUM_RECTS(rgn);
     size = PIXREGION_SIZE(rgn);
     rects = PIXREGION_RECTS(rgn);
-    ErrorF("num: %d size: %d\n", num, size);
-    ErrorF("extents: %d %d %d %d\n",
+    fprintf(stderr, "num: %d size: %d\n", num, size);
+    fprintf(stderr, "extents: %d %d %d %d\n",
 	   rgn->extents.x1, rgn->extents.y1, rgn->extents.x2, rgn->extents.y2);
     for (i = 0; i < num; i++)
-      ErrorF("%d %d %d %d \n",
-	     rects[i].x1, rects[i].y1, rects[i].x2, rects[i].y2);
-    ErrorF("\n");
+	fprintf(stderr, "%d %d %d %d \n",
+		rects[i].x1, rects[i].y1, rects[i].x2, rects[i].y2);
+    fprintf(stderr, "\n");
     return(num);
 }
 
-#endif /* DEBUG_PIXREGION */
 
 void
 pixman_region_init (pixman_region16_t *region)
@@ -324,7 +323,7 @@ pixman_region_rects (pixman_region16_t *region)
     return PIXREGION_RECTS (region);
 }
 
-const pixman_box16_t *
+pixman_box16_t *
 pixman_region_rectangles (pixman_region16_t *region,
 			  int		    *n_rects)
 {
