@@ -1395,12 +1395,7 @@ pixman_image_composite (pixman_op_t      op,
 #ifdef USE_MMX
 		    if (fbHaveMMX() &&
 			(pSrc->bits.format == PIXMAN_x8r8g8b8 || pSrc->bits.format == PIXMAN_x8b8g8r8))
-#if 0
-			/* FIXME */
-			
-			func = fbCompositeCopyAreammx
-#endif
-			    ;
+			func = fbCompositeCopyAreammx;
 		    else
 #endif
 #if 0
@@ -1442,11 +1437,7 @@ pixman_image_composite (pixman_op_t      op,
 		    case PIXMAN_x8r8g8b8:
 #ifdef USE_MMX
 			if (fbHaveMMX())
-#if 0
-			    /* FIXME */
-			    func = fbCompositeCopyAreammx
-#endif
-				;
+			    func = fbCompositeCopyAreammx;
 #endif
 			break;
 		    default:
@@ -1458,11 +1449,7 @@ pixman_image_composite (pixman_op_t      op,
 		    case PIXMAN_x8b8g8r8:
 #ifdef USE_MMX
 			if (fbHaveMMX())
-#if 0
-			    /* FIXME */
-			    func = fbCompositeCopyAreammx
-#endif
-				;
+			    func = fbCompositeCopyAreammx;
 #endif
 			break;
 		    default:
@@ -1616,11 +1603,7 @@ pixman_image_composite (pixman_op_t      op,
 		if (pSrc->bits.bits != pDst->bits.bits && fbHaveMMX() &&
 		    (PIXMAN_FORMAT_BPP (pSrc->bits.format) == 16 ||
 		     PIXMAN_FORMAT_BPP (pSrc->bits.format) == 32))
-#if 0
-		    /* FIXME */
-		    func = fbCompositeCopyAreammx
-#endif
-			;
+		    func = fbCompositeCopyAreammx;
 		else
 #endif
 		    /* FIXME */

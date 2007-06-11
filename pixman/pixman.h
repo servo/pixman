@@ -289,6 +289,18 @@ pixman_bool_t		pixman_region_equal (pixman_region16_t *region1,
 pixman_bool_t		pixman_region_selfcheck (pixman_region16_t *region);
 void			pixman_region_reset(pixman_region16_t *region, pixman_box16_t *box);
 
+
+/* Copy / Fill */
+pixman_bool_t pixman_blt (uint32_t *src_bits,
+			  uint32_t *dst_bits,
+			  int src_stride,
+			  int dst_stride,
+			  int src_bpp,
+			  int dst_bpp,
+			  int src_x, int src_y,
+			  int dst_x, int dst_y,
+			  int width, int height);
+
 /*
  * Images
  */

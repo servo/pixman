@@ -277,6 +277,7 @@ pixman_bool_t fbCopyAreammx (DrawablePtr	pSrc,
 			     int		width,
 			     int		height);
 #endif
+
 void fbCompositeCopyAreammx (pixman_op_t	op,
 			     pixman_image_t *	pSrc,
 			     pixman_image_t *	pMask,

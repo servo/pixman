@@ -56,3 +56,22 @@ pixman_transform_point_3d (pixman_transform_t *transform,
     *vector = result;
     return TRUE;
 }
+
+pixman_bool_t
+pixman_blt (uint32_t *src_bits,
+	    uint32_t *dst_bits,
+	    int src_stride,
+	    int dst_stride,
+	    int src_bpp,
+	    int dst_bpp,
+	    int src_x, int src_y,
+	    int dst_x, int dst_y,
+	    int width, int height)
+{
+#ifdef USE_MMX
+    return pixman_blt_mmx (src_bits, dst_bits, src_stride, dst_stride, src_bpp, dst_bpp,
+			   src_x, src_y, dst_x, dst_y, width, height);
+#else
+    return FALSE;
+#endif
+}
