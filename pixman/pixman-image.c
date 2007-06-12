@@ -263,6 +263,26 @@ pixman_image_create_conical_gradient (pixman_point_fixed_t *center,
     return image;
 }
 
+static uint32_t *
+create_bits (pixman_format_code_t format,
+	     int		  width,
+	     int		  height,
+	     int		 *rowstride_bytes)
+{
+    int stride;
+    int buf_size;
+    int bpp;
+    
+    bpp = PIXMAN_FORMAT_BPP (format);
+    stride = ((width * bpp + FB_MASK) >> FB_SHIFT) * sizeof (uint32_t);
+    buf_size = height * stride;
+
+    if (rowstride_bytes)
+	*rowstride_bytes = stride;
+    
+    return calloc (buf_size, 1);
+}
+
 pixman_image_t *
 pixman_image_create_bits (pixman_format_code_t  format,
 			  int                   width,
@@ -276,6 +296,13 @@ pixman_image_create_bits (pixman_format_code_t  format,
      */
     return_val_if_fail ((rowstride_bytes % sizeof (uint32_t)) == 0, NULL); 
 
+    if (!bits)
+    {
+	bits = create_bits (format, width, height, &rowstride_bytes);
+	if (!bits)
+	    return NULL;
+    }
+    
     image = allocate_image();
 
     if (!image)
