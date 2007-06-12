@@ -457,11 +457,11 @@ void            pixman_image_set_clip_region         (pixman_image_t            
 						      pixman_region16_t            *region);
 void		pixman_image_set_has_client_clip     (pixman_image_t               *image,
 						      pixman_bool_t		    clien_clip);
-void            pixman_image_set_transform           (pixman_image_t               *image,
+pixman_bool_t   pixman_image_set_transform           (pixman_image_t               *image,
 						      const pixman_transform_t     *transform);
 void            pixman_image_set_repeat              (pixman_image_t               *image,
 						      pixman_repeat_t               repeat);
-void            pixman_image_set_filter              (pixman_image_t               *image,
+pixman_bool_t   pixman_image_set_filter              (pixman_image_t               *image,
 						      pixman_filter_t               filter,
 						      const pixman_fixed_t         *filter_params,
 						      int                           n_filter_params);

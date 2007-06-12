@@ -347,14 +347,14 @@ pixman_image_set_has_client_clip (pixman_image_t *image,
     image->common.has_client_clip = client_clip;
 }
 
-void
+pixman_bool_t
 pixman_image_set_transform (pixman_image_t           *image,
 			    const pixman_transform_t *transform)
 {
     image_common_t *common = (image_common_t *)image;
 
     if (common->transform == transform)
-	return;
+	return TRUE;
 
     if (common->transform)
 	free (common->transform);
@@ -363,7 +363,7 @@ pixman_image_set_transform (pixman_image_t           *image,
     {
 	common->transform = malloc (sizeof (pixman_transform_t));
 	if (!common->transform)
-	    return;
+	    return FALSE;
 
 	*common->transform = *transform;
     }
@@ -371,6 +371,8 @@ pixman_image_set_transform (pixman_image_t           *image,
     {
 	common->transform = NULL;
     }
+
+    return TRUE;
 }
 
 void
@@ -380,34 +382,37 @@ pixman_image_set_repeat (pixman_image_t  *image,
     image->common.repeat = repeat;
 }
 
-void
+pixman_bool_t 
 pixman_image_set_filter (pixman_image_t       *image,
 			 pixman_filter_t       filter,
 			 const pixman_fixed_t *params,
 			 int		       n_params)
 {
     image_common_t *common = (image_common_t *)image;
-    
-    if (params != common->filter_params || filter != common->filter)
-    {
-	common->filter = filter;
-	
-	if (common->filter_params)
-	    free (common->filter_params);
+    pixman_fixed_t *new_params;
 
-	if (params)
-	{
-	    common->filter_params = malloc (n_params * sizeof (pixman_fixed_t));
-	    memcpy (common->filter_params, params, n_params * sizeof (pixman_fixed_t));
-	}
-	else
-	{
-	    common->filter_params = NULL;
-	    n_params = 0;
-	}
+    if (params == common->filter_params && filter == common->filter)
+	return TRUE;
+
+    new_params = NULL;
+    if (params)
+    {
+	new_params = malloc (n_params * sizeof (pixman_fixed_t));
+	if (!new_params)
+	    return FALSE;
+
+	memcpy (new_params,
+		params, n_params * sizeof (pixman_fixed_t));
     }
-    
+
+    common->filter = filter;
+	
+    if (common->filter_params)
+	free (common->filter_params);
+
+    common->filter_params = new_params;
     common->n_filter_params = n_params;
+    return TRUE;
 }
 
 /* Unlike all the other property setters, this function does not
