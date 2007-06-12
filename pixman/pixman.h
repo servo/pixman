@@ -479,6 +479,11 @@ void		pixman_image_set_accessors	     (pixman_image_t		   *image,
 						      pixman_write_memory_func_t    write_func);
 void		pixman_image_set_indexed	     (pixman_image_t		   *image,
 						      const pixman_indexed_t	   *indexed);
+uint32_t       *pixman_image_get_data                (pixman_image_t               *image);
+int		pixman_image_get_width               (pixman_image_t               *image);
+int             pixman_image_get_height              (pixman_image_t               *image);
+int		pixman_image_get_stride              (pixman_image_t               *image);
+int		pixman_image_get_depth               (pixman_image_t		   *image);
 
 /* Composite */
 pixman_bool_t   pixman_compute_composite_region (pixman_region16_t *	pRegion,
@@ -493,30 +498,18 @@ pixman_bool_t   pixman_compute_composite_region (pixman_region16_t *	pRegion,
 						 int16_t		yDst,
 						 uint16_t		width,
 						 uint16_t		height);
-void		pixman_image_composite               (pixman_op_t		    op,
-						      pixman_image_t		   *src,
-						      pixman_image_t               *mask,
-						      pixman_image_t               *dest,
-						      int16_t                       src_x,
-						      int16_t                       src_y,
-						      int16_t                       mask_x,
-						      int16_t                       mask_y,
-						      int16_t                       dest_x,
-						      int16_t                       dest_y,
-						      uint16_t                      width,
-						      uint16_t                      height);
-void            pixman_image_composite_rect          (pixman_op_t                   op,
-						      pixman_image_t               *src,
-						      pixman_image_t               *mask,
-						      pixman_image_t               *dest,
-						      int16_t                       src_x,
-						      int16_t                       src_y,
-						      int16_t                       mask_x,
-						      int16_t                       mask_y,
-						      int16_t                       dest_x,
-						      int16_t                       dest_y,
-						      uint16_t                      width,
-						      uint16_t                      height);
+void		pixman_image_composite          (pixman_op_t		    op,
+						 pixman_image_t		   *src,
+						 pixman_image_t               *mask,
+						 pixman_image_t               *dest,
+						 int16_t                       src_x,
+						 int16_t                       src_y,
+						 int16_t                       mask_x,
+						 int16_t                       mask_y,
+						 int16_t                       dest_x,
+						 int16_t                       dest_y,
+						 uint16_t                      width,
+						 uint16_t                      height);
 
 /*
  * Trapezoids

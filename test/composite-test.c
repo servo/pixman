@@ -129,8 +129,8 @@ main (int argc, char **argv)
 					 dest,
 					 WIDTH * 4);
 
-    pixman_image_composite_rect (PIXMAN_OP_OVER, src_img, NULL, dest_img,
-				 0, 0, 0, 0, 0, 0, WIDTH, HEIGHT);
+    pixman_image_composite (PIXMAN_OP_OVER, src_img, NULL, dest_img,
+			    0, 0, 0, 0, 0, 0, WIDTH, HEIGHT);
 
 #if 0
     for (i = 0; i < WIDTH; ++i)

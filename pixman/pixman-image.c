@@ -268,13 +268,13 @@ pixman_image_create_bits (pixman_format_code_t  format,
 			  int                   width,
 			  int                   height,
 			  uint32_t	       *bits,
-			  int			rowstride)
+			  int			rowstride_bytes)
 {
     pixman_image_t *image;
 
-    return_val_if_fail ((rowstride & 0x3) == 0, NULL); /* must be a
-							* multiple of 4
-							*/
+    /* must be a whole number of uint32_t's 
+     */
+    return_val_if_fail ((rowstride_bytes % sizeof (uint32_t)) == 0, NULL); 
 
     image = allocate_image();
 
@@ -286,9 +286,9 @@ pixman_image_create_bits (pixman_format_code_t  format,
     image->bits.width = width;
     image->bits.height = height;
     image->bits.bits = bits;
-    image->bits.rowstride = rowstride / 4; /* we store it in number
-					    * of uint32_t's
-					    */
+    image->bits.rowstride = rowstride_bytes / sizeof (uint32_t); /* we store it in number
+								  * of uint32_t's
+								  */
     image->bits.indexed = NULL;
 
     return image;
@@ -429,8 +429,6 @@ pixman_image_set_component_alpha   (pixman_image_t       *image,
 }
 
 
-#define SCANLINE_BUFFER_LENGTH 2048
-
 void
 pixman_image_set_accessors (pixman_image_t             *image,
 			    pixman_read_memory_func_t	read_func,
@@ -442,50 +440,43 @@ pixman_image_set_accessors (pixman_image_t             *image,
     image->common.write_func = write_func;
 }
 
-void
-pixman_image_composite_rect  (pixman_op_t                   op,
-			      pixman_image_t               *src,
-			      pixman_image_t               *mask,
-			      pixman_image_t               *dest,
-			      int16_t                       src_x,
-			      int16_t                       src_y,
-			      int16_t                       mask_x,
-			      int16_t                       mask_y,
-			      int16_t                       dest_x,
-			      int16_t                       dest_y,
-			      uint16_t                      width,
-			      uint16_t                      height)
+uint32_t *
+pixman_image_get_data (pixman_image_t *image)
 {
-    FbComposeData compose_data;
-    uint32_t _scanline_buffer[SCANLINE_BUFFER_LENGTH * 3];
-    uint32_t *scanline_buffer = _scanline_buffer;
+    return_val_if_fail (image->type == BITS, NULL);
 
-    return_if_fail (src != NULL);
-    return_if_fail (dest != NULL);
+    return image->bits.bits;
+}
+
+int
+pixman_image_get_width (pixman_image_t *image)
+{
+    return_val_if_fail (image->type == BITS, -1);
+
+    return image->bits.width;
     
-    if (width > SCANLINE_BUFFER_LENGTH)
-    {
-	scanline_buffer = (uint32_t *)malloc (width * 3 * sizeof (uint32_t));
+}
 
-	if (!scanline_buffer)
-	    return;
-    }
-    
-    compose_data.op = op;
-    compose_data.src = src;
-    compose_data.mask = mask;
-    compose_data.dest = dest;
-    compose_data.xSrc = src_x;
-    compose_data.ySrc = src_y;
-    compose_data.xMask = mask_x;
-    compose_data.yMask = mask_y;
-    compose_data.xDest = dest_x;
-    compose_data.yDest = dest_y;
-    compose_data.width = width;
-    compose_data.height = height;
+int
+pixman_image_get_height (pixman_image_t *image)
+{
+    return_val_if_fail (image->type == BITS, -1);
 
-    pixmanCompositeRect (&compose_data, scanline_buffer);
+    return image->bits.height;
+}
 
-    if (scanline_buffer != _scanline_buffer)
-	free (scanline_buffer);
+int
+pixman_image_get_stride (pixman_image_t *image)
+{
+    return_val_if_fail (image->type == BITS, -1);
+
+    return sizeof (uint32_t) * image->bits.rowstride;
+}
+
+int
+pixman_image_get_depth (pixman_image_t *image)
+{
+    return_val_if_fail (image->type == BITS, -1);
+
+    return PIXMAN_FORMAT_DEPTH (image->bits.format);
 }

@@ -129,8 +129,8 @@ main (int argc, char **argv)
 #endif
     pixman_image_set_transform (src_img, &trans);
     
-    pixman_image_composite_rect (PIXMAN_OP_OVER, src_img, NULL, dest_img,
-				 0, 0, 0, 0, 0, 0, WIDTH, HEIGHT);
+    pixman_image_composite (PIXMAN_OP_OVER, src_img, NULL, dest_img,
+			    0, 0, 0, 0, 0, 0, WIDTH, HEIGHT);
     
     printf ("0, 0: %x\n", dest[0]);
     printf ("10, 10: %x\n", dest[10 * 10 + 10]);
