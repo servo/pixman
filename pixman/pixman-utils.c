@@ -24,6 +24,7 @@
 #include <config.h>
 #include "pixman.h"
 #include "pixman-private.h"
+#include "pixman-mmx.h"
 
 pixman_bool_t
 pixman_transform_point_3d (pixman_transform_t *transform,
@@ -78,3 +79,24 @@ pixman_blt (uint32_t *src_bits,
 #endif
 	return FALSE;
 }
+
+pixman_bool_t
+pixman_fill (uint32_t *bits,
+		 int stride,
+		 int bpp,
+		 int x,
+		 int y,
+		 int width,
+		 int height,
+		 uint32_t xor)
+{
+#ifdef USE_MMX
+    if (pixman_have_mmx())
+    {
+	return pixman_fill_mmx (bits, stride, bpp, x, y, width, height, xor);
+    }
+    else
+#endif
+	return FALSE;
+}
+	    

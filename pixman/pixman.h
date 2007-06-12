@@ -300,7 +300,14 @@ pixman_bool_t pixman_blt (uint32_t *src_bits,
 			  int src_x, int src_y,
 			  int dst_x, int dst_y,
 			  int width, int height);
-
+pixman_bool_t pixman_fill (uint32_t *bits,
+			   int stride,
+			   int bpp,
+			   int x,
+			   int y,
+			   int width,
+			   int height,
+			   uint32_t xor);
 /*
  * Images
  */

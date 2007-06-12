@@ -46,6 +46,26 @@ pixman_bool_t pixman_have_mmx(void);
 
 #ifdef USE_MMX
 
+pixman_bool_t 
+pixman_blt_mmx (uint32_t *src_bits,
+		uint32_t *dst_bits,
+		int src_stride,
+		int dst_stride,
+		int src_bpp,
+		int dst_bpp,
+		int src_x, int src_y,
+		int dst_x, int dst_y,
+		int width, int height);
+pixman_bool_t
+pixman_fill_mmx (uint32_t *bits,
+		 int stride,
+		 int bpp,
+		 int x,
+		 int y,
+		 int width,
+		 int height,
+		 uint32_t xor);
+
 void fbComposeSetupMMX(void);
 
 void fbCompositeSolidMask_nx8888x0565Cmmx (pixman_op_t      op,
