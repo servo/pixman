@@ -286,18 +286,6 @@ void fbCompositeSrc_8888x8x8888mmx (pixman_op_t	op,
 				    int16_t       yDst,
 				    uint16_t      width,
 				    uint16_t      height);
-#if 0
-/* FIXME */
-pixman_bool_t fbCopyAreammx (DrawablePtr	pSrc,
-			     DrawablePtr	pDst,
-			     int		src_x,
-			     int		src_y,
-			     int		dst_x,
-			     int		dst_y,
-			     int		width,
-			     int		height);
-#endif
-
 void fbCompositeCopyAreammx (pixman_op_t	op,
 			     pixman_image_t *	pSrc,
 			     pixman_image_t *	pMask,
@@ -310,14 +298,5 @@ void fbCompositeCopyAreammx (pixman_op_t	op,
 			     int16_t      yDst,
 			     uint16_t     width,
 			     uint16_t     height);
-#if 0
-/* FIXME */
-pixman_bool_t fbSolidFillmmx (DrawablePtr	pDraw,
-			      int		x,
-			      int		y,
-			      int		width,
-			      int		height,
-			      FbBits		xor);
-#endif
 
 #endif /* USE_MMX */
