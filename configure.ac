@@ -22,7 +22,7 @@ dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.57])
 
-AC_INIT(pixman, 0.9.1, "sandmann@daimi.au.dk", pixman)
+AC_INIT(pixman, 0.9.2, "sandmann@daimi.au.dk", pixman)
 AM_INIT_AUTOMAKE([dist-bzip2])
 
 AM_CONFIG_HEADER(config.h)
