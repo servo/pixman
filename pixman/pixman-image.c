@@ -279,7 +279,7 @@ create_bits (pixman_format_code_t format,
 
     if (rowstride_bytes)
 	*rowstride_bytes = stride;
-    
+
     return calloc (buf_size, 1);
 }
 
@@ -318,6 +318,9 @@ pixman_image_create_bits (pixman_format_code_t  format,
 								  * of uint32_t's
 								  */
     image->bits.indexed = NULL;
+
+    pixman_region_fini (&image->common.clip_region);
+    pixman_region_init_rect (&image->common.clip_region, 0, 0, width, height);
 
     return image;
 }

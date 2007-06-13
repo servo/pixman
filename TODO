@@ -62,4 +62,7 @@
 - Run cairo test suite; fix bugs
 	- one bug in source-scale-clip
 
+
+done:
+
 - Default clip region should be the full image
