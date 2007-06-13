@@ -478,42 +478,46 @@ pixman_image_set_accessors (pixman_image_t             *image,
 uint32_t *
 pixman_image_get_data (pixman_image_t *image)
 {
-    return_val_if_fail (image->type == BITS, NULL);
+    if (image->type == BITS)
+	return image->bits.bits;
 
-    return image->bits.bits;
+    return NULL;
 }
 
 int
 pixman_image_get_width (pixman_image_t *image)
 {
-    return_val_if_fail (image->type == BITS, -1);
+    if (image->type == BITS)
+	return image->bits.width;
 
-    return image->bits.width;
-    
+    return 0;
 }
 
 int
 pixman_image_get_height (pixman_image_t *image)
 {
-    return_val_if_fail (image->type == BITS, -1);
+    if (image->type == BITS)
+	return image->bits.height;
 
-    return image->bits.height;
+    return 0;
 }
 
 int
 pixman_image_get_stride (pixman_image_t *image)
 {
-    return_val_if_fail (image->type == BITS, -1);
+    if (image->type == BITS)
+	return image->bits.rowstride * sizeof (uint32_t);
 
-    return sizeof (uint32_t) * image->bits.rowstride;
+    return 0;
 }
 
 int
 pixman_image_get_depth (pixman_image_t *image)
 {
-    return_val_if_fail (image->type == BITS, -1);
+    if (image->type == BITS)
+	return PIXMAN_FORMAT_DEPTH (image->bits.format);
 
-    return PIXMAN_FORMAT_DEPTH (image->bits.format);
+    return 0;
 }
 
 pixman_bool_t

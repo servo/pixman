@@ -23,6 +23,7 @@
  */
 
 #include <config.h>
+#include <stdio.h>
 #include "pixman-private.h"
 
 typedef uint32_t FbBits;
@@ -119,6 +120,8 @@ pixman_rasterize_trapezoid (pixman_image_t *    image,
     pixman_fixed_t	y_off_fixed;
     pixman_edge_t	l, r;
     pixman_fixed_t	t, b;
+
+    return_if_fail (image->type == BITS);
     
     if (!pixman_trapezoid_valid (trap))
 	return;
