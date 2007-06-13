@@ -453,7 +453,7 @@ void            pixman_image_unref                   (pixman_image_t            
 
 
 /* Set properties */
-void            pixman_image_set_clip_region         (pixman_image_t               *image,
+pixman_bool_t   pixman_image_set_clip_region         (pixman_image_t               *image,
 						      pixman_region16_t            *region);
 void		pixman_image_set_has_client_clip     (pixman_image_t               *image,
 						      pixman_bool_t		    clien_clip);
@@ -484,6 +484,11 @@ int		pixman_image_get_width               (pixman_image_t               *image);
 int             pixman_image_get_height              (pixman_image_t               *image);
 int		pixman_image_get_stride              (pixman_image_t               *image);
 int		pixman_image_get_depth               (pixman_image_t		   *image);
+pixman_bool_t	pixman_image_fill_rectangles	     (pixman_op_t		    op,
+						      pixman_image_t		   *image,
+						      pixman_color_t		   *color,
+						      int			    n_rects,
+						      const pixman_rectangle16_t	   *rects);
 
 /* Composite */
 pixman_bool_t   pixman_compute_composite_region (pixman_region16_t *	pRegion,
@@ -578,7 +583,7 @@ void           pixman_edge_init            (pixman_edge_t       *e,
 void           pixman_line_fixed_edge_init (pixman_edge_t       *e,
 					    int                  bpp,
 					    pixman_fixed_t       y,
-					    pixman_line_fixed_t *line,
+					    const pixman_line_fixed_t *line,
 					    int                  x_off,
 					    int                  y_off);
 void           pixman_rasterize_edges      (pixman_image_t      *image,
@@ -593,11 +598,11 @@ void           pixman_add_traps            (pixman_image_t      *image,
 					    pixman_trap_t       *traps);
 void	       pixman_add_trapezoids       (pixman_image_t      *image,
 					    int16_t              x_off,
-					    int                      y_off,
-					    int                      ntraps,
-					    const pixman_trapezoid_t *traps);
+					    int                  y_off,
+					    int                  ntraps,
+					    const pixman_trapezoid_t  *traps);
 void           pixman_rasterize_trapezoid  (pixman_image_t      *image,
-					    pixman_trapezoid_t  *trap,
+					    const pixman_trapezoid_t  *trap,
 					    int                  x_off,
 					    int                  y_off);
 

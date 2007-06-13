@@ -107,7 +107,7 @@ pixman_add_trapezoids       (pixman_image_t      *image,
 
 void
 pixman_rasterize_trapezoid (pixman_image_t *    image,
-			    pixman_trapezoid_t *trap,
+			    const pixman_trapezoid_t *trap,
 			    int			x_off,
 			    int			y_off)
 {

@@ -406,12 +406,12 @@ _pixman_edge_tMultiInit (pixman_edge_t *e, int n, pixman_fixed_t *stepx_p, pixma
  */
 void
 pixman_edge_init (pixman_edge_t	*e,
-		int		n,
-		pixman_fixed_t		y_start,
-		pixman_fixed_t		x_top,
-		pixman_fixed_t		y_top,
-		pixman_fixed_t		x_bot,
-		pixman_fixed_t		y_bot)
+		  int		n,
+		  pixman_fixed_t		y_start,
+		  pixman_fixed_t		x_top,
+		  pixman_fixed_t		y_top,
+		  pixman_fixed_t		x_bot,
+		  pixman_fixed_t		y_bot)
 {
     pixman_fixed_t	dx, dy;
 
@@ -452,13 +452,13 @@ void
 pixman_line_fixed_edge_init (pixman_edge_t *e,
 			     int	    n,
 			     pixman_fixed_t	    y,
-			     pixman_line_fixed_t *line,
+			     const pixman_line_fixed_t *line,
 			     int	    x_off,
 			     int	    y_off)
 {
     pixman_fixed_t	x_off_fixed = pixman_int_to_fixed(x_off);
     pixman_fixed_t	y_off_fixed = pixman_int_to_fixed(y_off);
-    pixman_point_fixed_t *top, *bot;
+    const pixman_point_fixed_t *top, *bot;
 
     if (line->p1.y <= line->p2.y)
     {

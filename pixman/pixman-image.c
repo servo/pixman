@@ -321,7 +321,7 @@ pixman_image_create_bits (pixman_format_code_t  format,
     return image;
 }
 
-void
+pixman_bool_t
 pixman_image_set_clip_region (pixman_image_t    *image,
 			      pixman_region16_t *region)
 {
@@ -329,12 +329,14 @@ pixman_image_set_clip_region (pixman_image_t    *image,
 
     if (region)
     {
-	pixman_region_copy (&common->clip_region, region);
+	return pixman_region_copy (&common->clip_region, region);
     }
     else
     {
 	pixman_region_fini (&common->clip_region);
 	pixman_region_init (&common->clip_region);
+
+	return TRUE;
     }
 }
 
@@ -511,4 +513,32 @@ pixman_image_get_depth (pixman_image_t *image)
     return_val_if_fail (image->type == BITS, -1);
 
     return PIXMAN_FORMAT_DEPTH (image->bits.format);
+}
+
+pixman_bool_t
+pixman_image_fill_rectangles (pixman_op_t		    op,
+			      pixman_image_t		   *dest,
+			      pixman_color_t		   *color,
+			      int			    n_rects,
+			      const pixman_rectangle16_t   *rects)
+{
+    pixman_image_t *solid = pixman_image_create_solid_fill (color);
+    int i;
+
+    if (!solid)
+	return FALSE;
+
+    for (i = 0; i < n_rects; ++i)
+    {
+	const pixman_rectangle16_t *rect = &(rects[i]);
+	
+	pixman_image_composite (op, solid, NULL, dest,
+				0, 0, 0, 0,
+				rect->x, rect->y,
+				rect->width, rect->height);
+    }
+
+    pixman_image_unref (solid);
+
+    return TRUE;
 }
