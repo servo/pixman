@@ -294,7 +294,8 @@ pixman_image_create_bits (pixman_format_code_t  format,
 
     /* must be a whole number of uint32_t's 
      */
-    return_val_if_fail ((rowstride_bytes % sizeof (uint32_t)) == 0, NULL); 
+    return_val_if_fail (bits == NULL ||
+			(rowstride_bytes % sizeof (uint32_t)) == 0, NULL); 
 
     if (!bits)
     {
