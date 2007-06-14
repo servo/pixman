@@ -6,6 +6,40 @@
 
   - Go through things marked FIXME
 
+  - Reinstate the FbBits typedef? At the moment we don't
+    even have the FbBits type; we just use uint32_t everywhere.
+
+    Keith says in bug 2335:
+
+        The 64-bit code in fb (pixman) is probably broken; it hasn't been
+        used in quite some time as PCI (and AGP) is 32-bits wide, so
+        doing things 64-bits at a time is a net loss.  To quickly fix
+        this, I suggest just using 32-bit datatypes by setting
+        IC_SHIFT to 5 for all machines.
+
+- Consider whether calling regions region16 is really such a great idea
+
+- Make sure the endian-ness macros are defined correctly.
+
+- Run cairo test suite; fix bugs
+	- one bug in source-scale-clip
+
+- Add calls to prepare and finish access where necessary. 
+  grep for ACCESS_MEM, and make sure they are correctly wrapped in
+  prepare and finish
+
+done:
+
+- The rectangles in a region probably shouldn't be returned const as
+  the X server will be changing them.
+
+- Right now we _always_ have a clip region, which is empty by default.
+  Why does this work at all? It probably doesn't. The server
+  distinguishes two cases, one where nothing is clipped (CT_NONE), and
+  one where there is a clip region (CT_REGION).
+
+- Default clip region should be the full image
+
   - Test if pseudo color still works. It does, but it also shows that
     copying a pixman_indexed_t on every composite operation is not
     going to fly. So, for now set_indexed() does not copy the 
@@ -36,33 +70,3 @@
             etc. instead of the types that are defined in
             renderproto.h
 
-  - Reinstate the FbBits conditional typedef? At the moment we don't
-    even have the FbBits type; we just use uint32_t everywhere.
-
-    Keith says in bug 2335:
-
-        The 64-bit code in fb (pixman) is probably broken; it hasn't been
-        used in quite some time as PCI (and AGP) is 32-bits wide, so
-        doing things 64-bits at a time is a net loss.  To quickly fix
-        this, I suggest just using 32-bit datatypes by setting
-        IC_SHIFT to 5 for all machines.
-
-- Consider whether calling regions region16 is really such a great idea
-
-- Right now we _always_ have a clip region, which is empty by default.
-  Why does this work at all? It probably doesn't. The server
-  distinguishes two cases, one where nothing is clipped (CT_NONE), and
-  one where there is a clip region (CT_REGION).
-
-- The rectangles in a region probably shouldn't be returned const as
-  the X server will be changing them.
-
-- Make sure the endian-ness macros are defined correctly.
-
-- Run cairo test suite; fix bugs
-	- one bug in source-scale-clip
-
-
-done:
-
-- Default clip region should be the full image
