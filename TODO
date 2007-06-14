@@ -1,6 +1,3 @@
-  - Remove the warning suppression in the ACCESS_MEM macro and fix the
-    warnings that are real
-
   - It probably makes sense to move the more strange X region API
     into pixman as well, but guarded with PIXMAN_XORG_COMPATIBILITY
 
@@ -24,9 +21,14 @@
 - Run cairo test suite; fix bugs
 	- one bug in source-scale-clip
 
+ - Remove the warning suppression in the ACCESS_MEM macro and fix the
+    warnings that are real
+
 - Add calls to prepare and finish access where necessary. 
   grep for ACCESS_MEM, and make sure they are correctly wrapped in
   prepare and finish
+
+- Make source clipping optional.
 
 done:
 
