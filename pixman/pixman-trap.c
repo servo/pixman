@@ -86,6 +86,36 @@ pixman_add_traps (pixman_image_t *	image,
     fbFinishAccess (pPicture->pDrawable);
 }
 
+static void
+dump_image (pixman_image_t *image,
+	    const char *title)
+{
+    int i, j;
+    
+    if (!image->type == BITS)
+    {
+	printf ("%s is not a regular image\n", title);
+    }
+
+    if (!image->bits.format == PIXMAN_a8)
+    {
+	printf ("%s is not an alpha mask\n", title);
+    }
+
+    printf ("\n\n\n%s: \n", title);
+    
+    for (i = 0; i < image->bits.height; ++i)
+    {
+	uint8_t *line =
+	    (uint8_t *)&(image->bits.bits[i * image->bits.rowstride]);
+	    
+	for (j = 0; j < image->bits.width; ++j)
+	    printf ("%c", line[j]? '#' : ' ');
+
+	printf ("\n");
+    }
+}
+
 void
 pixman_add_trapezoids       (pixman_image_t      *image,
 			     int16_t              x_off,
@@ -95,6 +125,10 @@ pixman_add_trapezoids       (pixman_image_t      *image,
 {
     int i;
 
+#if 0
+    dump_image (image, "before");
+#endif
+    
     for (i = 0; i < ntraps; ++i)
     {
 	const pixman_trapezoid_t *trap = &(traps[i]);
@@ -104,6 +138,10 @@ pixman_add_trapezoids       (pixman_image_t      *image,
 	
 	pixman_rasterize_trapezoid (image, trap, x_off, y_off);
     }
+
+#if 0
+    dump_image (image, "after");
+#endif
 }
 
 void

@@ -283,6 +283,23 @@ create_bits (pixman_format_code_t format,
     return calloc (buf_size, 1);
 }
 
+static void
+reset_clip_region (pixman_image_t *image)
+{
+    pixman_region_fini (&image->common.clip_region);
+    
+    if (image->type == BITS)
+    {
+	pixman_region_init_rect (&image->common.clip_region, 0, 0,
+				 image->bits.width, image->bits.height);
+	
+    }
+    else
+    {
+	pixman_region_init (&image->common.clip_region);
+    }
+}
+
 pixman_image_t *
 pixman_image_create_bits (pixman_format_code_t  format,
 			  int                   width,
@@ -319,8 +336,7 @@ pixman_image_create_bits (pixman_format_code_t  format,
 								  */
     image->bits.indexed = NULL;
 
-    pixman_region_fini (&image->common.clip_region);
-    pixman_region_init_rect (&image->common.clip_region, 0, 0, width, height);
+    reset_clip_region (image);
 
     return image;
 }
@@ -337,9 +353,8 @@ pixman_image_set_clip_region (pixman_image_t    *image,
     }
     else
     {
-	pixman_region_fini (&common->clip_region);
-	pixman_region_init (&common->clip_region);
-
+	reset_clip_region (image);
+	
 	return TRUE;
     }
 }
