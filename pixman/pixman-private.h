@@ -26,7 +26,7 @@
 #  define BITMAP_BIT_ORDER LSBFirst
 #endif
 
-#define DEBUG 1
+#define DEBUG 0
 
 #if defined (__GNUC__)
 #  define FUNC     ((const char*) (__PRETTY_FUNCTION__))
@@ -47,31 +47,44 @@
 #if DEBUG
 
 #define return_if_fail(expr)						\
-	do								\
+    do									\
+    {									\
+	if (!(expr))							\
 	{								\
-	    if (!(expr))						\
-	    {								\
-		fprintf(stderr, "In %s: %s failed\n", FUNC, #expr);	\
-		return;							\
-	    }								\
+	    fprintf(stderr, "In %s: %s failed\n", FUNC, #expr);		\
+	    return;							\
 	}								\
-	while (0)
+    }									\
+    while (0)
 
 #define return_val_if_fail(expr, retval) 				\
-	do								\
+    do									\
+    {									\
+	if (!(expr))							\
 	{								\
-	    if (!(expr))						\
-	    {								\
-		fprintf(stderr, "In %s: %s failed\n", FUNC, #expr);	\
-		return (retval);					\
-	    }								\
+	    fprintf(stderr, "In %s: %s failed\n", FUNC, #expr);		\
+	    return (retval);						\
 	}								\
-	while (0)
+    }									\
+    while (0)
 
 #else
 
-#define return_if_fail(expr)
-#define return_val_if_fail(expr, retval)
+#define return_if_fail(expr)						\
+    do									\
+    {									\
+	if (!(expr))							\
+	    return;							\
+    }									\
+    while (0)
+
+#define return_val_if_fail(expr, retval)				\
+    do									\
+    {									\
+	if (!(expr))							\
+	    return (retval);						\
+    }									\
+    while (0)
 
 #endif
 

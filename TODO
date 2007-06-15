@@ -27,6 +27,8 @@
   prepare and finish
 
 - Make source clipping optional.
+       - done: source clipping happens through an indirection.
+         still needs to make the indirection settable.
 
 done:
 
