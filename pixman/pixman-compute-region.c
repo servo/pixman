@@ -98,7 +98,7 @@ miClipPictureSrc (pixman_region16_t *	pRegion,
 	    pixman_region_translate ( pRegion, dx, dy);
 	    
 	    if (!pixman_region_intersect (pRegion, pRegion, 
-					  (pixman_region16_t *) &pPicture->common.clip_region))
+					  (pixman_region16_t *) pPicture->common.src_clip))
 		return FALSE;
 	    
 	    pixman_region_translate ( pRegion, -dx, -dy);
@@ -109,7 +109,7 @@ miClipPictureSrc (pixman_region16_t *	pRegion,
     else
     {
 	return miClipPictureReg (pRegion,
-				 &pPicture->common.clip_region,
+				 pPicture->common.src_clip,
 				 dx,
 				 dy);
     }

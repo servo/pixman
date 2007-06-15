@@ -29,12 +29,6 @@
 #include "pixman.h"
 #include "pixman-private.h"
 
-enum
-{
-    PIXMAN_BAD_VALUE,
-    PIXMAN_BAD_ALLOC
-};
-
 static void
 init_source_image (source_image_t *image)
 {
@@ -83,8 +77,10 @@ allocate_image (void)
     if (image)
     {
 	image_common_t *common = &image->common;
-	
+
+	pixman_region_init (&common->full_region);
 	pixman_region_init (&common->clip_region);
+	common->src_clip = &common->full_region;
 	common->has_client_clip = FALSE;
 	common->transform = NULL;
 	common->repeat = PIXMAN_REPEAT_NONE;
@@ -120,6 +116,7 @@ pixman_image_unref (pixman_image_t *image)
     if (common->ref_count == 0)
     {
 	pixman_region_fini (&common->clip_region);
+	pixman_region_fini (&common->full_region);
 
 	if (common->transform)
 	    free (common->transform);
@@ -291,8 +288,7 @@ reset_clip_region (pixman_image_t *image)
     if (image->type == BITS)
     {
 	pixman_region_init_rect (&image->common.clip_region, 0, 0,
-				 image->bits.width, image->bits.height);
-	
+				 image->bits.width, image->bits.height);	
     }
     else
     {
@@ -336,8 +332,11 @@ pixman_image_create_bits (pixman_format_code_t  format,
 								  */
     image->bits.indexed = NULL;
 
-    reset_clip_region (image);
+    pixman_region_fini (&image->common.full_region);
+    pixman_region_init_rect (&image->common.full_region, 0, 0,
+			     image->bits.width, image->bits.height);
 
+    reset_clip_region (image);
     return image;
 }
 
