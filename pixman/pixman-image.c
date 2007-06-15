@@ -371,11 +371,25 @@ pixman_bool_t
 pixman_image_set_transform (pixman_image_t           *image,
 			    const pixman_transform_t *transform)
 {
+    static const pixman_transform_t id =
+    {
+	{ { pixman_fixed_1, 0, 0 },
+	  { 0, pixman_fixed_1, 0 },
+	  { 0, 0, pixman_fixed_1 }
+	}
+    };
+    
     image_common_t *common = (image_common_t *)image;
 
     if (common->transform == transform)
 	return TRUE;
 
+    if (memcmp (&id, transform, sizeof (pixman_transform_t)) == 0)
+    {
+	transform = NULL;
+	return TRUE;
+    }
+    
     if (common->transform)
 	free (common->transform);
 
