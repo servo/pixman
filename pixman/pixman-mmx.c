@@ -1422,17 +1422,16 @@ fbCompositeSrc_8888x8888mmx (pixman_op_t op,
 {
     uint32_t	*dstLine, *dst;
     uint32_t	*srcLine, *src;
+    uint32_t    s;
     int	dstStride, srcStride;
+    uint8_t     a;
     uint16_t	w;
-    __m64  srca;
     
     CHECKPOINT();
     
     fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
     fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
 
-    srca = MC (4x00ff);
-    
     while (height--)
     {
 	dst = dstLine;
@@ -1441,47 +1440,21 @@ fbCompositeSrc_8888x8888mmx (pixman_op_t op,
 	srcLine += srcStride;
 	w = width;
 
-	while (w && (unsigned long)dst & 7)
+	while (w--)
 	{
-	    __m64 s = load8888 (*src);
-	    __m64 d = load8888 (*dst);
-	    
-	    *dst = store8888 (over (s, expand_alpha (s), d));
-	    
-	    w--;
+	    s = *src++;
+	    a = s >> 24;
+	    if (a == 0xff)
+		*dst = s;
+	    else if (a) {
+		__m64 ms, sa;
+		ms = load8888(s);
+		sa = expand_alpha(ms);
+		*dst = store8888(over(ms, sa, load8888(*dst)));
+	    }
 	    dst++;
-	    src++;
-	}
-
-	while (w >= 2)
-	{
-	    __m64 vd = *(__m64 *)(dst + 0);
-	    __m64 vs = *(__m64 *)(src + 0);
-	    __m64 vs0 = expand8888 (vs, 0);
-	    __m64 vs1 = expand8888 (vs, 1);
-
-	    *(__m64 *)dst = (__m64)pack8888 (
-		over (vs0, expand_alpha (vs0), expand8888 (vd, 0)),
-		over (vs1, expand_alpha (vs1), expand8888 (vd, 1)));
-	    
-	    w -= 2;
-	    dst += 2;
-	    src += 2;
-	}
-	
-	while (w)
-	{
-	    __m64 s = load8888 (*src);
-	    __m64 d = load8888 (*dst);
-	    
-	    *dst = store8888 (over (s, expand_alpha (s), d));
-	    
-	    w--;
-	    dst++;
-	    src++;
 	}
     }
-
     _mm_empty(); 
 }
 
