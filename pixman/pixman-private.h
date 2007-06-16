@@ -179,7 +179,7 @@ struct image_common
 struct source_image
 {
     image_common_t	common;
-    unsigned int	class;		/* FIXME: should be an enum */
+    source_pict_class_t class;
 };
 
 struct solid_fill
@@ -643,32 +643,46 @@ void pixmanCompositeRect (const FbComposeData *data,
 
 #define fbFinishAccess(x) 
 
-#define fbComposeGetSolid(img, res, fmt) do {				\
-	uint32_t	       *bits__   = (img)->bits.bits;		\
-	pixman_format_code_t	format__ = (img)->bits.format;		\
-									\
-	switch (PIXMAN_FORMAT_BPP((img)->bits.format))			\
+#define fbComposeGetSolid(img, res, fmt)				\
+    do									\
+    {									\
+	pixman_format_code_t format__;					\
+	if (img->type == SOLID)						\
 	{								\
-	case 32:							\
-	    (res) = READ((uint32_t *)bits__);				\
-	    break;							\
-	case 24:							\
-	    (res) = Fetch24 ((uint8_t *) bits__);			\
-	    break;							\
-	case 16:							\
-	    (res) = READ((uint16_t *) bits__);				\
-	    (res) = cvt0565to0888(res);					\
-	    break;							\
-	case 8:								\
-	    (res) = READ((uint8_t *) bits__);				\
-	    (res) = (res) << 24;					\
-	    break;							\
-	case 1:								\
-	    (res) = READ((uint32_t *) bits__);				\
-	    (res) = FbLeftStipBits((res),1) ? 0xff000000 : 0x00000000;	\
-	    break;							\
-	default:							\
-	    return;							\
+	    format__ = PIXMAN_a8r8g8b8;					\
+	    (res) = img->solid.color;					\
+	}								\
+	else								\
+	{								\
+	    uint32_t	       *bits__   = (img)->bits.bits;		\
+	    format__ = (img)->bits.format;				\
+		  							\
+	    switch (PIXMAN_FORMAT_BPP((img)->bits.format))		\
+	    {								\
+	    case 32:							\
+		(res) = READ((uint32_t *)bits__);			\
+		break;							\
+	    case 24:							\
+		(res) = Fetch24 ((uint8_t *) bits__);			\
+		break;							\
+	    case 16:							\
+		(res) = READ((uint16_t *) bits__);			\
+		(res) = cvt0565to0888(res);				\
+		break;							\
+	    case 8:							\
+		(res) = READ((uint8_t *) bits__);			\
+		(res) = (res) << 24;					\
+		break;							\
+	    case 1:							\
+		(res) = READ((uint32_t *) bits__);			\
+		(res) = FbLeftStipBits((res),1) ? 0xff000000 : 0x00000000; \
+		break;							\
+	    default:							\
+		return;							\
+	    }								\
+	    /* manage missing src alpha */				\
+	    if (!PIXMAN_FORMAT_A((img)->bits.format))			\
+		(res) |= 0xff000000;					\
 	}								\
 	/* If necessary, convert RGB <--> BGR. */			\
 	if (PIXMAN_FORMAT_TYPE (format__) != PIXMAN_FORMAT_TYPE(fmt))	\
@@ -678,11 +692,8 @@ void pixmanCompositeRect (const FbComposeData *data,
 		     (((res) & 0x0000ff00) >>  0) |			\
 		     (((res) & 0x000000ff) << 16));			\
 	}								\
-	/* manage missing src alpha */					\
-	if (!PIXMAN_FORMAT_A((img)->bits.format))			\
-	    (res) |= 0xff000000;					\
-    } while (0)
-
+    }									\
+    while (0)
 
 #define fbComposeGetStart(pict,x,y,type,out_stride,line,mul) do {	\
 	uint32_t	*__bits__;					\

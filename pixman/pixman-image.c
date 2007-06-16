@@ -572,9 +572,15 @@ pixman_image_fill_rectangles (pixman_op_t		    op,
 {
     pixman_image_t *solid = pixman_image_create_solid_fill (color);
     int i;
-
+    
     if (!solid)
 	return FALSE;
+
+    if (color->alpha == 0xffff)
+    {
+	if (op == PIXMAN_OP_OVER)
+	    op = PIXMAN_OP_SRC;
+    }
 
     for (i = 0; i < n_rects; ++i)
     {
@@ -585,7 +591,7 @@ pixman_image_fill_rectangles (pixman_op_t		    op,
 				rect->x, rect->y,
 				rect->width, rect->height);
     }
-
+    
     pixman_image_unref (solid);
 
     return TRUE;

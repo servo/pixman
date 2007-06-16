@@ -4328,6 +4328,9 @@ pixmanCompositeRect (const FbComposeData *data, uint32_t *scanline_buffer)
 	if (IS_SOURCE_IMAGE (data->mask))
 	{
 	    fetchMask = (scanFetchProc)pixmanFetchSourcePict;
+	    maskClass = SourcePictureClassify ((source_image_t *)data->mask,
+					       data->xMask, data->yMask,
+					       data->width, data->height);
 	}
 	else
 	{
@@ -4336,21 +4339,6 @@ pixmanCompositeRect (const FbComposeData *data, uint32_t *scanline_buffer)
 	    if (bits->common.alpha_map)
 	    {
 		fetchMask = (scanFetchProc)fbFetchExternalAlpha;
-		/* FIXME: this looks highly suspicious. Why would we
-		 * expect the mask to be a source picture here? In fact
-		 * we _know_ it's not a source picture.
-		 *
-		 * That's why it's commented out. This will result in
-		 * the classification of "unknown" which should be
-		 * correct.
-		 *
-		 * It looks like it belongs in the IS_SOURCE_IMAGE() clause
-		 */
-#if 0
-		maskClass = SourcePictureClassify (data->mask,
-						   data->xMask, data->yMask,
-						   data->width, data->height);
-#endif
 	    }
 	    else if (bits->common.repeat == PIXMAN_REPEAT_NORMAL &&
 		     bits->width == 1 && bits->height == 1)

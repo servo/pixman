@@ -1037,6 +1037,9 @@ pixman_walk_composite_region (pixman_op_t op,
 static pixman_bool_t
 can_get_solid (pixman_image_t *image)
 {
+    if (image->type == SOLID)
+	return TRUE;
+    
     if (image->type != BITS	||
 	image->bits.width != 1	||
 	image->bits.height != 1)
@@ -1165,7 +1168,7 @@ pixman_image_composite (pixman_op_t      op,
 	    maskTransform = FALSE;
     }
 
-    if (pSrc->type == BITS && (!pMask || pMask->type == BITS)
+    if ((pSrc->type == BITS || can_get_solid (pSrc)) && (!pMask || pMask->type == BITS)
         && !srcTransform && !maskTransform
         && !maskAlphaMap && !srcAlphaMap && !dstAlphaMap
         && (pSrc->common.filter != PIXMAN_FILTER_CONVOLUTION)
@@ -1180,7 +1183,7 @@ pixman_image_composite (pixman_op_t      op,
 	    if (can_get_solid(pSrc) &&
 		!maskRepeat)
 	    {
-		if (PIXMAN_FORMAT_COLOR(pSrc->bits.format)) {
+		if (pSrc->type == SOLID || PIXMAN_FORMAT_COLOR(pSrc->bits.format)) {
 		    switch (pMask->bits.format) {
 		    case PIXMAN_a8:
 			switch (pDst->bits.format) {
@@ -1405,8 +1408,8 @@ pixman_image_composite (pixman_op_t      op,
 	    if (can_get_solid(pSrc))
 	    {
 		/* no mask and repeating source */
-		switch (pSrc->bits.format) {
-		case PIXMAN_a8r8g8b8:
+		if (pSrc->type == SOLID || pSrc->bits.format == PIXMAN_a8r8g8b8)
+		{
 		    switch (pDst->bits.format) {
 		    case PIXMAN_a8r8g8b8:
 		    case PIXMAN_x8r8g8b8:
@@ -1430,8 +1433,6 @@ pixman_image_composite (pixman_op_t      op,
 		    default:
 			break;
 		    }
-		    break;
-		default:
 		    break;
 		}
 	    }
@@ -1602,9 +1603,7 @@ pixman_image_composite (pixman_op_t      op,
 	}
 	else
 	{
-	    if ((pSrc->bits.format == PIXMAN_a8r8g8b8	||
-		 pSrc->bits.format == PIXMAN_a8b8g8r8) &&
-		can_get_solid (pSrc)		&&
+	    if (can_get_solid (pSrc)		&&
 		pMask->bits.format == PIXMAN_a8	&&
 		pDst->bits.format == PIXMAN_a8)
 	    {
@@ -1647,7 +1646,16 @@ pixman_image_composite (pixman_op_t      op,
 	}
 	else
 	{
-	    if (pSrc->bits.format == pDst->bits.format)
+	    if (can_get_solid (pSrc))
+	    {
+		if (PIXMAN_FORMAT_BPP (pDst->bits.format) == 16 ||
+		    PIXMAN_FORMAT_BPP (pDst->bits.format) == 32)
+		{
+		    func = fbCompositeSolidFillmmx;
+		    srcRepeat = FALSE;
+		}
+	    }
+	    else if (pSrc->bits.format == pDst->bits.format)
 	    {
 #ifdef USE_MMX
 		if (pSrc->bits.bits != pDst->bits.bits && pixman_have_mmx() &&

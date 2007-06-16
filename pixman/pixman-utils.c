@@ -82,13 +82,13 @@ pixman_blt (uint32_t *src_bits,
 
 pixman_bool_t
 pixman_fill (uint32_t *bits,
-		 int stride,
-		 int bpp,
-		 int x,
-		 int y,
-		 int width,
-		 int height,
-		 uint32_t xor)
+	     int stride,
+	     int bpp,
+	     int x,
+	     int y,
+	     int width,
+	     int height,
+	     uint32_t xor)
 {
 #ifdef USE_MMX
     if (pixman_have_mmx())

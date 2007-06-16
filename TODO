@@ -30,6 +30,8 @@
        - done: source clipping happens through an indirection.
          still needs to make the indirection settable.
 
+- Add non-mmx solid fill
+
 done:
 
 - Make sure the endian-ness macros are defined correctly.
