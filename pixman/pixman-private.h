@@ -248,6 +248,7 @@ union pixman_image
     image_type_t		type;
     image_common_t		common;
     bits_image_t		bits;
+    gradient_t			gradient;
     linear_gradient_t		linear;
     conical_gradient_t		conical;
     radial_gradient_t		radial;

@@ -135,7 +135,13 @@ pixman_image_unref (pixman_image_t *image)
 #if 0
 	memset (image, 0xaa, sizeof (pixman_image_t));
 #endif
+	if (image->type == LINEAR || image->type == RADIAL || image->type == CONICAL)
+	{
+	    if (image->gradient.stops)
+		free (image->gradient.stops);
+	}
 
+	
 	if (image->type == BITS && image->bits.free_me)
 	    free (image->bits.free_me);
 	
