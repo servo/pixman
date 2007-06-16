@@ -135,6 +135,9 @@ pixman_image_unref (pixman_image_t *image)
 #if 0
 	memset (image, 0xaa, sizeof (pixman_image_t));
 #endif
+
+	if (image->type == BITS && image->bits.free_me)
+	    free (image->bits.free_me);
 	
 	free (image);
     }
@@ -304,6 +307,7 @@ pixman_image_create_bits (pixman_format_code_t  format,
 			  int			rowstride_bytes)
 {
     pixman_image_t *image;
+    uint32_t *free_me = NULL;
 
     /* must be a whole number of uint32_t's 
      */
@@ -312,7 +316,7 @@ pixman_image_create_bits (pixman_format_code_t  format,
 
     if (!bits)
     {
-	bits = create_bits (format, width, height, &rowstride_bytes);
+	free_me = bits = create_bits (format, width, height, &rowstride_bytes);
 	if (!bits)
 	    return NULL;
     }
@@ -327,6 +331,8 @@ pixman_image_create_bits (pixman_format_code_t  format,
     image->bits.width = width;
     image->bits.height = height;
     image->bits.bits = bits;
+    image->bits.free_me = free_me;
+    
     image->bits.rowstride = rowstride_bytes / sizeof (uint32_t); /* we store it in number
 								  * of uint32_t's
 								  */

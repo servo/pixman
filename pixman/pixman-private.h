@@ -239,6 +239,7 @@ struct bits_image
     int				width;
     int				height;
     uint32_t *			bits;
+    uint32_t *			free_me;
     int				rowstride; /* in number of uint32_t's */
 };
 
