@@ -431,13 +431,19 @@ mmxCombineMaskU (uint32_t *src, const uint32_t *mask, int width)
 {
     const uint32_t *end = mask + width;
     while (mask < end) {
-        __m64 a = load8888(*mask);
-        __m64 s = load8888(*src);
-        a = expand_alpha(a);
-        s = pix_multiply(s, a);
-        *src = store8888(s);
-        ++src;
-        ++mask;
+        uint32_t mmask = *mask;
+	uint32_t maska = mmask >> 24;
+	if (maska == 0) {
+	    *src = 0;
+	} else if (maska != 0xff) {
+	    __m64 a = load8888(mmask);
+	    __m64 s = load8888(*src);
+	    a = expand_alpha(a);
+	    s = pix_multiply(s, a);
+	    *src = store8888(s);
+	}
+	++src;
+	++mask;
     }
     _mm_empty();
 }
@@ -447,14 +453,20 @@ static FASTCALL void
 mmxCombineOverU (uint32_t *dest, const uint32_t *src, int width)
 {
     const uint32_t *end = dest + width;
-
+    
     while (dest < end) {
-        __m64 s, sa;
-	s = load8888(*src);
-	sa = expand_alpha(s);
-	*dest = store8888(over(s, sa, load8888(*dest)));
-        ++dest;
-        ++src;
+	uint32_t ssrc = *src;
+	uint32_t a = ssrc >> 24;
+	if (a == 0xff) {
+	    *dest = ssrc;
+	} else if (a) {
+	    __m64 s, sa;
+	    s = load8888(ssrc);
+	    sa = expand_alpha(s);
+	    *dest = store8888(over(s, sa, load8888(*dest)));
+	}
+	++dest;
+	++src;
     }
     _mm_empty();
 }
