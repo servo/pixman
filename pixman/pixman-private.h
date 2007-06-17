@@ -109,12 +109,6 @@ typedef FASTCALL void (*CombineMaskU) (uint32_t *src, const uint32_t *mask, int 
 typedef FASTCALL void (*CombineFuncU) (uint32_t *dest, const uint32_t *src, int width);
 typedef FASTCALL void (*CombineFuncC) (uint32_t *dest, uint32_t *src, uint32_t *mask, int width);
 
-typedef struct _FbComposeFunctions {
-    CombineFuncU *combineU;
-    CombineFuncC *combineC;
-    CombineMaskU combineMaskU;
-} FbComposeFunctions;
-
 typedef struct _FbComposeData {
     uint8_t	 op;
     pixman_image_t	*src;
@@ -130,6 +124,20 @@ typedef struct _FbComposeData {
     uint16_t	 height;
 } FbComposeData;
 
+typedef struct _FbComposeFunctions {
+    CombineFuncU *combineU;
+    CombineFuncC *combineC;
+    CombineMaskU combineMaskU;
+} FbComposeFunctions;
+
+extern FbComposeFunctions pixman_composeFunctions;
+
+void pixman_composite_rect_general_accessors (const FbComposeData *data,
+					      uint32_t *scanline_buffer);
+void pixman_composite_rect_general_no_acessors (const FbComposeData *data,
+						uint32_t *scanline_buffer);
+void pixman_composite_rect_general (const FbComposeData *data,
+				    uint32_t *scanline_buffer);
 
 /* end */
 
@@ -254,9 +262,6 @@ union pixman_image
     radial_gradient_t		radial;
     solid_fill_t		solid;
 };
-
-void pixmanCompositeRect (const FbComposeData *data,
-			  uint32_t *scanline_buffer);
 
 #define LOG2_BITMAP_PAD 5
 #define FB_STIP_SHIFT	LOG2_BITMAP_PAD

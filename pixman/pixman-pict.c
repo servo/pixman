@@ -1110,7 +1110,7 @@ pixman_image_composite_rect  (pixman_op_t                   op,
     compose_data.width = width;
     compose_data.height = height;
 
-    pixmanCompositeRect (&compose_data, scanline_buffer);
+    pixman_composite_rect_general (&compose_data, scanline_buffer);
 
     if (scanline_buffer != _scanline_buffer)
 	free (scanline_buffer);

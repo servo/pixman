@@ -884,13 +884,11 @@ mmxCombineAddC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
     _mm_empty();
 }
 
-/* FIXME: this should be reinstated after adding fbmmx to pixman */
-extern FbComposeFunctions pixman_composeFunctions;
-
 void fbComposeSetupMMX(void)
 {
     /* check if we have MMX support and initialize accordingly */
-    if (pixman_have_mmx()) {
+    if (pixman_have_mmx())
+    {
         pixman_composeFunctions.combineU[PIXMAN_OP_OVER] = mmxCombineOverU;
         pixman_composeFunctions.combineU[PIXMAN_OP_OVER_REVERSE] = mmxCombineOverReverseU;
         pixman_composeFunctions.combineU[PIXMAN_OP_IN] = mmxCombineInU;

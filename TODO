@@ -32,6 +32,8 @@
 
 - Add non-mmx solid fill
 
+- make the wrapper functions global instead of image specific
+
 done:
 
 - Make sure the endian-ness macros are defined correctly.
