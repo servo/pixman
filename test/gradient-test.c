@@ -59,6 +59,7 @@ show_window (uint32_t *bits, int w, int h, int stride)
     pixbuf = pixbuf_from_argb32 (bits, w, h, stride);
     
     g_signal_connect (window, "expose_event", G_CALLBACK (on_expose), pixbuf);
+    g_signal_connect (window, "delete_event", G_CALLBACK (gtk_main_quit), NULL);
     
     gtk_widget_show (window);
     

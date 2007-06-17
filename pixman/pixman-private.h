@@ -6,6 +6,7 @@
 #define PIXMAN_PRIVATE_H
 
 #include "pixman.h"
+#include <time.h>
 
 #ifndef FALSE
 #define FALSE 0
@@ -767,5 +768,50 @@ pixman_rasterize_edges_accessors (pixman_image_t *image,
 				  pixman_edge_t	*r,
 				  pixman_fixed_t	t,
 				  pixman_fixed_t	b);
+
+
+/* Timing */
+static inline uint64_t
+oil_profile_stamp_rdtsc (void)
+{
+    uint64_t ts;
+    __asm__ __volatile__("rdtsc\n" : "=A" (ts));
+    return ts;
+}
+#define OIL_STAMP oil_profile_stamp_rdtsc
+
+typedef struct PixmanTimer PixmanTimer;
+
+struct PixmanTimer
+{
+    int initialized;
+    const char *name;
+    uint64_t n_times;
+    uint64_t total;
+    PixmanTimer *next;
+};
+
+extern int timer_defined;
+void pixman_timer_register (PixmanTimer *timer);
+
+#define TIMER_BEGIN(tname)						\
+    {									\
+	static PixmanTimer	timer##tname;				\
+	uint64_t		begin##tname;				\
+									\
+	if (!timer##tname.initialized)					\
+	{								\
+	    timer##tname.initialized = 1;				\
+	    timer##tname.name = #tname;					\
+	    pixman_timer_register (&timer##tname);			\
+	}								\
+									\
+	timer##tname.n_times++;						\
+	begin##tname = OIL_STAMP();
+	
+#define TIMER_END(tname)						\
+        timer##tname.total += OIL_STAMP() - begin##tname;		\
+    }
+
 
 #endif /* PIXMAN_PRIVATE_H */
