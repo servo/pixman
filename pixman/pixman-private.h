@@ -572,6 +572,7 @@ union pixman_image
  * where Fetch4 doesn't have a READ
  */
 
+#if 0
 /* Framebuffer access support macros */
 #define ACCESS_MEM(code)						\
     do {								\
@@ -603,48 +604,48 @@ union pixman_image
 	    {code}							\
 	}								\
     } while (0)
+#endif
+
+#ifdef PIXMAN_FB_ACCESSORS
 
 #define READ(ptr)							\
-    (do_access__? read_func__ ((ptr), sizeof(*(ptr))) : (*(ptr)))
-
-#define WRITE(ptr, val)							\
-    (do_access__?							\
-     write_func__ ((ptr), (val), sizeof(*(ptr)))			\
-     : ((void)(*(ptr) = (val))))
+    (image->common.read_func ((ptr), sizeof(*(ptr))))
+#define WRITE(ptr,val)							\
+    (image->common.write_func ((ptr), (val), sizeof (*(ptr))))
 
 #define MEMCPY_WRAPPED(dst, src, size)					\
-    do	{								\
-	if (do_access__)						\
-	{								\
-	    size_t _i;							\
-	    uint8_t *_dst = (uint8_t*)(dst), *_src = (uint8_t*)(src);	\
-	    for(_i = 0; _i < size; _i++) {				\
-		WRITE(_dst +_i, READ(_src + _i));			\
-	    }								\
-	}								\
-	else								\
-	{								\
-	    memcpy((dst), (src), (size));				\
+    do {								\
+	size_t _i;							\
+	uint8_t *_dst = (uint8_t*)(dst), *_src = (uint8_t*)(src);	\
+	for(_i = 0; _i < size; _i++) {					\
+	    WRITE(_dst +_i, READ(_src + _i));				\
 	}								\
     } while (0)
 	
 #define MEMSET_WRAPPED(dst, val, size)					\
     do {								\
-	if (do_access__)						\
-	{								\
-	    size_t _i;							\
-	    uint8_t *_dst = (uint8_t*)(dst);				\
-	    for(_i = 0; _i < size; _i++) {				\
-		WRITE(_dst +_i, (val));					\
-	    }								\
-	}								\
-	else								\
-	{								\
-	    memset ((dst), (val), (size));				\
+	size_t _i;							\
+	uint8_t *_dst = (uint8_t*)(dst);				\
+	for(_i = 0; _i < size; _i++) {					\
+	    WRITE(_dst +_i, (val));					\
 	}								\
     } while (0)
 
-#define fbFinishAccess(x) 
+/* FIXME */
+#define fbPrepareAccess(x)
+#define fbFinishAccess(x)
+
+#else
+
+#define READ(ptr)		(*(ptr))
+#define WRITE(ptr, val)		(*(ptr) = (val))
+#define MEMCPY_WRAPPED(dst, src, size)					\
+    memcpy(dst, src, size)
+#define MEMSET_WRAPPED(dst, val, size)					\
+    memset(dst, val, size)
+#define fbPrepareAccess(x)
+#define fbFinishAccess(x)
+#endif
 
 #define fbComposeGetSolid(img, res, fmt)				\
     do									\

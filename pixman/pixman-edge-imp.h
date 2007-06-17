@@ -76,7 +76,6 @@ rasterizeEdges (pixman_image_t  *image,
 		x &= FB_MASK;
 		
 		FbMaskBits (x, width, startmask, nmiddle, endmask);
-		ACCESS_MEM(
 		    if (startmask) {
 			WRITE(a, READ(a) | startmask);
 			a++;
@@ -85,7 +84,6 @@ rasterizeEdges (pixman_image_t  *image,
 			WRITE(a++, FB_ALLONES);
 		    if (endmask)
 			WRITE(a, READ(a) | endmask);
-		    );
 	    }
 #else
 	    {
@@ -98,29 +96,28 @@ rasterizeEdges (pixman_image_t  *image,
 		rxs = RenderSamplesX (rx, N_BITS);
 		
 		/* Add coverage across row */
-		ACCESS_MEM(
-		    if (lxi == rxi)
+		if (lxi == rxi)
+		{
+		    AddAlpha (rxs - lxs);
+		}
+		else
+		{
+		    int	xi;
+		    
+		    AddAlpha (N_X_FRAC(N_BITS) - lxs);
+		    StepAlpha;
+		    for (xi = lxi + 1; xi < rxi; xi++)
 		    {
-			AddAlpha (rxs - lxs);
-		    }
-		    else
-		    {
-			int	xi;
-			
-			AddAlpha (N_X_FRAC(N_BITS) - lxs);
+			AddAlpha (N_X_FRAC(N_BITS));
 			StepAlpha;
-			for (xi = lxi + 1; xi < rxi; xi++)
-			{
-			    AddAlpha (N_X_FRAC(N_BITS));
-			    StepAlpha;
-			}
-			/* Do not add in a 0 alpha here. This check is necessary
-			 * to avoid a buffer overrun when rx is exactly on a pixel
-			 * boundary.
-			 */
-			if (rxs != 0)
-			    AddAlpha (rxs);
-		    });
+		    }
+		    /* Do not add in a 0 alpha here. This check is necessary
+		     * to avoid a buffer overrun when rx is exactly on a pixel
+		     * boundary.
+		     */
+		    if (rxs != 0)
+			AddAlpha (rxs);
+		}
 	    }
 #endif
 	}
