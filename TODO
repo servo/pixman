@@ -33,6 +33,10 @@
 - Add non-mmx solid fill
 
 - make the wrapper functions global instead of image specific
+	- this won't work since pixman is linked to both fb and wfb
+
+- restore READ/WRITE in the fbcompose combiners since they sometimes
+  store directly to destination drawables.
 
 done:
 
