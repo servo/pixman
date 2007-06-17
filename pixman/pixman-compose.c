@@ -3028,20 +3028,19 @@ static void fbFetch(bits_image_t * pict, int x, int y, int width, uint32_t *buff
 #ifdef PIXMAN_FB_ACCESSORS
 #define PIXMAN_COMPOSITE_RECT_GENERAL pixman_composite_rect_general_accessors
 #define PIXMAN_COMPOSE_FUNCTIONS pixman_composeFunctions_accessors
-static const FbComposeFunctions pixman_composeFunctions_accessors = {
-    pixman_fbCombineFuncU,
-    pixman_fbCombineFuncC,
-    pixman_fbCombineMaskU
-};
 #else
 #define PIXMAN_COMPOSITE_RECT_GENERAL pixman_composite_rect_general_no_accessors
 #define PIXMAN_COMPOSE_FUNCTIONS pixman_composeFunctions
-FbComposeFunctions pixman_composeFunctions = {
+#endif
+
+#ifdef PIXMAN_FB_ACCESSORS	/* The accessor version can't be parameterized from outside */
+static const
+#endif
+FbComposeFunctions PIXMAN_COMPOSE_FUNCTIONS = {
     pixman_fbCombineFuncU,
     pixman_fbCombineFuncC,
     pixman_fbCombineMaskU
 };
-#endif
 
 typedef struct
 {
