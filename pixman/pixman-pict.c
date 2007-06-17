@@ -1701,6 +1701,24 @@ pixman_image_composite (pixman_op_t      op,
 	break;
     }
 
+    if ((srcRepeat			&&
+	 pSrc->bits.width == 1		&&
+	 pSrc->bits.height == 1)	||
+	(maskRepeat			&&
+	 pMask->bits.width == 1		&&
+	 pMask->bits.height == 1))
+    {
+	/* If src or mask are repeating 1x1 images and srcRepeat or
+	 * maskRepeat are still TRUE, it means the fast path we
+	 * selected does not actually handle repeating images.
+	 *
+	 * So rather than call the "fast path" with a zillion
+	 * 1x1 requests, we just use the general code (which does
+	 * do something sensible with 1x1 repeating images).
+	 */
+	func = NULL;
+    }
+    
     if (!func) {
 	func = pixman_image_composite_rect;
 
