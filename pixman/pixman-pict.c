@@ -1089,6 +1089,8 @@ pixman_image_composite_rect  (pixman_op_t                   op,
     return_if_fail (src != NULL);
     return_if_fail (dest != NULL);
     
+    TIMER_BEGIN (pixman_image_composite);
+    
     if (width > SCANLINE_BUFFER_LENGTH)
     {
 	scanline_buffer = (uint32_t *)malloc (width * 3 * sizeof (uint32_t));
@@ -1114,7 +1116,10 @@ pixman_image_composite_rect  (pixman_op_t                   op,
 
     if (scanline_buffer != _scanline_buffer)
 	free (scanline_buffer);
-}
+
+    TIMER_END (pixman_image_composite);
+}    
+
 
 void
 pixman_image_composite (pixman_op_t      op,
@@ -1138,7 +1143,7 @@ pixman_image_composite (pixman_op_t      op,
     pixman_bool_t	maskAlphaMap = FALSE;
     pixman_bool_t	dstAlphaMap = pDst->common.alpha_map != NULL;
     CompositeFunc   func = NULL;
-    
+
 #ifdef USE_MMX
     static pixman_bool_t mmx_setup = FALSE;
     if (!mmx_setup)
