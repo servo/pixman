@@ -570,17 +570,31 @@ pixman_image_fill_rectangles (pixman_op_t		    op,
 			      int			    n_rects,
 			      const pixman_rectangle16_t   *rects)
 {
-    pixman_image_t *solid = pixman_image_create_solid_fill (color);
+    pixman_image_t *solid;
+    pixman_color_t c;
     int i;
     
-    if (!solid)
-	return FALSE;
-
     if (color->alpha == 0xffff)
     {
 	if (op == PIXMAN_OP_OVER)
 	    op = PIXMAN_OP_SRC;
     }
+
+    if (op == PIXMAN_OP_CLEAR)
+    {
+	c.red = 0;
+	c.green = 0;
+	c.blue = 0;
+	c.alpha = 0;
+
+	color = &c;
+	
+	op = PIXMAN_OP_SRC;
+    }
+
+    solid = pixman_image_create_solid_fill (color);
+    if (!solid)
+	return FALSE;
 
     for (i = 0; i < n_rects; ++i)
     {
