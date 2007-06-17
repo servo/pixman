@@ -134,8 +134,6 @@ extern FbComposeFunctions pixman_composeFunctions;
 
 void pixman_composite_rect_general_accessors (const FbComposeData *data,
 					      uint32_t *scanline_buffer);
-void pixman_composite_rect_general_no_acessors (const FbComposeData *data,
-						uint32_t *scanline_buffer);
 void pixman_composite_rect_general (const FbComposeData *data,
 				    uint32_t *scanline_buffer);
 
@@ -761,5 +759,12 @@ union pixman_image
 	edge->x += edge->signdx;    \
     }				    \
 }
+
+void
+pixman_rasterize_edges_accessors (pixman_image_t *image,
+				  pixman_edge_t	*l,
+				  pixman_edge_t	*r,
+				  pixman_fixed_t	t,
+				  pixman_fixed_t	b);
 
 #endif /* PIXMAN_PRIVATE_H */

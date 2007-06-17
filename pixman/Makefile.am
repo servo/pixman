@@ -19,7 +19,8 @@ libpixmaninclude_HEADERS = pixman.h
 # wrapper library
 noinst_LTLIBRARIES = libpixmanwrapper.la
 libpixmanwrapper_la_SOURCES =	\
-	pixman-compose.c
+	pixman-compose.c	\
+	pixman-edge.c
 libpixmanwrapper_la_CFLAGS = $(DEP_CFLAGS) -DPIXMAN_FB_ACCESSORS
 
 
