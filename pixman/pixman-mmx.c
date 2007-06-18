@@ -1271,7 +1271,7 @@ fbCompositeSrc_8888x8x8888mmx (pixman_op_t op,
 }
 
 void
-fbCompositeSrc_x888x8x8888mmx (pixman_op_t op,
+fbCompositeSrc_x888xnx8888mmx (pixman_op_t op,
 			       pixman_image_t * pSrc,
 			       pixman_image_t * pMask,
 			       pixman_image_t * pDst,

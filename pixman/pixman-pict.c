@@ -1374,13 +1374,13 @@ pixman_image_composite (pixman_op_t      op,
 			if ((pDst->bits.format == PIXMAN_a8r8g8b8 ||
 			     pDst->bits.format == PIXMAN_x8r8g8b8) &&
 			    pMask->bits.format == PIXMAN_a8 && pixman_have_mmx())
-			    func = fbCompositeSrc_x888x8x8888mmx;
+			    func = fbCompositeSrc_x888xnx8888mmx;
 			break;
 		    case PIXMAN_x8b8g8r8:
 			if ((pDst->bits.format == PIXMAN_a8b8g8r8 ||
 			     pDst->bits.format == PIXMAN_x8b8g8r8) &&
 			    pMask->bits.format == PIXMAN_a8 && pixman_have_mmx())
-			    func = fbCompositeSrc_x888x8x8888mmx;
+			    func = fbCompositeSrc_x888xnx8888mmx;
 			break;
 		    case PIXMAN_a8r8g8b8:
 			if ((pDst->bits.format == PIXMAN_a8r8g8b8 ||
