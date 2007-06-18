@@ -1470,7 +1470,12 @@ pixman_image_composite (pixman_op_t      op,
 			(pDst->bits.format == PIXMAN_a8r8g8b8 ||
 			 pDst->bits.format == PIXMAN_x8r8g8b8))
 		    {
-			func = fbCompositeOver_x888x8x8888;
+#ifdef USE_MMX
+			if (pixman_have_mmx())
+			    func = fbCompositeOver_x888x8x8888mmx;
+			else
+#endif
+			    func = fbCompositeOver_x888x8x8888;
 		    }
 		}
 	    }

@@ -2929,4 +2929,70 @@ fbCompositeCopyAreammx (pixman_op_t       op,
 		    xSrc, ySrc, xDst, yDst, width, height);
 }
 
+void
+fbCompositeOver_x888x8x8888mmx (pixman_op_t      op,
+				pixman_image_t * pSrc,
+				pixman_image_t * pMask,
+				pixman_image_t * pDst,
+				int16_t      xSrc,
+				int16_t      ySrc,
+				int16_t      xMask,
+				int16_t      yMask,
+				int16_t      xDst,
+				int16_t      yDst,
+				uint16_t     width,
+				uint16_t     height)
+{
+    uint32_t	*src, *srcLine;
+    uint32_t    *dst, *dstLine;
+    uint8_t	*mask, *maskLine;
+    int		 srcStride, maskStride, dstStride;
+    __m64 m;
+    uint32_t s, d;
+    uint16_t w;
+
+    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
+    fbComposeGetStart (pMask, xMask, yMask, uint8_t, maskStride, maskLine, 1);
+    fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
+
+    while (height--)
+    {
+	src = srcLine;
+	srcLine += srcStride;
+	dst = dstLine;
+	dstLine += dstStride;
+	mask = maskLine;
+	maskLine += maskStride;
+
+	w = width;
+
+	while (w--)
+	{
+	    ullong m = *mask;
+
+	    if (m)
+	    {
+		__m64 s = load8888 (*src);
+
+		if (m == 0xff)
+		    *dst = store8888 (s);
+		else
+		{
+		    __m64 sa = expand_alpha (s);
+		    __m64 vm = expand_alpha_rev ((__m64)m);
+		    __m64 vdest = in_over(s, sa, vm, load8888 (*dst));
+		}
+	    }
+	    
+	    mask++;
+	    dst++;
+	    src++;
+	}
+    }
+
+    _mm_empty();
+}
+
+
+
 #endif /* USE_MMX */
