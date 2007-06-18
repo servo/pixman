@@ -2981,6 +2981,8 @@ fbCompositeOver_x888x8x8888mmx (pixman_op_t      op,
 		    __m64 sa = expand_alpha (s);
 		    __m64 vm = expand_alpha_rev ((__m64)m);
 		    __m64 vdest = in_over(s, sa, vm, load8888 (*dst));
+
+		    *dst = store8888 (vdest);
 		}
 	    }
 	    
