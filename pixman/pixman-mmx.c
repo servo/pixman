@@ -2882,31 +2882,6 @@ pixman_blt_mmx (uint32_t *src_bits,
 }
 
 void
-fbCompositeSolidFillmmx (pixman_op_t op,
-			 pixman_image_t * pSrc,
-			 pixman_image_t * pMask,
-			 pixman_image_t * pDst,
-			 int16_t      xSrc,
-			 int16_t      ySrc,
-			 int16_t      xMask,
-			 int16_t      yMask,
-			 int16_t      xDst,
-			 int16_t      yDst,
-			 uint16_t     width,
-			 uint16_t     height)
-{
-    uint32_t	src;
-    
-    fbComposeGetSolid(pSrc, src, pDst->bits.format);
-
-    pixman_fill_mmx (pDst->bits.bits, pDst->bits.rowstride,
-		     PIXMAN_FORMAT_BPP (pDst->bits.format),
-		     xDst, yDst,
-		     width, height,
-		     src);
-}
-
-void
 fbCompositeCopyAreammx (pixman_op_t       op,
 			pixman_image_t *	pSrc,
 			pixman_image_t *	pMask,

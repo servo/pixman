@@ -1004,6 +1004,47 @@ fbCompositeSrcSrc_nxn  (pixman_op_t	   op,
 }
 
 static void
+pixman_image_composite_rect  (pixman_op_t                   op,
+			      pixman_image_t               *src,
+			      pixman_image_t               *mask,
+			      pixman_image_t               *dest,
+			      int16_t                       src_x,
+			      int16_t                       src_y,
+			      int16_t                       mask_x,
+			      int16_t                       mask_y,
+			      int16_t                       dest_x,
+			      int16_t                       dest_y,
+			      uint16_t                      width,
+			      uint16_t                      height);
+void
+fbCompositeSolidFill (pixman_op_t op,
+		      pixman_image_t * pSrc,
+		      pixman_image_t * pMask,
+		      pixman_image_t * pDst,
+		      int16_t      xSrc,
+		      int16_t      ySrc,
+		      int16_t      xMask,
+		      int16_t      yMask,
+		      int16_t      xDst,
+		      int16_t      yDst,
+		      uint16_t     width,
+		      uint16_t     height)
+{
+    uint32_t	src;
+    
+    fbComposeGetSolid(pSrc, src, pDst->bits.format);
+
+    if (!pixman_fill (pDst->bits.bits, pDst->bits.rowstride,
+		      PIXMAN_FORMAT_BPP (pDst->bits.format),
+		      xDst, yDst,
+		      width, height,
+		      src))
+    {
+	pixman_image_composite_rect (op, pSrc, pMask, pDst, xSrc, ySrc, xMask, yMask, xDst, yDst, width, height);
+    }
+}
+
+static void
 pixman_walk_composite_region (pixman_op_t op,
 			      pixman_image_t * pSrc,
 			      pixman_image_t * pMask,
@@ -1731,9 +1772,10 @@ pixman_image_composite (pixman_op_t      op,
 	    if (can_get_solid (pSrc))
 	    {
 		if (PIXMAN_FORMAT_BPP (pDst->bits.format) == 16 ||
-		    PIXMAN_FORMAT_BPP (pDst->bits.format) == 32)
+		    PIXMAN_FORMAT_BPP (pDst->bits.format) == 32 ||
+		    PIXMAN_FORMAT_BPP (pDst->bits.format) == 8)
 		{
-		    func = fbCompositeSolidFillmmx;
+		    func = fbCompositeSolidFill;
 		    srcRepeat = FALSE;
 		}
 	    }

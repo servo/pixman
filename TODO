@@ -30,15 +30,18 @@
        - done: source clipping happens through an indirection.
          still needs to make the indirection settable.
 
-- Add non-mmx solid fill
-
 - make the wrapper functions global instead of image specific
 	- this won't work since pixman is linked to both fb and wfb
 
 - restore READ/WRITE in the fbcompose combiners since they sometimes
   store directly to destination drawables.
 
+- Consider optimizing the 8/16 bit solid fills in pixman-util.c by
+  storing more than one value at a time.
+
 done:
+
+- Add non-mmx solid fill
 
 - Make sure the endian-ness macros are defined correctly.
 
