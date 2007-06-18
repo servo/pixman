@@ -1465,17 +1465,22 @@ pixman_image_composite (pixman_op_t      op,
 		}
 		else
 		{
-		    if (pSrc->bits.format == PIXMAN_x8r8g8b8	&&
-			pMask->bits.format == PIXMAN_a8         &&
-			(pDst->bits.format == PIXMAN_a8r8g8b8 ||
-			 pDst->bits.format == PIXMAN_x8r8g8b8))
+		    if (pMask->bits.format == PIXMAN_a8)
 		    {
+			if ((pSrc->bits.format == PIXMAN_x8r8g8b8 &&
+			     (pDst->bits.format == PIXMAN_x8r8g8b8 ||
+			      pDst->bits.format == PIXMAN_a8r8g8b8))  ||
+			    (pSrc->bits.format == PIXMAN_x8b8g8r8 &&
+			     (pDst->bits.format == PIXMAN_x8b8g8r8 ||
+			      pDst->bits.format == PIXMAN_a8b8g8r8)))
+			{
 #ifdef USE_MMX
-			if (pixman_have_mmx())
-			    func = fbCompositeOver_x888x8x8888mmx;
-			else
+			    if (pixman_have_mmx())
+				func = fbCompositeOver_x888x8x8888mmx;
+			    else
 #endif
-			    func = fbCompositeOver_x888x8x8888;
+				func = fbCompositeOver_x888x8x8888;
+			}
 		    }
 		}
 	    }
