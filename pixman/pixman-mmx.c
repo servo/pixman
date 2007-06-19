@@ -2947,7 +2947,7 @@ fbCompositeOver_x888x8x8888mmx (pixman_op_t      op,
 
 	    if (m)
 	    {
-		__m64 s = load8888 (*src);
+		__m64 s = load8888 (*src | 0xff000000);
 
 		if (m == 0xff)
 		    *dst = store8888 (s);
