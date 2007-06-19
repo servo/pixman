@@ -162,6 +162,11 @@ pixman_fill (uint32_t *bits,
 	     int height,
 	     uint32_t xor)
 {
+#if 0
+    printf ("filling: %d %d %d %d (stride: %d, bpp: %d)   pixel: %x\n",
+	    x, y, width, height, stride, bpp, xor);
+#endif
+    
 #ifdef USE_MMX
     if (!pixman_have_mmx() || !pixman_fill_mmx (bits, stride, bpp, x, y, width, height, xor))
 #endif

@@ -591,6 +591,47 @@ pixman_image_get_depth (pixman_image_t *image)
 }
 
 pixman_bool_t
+color_to_pixel (pixman_color_t *color,
+		uint32_t       *pixel,
+		pixman_format_code_t format)
+{
+    uint32_t c = color_to_uint32 (color);
+
+    if (!(format == PIXMAN_a8r8g8b8	||
+	  format == PIXMAN_x8r8g8b8	||
+	  format == PIXMAN_a8b8g8r8	||
+	  format == PIXMAN_x8b8g8r8	||
+	  format == PIXMAN_r5g6b5	||
+	  format == PIXMAN_b5g6r5	||
+	  format == PIXMAN_a8))
+    {
+	return FALSE;
+    }
+    
+    if (PIXMAN_FORMAT_TYPE (format) == PIXMAN_TYPE_ABGR)
+    {
+	c = ((c & 0xff000000) >>  0) |
+	    ((c & 0x00ff0000) >> 16) |
+	    ((c & 0x0000ff00) >>  0) |
+	    ((c & 0x000000ff) << 16);
+    }
+
+    if (format == PIXMAN_a8)
+	c = c >> 24;
+    else if (format == PIXMAN_r5g6b5 ||
+	     format == PIXMAN_b5g6r5)
+	c = cvt8888to0565 (c);
+
+#if 0
+    printf ("color: %x %x %x %x\n", color->alpha, color->red, color->green, color->blue);
+    printf ("pixel: %x\n", c);
+#endif
+    
+    *pixel = c;
+    return TRUE;
+}
+
+pixman_bool_t
 pixman_image_fill_rectangles (pixman_op_t		    op,
 			      pixman_image_t		   *dest,
 			      pixman_color_t		   *color,
@@ -619,6 +660,36 @@ pixman_image_fill_rectangles (pixman_op_t		    op,
 	op = PIXMAN_OP_SRC;
     }
 
+    if (op == PIXMAN_OP_SRC)
+    {
+	uint32_t pixel;
+	
+	if (color_to_pixel (color, &pixel, dest->bits.format))
+	{
+	    for (i = 0; i < n_rects; ++i)
+	    {
+		pixman_region16_t fill_region;
+		int n_boxes, j;
+		pixman_box16_t *boxes;
+		
+		pixman_region_init_rect (&fill_region, rects[i].x, rects[i].y, rects[i].width, rects[i].height);
+		pixman_region_intersect (&fill_region, &fill_region, &dest->common.clip_region);
+
+		boxes = pixman_region_rectangles (&fill_region, &n_boxes);
+		for (j = 0; j < n_boxes; ++j)
+		{
+		    const pixman_box16_t *box = &(boxes[j]);
+		    pixman_fill (dest->bits.bits, dest->bits.rowstride, PIXMAN_FORMAT_BPP (dest->bits.format),
+				 box->x1, box->y1, box->x2 - box->x1, box->y2 - box->y1,
+				 pixel);
+		}
+
+		pixman_region_fini (&fill_region);
+	    }
+	    return TRUE;
+	}
+    }
+    
     solid = pixman_image_create_solid_fill (color);
     if (!solid)
 	return FALSE;
