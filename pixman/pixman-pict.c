@@ -1857,30 +1857,25 @@ pixman_image_composite (pixman_op_t      op,
 	func = pixman_image_composite_rect;
 
 	/* CompositeGeneral optimizes 1x1 repeating images itself */
-	if (pSrc->type == BITS)
+	if (pSrc->type == BITS &&
+	    pSrc->bits.width == 1 && pSrc->bits.height == 1)
 	{
-	    srcRepeat =
-		pSrc->common.repeat == PIXMAN_REPEAT_NORMAL	&&
-		!pSrc->common.transform				&&
-		pSrc->bits.width != 1				&&
-		pSrc->bits.height != 1;
+	    srcRepeat = FALSE;
+	}
+	
+	if (pMask && pMask->type == BITS &&
+	    pMask->bits.width == 1 && pMask->bits.height == 1)
+	{
+	    maskRepeat = FALSE;
 	}
 
-	if (pMask && pMask->type == BITS)
-	{
-	    maskRepeat =
-		pMask->common.repeat == PIXMAN_REPEAT_NORMAL	&&
-		!pMask->common.transform			&&
-		pMask->bits.width != 1				&&
-		pMask->bits.height != 1;
-	}
+	/* if we are transforming, repeats are handled in fbFetchTransformed */
+	if (srcTransform)
+	    srcRepeat = FALSE;
+	
+	if (maskTransform)
+	    maskTransform = FALSE;
     }
-
-    /* if we are transforming, we handle repeats in fbFetchTransformed */
-    if (srcTransform)
-	srcRepeat = FALSE;
-    if (maskTransform)
-	maskRepeat = FALSE;
 
     pixman_walk_composite_region (op, pSrc, pMask, pDst, xSrc, ySrc,
 				  xMask, yMask, xDst, yDst, width, height,
