@@ -1404,7 +1404,8 @@ fbStore_r3g3b2 (pixman_image_t *image,
     uint8_t   *pixel = ((uint8_t *) bits) + x;
     for (i = 0; i < width; ++i) {
 	Split(READ(values + i));
-	WRITE(pixel++, ((r     ) & 0xe0) |
+	WRITE(pixel++,
+	      ((r     ) & 0xe0) |
 	      ((g >> 3) & 0x1c) |
 	      ((b >> 6)       ));
     }
@@ -1418,9 +1419,10 @@ fbStore_b2g3r3 (pixman_image_t *image,
     uint8_t   *pixel = ((uint8_t *) bits) + x;
     for (i = 0; i < width; ++i) {
 	Split(READ(values + i));
-	WRITE(pixel++, ((b     ) & 0xe0) |
+	WRITE(pixel++,
+	      ((b     ) & 0xc0) |
 	      ((g >> 3) & 0x1c) |
-	      ((r >> 6)       ));
+	      ((r >> 5)       ));
     }
 }
 
