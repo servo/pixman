@@ -260,6 +260,7 @@ union pixman_image
     conical_gradient_t		conical;
     radial_gradient_t		radial;
     solid_fill_t		solid;
+    pixman_image_t             *next;	/* Used in the image cache */
 };
 
 #define LOG2_BITMAP_PAD 5
