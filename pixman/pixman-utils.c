@@ -170,7 +170,6 @@ pixman_fill (uint32_t *bits,
 	{
 	case 8:
 	    pixman_fill8 (bits, stride, x, y, width, height, xor);
-	    return TRUE;
 	    break;
 	    
 	case 16:
@@ -180,10 +179,14 @@ pixman_fill (uint32_t *bits,
 	case 32:
 	    pixman_fill32 (bits, stride, x, y, width, height, xor);
 	    break;
+
+	default:
+	    return FALSE;
+	    break;
 	}
     }
 	
-    return FALSE;
+    return TRUE;
 }
 	    
 
