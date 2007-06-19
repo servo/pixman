@@ -1034,14 +1034,17 @@ fbCompositeSolidFill (pixman_op_t op,
     
     fbComposeGetSolid(pSrc, src, pDst->bits.format);
 
-    if (!pixman_fill (pDst->bits.bits, pDst->bits.rowstride,
-		      PIXMAN_FORMAT_BPP (pDst->bits.format),
-		      xDst, yDst,
-		      width, height,
-		      src))
-    {
-	pixman_image_composite_rect (op, pSrc, pMask, pDst, xSrc, ySrc, xMask, yMask, xDst, yDst, width, height);
-    }
+    if (pDst->bits.format == PIXMAN_a8)
+	src = src >> 24;
+    else if (pDst->bits.format == PIXMAN_r5g6b5 ||
+	     pDst->bits.format == PIXMAN_b5g6r5)
+	src = cvt8888to0565 (src);
+
+    pixman_fill (pDst->bits.bits, pDst->bits.rowstride,
+		 PIXMAN_FORMAT_BPP (pDst->bits.format),
+		 xDst, yDst,
+		 width, height,
+		 src);
 }
 
 static void
@@ -1771,12 +1774,19 @@ pixman_image_composite (pixman_op_t      op,
 	{
 	    if (can_get_solid (pSrc))
 	    {
-		if (PIXMAN_FORMAT_BPP (pDst->bits.format) == 16 ||
-		    PIXMAN_FORMAT_BPP (pDst->bits.format) == 32 ||
-		    PIXMAN_FORMAT_BPP (pDst->bits.format) == 8)
+		switch (pDst->bits.format)
 		{
+		case PIXMAN_a8r8g8b8:
+		case PIXMAN_x8r8g8b8:
+		case PIXMAN_a8b8g8r8:
+		case PIXMAN_x8b8g8r8:
+		case PIXMAN_a8:
+		case PIXMAN_r5g6b5:
 		    func = fbCompositeSolidFill;
 		    srcRepeat = FALSE;
+		    break;
+		default:
+		    break;
 		}
 	    }
 	    else if (pSrc->bits.format == pDst->bits.format)

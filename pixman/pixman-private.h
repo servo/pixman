@@ -689,6 +689,7 @@ union pixman_image
 	    if (!PIXMAN_FORMAT_A((img)->bits.format))			\
 		(res) |= 0xff000000;					\
 	}								\
+									\
 	/* If necessary, convert RGB <--> BGR. */			\
 	if (PIXMAN_FORMAT_TYPE (format__) != PIXMAN_FORMAT_TYPE(fmt))	\
 	{								\
