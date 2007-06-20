@@ -2468,3 +2468,30 @@ pixman_region_selfcheck (reg)
     }
 }
 
+pixman_bool_t
+pixman_region_init_rects (pixman_region16_t *region,
+			  pixman_box16_t *boxes, int count)
+{
+    int overlap;
+
+    if (count == 1) {
+       pixman_region_init_rect(region,
+                               boxes[0].x1,
+                               boxes[0].y1,
+                               boxes[0].x2 - boxes[0].x1,
+                               boxes[0].y2 - boxes[0].y1);
+       return TRUE;
+    }
+
+    pixman_region_init(region);
+    if (!pixman_rect_alloc(region, count))
+	return FALSE;
+
+    /* Copy in the rects */
+    memcpy (PIXREGION_RECTS(region), boxes, sizeof(pixman_box16_t) * count);
+    region->data->numRects = count;
+
+    /* Validate */
+    region->extents.x1 = region->extents.x2 = 0;
+    return pixman_region_validate (region, &overlap);
+}

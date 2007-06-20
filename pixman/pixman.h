@@ -288,7 +288,8 @@ pixman_bool_t		pixman_region_equal (pixman_region16_t *region1,
 					     pixman_region16_t *region2);
 pixman_bool_t		pixman_region_selfcheck (pixman_region16_t *region);
 void			pixman_region_reset(pixman_region16_t *region, pixman_box16_t *box);
-
+pixman_bool_t		pixman_region_init_rects (pixman_region16_t *region,
+						  pixman_box16_t *boxes, int count);
 
 /* Copy / Fill */
 pixman_bool_t pixman_blt (uint32_t *src_bits,
