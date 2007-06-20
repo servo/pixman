@@ -1993,7 +1993,7 @@ pixman_image_composite (pixman_op_t      op,
 		func = fbCompositeIn_8x8mmx;	    
 	    else
 #endif
-		func = fbCompositeIn_8x8;
+		func = fbCompositeSrcIn_8x8;
 	}
 	else if (srcRepeat && pMask && !pMask->common.component_alpha &&
 		 (pSrc->bits.format == PIXMAN_a8r8g8b8 ||
