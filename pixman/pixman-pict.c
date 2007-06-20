@@ -1048,6 +1048,40 @@ fbCompositeSolidFill (pixman_op_t op,
 }
 
 static void
+fbCompositeSrc_8888xx888 (pixman_op_t op,
+			  pixman_image_t * pSrc,
+			  pixman_image_t * pMask,
+			  pixman_image_t * pDst,
+			  int16_t      xSrc,
+			  int16_t      ySrc,
+			  int16_t      xMask,
+			  int16_t      yMask,
+			  int16_t      xDst,
+			  int16_t      yDst,
+			  uint16_t     width,
+			  uint16_t     height)
+{
+    uint32_t	*dst;
+    uint32_t    *src;
+    int		 dstStride, srcStride;
+    uint32_t	 n_bytes = width * sizeof (uint32_t);
+
+    fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, src, 1);
+    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dst, 1);
+
+    while (height--)
+    {
+	memcpy (dst, src, n_bytes);
+
+	dst += dstStride;
+	src += srcStride;
+    }
+    
+    fbFinishAccess(pSrc->pDrawable);
+    fbFinishAccess(pDst->pDrawable);
+}
+
+static void
 pixman_walk_composite_region (pixman_op_t op,
 			      pixman_image_t * pSrc,
 			      pixman_image_t * pMask,
@@ -1509,6 +1543,10 @@ pixman_image_composite (pixman_op_t      op,
 		}
 		else
 		{
+#if 0
+		    /* FIXME: This code is commented out since it's apparently not
+		     * actually faster than the generic code.
+		     */
 		    if (pMask->bits.format == PIXMAN_a8)
 		    {
 			if ((pSrc->bits.format == PIXMAN_x8r8g8b8 &&
@@ -1526,6 +1564,7 @@ pixman_image_composite (pixman_op_t      op,
 				func = fbCompositeOver_x888x8x8888;
 			}
 		    }
+#endif
 		}
 	    }
 	}
@@ -1803,6 +1842,15 @@ pixman_image_composite (pixman_op_t      op,
 		    func = fbCompositeSrcSrc_nxn
 #endif
 			;
+	    }
+	    else if (((pSrc->bits.format == PIXMAN_a8r8g8b8 ||
+		       pSrc->bits.format == PIXMAN_x8r8g8b8) &&
+		      pDst->bits.format == PIXMAN_x8r8g8b8)	||
+		     ((pSrc->bits.format == PIXMAN_a8b8g8r8 ||
+		       pSrc->bits.format == PIXMAN_x8b8g8r8) &&
+		      pDst->bits.format == PIXMAN_x8b8g8r8))
+	    {
+		func = fbCompositeSrc_8888xx888;
 	    }
 	}
 	break;
