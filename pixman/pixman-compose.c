@@ -4459,11 +4459,11 @@ pixman_composite_rect_general (const FbComposeData *data,
 	data->dest->common.read_func			||
 	data->dest->common.write_func)
     {
-	return pixman_composite_rect_general_accessors (data, scanline_buffer);
+	pixman_composite_rect_general_accessors (data, scanline_buffer);
     }
     else
     {
-	return pixman_composite_rect_general_no_accessors (data, scanline_buffer);
+	pixman_composite_rect_general_no_accessors (data, scanline_buffer);
     }
 }
 
