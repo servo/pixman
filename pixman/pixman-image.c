@@ -69,37 +69,10 @@ color_to_uint32 (const pixman_color_t *color)
 	(color->blue >> 8);
 }
 
-static pixman_image_t *image_cache;
-
-static pixman_image_t *
-new_image (void)
-{
-    pixman_image_t *image;
-
-    if (image_cache)
-    {
-	image = image_cache;
-	image_cache = image->next;
-    }
-    else
-    {
-	image = malloc (sizeof (pixman_image_t));
-    }
-
-    return image;
-}
-
-static void
-delete_image (pixman_image_t *image)
-{
-    image->next = image_cache;
-    image_cache = image;
-}
-
 static pixman_image_t *
 allocate_image (void)
 {
-    pixman_image_t *image = new_image();
+    pixman_image_t *image = malloc (sizeof (pixman_image_t));
     
     if (image)
     {
@@ -172,7 +145,7 @@ pixman_image_unref (pixman_image_t *image)
 	if (image->type == BITS && image->bits.free_me)
 	    free (image->bits.free_me);
 	
-	delete_image (image);
+	free (image);
     }
 }
 
