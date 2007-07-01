@@ -29,6 +29,7 @@
 #include "pixman.h"
 #include "pixman-private.h"
 #include "pixman-mmx.h"
+#include "pixman-vmx.h"
 
 #define FbFullMask(n)   ((n) == 32 ? (uint32_t)-1 : ((((uint32_t) 1) << n) - 1))
 
@@ -1416,6 +1417,13 @@ pixman_image_composite (pixman_op_t      op,
         mmx_setup = TRUE;
     }
 #endif
+#ifdef USE_VMX
+    static pixman_bool_t vmx_setup = FALSE;
+    if (!vmx_setup) {
+        fbComposeSetupVMX();
+        vmx_setup = TRUE;
+    }
+#endif
 
     if (srcRepeat && srcTransform &&
 	pSrc->bits.width == 1 &&
@@ -2061,6 +2069,53 @@ pixman_image_composite (pixman_op_t      op,
 				  srcRepeat, maskRepeat, func);
 }
 
+
+#ifdef USE_VMX
+/* The CPU detection code needs to be in a file not compiled with
+ * "-maltivec -mabi=altivec", as gcc would try to save vector register
+ * across function calls causing SIGILL on cpus without Altivec/vmx.
+ */
+#ifdef __APPLE__
+#include <sys/sysctl.h>
+
+pixman_bool_t pixman_have_vmx (void) {
+    int hasVMX = 0;
+    size_t length = sizeof ( hasVMX );
+    int error = sysctlbyname ("hw.optional.altivec", &hasVMX, &length, NULL, 0);
+    if ( 0 != error ) return 0;
+    return hasVMX;
+}
+
+#else
+#include <signal.h>
+#include <setjmp.h>
+
+static sigjmp_buf jmp;
+static volatile sig_atomic_t in_test = 0;
+
+static void vmx_test (int sig) {
+    if (! in_test) {
+        signal (sig, SIG_DFL);
+        raise (sig);
+    }
+    in_test = 0;
+    siglongjmp (jmp, 1);
+}
+
+pixman_bool_t pixman_have_vmx (void) {
+    signal (SIGILL, vmx_test);
+    if (sigsetjmp (jmp, 1)) {
+        signal (SIGILL, SIG_DFL);
+    } else {
+        in_test = 1;
+        asm volatile ( "vor 0, 0, 0" );
+        signal (SIGILL, SIG_DFL);
+        return 1;
+    }
+    return 0;
+}
+#endif /* __APPLE__ */
+#endif /* USE_VMX */
 
 #ifdef USE_MMX
 /* The CPU detection code needs to be in a file not compiled with
