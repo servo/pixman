@@ -1359,7 +1359,7 @@ pixman_image_composite_rect  (pixman_op_t                   op,
     
     if (width > SCANLINE_BUFFER_LENGTH)
     {
-	scanline_buffer = (uint32_t *)malloc (width * 3 * sizeof (uint32_t));
+	scanline_buffer = (uint32_t *)pixman_malloc_abc (width, 3, sizeof (uint32_t));
 
 	if (!scanline_buffer)
 	    return;

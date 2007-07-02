@@ -44,6 +44,9 @@
 #define FB_MASK     (FB_UNIT - 1)
 #define FB_ALLONES  ((uint32_t) -1)
     
+/* Memory allocation helpers */
+void *pixman_malloc_ab (unsigned int n, unsigned int b);
+void *pixman_malloc_abc (unsigned int a, unsigned int b, unsigned int c);
 
 #if DEBUG
 

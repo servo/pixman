@@ -363,7 +363,7 @@ struct pixman_indexed
 				 PIXMAN_FORMAT_B(f))
 
 #define PIXMAN_TYPE_OTHER	0
-#define PIXMAN_TYPE_A	1
+#define PIXMAN_TYPE_A		1
 #define PIXMAN_TYPE_ARGB	2
 #define PIXMAN_TYPE_ABGR	3
 #define PIXMAN_TYPE_COLOR	4

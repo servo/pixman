@@ -22,6 +22,7 @@
  */
 
 #include <config.h>
+#include <stdlib.h>
 #include "pixman.h"
 #include "pixman-private.h"
 #include "pixman-mmx.h"
@@ -365,4 +366,27 @@ pixman_line_fixed_edge_init (pixman_edge_t *e,
 		    top->y + y_off_fixed,
 		    bot->x + x_off_fixed,
 		    bot->y + y_off_fixed);
+}
+
+void *
+pixman_malloc_ab(unsigned int a,
+		 unsigned int b)
+{
+    if (a >= INT32_MAX / b)
+	return NULL;
+
+    return malloc (a * b);
+}
+
+void *
+pixman_malloc_abc (unsigned int a,
+		   unsigned int b,
+		   unsigned int c)
+{
+    if (a >= INT32_MAX / b)
+	return NULL;
+    else if (a * b >= INT32_MAX / c)
+	return NULL;
+    else
+	return malloc (a * b * c);
 }

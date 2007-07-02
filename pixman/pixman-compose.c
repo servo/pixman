@@ -4074,7 +4074,7 @@ static void fbFetchExternalAlpha(bits_image_t * pict, int x, int y, int width, u
 	return;
     }
     if (width > SCANLINE_BUFFER_LENGTH)
-        alpha_buffer = (uint32_t *) malloc(width*sizeof(uint32_t));
+        alpha_buffer = (uint32_t *) pixman_malloc_ab (width, sizeof(uint32_t));
     
     fbFetchTransformed(pict, x, y, width, buffer, mask, maskBits);
     fbFetchTransformed((bits_image_t *)pict->common.alpha_map, x - pict->common.alpha_origin.x,

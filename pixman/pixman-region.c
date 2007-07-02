@@ -69,7 +69,6 @@ typedef struct pixman_region16_point {
 #define PIXREGION_BOX(reg,i) (&PIXREGION_BOXPTR(reg)[i])
 #define PIXREGION_TOP(reg) PIXREGION_BOX(reg, (reg)->data->numRects)
 #define PIXREGION_END(reg) PIXREGION_BOX(reg, (reg)->data->numRects - 1)
-#define PIXREGION_SZOF(n) (sizeof(pixman_region16_data_t) + ((n) * sizeof(pixman_box16_t)))
 
 
 #undef assert
@@ -186,7 +185,29 @@ pixman_break (pixman_region16_t *pReg);
         ((r1)->y1 <= (r2)->y1) && \
         ((r1)->y2 >= (r2)->y2) )
 
-#define allocData(n) malloc(PIXREGION_SZOF(n))
+static size_t
+PIXREGION_SZOF(size_t n)
+{
+    size_t size = n * sizeof(pixman_box16_t);
+    if (n > UINT32_MAX / sizeof(pixman_box16_t))
+        return 0;
+
+    if (sizeof(pixman_region16_data_t) > UINT32_MAX - size)
+        return 0;
+
+    return size + sizeof(pixman_region16_data_t);
+}
+
+static void *
+allocData(size_t n)
+{
+    size_t sz = PIXREGION_SZOF(n);
+    if (!sz)
+	return NULL;
+
+    return malloc(sz);
+}
+
 #define freeData(reg) if ((reg)->data && (reg)->data->size) free((reg)->data)
 
 #define RECTALLOC_BAIL(pReg,n,bail) \
@@ -219,17 +240,21 @@ if (!(pReg)->data || (((pReg)->data->numRects + (n)) > (pReg)->data->size)) \
     assert(pReg->data->numRects<=pReg->data->size);			\
 }
 
-#define DOWNSIZE(reg,numRects)						 \
-if (((numRects) < ((reg)->data->size >> 1)) && ((reg)->data->size > 50)) \
-{									 \
-    pixman_region16_data_t * NewData;							 \
-    NewData = (pixman_region16_data_t *)realloc((reg)->data, PIXREGION_SZOF(numRects));	 \
-    if (NewData)							 \
-    {									 \
-	NewData->size = (numRects);					 \
-	(reg)->data = NewData;						 \
-    }									 \
-}
+#define DOWNSIZE(reg,numRects)						\
+    if (((numRects) < ((reg)->data->size >> 1)) && ((reg)->data->size > 50)) \
+    {									\
+	pixman_region16_data_t * NewData;				\
+	size_t data_size = PIXREGION_SZOF(numRects);			\
+	if (!data_size)							\
+	    NewData = NULL;						\
+	else								\
+	    NewData = (pixman_region16_data_t *)realloc((reg)->data, data_size); \
+	if (NewData)							\
+	{								\
+	    NewData->size = (numRects);					\
+	    (reg)->data = NewData;					\
+	}								\
+    }
 
 pixman_bool_t
 pixman_region_equal(reg1, reg2)
@@ -365,6 +390,7 @@ pixman_rect_alloc (pixman_region16_t * region, int n)
     }
     else
     {
+	size_t data_size;
 	if (n == 1)
 	{
 	    n = region->data->numRects;
@@ -372,7 +398,11 @@ pixman_rect_alloc (pixman_region16_t * region, int n)
 		n = 250;
 	}
 	n += region->data->numRects;
-	data = (pixman_region16_data_t *)realloc(region->data, PIXREGION_SZOF(n));
+	data_size = PIXREGION_SZOF(n);
+	if (!data_size)
+	    data = NULL;
+	else
+	    data = (pixman_region16_data_t *)realloc(region->data, PIXREGION_SZOF(n));
 	if (!data)
 	    return pixman_break (region);
 	region->data = data;
@@ -1466,7 +1496,7 @@ pixman_region_validate(pixman_region16_t * badreg,
 
     /* Set up the first region to be the first rectangle in badreg */
     /* Note that step 2 code will never overflow the ri[0].reg rects array */
-    ri = (RegionInfo *) malloc(4 * sizeof(RegionInfo));
+    ri = (RegionInfo *) pixman_malloc_ab (4, sizeof(RegionInfo));
     if (!ri)
 	return pixman_break (badreg);
     sizeRI = 4;
@@ -1528,9 +1558,15 @@ pixman_region_validate(pixman_region16_t * badreg,
 	/* Uh-oh.  No regions were appropriate.  Create a new one. */
 	if (sizeRI == numRI)
 	{
+	    size_t data_size;
+	    
 	    /* Oops, allocate space for new region information */
 	    sizeRI <<= 1;
-	    rit = (RegionInfo *) realloc(ri, sizeRI * sizeof(RegionInfo));
+
+            data_size = sizeRI * sizeof(RegionInfo);
+            if (data_size / sizeRI != sizeof(RegionInfo))
+                goto bail;
+            rit = (RegionInfo *) realloc(ri, data_size);
 	    if (!rit)
 		goto bail;
 	    ri = rit;

@@ -44,7 +44,7 @@ init_gradient (gradient_t     *gradient,
 
     init_source_image (&gradient->common);
 
-    gradient->stops = malloc (n_stops * sizeof (pixman_gradient_stop_t));
+    gradient->stops = pixman_malloc_ab (n_stops, sizeof (pixman_gradient_stop_t));
     if (!gradient->stops)
 	return FALSE;
 
@@ -443,7 +443,7 @@ pixman_image_set_filter (pixman_image_t       *image,
     new_params = NULL;
     if (params)
     {
-	new_params = malloc (n_params * sizeof (pixman_fixed_t));
+	new_params = pixman_malloc_ab (n_params, sizeof (pixman_fixed_t));
 	if (!new_params)
 	    return FALSE;
 
