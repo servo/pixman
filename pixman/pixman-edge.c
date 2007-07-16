@@ -321,13 +321,9 @@ pixman_rasterize_edges (pixman_image_t *image,
 			pixman_fixed_t	b)
 {
     if (image->common.read_func	|| image->common.write_func)
-    {
-	return pixman_rasterize_edges_accessors (image, l, r, t, b);
-    }
+	pixman_rasterize_edges_accessors (image, l, r, t, b);
     else
-    {
-	return pixman_rasterize_edges_no_accessors (image, l, r, t, b);
-    }
+	pixman_rasterize_edges_no_accessors (image, l, r, t, b);
 }
 
 #endif
