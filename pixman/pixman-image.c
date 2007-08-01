@@ -106,7 +106,8 @@ pixman_image_ref (pixman_image_t *image)
     return image;
 }
 
-void
+/* returns TRUE when the image is freed */
+pixman_bool_t
 pixman_image_unref (pixman_image_t *image)
 {
     image_common_t *common = (image_common_t *)image;
@@ -146,7 +147,11 @@ pixman_image_unref (pixman_image_t *image)
 	    free (image->bits.free_me);
 	
 	free (image);
+
+	return TRUE;
     }
+
+    return FALSE;
 }
 
 /* Constructors */
