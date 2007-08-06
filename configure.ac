@@ -42,7 +42,7 @@ AC_PREREQ([2.57])
 
 m4_define([pixman_major], 0)
 m4_define([pixman_minor], 9)
-m4_define([pixman_micro], 3)
+m4_define([pixman_micro], 4)
 
 m4_define([pixman_version],[pixman_major.pixman_minor.pixman_micro])
 
@@ -62,7 +62,7 @@ AC_C_BIGENDIAN
 #
 #      pixman-$(pixman_major).0.minor.micro
 #
-m4_define([lt_current], [pixman_minor)])
+m4_define([lt_current], [pixman_minor])
 m4_define([lt_revision], [pixman_micro])
 m4_define([lt_age], [pixman_minor])
 
