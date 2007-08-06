@@ -1,6 +1,7 @@
-lib_LTLIBRARIES = libpixman.la
-libpixman_la_LIBADD = @DEP_LIBS@ -lm libpixmanwrapper.la
-libpixman_la_SOURCES =		\
+lib_LTLIBRARIES = libpixman-1.la
+libpixman_1_la_LDFLAGS = -version-info $(LT_VERSION_INFO)
+libpixman_1_la_LIBADD = @DEP_LIBS@ -lm libpixmanwrapper.la
+libpixman_1_la_SOURCES =		\
 	pixman.h		\
 	pixman-region.c		\
 	pixman-private.h	\
@@ -14,7 +15,7 @@ libpixman_la_SOURCES =		\
 	pixman-compute-region.c \
 	pixman-timer.c
 
-libpixmanincludedir = $(includedir)/pixman
+libpixmanincludedir = $(includedir)/pixman-1/
 libpixmaninclude_HEADERS = pixman.h
 
 # wrapper library
@@ -34,5 +35,5 @@ libpixman_mmx_la_SOURCES = \
 	pixman-mmx.h
 libpixman_mmx_la_CFLAGS = $(DEP_CFLAGS) $(MMX_CFLAGS)
 libpixman_mmx_la_LIBADD = $(DEP_LIBS)
-libpixman_la_LIBADD += libpixman-mmx.la
+libpixman_1_la_LIBADD += libpixman-mmx.la
 endif
