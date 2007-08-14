@@ -1078,7 +1078,7 @@ static FASTCALL uint32_t
 fbFetchPixel_a1 (pixman_image_t *image,
 		 const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
 {
-    uint32_t  pixel = ((uint32_t *)bits)[offset >> 5];
+    uint32_t  pixel = READ(bits + (offset >> 5));
     uint32_t  a;
 #if BITMAP_BIT_ORDER == MSBFirst
     a = pixel >> (0x1f - (offset & 0x1f));
@@ -1096,7 +1096,7 @@ static FASTCALL uint32_t
 fbFetchPixel_g1 (pixman_image_t *image,
 		 const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
 {
-    uint32_t pixel = ((uint32_t *)bits)[offset >> 5];
+    uint32_t pixel = READ(bits + (offset >> 5));
     uint32_t a;
 #if BITMAP_BIT_ORDER == MSBFirst
     a = pixel >> (0x1f - (offset & 0x1f));
