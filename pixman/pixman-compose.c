@@ -4257,6 +4257,7 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 	case PIXMAN_OP_CLEAR:
 	case PIXMAN_OP_SRC:
 	    fetchDest = NULL;
+#ifndef PIXMAN_FB_ACCESSORS
 	    /* fall-through */
 	case PIXMAN_OP_ADD:
 	case PIXMAN_OP_OVER:
@@ -4268,6 +4269,7 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 	    default:
 		break;
 	    }
+#endif
 	    break;
 	}
     }
