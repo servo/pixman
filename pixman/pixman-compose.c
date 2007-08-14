@@ -993,13 +993,6 @@ fbFetchPixel_x4a4 (pixman_image_t *image,
     return ((pixel & 0xf) | ((pixel & 0xf) << 4)) << 24;
 }
 
-#define Fetch8(l,o)    (READ((uint8_t *)(l) + ((o) >> 2)))
-#if IMAGE_BYTE_ORDER == MSBFirst
-#define Fetch4(l,o)    ((o) & 2 ? Fetch8(l,o) & 0xf : Fetch8(l,o) >> 4)
-#else
-#define Fetch4(l,o)    ((o) & 2 ? Fetch8(l,o) >> 4 : Fetch8(l,o) & 0xf)
-#endif
-
 static FASTCALL uint32_t
 fbFetchPixel_a4 (pixman_image_t *image,
 		 const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
