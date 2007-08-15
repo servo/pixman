@@ -69,7 +69,7 @@ m4_define([lt_age], [pixman_minor])
 LT_VERSION_INFO="lt_current:lt_revision:lt_age"
 
 PIXMAN_MAJOR=pixman_major
-AC_SUBST(AC_MAJOR)
+AC_SUBST(PIXMAN_MAJOR)
 
 AC_SUBST(LT_VERSION_INFO)
 
