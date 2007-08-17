@@ -466,6 +466,18 @@ pixman_image_set_filter (pixman_image_t       *image,
     return TRUE;
 }
 
+void
+pixman_image_set_source_clipping (pixman_image_t  *image,
+				  pixman_bool_t    source_clipping)
+{
+    image_common_t *common = &image->common;
+
+    if (source_clipping)
+	common->src_clip = &common->clip_region;
+    else
+	common->src_clip = &common->full_region;
+}
+
 /* Unlike all the other property setters, this function does not
  * copy the content of indexed. Doing this copying is simply
  * way, way too expensive.
