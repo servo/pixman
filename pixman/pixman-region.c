@@ -1507,6 +1507,8 @@ pixman_region_validate(pixman_region16_t * badreg,
     box = PIXREGION_BOXPTR(&ri[0].reg);
     ri[0].reg.extents = *box;
     ri[0].reg.data->numRects = 1;
+    badreg->extents = *pixman_region_emptyBox;
+    badreg->data = pixman_region_emptyData;
 
     /* Now scatter rectangles into the minimum set of valid regions.  If the
        next rectangle to be added to a region would force an existing rectangle
@@ -1620,6 +1622,8 @@ NextRect: ;
 	    freeData(hreg);
 	}
 	numRI -= half;
+	if (!ret)
+	    goto bail;
     }
     *badreg = ri[0].reg;
     free(ri);
@@ -1629,6 +1633,7 @@ bail:
     for (i = 0; i < numRI; i++)
 	freeData(&ri[i].reg);
     free (ri);
+
     return pixman_break (badreg);
 }
 
