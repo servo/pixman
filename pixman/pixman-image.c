@@ -403,25 +403,17 @@ pixman_image_set_transform (pixman_image_t           *image,
 
     if (memcmp (&id, transform, sizeof (pixman_transform_t)) == 0)
     {
-	transform = NULL;
+	free(common->transform);
+	common->transform = NULL;
 	return TRUE;
     }
     
-    if (common->transform)
-	free (common->transform);
-
-    if (transform)
-    {
+    if (common->transform == NULL)
 	common->transform = malloc (sizeof (pixman_transform_t));
-	if (!common->transform)
-	    return FALSE;
+    if (common->transform == NULL)
+	return FALSE;
 
-	*common->transform = *transform;
-    }
-    else
-    {
-	common->transform = NULL;
-    }
+    memcpy(common->transform, transform, sizeof(pixman_transform_t));
 
     return TRUE;
 }
