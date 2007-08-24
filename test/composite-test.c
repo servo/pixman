@@ -122,13 +122,14 @@ main (int argc, char **argv)
 					src,
 					WIDTH * 4);
 
-    pixman_image_set_accessors (src_img, reader, writer);
-    
     dest_img = pixman_image_create_bits (PIXMAN_a8r8g8b8,
 					 WIDTH, HEIGHT,
 					 dest,
 					 WIDTH * 4);
 
+    pixman_image_set_accessors (src_img, reader, writer);
+    pixman_image_set_accessors (dest_img, reader, writer);
+    
     pixman_image_composite (PIXMAN_OP_OVER, src_img, NULL, dest_img,
 			    0, 0, 0, 0, 0, 0, WIDTH, HEIGHT);
 
