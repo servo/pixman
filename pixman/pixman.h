@@ -182,7 +182,7 @@ typedef enum
 
 typedef enum
 {
-    PIXMAN_OP_CLEAR			= 0x00
+    PIXMAN_OP_CLEAR			= 0x00,
     PIXMAN_OP_SRC			= 0x01,
     PIXMAN_OP_DST			= 0x02,
     PIXMAN_OP_OVER			= 0x03,
