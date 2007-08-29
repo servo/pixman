@@ -341,7 +341,7 @@ fbCombineScreenU (pixman_implementation_t *imp, pixman_op_t op,
 	dca = Blue (d);				    \
 	FbBlendOp (b);				    \
 						    \
-	*(dest + i) = (a << 24)			    \
+	*(dest + i) = (a << A_SHIFT)		    \
 	    | ((r & MASK) << R_SHIFT)               \
 	    | ((g & MASK) << G_SHIFT)		    \
 	    |  (b & MASK);			    \
