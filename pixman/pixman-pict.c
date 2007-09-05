@@ -1778,7 +1778,6 @@ pixman_image_composite (pixman_op_t      op,
 		    break;
 		case PIXMAN_x8r8g8b8:
 		    switch (pDst->bits.format) {
-		    case PIXMAN_a8r8g8b8:
 		    case PIXMAN_x8r8g8b8:
 #ifdef USE_MMX
 			if (pixman_have_mmx())
@@ -1790,7 +1789,6 @@ pixman_image_composite (pixman_op_t      op,
 		    }
 		case PIXMAN_x8b8g8r8:
 		    switch (pDst->bits.format) {
-		    case PIXMAN_a8b8g8r8:
 		    case PIXMAN_x8b8g8r8:
 #ifdef USE_MMX
 			if (pixman_have_mmx())
