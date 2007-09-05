@@ -109,28 +109,29 @@ SourcePictureClassify (source_image_t *pict,
 
 #define SCANLINE_BUFFER_LENGTH 2048
 
-typedef FASTCALL void (*fetchProc)(pixman_image_t *image,
-				   const uint32_t *bits,
-				   int x, int width,
-				   uint32_t *buffer,
-				   const pixman_indexed_t * indexed);
+typedef FASTCALL void (*fetchProc)(bits_image_t *pict, int x, int y, int width, uint32_t *buffer);
+
+/*
+ * Used by READ/WRITE macros
+ */
+#define image ((pixman_image_t *)pict)
 
 /*
  * All of the fetch functions
  */
 
 static FASTCALL void
-fbFetch_a8r8g8b8 (pixman_image_t *image,
-		  const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
+fbFetch_a8r8g8b8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
 {
+    const uint32_t *bits = pict->bits + y*pict->rowstride;
     MEMCPY_WRAPPED(buffer, (const uint32_t *)bits + x,
 		   width*sizeof(uint32_t));
 }
 
 static FASTCALL void
-fbFetch_x8r8g8b8 (pixman_image_t *image,
-		  const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
+fbFetch_x8r8g8b8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
 {
+    const uint32_t *bits = pict->bits + y*pict->rowstride;
     const uint32_t *pixel = (const uint32_t *)bits + x;
     const uint32_t *end = pixel + width;
     while (pixel < end) {
@@ -139,9 +140,9 @@ fbFetch_x8r8g8b8 (pixman_image_t *image,
 }
 
 static FASTCALL void
-fbFetch_a8b8g8r8 (pixman_image_t *image,
-		  const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
+fbFetch_a8b8g8r8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
 {
+    const uint32_t *bits = pict->bits + y*pict->rowstride;
     const uint32_t *pixel = (uint32_t *)bits + x;
     const uint32_t *end = pixel + width;
     while (pixel < end) {
@@ -153,9 +154,9 @@ fbFetch_a8b8g8r8 (pixman_image_t *image,
 }
 
 static FASTCALL void
-fbFetch_x8b8g8r8 (pixman_image_t *image,
-		  const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
+fbFetch_x8b8g8r8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
 {
+    const uint32_t *bits = pict->bits + y*pict->rowstride;
     const uint32_t *pixel = (uint32_t *)bits + x;
     const uint32_t *end = pixel + width;
     while (pixel < end) {
@@ -168,9 +169,9 @@ fbFetch_x8b8g8r8 (pixman_image_t *image,
 }
 
 static FASTCALL void
-fbFetch_r8g8b8 (pixman_image_t *image,
-		const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
+fbFetch_r8g8b8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
 {
+    const uint32_t *bits = pict->bits + y*pict->rowstride;
     const uint8_t *pixel = (const uint8_t *)bits + 3*x;
     const uint8_t *end = pixel + 3*width;
     while (pixel < end) {
@@ -181,9 +182,9 @@ fbFetch_r8g8b8 (pixman_image_t *image,
 }
 
 static FASTCALL void
-fbFetch_b8g8r8 (pixman_image_t *image,
-		const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
+fbFetch_b8g8r8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
 {
+    const uint32_t *bits = pict->bits + y*pict->rowstride;
     const uint8_t *pixel = (const uint8_t *)bits + 3*x;
     const uint8_t *end = pixel + 3*width;
     while (pixel < end) {
@@ -202,10 +203,9 @@ fbFetch_b8g8r8 (pixman_image_t *image,
 }
 
 static FASTCALL void
-fbFetch_r5g6b5 (pixman_image_t *image,
-		const uint32_t *bits, int x, int width, uint32_t *buffer,
-		const pixman_indexed_t * indexed)
+fbFetch_r5g6b5 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
 {
+    const uint32_t *bits = pict->bits + y*pict->rowstride;
     const uint16_t *pixel = (const uint16_t *)bits + x;
     const uint16_t *end = pixel + width;
     while (pixel < end) {
@@ -220,12 +220,10 @@ fbFetch_r5g6b5 (pixman_image_t *image,
 }
 
 static FASTCALL void
-fbFetch_b5g6r5 (pixman_image_t *image,
-		const uint32_t *bits, int x, int width, uint32_t *buffer,
-		const pixman_indexed_t * indexed)
+fbFetch_b5g6r5 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
 {
     uint32_t  r,g,b;
-    
+    const uint32_t *bits = pict->bits + y*pict->rowstride;
     const uint16_t *pixel = (const uint16_t *)bits + x;
     const uint16_t *end = pixel + width;
     while (pixel < end) {
@@ -238,11 +236,10 @@ fbFetch_b5g6r5 (pixman_image_t *image,
 }
 
 static FASTCALL void
-fbFetch_a1r5g5b5 (pixman_image_t *image,
-		  const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
+fbFetch_a1r5g5b5 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
 {
     uint32_t  r,g,b, a;
-    
+    const uint32_t *bits = pict->bits + y*pict->rowstride;
     const uint16_t *pixel = (const uint16_t *)bits + x;
     const uint16_t *end = pixel + width;
     while (pixel < end) {
@@ -257,11 +254,10 @@ fbFetch_a1r5g5b5 (pixman_image_t *image,
 }
 
 static FASTCALL void
-fbFetch_x1r5g5b5 (pixman_image_t *image,
-		  const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
+fbFetch_x1r5g5b5 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
 {
     uint32_t  r,g,b;
-    
+    const uint32_t *bits = pict->bits + y*pict->rowstride;
     const uint16_t *pixel = (const uint16_t *)bits + x;
     const uint16_t *end = pixel + width;
     while (pixel < end) {
@@ -275,11 +271,10 @@ fbFetch_x1r5g5b5 (pixman_image_t *image,
 }
 
 static FASTCALL void
-fbFetch_a1b5g5r5 (pixman_image_t *image,
-		  const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
+fbFetch_a1b5g5r5 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
 {
     uint32_t  r,g,b, a;
-    
+    const uint32_t *bits = pict->bits + y*pict->rowstride;
     const uint16_t *pixel = (const uint16_t *)bits + x;
     const uint16_t *end = pixel + width;
     while (pixel < end) {
@@ -294,11 +289,10 @@ fbFetch_a1b5g5r5 (pixman_image_t *image,
 }
 
 static FASTCALL void
-fbFetch_x1b5g5r5 (pixman_image_t *image,
-		  const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
+fbFetch_x1b5g5r5 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
 {
     uint32_t  r,g,b;
-    
+    const uint32_t *bits = pict->bits + y*pict->rowstride;
     const uint16_t *pixel = (const uint16_t *)bits + x;
     const uint16_t *end = pixel + width;
     while (pixel < end) {
@@ -312,10 +306,10 @@ fbFetch_x1b5g5r5 (pixman_image_t *image,
 }
 
 static FASTCALL void
-fbFetch_a4r4g4b4 (pixman_image_t *image,
-		  const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
+fbFetch_a4r4g4b4 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
 {
     uint32_t  r,g,b, a;
+    const uint32_t *bits = pict->bits + y*pict->rowstride;
     const uint16_t *pixel = (const uint16_t *)bits + x;
     const uint16_t *end = pixel + width;
     while (pixel < end) {
@@ -330,11 +324,10 @@ fbFetch_a4r4g4b4 (pixman_image_t *image,
 }
 
 static FASTCALL void
-fbFetch_x4r4g4b4 (pixman_image_t *image,
-		  const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
+fbFetch_x4r4g4b4 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
 {
     uint32_t  r,g,b;
-    
+    const uint32_t *bits = pict->bits + y*pict->rowstride;
     const uint16_t *pixel = (const uint16_t *)bits + x;
     const uint16_t *end = pixel + width;
     while (pixel < end) {
@@ -348,11 +341,10 @@ fbFetch_x4r4g4b4 (pixman_image_t *image,
 }
 
 static FASTCALL void
-fbFetch_a4b4g4r4 (pixman_image_t *image,
-		  const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
+fbFetch_a4b4g4r4 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
 {
     uint32_t  r,g,b, a;
-    
+    const uint32_t *bits = pict->bits + y*pict->rowstride;
     const uint16_t *pixel = (const uint16_t *)bits + x;
     const uint16_t *end = pixel + width;
     while (pixel < end) {
@@ -367,11 +359,10 @@ fbFetch_a4b4g4r4 (pixman_image_t *image,
 }
 
 static FASTCALL void
-fbFetch_x4b4g4r4 (pixman_image_t *image,
-		  const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
+fbFetch_x4b4g4r4 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
 {
     uint32_t  r,g,b;
-    
+    const uint32_t *bits = pict->bits + y*pict->rowstride;
     const uint16_t *pixel = (const uint16_t *)bits + x;
     const uint16_t *end = pixel + width;
     while (pixel < end) {
@@ -385,9 +376,9 @@ fbFetch_x4b4g4r4 (pixman_image_t *image,
 }
 
 static FASTCALL void
-fbFetch_a8 (pixman_image_t *image,
-	    const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
+fbFetch_a8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
 {
+    const uint32_t *bits = pict->bits + y*pict->rowstride;
     const uint8_t *pixel = (const uint8_t *)bits + x;
     const uint8_t *end = pixel + width;
     while (pixel < end) {
@@ -396,11 +387,10 @@ fbFetch_a8 (pixman_image_t *image,
 }
 
 static FASTCALL void
-fbFetch_r3g3b2 (pixman_image_t *image,
-		const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
+fbFetch_r3g3b2 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
 {
     uint32_t  r,g,b;
-    
+    const uint32_t *bits = pict->bits + y*pict->rowstride;
     const uint8_t *pixel = (const uint8_t *)bits + x;
     const uint8_t *end = pixel + width;
     while (pixel < end) {
@@ -417,11 +407,10 @@ fbFetch_r3g3b2 (pixman_image_t *image,
 }
 
 static FASTCALL void
-fbFetch_b2g3r3 (pixman_image_t *image,
-		const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
+fbFetch_b2g3r3 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
 {
     uint32_t  r,g,b;
-    
+    const uint32_t *bits = pict->bits + y*pict->rowstride;
     const uint8_t *pixel = (const uint8_t *)bits + x;
     const uint8_t *end = pixel + width;
     while (pixel < end) {
@@ -440,10 +429,10 @@ fbFetch_b2g3r3 (pixman_image_t *image,
 }
 
 static FASTCALL void
-fbFetch_a2r2g2b2 (pixman_image_t *image,
-		  const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
+fbFetch_a2r2g2b2 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
 {
     uint32_t   a,r,g,b;
+    const uint32_t *bits = pict->bits + y*pict->rowstride;
     const uint8_t *pixel = (const uint8_t *)bits + x;
     const uint8_t *end = pixel + width;
     while (pixel < end) {
@@ -458,10 +447,10 @@ fbFetch_a2r2g2b2 (pixman_image_t *image,
 }
 
 static FASTCALL void
-fbFetch_a2b2g2r2 (pixman_image_t *image,
-		  const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
+fbFetch_a2b2g2r2 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
 {
     uint32_t   a,r,g,b;
+    const uint32_t *bits = pict->bits + y*pict->rowstride;
     const uint8_t *pixel = (const uint8_t *)bits + x;
     const uint8_t *end = pixel + width;
     while (pixel < end) {
@@ -476,9 +465,10 @@ fbFetch_a2b2g2r2 (pixman_image_t *image,
 }
 
 static FASTCALL void
-fbFetch_c8 (pixman_image_t *image,
-	    const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
+fbFetch_c8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
 {
+    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const pixman_indexed_t * indexed = pict->indexed;
     const uint8_t *pixel = (const uint8_t *)bits + x;
     const uint8_t *end = pixel + width;
     while (pixel < end) {
@@ -488,9 +478,9 @@ fbFetch_c8 (pixman_image_t *image,
 }
 
 static FASTCALL void
-fbFetch_x4a4 (pixman_image_t *image,
-	      const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
+fbFetch_x4a4 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
 {
+    const uint32_t *bits = pict->bits + y*pict->rowstride;
     const uint8_t *pixel = (const uint8_t *)bits + x;
     const uint8_t *end = pixel + width;
     while (pixel < end) {
@@ -507,9 +497,9 @@ fbFetch_x4a4 (pixman_image_t *image,
 #endif
 
 static FASTCALL void
-fbFetch_a4 (pixman_image_t *image,
-	    const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
+fbFetch_a4 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
 {
+    const uint32_t *bits = pict->bits + y*pict->rowstride;
     int i;
     for (i = 0; i < width; ++i) {
 	uint32_t  p = Fetch4(bits, i + x);
@@ -520,10 +510,10 @@ fbFetch_a4 (pixman_image_t *image,
 }
 
 static FASTCALL void
-fbFetch_r1g2b1 (pixman_image_t *image,
-		const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
+fbFetch_r1g2b1 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
 {
     uint32_t  r,g,b;
+    const uint32_t *bits = pict->bits + y*pict->rowstride;
     int i;
     for (i = 0; i < width; ++i) {
 	uint32_t  p = Fetch4(bits, i + x);
@@ -536,10 +526,10 @@ fbFetch_r1g2b1 (pixman_image_t *image,
 }
 
 static FASTCALL void
-fbFetch_b1g2r1 (pixman_image_t *image,
-		const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
+fbFetch_b1g2r1 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
 {
     uint32_t  r,g,b;
+    const uint32_t *bits = pict->bits + y*pict->rowstride;
     int i;
     for (i = 0; i < width; ++i) {
 	uint32_t  p = Fetch4(bits, i + x);
@@ -552,10 +542,10 @@ fbFetch_b1g2r1 (pixman_image_t *image,
 }
 
 static FASTCALL void
-fbFetch_a1r1g1b1 (pixman_image_t *image,
-		  const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
+fbFetch_a1r1g1b1 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
 {
     uint32_t  a,r,g,b;
+    const uint32_t *bits = pict->bits + y*pict->rowstride;
     int i;
     for (i = 0; i < width; ++i) {
 	uint32_t  p = Fetch4(bits, i + x);
@@ -569,10 +559,10 @@ fbFetch_a1r1g1b1 (pixman_image_t *image,
 }
 
 static FASTCALL void
-fbFetch_a1b1g1r1 (pixman_image_t *image,
-		  const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
+fbFetch_a1b1g1r1 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
 {
     uint32_t  a,r,g,b;
+    const uint32_t *bits = pict->bits + y*pict->rowstride;
     int i;
     for (i = 0; i < width; ++i) {
 	uint32_t  p = Fetch4(bits, i + x);
@@ -586,9 +576,10 @@ fbFetch_a1b1g1r1 (pixman_image_t *image,
 }
 
 static FASTCALL void
-fbFetch_c4 (pixman_image_t *image,
-	    const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
+fbFetch_c4 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
 {
+    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const pixman_indexed_t * indexed = pict->indexed;
     int i;
     for (i = 0; i < width; ++i) {
 	uint32_t  p = Fetch4(bits, i + x);
@@ -599,9 +590,9 @@ fbFetch_c4 (pixman_image_t *image,
 
 
 static FASTCALL void
-fbFetch_a1 (pixman_image_t *image,
-	    const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
+fbFetch_a1 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
 {
+    const uint32_t *bits = pict->bits + y*pict->rowstride;
     int i;
     for (i = 0; i < width; ++i) {
 	uint32_t  p = READ(bits + ((i + x) >> 5));
@@ -620,9 +611,10 @@ fbFetch_a1 (pixman_image_t *image,
 }
 
 static FASTCALL void
-fbFetch_g1 (pixman_image_t *image,
-	    const uint32_t *bits, int x, int width, uint32_t *buffer, const pixman_indexed_t * indexed)
+fbFetch_g1 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
 {
+    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const pixman_indexed_t * indexed = pict->indexed;
     int i;
     for (i = 0; i < width; ++i) {
 	uint32_t p = READ(bits + ((i+x) >> 5));
@@ -693,28 +685,26 @@ static fetchProc fetchProcForPicture (bits_image_t * pict)
  * Pixel wise fetching
  */
 
-typedef FASTCALL uint32_t (*fetchPixelProc)(pixman_image_t *image,
-					    const uint32_t *bits, int offset,
-					    const pixman_indexed_t * indexed);
+typedef FASTCALL uint32_t (*fetchPixelProc)(bits_image_t *pict, int offset, int line);
 
 static FASTCALL uint32_t
-fbFetchPixel_a8r8g8b8 (pixman_image_t *image,
-		       const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
+fbFetchPixel_a8r8g8b8 (bits_image_t *pict, int offset, int line)
 {
+    uint32_t *bits = pict->bits + line*pict->rowstride;
     return READ((uint32_t *)bits + offset);
 }
 
 static FASTCALL uint32_t
-fbFetchPixel_x8r8g8b8 (pixman_image_t *image,
-		       const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
+fbFetchPixel_x8r8g8b8 (bits_image_t *pict, int offset, int line)
 {
+    uint32_t *bits = pict->bits + line*pict->rowstride;
     return READ((uint32_t *)bits + offset) | 0xff000000;
 }
 
 static FASTCALL uint32_t
-fbFetchPixel_a8b8g8r8 (pixman_image_t *image,
-		       const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
+fbFetchPixel_a8b8g8r8 (bits_image_t *pict, int offset, int line)
 {
+    uint32_t *bits = pict->bits + line*pict->rowstride;
     uint32_t  pixel = READ((uint32_t *)bits + offset);
     
     return ((pixel & 0xff000000) |
@@ -724,9 +714,9 @@ fbFetchPixel_a8b8g8r8 (pixman_image_t *image,
 }
 
 static FASTCALL uint32_t
-fbFetchPixel_x8b8g8r8 (pixman_image_t *image,
-		       const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
+fbFetchPixel_x8b8g8r8 (bits_image_t *pict, int offset, int line)
 {
+    uint32_t *bits = pict->bits + line*pict->rowstride;
     uint32_t  pixel = READ((uint32_t *)bits + offset);
     
     return ((0xff000000) |
@@ -736,9 +726,9 @@ fbFetchPixel_x8b8g8r8 (pixman_image_t *image,
 }
 
 static FASTCALL uint32_t
-fbFetchPixel_r8g8b8 (pixman_image_t *image,
-		     const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
+fbFetchPixel_r8g8b8 (bits_image_t *pict, int offset, int line)
 {
+    uint32_t *bits = pict->bits + line*pict->rowstride;
     uint8_t   *pixel = ((uint8_t *) bits) + (offset*3);
 #if IMAGE_BYTE_ORDER == MSBFirst
     return (0xff000000 |
@@ -754,9 +744,9 @@ fbFetchPixel_r8g8b8 (pixman_image_t *image,
 }
 
 static FASTCALL uint32_t
-fbFetchPixel_b8g8r8 (pixman_image_t *image,
-		     const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
+fbFetchPixel_b8g8r8 (bits_image_t *pict, int offset, int line)
 {
+    uint32_t *bits = pict->bits + line*pict->rowstride;
     uint8_t   *pixel = ((uint8_t *) bits) + (offset*3);
 #if IMAGE_BYTE_ORDER == MSBFirst
     return (0xff000000 |
@@ -772,10 +762,10 @@ fbFetchPixel_b8g8r8 (pixman_image_t *image,
 }
 
 static FASTCALL uint32_t
-fbFetchPixel_r5g6b5 (pixman_image_t *image,
-		     const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
+fbFetchPixel_r5g6b5 (bits_image_t *pict, int offset, int line)
 {
     uint32_t  r,g,b;
+    uint32_t *bits = pict->bits + line*pict->rowstride;
     uint32_t  pixel = READ((uint16_t *) bits + offset);
     
     r = ((pixel & 0xf800) | ((pixel & 0xe000) >> 5)) << 8;
@@ -785,10 +775,10 @@ fbFetchPixel_r5g6b5 (pixman_image_t *image,
 }
 
 static FASTCALL uint32_t
-fbFetchPixel_b5g6r5 (pixman_image_t *image,
-		     const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
+fbFetchPixel_b5g6r5 (bits_image_t *pict, int offset, int line)
 {
     uint32_t  r,g,b;
+    uint32_t *bits = pict->bits + line*pict->rowstride;
     uint32_t  pixel = READ((uint16_t *) bits + offset);
     
     b = ((pixel & 0xf800) | ((pixel & 0xe000) >> 5)) >> 8;
@@ -798,10 +788,10 @@ fbFetchPixel_b5g6r5 (pixman_image_t *image,
 }
 
 static FASTCALL uint32_t
-fbFetchPixel_a1r5g5b5 (pixman_image_t *image,
-		       const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
+fbFetchPixel_a1r5g5b5 (bits_image_t *pict, int offset, int line)
 {
     uint32_t  a,r,g,b;
+    uint32_t *bits = pict->bits + line*pict->rowstride;
     uint32_t  pixel = READ((uint16_t *) bits + offset);
     
     a = (uint32_t) ((uint8_t) (0 - ((pixel & 0x8000) >> 15))) << 24;
@@ -812,10 +802,10 @@ fbFetchPixel_a1r5g5b5 (pixman_image_t *image,
 }
 
 static FASTCALL uint32_t
-fbFetchPixel_x1r5g5b5 (pixman_image_t *image,
-		       const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
+fbFetchPixel_x1r5g5b5 (bits_image_t *pict, int offset, int line)
 {
     uint32_t  r,g,b;
+    uint32_t *bits = pict->bits + line*pict->rowstride;
     uint32_t  pixel = READ((uint16_t *) bits + offset);
     
     r = ((pixel & 0x7c00) | ((pixel & 0x7000) >> 5)) << 9;
@@ -825,10 +815,10 @@ fbFetchPixel_x1r5g5b5 (pixman_image_t *image,
 }
 
 static FASTCALL uint32_t
-fbFetchPixel_a1b5g5r5 (pixman_image_t *image,
-		       const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
+fbFetchPixel_a1b5g5r5 (bits_image_t *pict, int offset, int line)
 {
     uint32_t  a,r,g,b;
+    uint32_t *bits = pict->bits + line*pict->rowstride;
     uint32_t  pixel = READ((uint16_t *) bits + offset);
     
     a = (uint32_t) ((uint8_t) (0 - ((pixel & 0x8000) >> 15))) << 24;
@@ -839,10 +829,10 @@ fbFetchPixel_a1b5g5r5 (pixman_image_t *image,
 }
 
 static FASTCALL uint32_t
-fbFetchPixel_x1b5g5r5 (pixman_image_t *image,
-		       const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
+fbFetchPixel_x1b5g5r5 (bits_image_t *pict, int offset, int line)
 {
     uint32_t  r,g,b;
+    uint32_t *bits = pict->bits + line*pict->rowstride;
     uint32_t  pixel = READ((uint16_t *) bits + offset);
     
     b = ((pixel & 0x7c00) | ((pixel & 0x7000) >> 5)) >> 7;
@@ -852,10 +842,10 @@ fbFetchPixel_x1b5g5r5 (pixman_image_t *image,
 }
 
 static FASTCALL uint32_t
-fbFetchPixel_a4r4g4b4 (pixman_image_t *image,
-		       const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
+fbFetchPixel_a4r4g4b4 (bits_image_t *pict, int offset, int line)
 {
     uint32_t  a,r,g,b;
+    uint32_t *bits = pict->bits + line*pict->rowstride;
     uint32_t  pixel = READ((uint16_t *) bits + offset);
     
     a = ((pixel & 0xf000) | ((pixel & 0xf000) >> 4)) << 16;
@@ -866,10 +856,10 @@ fbFetchPixel_a4r4g4b4 (pixman_image_t *image,
 }
 
 static FASTCALL uint32_t
-fbFetchPixel_x4r4g4b4 (pixman_image_t *image,
-		       const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
+fbFetchPixel_x4r4g4b4 (bits_image_t *pict, int offset, int line)
 {
     uint32_t  r,g,b;
+    uint32_t *bits = pict->bits + line*pict->rowstride;
     uint32_t  pixel = READ((uint16_t *) bits + offset);
     
     r = ((pixel & 0x0f00) | ((pixel & 0x0f00) >> 4)) << 12;
@@ -879,10 +869,10 @@ fbFetchPixel_x4r4g4b4 (pixman_image_t *image,
 }
 
 static FASTCALL uint32_t
-fbFetchPixel_a4b4g4r4 (pixman_image_t *image,
-		       const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
+fbFetchPixel_a4b4g4r4 (bits_image_t *pict, int offset, int line)
 {
     uint32_t  a,r,g,b;
+    uint32_t *bits = pict->bits + line*pict->rowstride;
     uint32_t  pixel = READ((uint16_t *) bits + offset);
     
     a = ((pixel & 0xf000) | ((pixel & 0xf000) >> 4)) << 16;
@@ -893,10 +883,10 @@ fbFetchPixel_a4b4g4r4 (pixman_image_t *image,
 }
 
 static FASTCALL uint32_t
-fbFetchPixel_x4b4g4r4 (pixman_image_t *image,
-		       const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
+fbFetchPixel_x4b4g4r4 (bits_image_t *pict, int offset, int line)
 {
     uint32_t  r,g,b;
+    uint32_t *bits = pict->bits + line*pict->rowstride;
     uint32_t  pixel = READ((uint16_t *) bits + offset);
     
     b = ((pixel & 0x0f00) | ((pixel & 0x0f00) >> 4)) >> 4;
@@ -906,19 +896,19 @@ fbFetchPixel_x4b4g4r4 (pixman_image_t *image,
 }
 
 static FASTCALL uint32_t
-fbFetchPixel_a8 (pixman_image_t *image,
-		 const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
+fbFetchPixel_a8 (bits_image_t *pict, int offset, int line)
 {
+    uint32_t *bits = pict->bits + line*pict->rowstride;
     uint32_t   pixel = READ((uint8_t *) bits + offset);
     
     return pixel << 24;
 }
 
 static FASTCALL uint32_t
-fbFetchPixel_r3g3b2 (pixman_image_t *image,
-		     const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
+fbFetchPixel_r3g3b2 (bits_image_t *pict, int offset, int line)
 {
     uint32_t  r,g,b;
+    uint32_t *bits = pict->bits + line*pict->rowstride;
     uint32_t   pixel = READ((uint8_t *) bits + offset);
     
     r = ((pixel & 0xe0) | ((pixel & 0xe0) >> 3) | ((pixel & 0xc0) >> 6)) << 16;
@@ -931,10 +921,10 @@ fbFetchPixel_r3g3b2 (pixman_image_t *image,
 }
 
 static FASTCALL uint32_t
-fbFetchPixel_b2g3r3 (pixman_image_t *image,
-		     const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
+fbFetchPixel_b2g3r3 (bits_image_t *pict, int offset, int line)
 {
     uint32_t  r,g,b;
+    uint32_t *bits = pict->bits + line*pict->rowstride;
     uint32_t   pixel = READ((uint8_t *) bits + offset);
     
     b = (((pixel & 0xc0)     ) |
@@ -949,10 +939,10 @@ fbFetchPixel_b2g3r3 (pixman_image_t *image,
 }
 
 static FASTCALL uint32_t
-fbFetchPixel_a2r2g2b2 (pixman_image_t *image,
-		       const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
+fbFetchPixel_a2r2g2b2 (bits_image_t *pict, int offset, int line)
 {
     uint32_t   a,r,g,b;
+    uint32_t *bits = pict->bits + line*pict->rowstride;
     uint32_t   pixel = READ((uint8_t *) bits + offset);
     
     a = ((pixel & 0xc0) * 0x55) << 18;
@@ -963,10 +953,10 @@ fbFetchPixel_a2r2g2b2 (pixman_image_t *image,
 }
 
 static FASTCALL uint32_t
-fbFetchPixel_a2b2g2r2 (pixman_image_t *image,
-		       const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
+fbFetchPixel_a2b2g2r2 (bits_image_t *pict, int offset, int line)
 {
     uint32_t   a,r,g,b;
+    uint32_t *bits = pict->bits + line*pict->rowstride;
     uint32_t   pixel = READ((uint8_t *) bits + offset);
     
     a = ((pixel & 0xc0) * 0x55) << 18;
@@ -977,26 +967,27 @@ fbFetchPixel_a2b2g2r2 (pixman_image_t *image,
 }
 
 static FASTCALL uint32_t
-fbFetchPixel_c8 (pixman_image_t *image,
-		 const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
+fbFetchPixel_c8 (bits_image_t *pict, int offset, int line)
 {
+    uint32_t *bits = pict->bits + line*pict->rowstride;
     uint32_t   pixel = READ((uint8_t *) bits + offset);
+    const pixman_indexed_t * indexed = pict->indexed;
     return indexed->rgba[pixel];
 }
 
 static FASTCALL uint32_t
-fbFetchPixel_x4a4 (pixman_image_t *image,
-		   const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
+fbFetchPixel_x4a4 (bits_image_t *pict, int offset, int line)
 {
+    uint32_t *bits = pict->bits + line*pict->rowstride;
     uint32_t   pixel = READ((uint8_t *) bits + offset);
     
     return ((pixel & 0xf) | ((pixel & 0xf) << 4)) << 24;
 }
 
 static FASTCALL uint32_t
-fbFetchPixel_a4 (pixman_image_t *image,
-		 const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
+fbFetchPixel_a4 (bits_image_t *pict, int offset, int line)
 {
+    uint32_t *bits = pict->bits + line*pict->rowstride;
     uint32_t  pixel = Fetch4(bits, offset);
     
     pixel |= pixel << 4;
@@ -1004,10 +995,10 @@ fbFetchPixel_a4 (pixman_image_t *image,
 }
 
 static FASTCALL uint32_t
-fbFetchPixel_r1g2b1 (pixman_image_t *image,
-		     const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
+fbFetchPixel_r1g2b1 (bits_image_t *pict, int offset, int line)
 {
     uint32_t  r,g,b;
+    uint32_t *bits = pict->bits + line*pict->rowstride;
     uint32_t  pixel = Fetch4(bits, offset);
     
     r = ((pixel & 0x8) * 0xff) << 13;
@@ -1017,10 +1008,10 @@ fbFetchPixel_r1g2b1 (pixman_image_t *image,
 }
 
 static FASTCALL uint32_t
-fbFetchPixel_b1g2r1 (pixman_image_t *image,
-		     const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
+fbFetchPixel_b1g2r1 (bits_image_t *pict, int offset, int line)
 {
     uint32_t  r,g,b;
+    uint32_t *bits = pict->bits + line*pict->rowstride;
     uint32_t  pixel = Fetch4(bits, offset);
     
     b = ((pixel & 0x8) * 0xff) >> 3;
@@ -1030,10 +1021,10 @@ fbFetchPixel_b1g2r1 (pixman_image_t *image,
 }
 
 static FASTCALL uint32_t
-fbFetchPixel_a1r1g1b1 (pixman_image_t *image,
-		       const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
+fbFetchPixel_a1r1g1b1 (bits_image_t *pict, int offset, int line)
 {
     uint32_t  a,r,g,b;
+    uint32_t *bits = pict->bits + line*pict->rowstride;
     uint32_t  pixel = Fetch4(bits, offset);
     
     a = ((pixel & 0x8) * 0xff) << 21;
@@ -1044,10 +1035,10 @@ fbFetchPixel_a1r1g1b1 (pixman_image_t *image,
 }
 
 static FASTCALL uint32_t
-fbFetchPixel_a1b1g1r1 (pixman_image_t *image,
-		       const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
+fbFetchPixel_a1b1g1r1 (bits_image_t *pict, int offset, int line)
 {
     uint32_t  a,r,g,b;
+    uint32_t *bits = pict->bits + line*pict->rowstride;
     uint32_t  pixel = Fetch4(bits, offset);
     
     a = ((pixel & 0x8) * 0xff) << 21;
@@ -1058,19 +1049,20 @@ fbFetchPixel_a1b1g1r1 (pixman_image_t *image,
 }
 
 static FASTCALL uint32_t
-fbFetchPixel_c4 (pixman_image_t *image,
-		 const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
+fbFetchPixel_c4 (bits_image_t *pict, int offset, int line)
 {
+    uint32_t *bits = pict->bits + line*pict->rowstride;
     uint32_t  pixel = Fetch4(bits, offset);
+    const pixman_indexed_t * indexed = pict->indexed;
     
     return indexed->rgba[pixel];
 }
 
 
 static FASTCALL uint32_t
-fbFetchPixel_a1 (pixman_image_t *image,
-		 const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
+fbFetchPixel_a1 (bits_image_t *pict, int offset, int line)
 {
+    uint32_t *bits = pict->bits + line*pict->rowstride;
     uint32_t  pixel = READ(bits + (offset >> 5));
     uint32_t  a;
 #if BITMAP_BIT_ORDER == MSBFirst
@@ -1086,10 +1078,11 @@ fbFetchPixel_a1 (pixman_image_t *image,
 }
 
 static FASTCALL uint32_t
-fbFetchPixel_g1 (pixman_image_t *image,
-		 const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
+fbFetchPixel_g1 (bits_image_t *pict, int offset, int line)
 {
+    uint32_t *bits = pict->bits + line*pict->rowstride;
     uint32_t pixel = READ(bits + (offset >> 5));
+    const pixman_indexed_t * indexed = pict->indexed;
     uint32_t a;
 #if BITMAP_BIT_ORDER == MSBFirst
     a = pixel >> (0x1f - (offset & 0x1f));
@@ -1152,6 +1145,7 @@ static fetchPixelProc fetchPixelProcForPicture (bits_image_t * pict)
     return NULL;
 }
 
+#undef image
 
 
 /*
@@ -2859,15 +2853,11 @@ static CombineFuncC pixman_fbCombineFuncC[] = {
 
 static void fbFetchSolid(bits_image_t * pict, int x, int y, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
 {
-    uint32_t *bits;
     uint32_t color;
     uint32_t *end;
     fetchPixelProc fetch = fetchPixelProcForPicture(pict);
-    const pixman_indexed_t * indexed = pict->indexed;
     
-    bits = pict->bits;
-    
-    color = fetch((pixman_image_t *)pict, bits, 0, indexed);
+    color = fetch(pict, 0, 0);
     
     end = buffer + width;
     while (buffer < end)
@@ -2877,17 +2867,9 @@ static void fbFetchSolid(bits_image_t * pict, int x, int y, int width, uint32_t 
 
 static void fbFetch(bits_image_t * pict, int x, int y, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
 {
-    uint32_t *bits;
-    uint32_t stride;
     fetchProc fetch = fetchProcForPicture(pict);
-    const pixman_indexed_t * indexed = pict->indexed;
     
-    bits = pict->bits;
-    stride = pict->rowstride;
-    
-    bits += y*stride;
-    
-    fetch((pixman_image_t *)pict, bits, x, width, buffer, indexed);
+    fetch(pict, x, y, width, buffer);
 }
 
 #ifdef PIXMAN_FB_ACCESSORS
@@ -3564,7 +3546,6 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
     pixman_vector_t  unit;
     int         i;
     pixman_box16_t box;
-    const pixman_indexed_t * indexed = pict->indexed;
     pixman_bool_t affine = TRUE;
     
     fetch = fetchPixelProcForPicture(pict);
@@ -3614,7 +3595,7 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 				y = MOD(v.vector[1]>>16, pict->height);
 				x = MOD(v.vector[0]>>16, pict->width);
 			    }
-			    *(buffer + i) = fetch((pixman_image_t *)pict, bits + y * stride, x, indexed);
+			    *(buffer + i) = fetch(pict, x, y);
 			}
 		    }
 		    
@@ -3637,7 +3618,7 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 				x = MOD(v.vector[0]>>16, pict->width);
 			    }
 			    if (pixman_region_contains_point (pict->common.src_clip, x, y, &box))
-				*(buffer + i) = fetch ((pixman_image_t *)pict, bits + y*stride, x, indexed);
+				*(buffer + i) = fetch (pict, x, y);
 			    else
 				*(buffer + i) = 0;
 			}
@@ -3665,7 +3646,7 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 				x = v.vector[0]>>16;
 			    }
 			    *(buffer + i) = ((x < box.x1) | (x >= box.x2) | (y < box.y1) | (y >= box.y2)) ?
-				0 : fetch((pixman_image_t *)pict, bits + (y)*stride, x, indexed);
+				0 : fetch(pict, x, y);
 			}
 		    }
                     v.vector[0] += unit.vector[0];
@@ -3687,7 +3668,7 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 				x = v.vector[0]>>16;
 			    }
 			    if (pixman_region_contains_point (pict->common.src_clip, x, y, &box))
-				*(buffer + i) = fetch((pixman_image_t *)pict, bits + y*stride, x, indexed);
+				*(buffer + i) = fetch(pict, x, y);
 			    else
 				*(buffer + i) = 0;
 			}
@@ -3717,7 +3698,6 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 			    *(buffer + i) = 0;
 			} else {
 			    int x1, x2, y1, y2, distx, idistx, disty, idisty;
-			    uint32_t *b;
 			    uint32_t tl, tr, bl, br, r;
 			    uint32_t ft, fb;
 			    
@@ -3746,13 +3726,10 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 			    y1 = MOD (y1, pict->height);
 			    y2 = MOD (y2, pict->height);
 			    
-			    b = bits + y1*stride;
-			    
-			    tl = fetch((pixman_image_t *)pict, b, x1, indexed);
-			    tr = fetch((pixman_image_t *)pict, b, x2, indexed);
-			    b = bits + y2*stride;
-			    bl = fetch((pixman_image_t *)pict, b, x1, indexed);
-			    br = fetch((pixman_image_t *)pict, b, x2, indexed);
+			    tl = fetch(pict, x1, y1);
+			    tr = fetch(pict, x2, y1);
+			    bl = fetch(pict, x1, y2);
+			    br = fetch(pict, x2, y2);
 			    
 			    ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
 			    fb = FbGet8(bl,0) * idistx + FbGet8(br,0) * distx;
@@ -3781,7 +3758,6 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 			    *(buffer + i) = 0;
 			} else {
 			    int x1, x2, y1, y2, distx, idistx, disty, idisty;
-			    uint32_t *b;
 			    uint32_t tl, tr, bl, br, r;
 			    uint32_t ft, fb;
 			    
@@ -3810,17 +3786,14 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 			    y1 = MOD (y1, pict->height);
 			    y2 = MOD (y2, pict->height);
 			    
-			    b = bits + y1*stride;
-			    
 			    tl = pixman_region_contains_point(pict->common.src_clip, x1, y1, &box)
-				? fetch((pixman_image_t *)pict, b, x1, indexed) : 0;
+				? fetch(pict, x1, y1) : 0;
 			    tr = pixman_region_contains_point(pict->common.src_clip, x2, y1, &box)
-				? fetch((pixman_image_t *)pict, b, x2, indexed) : 0;
-			    b = bits + (y2)*stride;
+				? fetch(pict, x2, y1) : 0;
 			    bl = pixman_region_contains_point(pict->common.src_clip, x1, y2, &box)
-				? fetch((pixman_image_t *)pict, b, x1, indexed) : 0;
+				? fetch(pict, x1, y2) : 0;
 			    br = pixman_region_contains_point(pict->common.src_clip, x2, y2, &box)
-				? fetch((pixman_image_t *)pict, b, x2, indexed) : 0;
+				? fetch(pict, x2, y2) : 0;
 			    
 			    ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
 			    fb = FbGet8(bl,0) * idistx + FbGet8(br,0) * distx;
@@ -3852,8 +3825,7 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 			if (!v.vector[2]) {
 			    *(buffer + i) = 0;
 			} else {
-			    int x1, x2, y1, y2, distx, idistx, disty, idisty, x_off;
-			    uint32_t *b;
+			    int x1, x2, y1, y2, distx, idistx, disty, idisty;
 			    uint32_t tl, tr, bl, br, r;
 			    pixman_bool_t x1_out, x2_out, y1_out, y2_out;
 			    uint32_t ft, fb;
@@ -3878,19 +3850,15 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 			    idistx = 256 - distx;
 			    idisty = 256 - disty;
 			    
-			    b = bits + (y1)*stride;
-			    x_off = x1;
-			    
 			    x1_out = (x1 < box.x1) | (x1 >= box.x2);
 			    x2_out = (x2 < box.x1) | (x2 >= box.x2);
 			    y1_out = (y1 < box.y1) | (y1 >= box.y2);
 			    y2_out = (y2 < box.y1) | (y2 >= box.y2);
 			    
-			    tl = x1_out|y1_out ? 0 : fetch((pixman_image_t *)pict, b, x_off, indexed);
-			    tr = x2_out|y1_out ? 0 : fetch((pixman_image_t *)pict, b, x_off + 1, indexed);
-			    b += stride;
-			    bl = x1_out|y2_out ? 0 : fetch((pixman_image_t *)pict, b, x_off, indexed);
-			    br = x2_out|y2_out ? 0 : fetch((pixman_image_t *)pict, b, x_off + 1, indexed);
+			    tl = x1_out|y1_out ? 0 : fetch(pict, x1, y1);
+			    tr = x2_out|y1_out ? 0 : fetch(pict, x2, y1);
+			    bl = x1_out|y2_out ? 0 : fetch(pict, x1, y2);
+			    br = x2_out|y2_out ? 0 : fetch(pict, x2, y2);
 			    
 			    ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
 			    fb = FbGet8(bl,0) * idistx + FbGet8(br,0) * distx;
@@ -3919,8 +3887,7 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 			if (!v.vector[2]) {
 			    *(buffer + i) = 0;
 			} else {
-			    int x1, x2, y1, y2, distx, idistx, disty, idisty, x_off;
-			    uint32_t *b;
+			    int x1, x2, y1, y2, distx, idistx, disty, idisty;
 			    uint32_t tl, tr, bl, br, r;
 			    uint32_t ft, fb;
 			    
@@ -3944,18 +3911,14 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 			    idistx = 256 - distx;
 			    idisty = 256 - disty;
 			    
-			    b = bits + (y1)*stride;
-			    x_off = x1;
-			    
 			    tl = pixman_region_contains_point(pict->common.src_clip, x1, y1, &box)
-				? fetch((pixman_image_t *)pict, b, x_off, indexed) : 0;
+				? fetch(pict, x1, y1) : 0;
 			    tr = pixman_region_contains_point(pict->common.src_clip, x2, y1, &box)
-				? fetch((pixman_image_t *)pict, b, x_off + 1, indexed) : 0;
-			    b += stride;
+				? fetch(pict, x2, y1) : 0;
 			    bl = pixman_region_contains_point(pict->common.src_clip, x1, y2, &box)
-				? fetch((pixman_image_t *)pict, b, x_off, indexed) : 0;
+				? fetch(pict, x1, y2) : 0;
 			    br = pixman_region_contains_point(pict->common.src_clip, x2, y2, &box)
-				? fetch((pixman_image_t *)pict, b, x_off + 1, indexed) : 0;
+				? fetch(pict, x2, y2) : 0;
 			    
 			    ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
 			    fb = FbGet8(bl,0) * idistx + FbGet8(br,0) * distx;
@@ -4017,8 +3980,7 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 			    if (*p) {
 				int tx = (pict->common.repeat == PIXMAN_REPEAT_NORMAL) ? MOD (x, pict->width) : x;
 				if (pixman_region_contains_point (pict->common.src_clip, tx, ty, &box)) {
-				    uint32_t *b = bits + (ty)*stride;
-				    uint32_t c = fetch((pixman_image_t *)pict, b, tx, indexed);
+				    uint32_t c = fetch(pict, tx, ty);
 				    
 				    srtot += Red(c) * *p;
 				    sgtot += Green(c) * *p;
