@@ -109,6 +109,31 @@ SourcePictureClassify (source_image_t *pict,
 
 #define SCANLINE_BUFFER_LENGTH 2048
 
+/*
+ * YV12 setup and access macros
+ */
+
+#define YV12_SETUP(pict) \
+	uint32_t *bits = pict->bits; \
+	int stride = pict->rowstride; \
+	int offset0 = stride < 0 ? \
+		((-stride) >> 1) * ((pict->height - 1) >> 1) - stride : \
+		stride * pict->height; \
+	int offset1 = stride < 0 ? \
+		offset0 + ((-stride) >> 1) * ((pict->height) >> 1) : \
+		offset0 + (offset0 >> 2); 
+
+#define YV12_Y(line)		\
+    ((uint8_t *) ((bits) + (stride) * (line)))
+
+#define YV12_U(line)	      \
+    ((uint8_t *) ((bits) + offset1 + \
+		((stride) >> 1) * ((line) >> 1)))
+
+#define YV12_V(line)	      \
+    ((uint8_t *) ((bits) + offset0 + \
+		((stride) >> 1) * ((line) >> 1)))
+
 typedef FASTCALL void (*fetchProc)(bits_image_t *pict, int x, int y, int width, uint32_t *buffer);
 
 /*
@@ -629,6 +654,66 @@ fbFetch_g1 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
     }
 }
 
+static FASTCALL void
+fbFetch_yuy2 (bits_image_t *pict, int x, int line, int width, uint32_t *buffer)
+{
+    int16_t y, u, v;
+    int32_t r, g, b;
+    int   i;
+
+    const uint32_t *bits = pict->bits + pict->rowstride * line;
+
+    for (i = 0; i < width; i++)
+    {
+	y = ((uint8_t *) bits)[(x + i) << 1] - 16;
+	u = ((uint8_t *) bits)[(((x + i) << 1) & -4) + 1] - 128;
+	v = ((uint8_t *) bits)[(((x + i) << 1) & -4) + 3] - 128;
+
+	/* R = 1.164(Y - 16) + 1.596(V - 128) */
+	r = 0x012b27 * y + 0x019a2e * v;
+	/* G = 1.164(Y - 16) - 0.813(V - 128) - 0.391(U - 128) */
+	g = 0x012b27 * y - 0x00d0f2 * v - 0x00647e * u;
+	/* B = 1.164(Y - 16) + 2.018(U - 128) */
+	b = 0x012b27 * y + 0x0206a2 * u;
+
+    WRITE(buffer++, 0xff000000 |
+	(r >= 0 ? r < 0x1000000 ? r         & 0xff0000 : 0xff0000 : 0) |
+	(g >= 0 ? g < 0x1000000 ? (g >> 8)  & 0x00ff00 : 0x00ff00 : 0) |
+	(b >= 0 ? b < 0x1000000 ? (b >> 16) & 0x0000ff : 0x0000ff : 0));
+    }
+}
+
+static FASTCALL void
+fbFetch_yv12 (bits_image_t *pict, int x, int line, int width, uint32_t *buffer)
+{
+    YV12_SETUP(pict);
+    uint8_t *pY = YV12_Y (line);
+    uint8_t *pU = YV12_U (line);
+    uint8_t *pV = YV12_V (line);
+    int16_t y, u, v;
+    int32_t r, g, b;
+    int   i;
+
+    for (i = 0; i < width; i++)
+    {
+	y = pY[x + i] - 16;
+	u = pU[(x + i) >> 1] - 128;
+	v = pV[(x + i) >> 1] - 128;
+
+	/* R = 1.164(Y - 16) + 1.596(V - 128) */
+	r = 0x012b27 * y + 0x019a2e * v;
+	/* G = 1.164(Y - 16) - 0.813(V - 128) - 0.391(U - 128) */
+	g = 0x012b27 * y - 0x00d0f2 * v - 0x00647e * u;
+	/* B = 1.164(Y - 16) + 2.018(U - 128) */
+	b = 0x012b27 * y + 0x0206a2 * u;
+
+	WRITE(buffer++, 0xff000000 |
+	    (r >= 0 ? r < 0x1000000 ? r         & 0xff0000 : 0xff0000 : 0) |
+	    (g >= 0 ? g < 0x1000000 ? (g >> 8)  & 0x00ff00 : 0x00ff00 : 0) |
+	    (b >= 0 ? b < 0x1000000 ? (b >> 16) & 0x0000ff : 0x0000ff : 0));
+    }
+}
+
 static fetchProc fetchProcForPicture (bits_image_t * pict)
 {
     switch(pict->format) {
@@ -676,6 +761,10 @@ static fetchProc fetchProcForPicture (bits_image_t * pict)
         /* 1bpp formats */
     case PIXMAN_a1: return  fbFetch_a1;
     case PIXMAN_g1: return  fbFetch_g1;
+
+        /* YUV formats */
+    case PIXMAN_yuy2: return fbFetch_yuy2;
+    case PIXMAN_yv12: return fbFetch_yv12;
     }
     
     return NULL;
@@ -1093,6 +1182,53 @@ fbFetchPixel_g1 (bits_image_t *pict, int offset, int line)
     return indexed->rgba[a];
 }
 
+static FASTCALL uint32_t
+fbFetchPixel_yuy2 (bits_image_t *pict, int offset, int line)
+{
+    int16_t y, u, v;
+    int32_t r, g, b;
+
+    const uint32_t *bits = pict->bits + pict->rowstride * line;
+
+    y = ((uint8_t *) bits)[offset << 1] - 16;
+    u = ((uint8_t *) bits)[((offset << 1) & -4) + 1] - 128;
+    v = ((uint8_t *) bits)[((offset << 1) & -4) + 3] - 128;
+
+    /* R = 1.164(Y - 16) + 1.596(V - 128) */
+    r = 0x012b27 * y + 0x019a2e * v;
+    /* G = 1.164(Y - 16) - 0.813(V - 128) - 0.391(U - 128) */
+    g = 0x012b27 * y - 0x00d0f2 * v - 0x00647e * u;
+    /* B = 1.164(Y - 16) + 2.018(U - 128) */
+    b = 0x012b27 * y + 0x0206a2 * u;
+
+    return 0xff000000 |
+	(r >= 0 ? r < 0x1000000 ? r         & 0xff0000 : 0xff0000 : 0) |
+	(g >= 0 ? g < 0x1000000 ? (g >> 8)  & 0x00ff00 : 0x00ff00 : 0) |
+	(b >= 0 ? b < 0x1000000 ? (b >> 16) & 0x0000ff : 0x0000ff : 0);
+}
+
+static FASTCALL uint32_t
+fbFetchPixel_yv12 (bits_image_t *pict, int offset, int line)
+{
+    YV12_SETUP(pict);
+    int16_t y = YV12_Y (line)[offset] - 16;
+    int16_t u = YV12_U (line)[offset >> 1] - 128;
+    int16_t v = YV12_V (line)[offset >> 1] - 128;
+    int32_t r, g, b;
+
+    /* R = 1.164(Y - 16) + 1.596(V - 128) */
+    r = 0x012b27 * y + 0x019a2e * v;
+    /* G = 1.164(Y - 16) - 0.813(V - 128) - 0.391(U - 128) */
+    g = 0x012b27 * y - 0x00d0f2 * v - 0x00647e * u;
+    /* B = 1.164(Y - 16) + 2.018(U - 128) */
+    b = 0x012b27 * y + 0x0206a2 * u;
+
+    return 0xff000000 |
+	(r >= 0 ? r < 0x1000000 ? r         & 0xff0000 : 0xff0000 : 0) |
+	(g >= 0 ? g < 0x1000000 ? (g >> 8)  & 0x00ff00 : 0x00ff00 : 0) |
+	(b >= 0 ? b < 0x1000000 ? (b >> 16) & 0x0000ff : 0x0000ff : 0);
+}
+
 static fetchPixelProc fetchPixelProcForPicture (bits_image_t * pict)
 {
     switch(pict->format) {
@@ -1140,6 +1276,10 @@ static fetchPixelProc fetchPixelProcForPicture (bits_image_t * pict)
         /* 1bpp formats */
     case PIXMAN_a1: return  fbFetchPixel_a1;
     case PIXMAN_g1: return  fbFetchPixel_g1;
+
+        /* YUV formats */
+    case PIXMAN_yuy2: return fbFetchPixel_yuy2;
+    case PIXMAN_yv12: return fbFetchPixel_yv12;
     }
     
     return NULL;
