@@ -22,7 +22,7 @@ libpixmaninclude_HEADERS = pixman.h
 
 # mmx code
 if USE_MMX
-noinst_LTLIBRARIES += libpixman-mmx.la
+noinst_LTLIBRARIES = libpixman-mmx.la
 libpixman_mmx_la_SOURCES = \
 	pixman-mmx.c \
 	pixman-mmx.h
