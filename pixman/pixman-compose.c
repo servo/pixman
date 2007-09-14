@@ -45,7 +45,7 @@
 #define INLINE inline
 
 /*   End of stuff added to get it to compile
- */ 
+ */
 
 static unsigned int
 SourcePictureClassify (source_image_t *pict,
@@ -66,7 +66,7 @@ SourcePictureClassify (source_image_t *pict,
 	pixman_fixed_48_16_t dx, dy, a, b, off;
 	pixman_fixed_48_16_t factors[4];
 	int	     i;
-	
+
 	dx = linear->p2.x - linear->p1.x;
 	dy = linear->p2.y - linear->p1.y;
 	l = dx * dx + dy * dy;
@@ -79,31 +79,31 @@ SourcePictureClassify (source_image_t *pict,
 	{
 	    a = b = 0;
 	}
-	
+
 	off = (-a * linear->p1.x
 	       -b * linear->p1.y) >> 16;
-	
+
 	for (i = 0; i < 3; i++)
 	{
 	    v.vector[0] = pixman_int_to_fixed ((i % 2) * (width  - 1) + x);
 	    v.vector[1] = pixman_int_to_fixed ((i / 2) * (height - 1) + y);
 	    v.vector[2] = pixman_fixed_1;
-	    
+
 	    if (pict->common.transform)
 	    {
 		if (!pixman_transform_point_3d (pict->common.transform, &v))
 		    return SOURCE_IMAGE_CLASS_UNKNOWN;
 	    }
-	    
+
 	    factors[i] = ((a * v.vector[0] + b * v.vector[1]) >> 16) + off;
 	}
-	
+
 	if (factors[2] == factors[0])
 	    pict->class = SOURCE_IMAGE_CLASS_HORIZONTAL;
 	else if (factors[1] == factors[0])
 	    pict->class = SOURCE_IMAGE_CLASS_VERTICAL;
     }
-    
+
     return pict->class;
 }
 
@@ -121,7 +121,7 @@ SourcePictureClassify (source_image_t *pict,
 		stride * pict->height; \
 	int offset1 = stride < 0 ? \
 		offset0 + ((-stride) >> 1) * ((pict->height) >> 1) : \
-		offset0 + (offset0 >> 2); 
+		offset0 + (offset0 >> 2);
 
 #define YV12_Y(line)		\
     ((uint8_t *) ((bits) + (stride) * (line)))
@@ -137,11 +137,6 @@ SourcePictureClassify (source_image_t *pict,
 typedef FASTCALL void (*fetchProc)(bits_image_t *pict, int x, int y, int width, uint32_t *buffer);
 
 /*
- * Used by READ/WRITE macros
- */
-#define image ((pixman_image_t *)pict)
-
-/*
  * All of the fetch functions
  */
 
@@ -149,7 +144,8 @@ static FASTCALL void
 fbFetch_a8r8g8b8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
 {
     const uint32_t *bits = pict->bits + y*pict->rowstride;
-    MEMCPY_WRAPPED(buffer, (const uint32_t *)bits + x,
+    MEMCPY_WRAPPED(pict,
+                   buffer, (const uint32_t *)bits + x,
 		   width*sizeof(uint32_t));
 }
 
@@ -160,7 +156,7 @@ fbFetch_x8r8g8b8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
     const uint32_t *pixel = (const uint32_t *)bits + x;
     const uint32_t *end = pixel + width;
     while (pixel < end) {
-	*buffer++ = READ(pixel++) | 0xff000000;
+	*buffer++ = READ(pict, pixel++) | 0xff000000;
     }
 }
 
@@ -171,7 +167,7 @@ fbFetch_a8b8g8r8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
     const uint32_t *pixel = (uint32_t *)bits + x;
     const uint32_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t p = READ(pixel++);
+	uint32_t p = READ(pict, pixel++);
 	*buffer++ = (p & 0xff00ff00) |
 	            ((p >> 16) & 0xff) |
 	    ((p & 0xff) << 16);
@@ -185,7 +181,7 @@ fbFetch_x8b8g8r8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
     const uint32_t *pixel = (uint32_t *)bits + x;
     const uint32_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t p = READ(pixel++);
+	uint32_t p = READ(pict, pixel++);
 	*buffer++ = 0xff000000 |
 	    (p & 0x0000ff00) |
 	    ((p >> 16) & 0xff) |
@@ -200,7 +196,7 @@ fbFetch_r8g8b8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
     const uint8_t *pixel = (const uint8_t *)bits + 3*x;
     const uint8_t *end = pixel + 3*width;
     while (pixel < end) {
-	uint32_t b = Fetch24(pixel) | 0xff000000;
+	uint32_t b = Fetch24(pict, pixel) | 0xff000000;
 	pixel += 3;
 	*buffer++ = b;
     }
@@ -215,13 +211,13 @@ fbFetch_b8g8r8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
     while (pixel < end) {
 	uint32_t b = 0xff000000;
 #if IMAGE_BYTE_ORDER == MSBFirst
-	b |= (READ(pixel++));
-	b |= (READ(pixel++) << 8);
-	b |= (READ(pixel++) << 16);
+	b |= (READ(pict, pixel++));
+	b |= (READ(pict, pixel++) << 8);
+	b |= (READ(pict, pixel++) << 16);
 #else
-	b |= (READ(pixel++) << 16);
-	b |= (READ(pixel++) << 8);
-	b |= (READ(pixel++));
+	b |= (READ(pict, pixel++) << 16);
+	b |= (READ(pict, pixel++) << 8);
+	b |= (READ(pict, pixel++));
 #endif
 	*buffer++ = b;
     }
@@ -234,8 +230,8 @@ fbFetch_r5g6b5 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
     const uint16_t *pixel = (const uint16_t *)bits + x;
     const uint16_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t p = READ(pixel++);
-	uint32_t r = (((p) << 3) & 0xf8) | 
+	uint32_t p = READ(pict, pixel++);
+	uint32_t r = (((p) << 3) & 0xf8) |
 	    (((p) << 5) & 0xfc00) |
 	    (((p) << 8) & 0xf80000);
 	r |= (r >> 5) & 0x70007;
@@ -252,7 +248,7 @@ fbFetch_b5g6r5 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
     const uint16_t *pixel = (const uint16_t *)bits + x;
     const uint16_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t  p = READ(pixel++);
+	uint32_t  p = READ(pict, pixel++);
 	b = ((p & 0xf800) | ((p & 0xe000) >> 5)) >> 8;
 	g = ((p & 0x07e0) | ((p & 0x0600) >> 6)) << 5;
 	r = ((p & 0x001c) | ((p & 0x001f) << 5)) << 14;
@@ -268,8 +264,8 @@ fbFetch_a1r5g5b5 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
     const uint16_t *pixel = (const uint16_t *)bits + x;
     const uint16_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t  p = READ(pixel++);
-	
+	uint32_t  p = READ(pict, pixel++);
+
 	a = (uint32_t) ((uint8_t) (0 - ((p & 0x8000) >> 15))) << 24;
 	r = ((p & 0x7c00) | ((p & 0x7000) >> 5)) << 9;
 	g = ((p & 0x03e0) | ((p & 0x0380) >> 5)) << 6;
@@ -286,8 +282,8 @@ fbFetch_x1r5g5b5 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
     const uint16_t *pixel = (const uint16_t *)bits + x;
     const uint16_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t  p = READ(pixel++);
-	
+	uint32_t  p = READ(pict, pixel++);
+
 	r = ((p & 0x7c00) | ((p & 0x7000) >> 5)) << 9;
 	g = ((p & 0x03e0) | ((p & 0x0380) >> 5)) << 6;
 	b = ((p & 0x001c) | ((p & 0x001f) << 5)) >> 2;
@@ -303,8 +299,8 @@ fbFetch_a1b5g5r5 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
     const uint16_t *pixel = (const uint16_t *)bits + x;
     const uint16_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t  p = READ(pixel++);
-	
+	uint32_t  p = READ(pict, pixel++);
+
 	a = (uint32_t) ((uint8_t) (0 - ((p & 0x8000) >> 15))) << 24;
 	b = ((p & 0x7c00) | ((p & 0x7000) >> 5)) >> 7;
 	g = ((p & 0x03e0) | ((p & 0x0380) >> 5)) << 6;
@@ -321,8 +317,8 @@ fbFetch_x1b5g5r5 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
     const uint16_t *pixel = (const uint16_t *)bits + x;
     const uint16_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t  p = READ(pixel++);
-	
+	uint32_t  p = READ(pict, pixel++);
+
 	b = ((p & 0x7c00) | ((p & 0x7000) >> 5)) >> 7;
 	g = ((p & 0x03e0) | ((p & 0x0380) >> 5)) << 6;
 	r = ((p & 0x001c) | ((p & 0x001f) << 5)) << 14;
@@ -338,8 +334,8 @@ fbFetch_a4r4g4b4 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
     const uint16_t *pixel = (const uint16_t *)bits + x;
     const uint16_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t  p = READ(pixel++);
-	
+	uint32_t  p = READ(pict, pixel++);
+
 	a = ((p & 0xf000) | ((p & 0xf000) >> 4)) << 16;
 	r = ((p & 0x0f00) | ((p & 0x0f00) >> 4)) << 12;
 	g = ((p & 0x00f0) | ((p & 0x00f0) >> 4)) << 8;
@@ -356,8 +352,8 @@ fbFetch_x4r4g4b4 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
     const uint16_t *pixel = (const uint16_t *)bits + x;
     const uint16_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t  p = READ(pixel++);
-	
+	uint32_t  p = READ(pict, pixel++);
+
 	r = ((p & 0x0f00) | ((p & 0x0f00) >> 4)) << 12;
 	g = ((p & 0x00f0) | ((p & 0x00f0) >> 4)) << 8;
 	b = ((p & 0x000f) | ((p & 0x000f) << 4));
@@ -373,8 +369,8 @@ fbFetch_a4b4g4r4 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
     const uint16_t *pixel = (const uint16_t *)bits + x;
     const uint16_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t  p = READ(pixel++);
-	
+	uint32_t  p = READ(pict, pixel++);
+
 	a = ((p & 0xf000) | ((p & 0xf000) >> 4)) << 16;
 	b = ((p & 0x0f00) | ((p & 0x0f00) >> 4)) >> 4;
 	g = ((p & 0x00f0) | ((p & 0x00f0) >> 4)) << 8;
@@ -391,8 +387,8 @@ fbFetch_x4b4g4r4 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
     const uint16_t *pixel = (const uint16_t *)bits + x;
     const uint16_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t  p = READ(pixel++);
-	
+	uint32_t  p = READ(pict, pixel++);
+
 	b = ((p & 0x0f00) | ((p & 0x0f00) >> 4)) >> 4;
 	g = ((p & 0x00f0) | ((p & 0x00f0) >> 4)) << 8;
 	r = ((p & 0x000f) | ((p & 0x000f) << 4)) << 16;
@@ -407,7 +403,7 @@ fbFetch_a8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
     const uint8_t *pixel = (const uint8_t *)bits + x;
     const uint8_t *end = pixel + width;
     while (pixel < end) {
-	*buffer++ = READ(pixel++) << 24;
+	*buffer++ = READ(pict, pixel++) << 24;
     }
 }
 
@@ -419,8 +415,8 @@ fbFetch_r3g3b2 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
     const uint8_t *pixel = (const uint8_t *)bits + x;
     const uint8_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t  p = READ(pixel++);
-	
+	uint32_t  p = READ(pict, pixel++);
+
 	r = ((p & 0xe0) | ((p & 0xe0) >> 3) | ((p & 0xc0) >> 6)) << 16;
 	g = ((p & 0x1c) | ((p & 0x18) >> 3) | ((p & 0x1c) << 3)) << 8;
 	b = (((p & 0x03)     ) |
@@ -439,8 +435,8 @@ fbFetch_b2g3r3 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
     const uint8_t *pixel = (const uint8_t *)bits + x;
     const uint8_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t  p = READ(pixel++);
-	
+	uint32_t  p = READ(pict, pixel++);
+
 	b = (((p & 0xc0)     ) |
 	     ((p & 0xc0) >> 2) |
 	     ((p & 0xc0) >> 4) |
@@ -461,8 +457,8 @@ fbFetch_a2r2g2b2 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
     const uint8_t *pixel = (const uint8_t *)bits + x;
     const uint8_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t  p = READ(pixel++);
-	
+	uint32_t  p = READ(pict, pixel++);
+
 	a = ((p & 0xc0) * 0x55) << 18;
 	r = ((p & 0x30) * 0x55) << 12;
 	g = ((p & 0x0c) * 0x55) << 6;
@@ -479,8 +475,8 @@ fbFetch_a2b2g2r2 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
     const uint8_t *pixel = (const uint8_t *)bits + x;
     const uint8_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t  p = READ(pixel++);
-	
+	uint32_t  p = READ(pict, pixel++);
+
 	a = ((p & 0xc0) * 0x55) << 18;
 	b = ((p & 0x30) * 0x55) >> 6;
 	g = ((p & 0x0c) * 0x55) << 6;
@@ -497,7 +493,7 @@ fbFetch_c8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
     const uint8_t *pixel = (const uint8_t *)bits + x;
     const uint8_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t  p = READ(pixel++);
+	uint32_t  p = READ(pict, pixel++);
 	*buffer++ = indexed->rgba[p];
     }
 }
@@ -509,16 +505,16 @@ fbFetch_x4a4 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
     const uint8_t *pixel = (const uint8_t *)bits + x;
     const uint8_t *end = pixel + width;
     while (pixel < end) {
-	uint8_t p = READ(pixel++) & 0xf;
+	uint8_t p = READ(pict, pixel++) & 0xf;
 	*buffer++ = (p | (p << 4)) << 24;
     }
 }
 
-#define Fetch8(l,o)    (READ((uint8_t *)(l) + ((o) >> 2)))
+#define Fetch8(img,l,o)    (READ(img, (uint8_t *)(l) + ((o) >> 2)))
 #if IMAGE_BYTE_ORDER == MSBFirst
-#define Fetch4(l,o)    ((o) & 2 ? Fetch8(l,o) & 0xf : Fetch8(l,o) >> 4)
+#define Fetch4(img,l,o)    ((o) & 2 ? Fetch8(img,l,o) & 0xf : Fetch8(img,l,o) >> 4)
 #else
-#define Fetch4(l,o)    ((o) & 2 ? Fetch8(l,o) >> 4 : Fetch8(l,o) & 0xf)
+#define Fetch4(img,l,o)    ((o) & 2 ? Fetch8(img,l,o) >> 4 : Fetch8(img,l,o) & 0xf)
 #endif
 
 static FASTCALL void
@@ -527,8 +523,8 @@ fbFetch_a4 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
     const uint32_t *bits = pict->bits + y*pict->rowstride;
     int i;
     for (i = 0; i < width; ++i) {
-	uint32_t  p = Fetch4(bits, i + x);
-	
+	uint32_t  p = Fetch4(pict, bits, i + x);
+
 	p |= p << 4;
 	*buffer++ = p << 24;
     }
@@ -541,8 +537,8 @@ fbFetch_r1g2b1 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
     const uint32_t *bits = pict->bits + y*pict->rowstride;
     int i;
     for (i = 0; i < width; ++i) {
-	uint32_t  p = Fetch4(bits, i + x);
-	
+	uint32_t  p = Fetch4(pict, bits, i + x);
+
 	r = ((p & 0x8) * 0xff) << 13;
 	g = ((p & 0x6) * 0x55) << 7;
 	b = ((p & 0x1) * 0xff);
@@ -557,8 +553,8 @@ fbFetch_b1g2r1 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
     const uint32_t *bits = pict->bits + y*pict->rowstride;
     int i;
     for (i = 0; i < width; ++i) {
-	uint32_t  p = Fetch4(bits, i + x);
-	
+	uint32_t  p = Fetch4(pict, bits, i + x);
+
 	b = ((p & 0x8) * 0xff) >> 3;
 	g = ((p & 0x6) * 0x55) << 7;
 	r = ((p & 0x1) * 0xff) << 16;
@@ -573,8 +569,8 @@ fbFetch_a1r1g1b1 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
     const uint32_t *bits = pict->bits + y*pict->rowstride;
     int i;
     for (i = 0; i < width; ++i) {
-	uint32_t  p = Fetch4(bits, i + x);
-	
+	uint32_t  p = Fetch4(pict, bits, i + x);
+
 	a = ((p & 0x8) * 0xff) << 21;
 	r = ((p & 0x4) * 0xff) << 14;
 	g = ((p & 0x2) * 0xff) << 7;
@@ -590,8 +586,8 @@ fbFetch_a1b1g1r1 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
     const uint32_t *bits = pict->bits + y*pict->rowstride;
     int i;
     for (i = 0; i < width; ++i) {
-	uint32_t  p = Fetch4(bits, i + x);
-	
+	uint32_t  p = Fetch4(pict, bits, i + x);
+
 	a = ((p & 0x8) * 0xff) << 21;
 	r = ((p & 0x4) * 0xff) >> 3;
 	g = ((p & 0x2) * 0xff) << 7;
@@ -607,8 +603,8 @@ fbFetch_c4 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
     const pixman_indexed_t * indexed = pict->indexed;
     int i;
     for (i = 0; i < width; ++i) {
-	uint32_t  p = Fetch4(bits, i + x);
-	
+	uint32_t  p = Fetch4(pict, bits, i + x);
+
 	*buffer++ = indexed->rgba[p];
     }
 }
@@ -620,7 +616,7 @@ fbFetch_a1 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
     const uint32_t *bits = pict->bits + y*pict->rowstride;
     int i;
     for (i = 0; i < width; ++i) {
-	uint32_t  p = READ(bits + ((i + x) >> 5));
+	uint32_t  p = READ(pict, bits + ((i + x) >> 5));
 	uint32_t  a;
 #if BITMAP_BIT_ORDER == MSBFirst
 	a = p >> (0x1f - ((i+x) & 0x1f));
@@ -642,7 +638,7 @@ fbFetch_g1 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
     const pixman_indexed_t * indexed = pict->indexed;
     int i;
     for (i = 0; i < width; ++i) {
-	uint32_t p = READ(bits + ((i+x) >> 5));
+	uint32_t p = READ(pict, bits + ((i+x) >> 5));
 	uint32_t a;
 #if BITMAP_BIT_ORDER == MSBFirst
 	a = p >> (0x1f - ((i+x) & 0x1f));
@@ -676,7 +672,7 @@ fbFetch_yuy2 (bits_image_t *pict, int x, int line, int width, uint32_t *buffer)
 	/* B = 1.164(Y - 16) + 2.018(U - 128) */
 	b = 0x012b27 * y + 0x0206a2 * u;
 
-    WRITE(buffer++, 0xff000000 |
+    WRITE(pict, buffer++, 0xff000000 |
 	(r >= 0 ? r < 0x1000000 ? r         & 0xff0000 : 0xff0000 : 0) |
 	(g >= 0 ? g < 0x1000000 ? (g >> 8)  & 0x00ff00 : 0x00ff00 : 0) |
 	(b >= 0 ? b < 0x1000000 ? (b >> 16) & 0x0000ff : 0x0000ff : 0));
@@ -707,7 +703,7 @@ fbFetch_yv12 (bits_image_t *pict, int x, int line, int width, uint32_t *buffer)
 	/* B = 1.164(Y - 16) + 2.018(U - 128) */
 	b = 0x012b27 * y + 0x0206a2 * u;
 
-	WRITE(buffer++, 0xff000000 |
+	WRITE(pict, buffer++, 0xff000000 |
 	    (r >= 0 ? r < 0x1000000 ? r         & 0xff0000 : 0xff0000 : 0) |
 	    (g >= 0 ? g < 0x1000000 ? (g >> 8)  & 0x00ff00 : 0x00ff00 : 0) |
 	    (b >= 0 ? b < 0x1000000 ? (b >> 16) & 0x0000ff : 0x0000ff : 0));
@@ -721,15 +717,15 @@ static fetchProc fetchProcForPicture (bits_image_t * pict)
     case PIXMAN_x8r8g8b8: return fbFetch_x8r8g8b8;
     case PIXMAN_a8b8g8r8: return fbFetch_a8b8g8r8;
     case PIXMAN_x8b8g8r8: return fbFetch_x8b8g8r8;
-	
+
         /* 24bpp formats */
     case PIXMAN_r8g8b8: return fbFetch_r8g8b8;
     case PIXMAN_b8g8r8: return fbFetch_b8g8r8;
-	
+
         /* 16bpp formats */
     case PIXMAN_r5g6b5: return fbFetch_r5g6b5;
     case PIXMAN_b5g6r5: return fbFetch_b5g6r5;
-	
+
     case PIXMAN_a1r5g5b5: return fbFetch_a1r5g5b5;
     case PIXMAN_x1r5g5b5: return fbFetch_x1r5g5b5;
     case PIXMAN_a1b5g5r5: return fbFetch_a1b5g5r5;
@@ -738,7 +734,7 @@ static fetchProc fetchProcForPicture (bits_image_t * pict)
     case PIXMAN_x4r4g4b4: return fbFetch_x4r4g4b4;
     case PIXMAN_a4b4g4r4: return fbFetch_a4b4g4r4;
     case PIXMAN_x4b4g4r4: return fbFetch_x4b4g4r4;
-	
+
         /* 8bpp formats */
     case PIXMAN_a8: return  fbFetch_a8;
     case PIXMAN_r3g3b2: return fbFetch_r3g3b2;
@@ -748,7 +744,7 @@ static fetchProc fetchProcForPicture (bits_image_t * pict)
     case PIXMAN_c8: return  fbFetch_c8;
     case PIXMAN_g8: return  fbFetch_c8;
     case PIXMAN_x4a4: return fbFetch_x4a4;
-	
+
         /* 4bpp formats */
     case PIXMAN_a4: return  fbFetch_a4;
     case PIXMAN_r1g2b1: return fbFetch_r1g2b1;
@@ -757,7 +753,7 @@ static fetchProc fetchProcForPicture (bits_image_t * pict)
     case PIXMAN_a1b1g1r1: return fbFetch_a1b1g1r1;
     case PIXMAN_c4: return  fbFetch_c4;
     case PIXMAN_g4: return  fbFetch_c4;
-	
+
         /* 1bpp formats */
     case PIXMAN_a1: return  fbFetch_a1;
     case PIXMAN_g1: return  fbFetch_g1;
@@ -766,7 +762,7 @@ static fetchProc fetchProcForPicture (bits_image_t * pict)
     case PIXMAN_yuy2: return fbFetch_yuy2;
     case PIXMAN_yv12: return fbFetch_yv12;
     }
-    
+
     return NULL;
 }
 
@@ -780,22 +776,22 @@ static FASTCALL uint32_t
 fbFetchPixel_a8r8g8b8 (bits_image_t *pict, int offset, int line)
 {
     uint32_t *bits = pict->bits + line*pict->rowstride;
-    return READ((uint32_t *)bits + offset);
+    return READ(pict, (uint32_t *)bits + offset);
 }
 
 static FASTCALL uint32_t
 fbFetchPixel_x8r8g8b8 (bits_image_t *pict, int offset, int line)
 {
     uint32_t *bits = pict->bits + line*pict->rowstride;
-    return READ((uint32_t *)bits + offset) | 0xff000000;
+    return READ(pict, (uint32_t *)bits + offset) | 0xff000000;
 }
 
 static FASTCALL uint32_t
 fbFetchPixel_a8b8g8r8 (bits_image_t *pict, int offset, int line)
 {
     uint32_t *bits = pict->bits + line*pict->rowstride;
-    uint32_t  pixel = READ((uint32_t *)bits + offset);
-    
+    uint32_t  pixel = READ(pict, (uint32_t *)bits + offset);
+
     return ((pixel & 0xff000000) |
 	    ((pixel >> 16) & 0xff) |
 	    (pixel & 0x0000ff00) |
@@ -806,8 +802,8 @@ static FASTCALL uint32_t
 fbFetchPixel_x8b8g8r8 (bits_image_t *pict, int offset, int line)
 {
     uint32_t *bits = pict->bits + line*pict->rowstride;
-    uint32_t  pixel = READ((uint32_t *)bits + offset);
-    
+    uint32_t  pixel = READ(pict, (uint32_t *)bits + offset);
+
     return ((0xff000000) |
 	    ((pixel >> 16) & 0xff) |
 	    (pixel & 0x0000ff00) |
@@ -821,14 +817,14 @@ fbFetchPixel_r8g8b8 (bits_image_t *pict, int offset, int line)
     uint8_t   *pixel = ((uint8_t *) bits) + (offset*3);
 #if IMAGE_BYTE_ORDER == MSBFirst
     return (0xff000000 |
-	    (READ(pixel + 0) << 16) |
-	    (READ(pixel + 1) << 8) |
-	    (READ(pixel + 2)));
+	    (READ(pict, pixel + 0) << 16) |
+	    (READ(pict, pixel + 1) << 8) |
+	    (READ(pict, pixel + 2)));
 #else
     return (0xff000000 |
-	    (READ(pixel + 2) << 16) |
-	    (READ(pixel + 1) << 8) |
-	    (READ(pixel + 0)));
+	    (READ(pict, pixel + 2) << 16) |
+	    (READ(pict, pixel + 1) << 8) |
+	    (READ(pict, pixel + 0)));
 #endif
 }
 
@@ -839,14 +835,14 @@ fbFetchPixel_b8g8r8 (bits_image_t *pict, int offset, int line)
     uint8_t   *pixel = ((uint8_t *) bits) + (offset*3);
 #if IMAGE_BYTE_ORDER == MSBFirst
     return (0xff000000 |
-	    (READ(pixel + 2) << 16) |
-	    (READ(pixel + 1) << 8) |
-	    (READ(pixel + 0)));
+	    (READ(pict, pixel + 2) << 16) |
+	    (READ(pict, pixel + 1) << 8) |
+	    (READ(pict, pixel + 0)));
 #else
     return (0xff000000 |
-	    (READ(pixel + 0) << 16) |
-	    (READ(pixel + 1) << 8) |
-	    (READ(pixel + 2)));
+	    (READ(pict, pixel + 0) << 16) |
+	    (READ(pict, pixel + 1) << 8) |
+	    (READ(pict, pixel + 2)));
 #endif
 }
 
@@ -855,8 +851,8 @@ fbFetchPixel_r5g6b5 (bits_image_t *pict, int offset, int line)
 {
     uint32_t  r,g,b;
     uint32_t *bits = pict->bits + line*pict->rowstride;
-    uint32_t  pixel = READ((uint16_t *) bits + offset);
-    
+    uint32_t  pixel = READ(pict, (uint16_t *) bits + offset);
+
     r = ((pixel & 0xf800) | ((pixel & 0xe000) >> 5)) << 8;
     g = ((pixel & 0x07e0) | ((pixel & 0x0600) >> 6)) << 5;
     b = ((pixel & 0x001c) | ((pixel & 0x001f) << 5)) >> 2;
@@ -868,8 +864,8 @@ fbFetchPixel_b5g6r5 (bits_image_t *pict, int offset, int line)
 {
     uint32_t  r,g,b;
     uint32_t *bits = pict->bits + line*pict->rowstride;
-    uint32_t  pixel = READ((uint16_t *) bits + offset);
-    
+    uint32_t  pixel = READ(pict, (uint16_t *) bits + offset);
+
     b = ((pixel & 0xf800) | ((pixel & 0xe000) >> 5)) >> 8;
     g = ((pixel & 0x07e0) | ((pixel & 0x0600) >> 6)) << 5;
     r = ((pixel & 0x001c) | ((pixel & 0x001f) << 5)) << 14;
@@ -881,8 +877,8 @@ fbFetchPixel_a1r5g5b5 (bits_image_t *pict, int offset, int line)
 {
     uint32_t  a,r,g,b;
     uint32_t *bits = pict->bits + line*pict->rowstride;
-    uint32_t  pixel = READ((uint16_t *) bits + offset);
-    
+    uint32_t  pixel = READ(pict, (uint16_t *) bits + offset);
+
     a = (uint32_t) ((uint8_t) (0 - ((pixel & 0x8000) >> 15))) << 24;
     r = ((pixel & 0x7c00) | ((pixel & 0x7000) >> 5)) << 9;
     g = ((pixel & 0x03e0) | ((pixel & 0x0380) >> 5)) << 6;
@@ -895,8 +891,8 @@ fbFetchPixel_x1r5g5b5 (bits_image_t *pict, int offset, int line)
 {
     uint32_t  r,g,b;
     uint32_t *bits = pict->bits + line*pict->rowstride;
-    uint32_t  pixel = READ((uint16_t *) bits + offset);
-    
+    uint32_t  pixel = READ(pict, (uint16_t *) bits + offset);
+
     r = ((pixel & 0x7c00) | ((pixel & 0x7000) >> 5)) << 9;
     g = ((pixel & 0x03e0) | ((pixel & 0x0380) >> 5)) << 6;
     b = ((pixel & 0x001c) | ((pixel & 0x001f) << 5)) >> 2;
@@ -908,8 +904,8 @@ fbFetchPixel_a1b5g5r5 (bits_image_t *pict, int offset, int line)
 {
     uint32_t  a,r,g,b;
     uint32_t *bits = pict->bits + line*pict->rowstride;
-    uint32_t  pixel = READ((uint16_t *) bits + offset);
-    
+    uint32_t  pixel = READ(pict, (uint16_t *) bits + offset);
+
     a = (uint32_t) ((uint8_t) (0 - ((pixel & 0x8000) >> 15))) << 24;
     b = ((pixel & 0x7c00) | ((pixel & 0x7000) >> 5)) >> 7;
     g = ((pixel & 0x03e0) | ((pixel & 0x0380) >> 5)) << 6;
@@ -922,8 +918,8 @@ fbFetchPixel_x1b5g5r5 (bits_image_t *pict, int offset, int line)
 {
     uint32_t  r,g,b;
     uint32_t *bits = pict->bits + line*pict->rowstride;
-    uint32_t  pixel = READ((uint16_t *) bits + offset);
-    
+    uint32_t  pixel = READ(pict, (uint16_t *) bits + offset);
+
     b = ((pixel & 0x7c00) | ((pixel & 0x7000) >> 5)) >> 7;
     g = ((pixel & 0x03e0) | ((pixel & 0x0380) >> 5)) << 6;
     r = ((pixel & 0x001c) | ((pixel & 0x001f) << 5)) << 14;
@@ -935,8 +931,8 @@ fbFetchPixel_a4r4g4b4 (bits_image_t *pict, int offset, int line)
 {
     uint32_t  a,r,g,b;
     uint32_t *bits = pict->bits + line*pict->rowstride;
-    uint32_t  pixel = READ((uint16_t *) bits + offset);
-    
+    uint32_t  pixel = READ(pict, (uint16_t *) bits + offset);
+
     a = ((pixel & 0xf000) | ((pixel & 0xf000) >> 4)) << 16;
     r = ((pixel & 0x0f00) | ((pixel & 0x0f00) >> 4)) << 12;
     g = ((pixel & 0x00f0) | ((pixel & 0x00f0) >> 4)) << 8;
@@ -949,8 +945,8 @@ fbFetchPixel_x4r4g4b4 (bits_image_t *pict, int offset, int line)
 {
     uint32_t  r,g,b;
     uint32_t *bits = pict->bits + line*pict->rowstride;
-    uint32_t  pixel = READ((uint16_t *) bits + offset);
-    
+    uint32_t  pixel = READ(pict, (uint16_t *) bits + offset);
+
     r = ((pixel & 0x0f00) | ((pixel & 0x0f00) >> 4)) << 12;
     g = ((pixel & 0x00f0) | ((pixel & 0x00f0) >> 4)) << 8;
     b = ((pixel & 0x000f) | ((pixel & 0x000f) << 4));
@@ -962,8 +958,8 @@ fbFetchPixel_a4b4g4r4 (bits_image_t *pict, int offset, int line)
 {
     uint32_t  a,r,g,b;
     uint32_t *bits = pict->bits + line*pict->rowstride;
-    uint32_t  pixel = READ((uint16_t *) bits + offset);
-    
+    uint32_t  pixel = READ(pict, (uint16_t *) bits + offset);
+
     a = ((pixel & 0xf000) | ((pixel & 0xf000) >> 4)) << 16;
     b = ((pixel & 0x0f00) | ((pixel & 0x0f00) >> 4)) >> 4;
     g = ((pixel & 0x00f0) | ((pixel & 0x00f0) >> 4)) << 8;
@@ -976,8 +972,8 @@ fbFetchPixel_x4b4g4r4 (bits_image_t *pict, int offset, int line)
 {
     uint32_t  r,g,b;
     uint32_t *bits = pict->bits + line*pict->rowstride;
-    uint32_t  pixel = READ((uint16_t *) bits + offset);
-    
+    uint32_t  pixel = READ(pict, (uint16_t *) bits + offset);
+
     b = ((pixel & 0x0f00) | ((pixel & 0x0f00) >> 4)) >> 4;
     g = ((pixel & 0x00f0) | ((pixel & 0x00f0) >> 4)) << 8;
     r = ((pixel & 0x000f) | ((pixel & 0x000f) << 4)) << 16;
@@ -988,8 +984,8 @@ static FASTCALL uint32_t
 fbFetchPixel_a8 (bits_image_t *pict, int offset, int line)
 {
     uint32_t *bits = pict->bits + line*pict->rowstride;
-    uint32_t   pixel = READ((uint8_t *) bits + offset);
-    
+    uint32_t   pixel = READ(pict, (uint8_t *) bits + offset);
+
     return pixel << 24;
 }
 
@@ -998,8 +994,8 @@ fbFetchPixel_r3g3b2 (bits_image_t *pict, int offset, int line)
 {
     uint32_t  r,g,b;
     uint32_t *bits = pict->bits + line*pict->rowstride;
-    uint32_t   pixel = READ((uint8_t *) bits + offset);
-    
+    uint32_t   pixel = READ(pict, (uint8_t *) bits + offset);
+
     r = ((pixel & 0xe0) | ((pixel & 0xe0) >> 3) | ((pixel & 0xc0) >> 6)) << 16;
     g = ((pixel & 0x1c) | ((pixel & 0x18) >> 3) | ((pixel & 0x1c) << 3)) << 8;
     b = (((pixel & 0x03)     ) |
@@ -1014,8 +1010,8 @@ fbFetchPixel_b2g3r3 (bits_image_t *pict, int offset, int line)
 {
     uint32_t  r,g,b;
     uint32_t *bits = pict->bits + line*pict->rowstride;
-    uint32_t   pixel = READ((uint8_t *) bits + offset);
-    
+    uint32_t   pixel = READ(pict, (uint8_t *) bits + offset);
+
     b = (((pixel & 0xc0)     ) |
 	 ((pixel & 0xc0) >> 2) |
 	 ((pixel & 0xc0) >> 4) |
@@ -1032,8 +1028,8 @@ fbFetchPixel_a2r2g2b2 (bits_image_t *pict, int offset, int line)
 {
     uint32_t   a,r,g,b;
     uint32_t *bits = pict->bits + line*pict->rowstride;
-    uint32_t   pixel = READ((uint8_t *) bits + offset);
-    
+    uint32_t   pixel = READ(pict, (uint8_t *) bits + offset);
+
     a = ((pixel & 0xc0) * 0x55) << 18;
     r = ((pixel & 0x30) * 0x55) << 12;
     g = ((pixel & 0x0c) * 0x55) << 6;
@@ -1046,8 +1042,8 @@ fbFetchPixel_a2b2g2r2 (bits_image_t *pict, int offset, int line)
 {
     uint32_t   a,r,g,b;
     uint32_t *bits = pict->bits + line*pict->rowstride;
-    uint32_t   pixel = READ((uint8_t *) bits + offset);
-    
+    uint32_t   pixel = READ(pict, (uint8_t *) bits + offset);
+
     a = ((pixel & 0xc0) * 0x55) << 18;
     b = ((pixel & 0x30) * 0x55) >> 6;
     g = ((pixel & 0x0c) * 0x55) << 6;
@@ -1059,7 +1055,7 @@ static FASTCALL uint32_t
 fbFetchPixel_c8 (bits_image_t *pict, int offset, int line)
 {
     uint32_t *bits = pict->bits + line*pict->rowstride;
-    uint32_t   pixel = READ((uint8_t *) bits + offset);
+    uint32_t   pixel = READ(pict, (uint8_t *) bits + offset);
     const pixman_indexed_t * indexed = pict->indexed;
     return indexed->rgba[pixel];
 }
@@ -1068,8 +1064,8 @@ static FASTCALL uint32_t
 fbFetchPixel_x4a4 (bits_image_t *pict, int offset, int line)
 {
     uint32_t *bits = pict->bits + line*pict->rowstride;
-    uint32_t   pixel = READ((uint8_t *) bits + offset);
-    
+    uint32_t   pixel = READ(pict, (uint8_t *) bits + offset);
+
     return ((pixel & 0xf) | ((pixel & 0xf) << 4)) << 24;
 }
 
@@ -1077,8 +1073,8 @@ static FASTCALL uint32_t
 fbFetchPixel_a4 (bits_image_t *pict, int offset, int line)
 {
     uint32_t *bits = pict->bits + line*pict->rowstride;
-    uint32_t  pixel = Fetch4(bits, offset);
-    
+    uint32_t  pixel = Fetch4(pict, bits, offset);
+
     pixel |= pixel << 4;
     return pixel << 24;
 }
@@ -1088,8 +1084,8 @@ fbFetchPixel_r1g2b1 (bits_image_t *pict, int offset, int line)
 {
     uint32_t  r,g,b;
     uint32_t *bits = pict->bits + line*pict->rowstride;
-    uint32_t  pixel = Fetch4(bits, offset);
-    
+    uint32_t  pixel = Fetch4(pict, bits, offset);
+
     r = ((pixel & 0x8) * 0xff) << 13;
     g = ((pixel & 0x6) * 0x55) << 7;
     b = ((pixel & 0x1) * 0xff);
@@ -1101,8 +1097,8 @@ fbFetchPixel_b1g2r1 (bits_image_t *pict, int offset, int line)
 {
     uint32_t  r,g,b;
     uint32_t *bits = pict->bits + line*pict->rowstride;
-    uint32_t  pixel = Fetch4(bits, offset);
-    
+    uint32_t  pixel = Fetch4(pict, bits, offset);
+
     b = ((pixel & 0x8) * 0xff) >> 3;
     g = ((pixel & 0x6) * 0x55) << 7;
     r = ((pixel & 0x1) * 0xff) << 16;
@@ -1114,8 +1110,8 @@ fbFetchPixel_a1r1g1b1 (bits_image_t *pict, int offset, int line)
 {
     uint32_t  a,r,g,b;
     uint32_t *bits = pict->bits + line*pict->rowstride;
-    uint32_t  pixel = Fetch4(bits, offset);
-    
+    uint32_t  pixel = Fetch4(pict, bits, offset);
+
     a = ((pixel & 0x8) * 0xff) << 21;
     r = ((pixel & 0x4) * 0xff) << 14;
     g = ((pixel & 0x2) * 0xff) << 7;
@@ -1128,8 +1124,8 @@ fbFetchPixel_a1b1g1r1 (bits_image_t *pict, int offset, int line)
 {
     uint32_t  a,r,g,b;
     uint32_t *bits = pict->bits + line*pict->rowstride;
-    uint32_t  pixel = Fetch4(bits, offset);
-    
+    uint32_t  pixel = Fetch4(pict, bits, offset);
+
     a = ((pixel & 0x8) * 0xff) << 21;
     r = ((pixel & 0x4) * 0xff) >> 3;
     g = ((pixel & 0x2) * 0xff) << 7;
@@ -1141,9 +1137,9 @@ static FASTCALL uint32_t
 fbFetchPixel_c4 (bits_image_t *pict, int offset, int line)
 {
     uint32_t *bits = pict->bits + line*pict->rowstride;
-    uint32_t  pixel = Fetch4(bits, offset);
+    uint32_t  pixel = Fetch4(pict, bits, offset);
     const pixman_indexed_t * indexed = pict->indexed;
-    
+
     return indexed->rgba[pixel];
 }
 
@@ -1152,7 +1148,7 @@ static FASTCALL uint32_t
 fbFetchPixel_a1 (bits_image_t *pict, int offset, int line)
 {
     uint32_t *bits = pict->bits + line*pict->rowstride;
-    uint32_t  pixel = READ(bits + (offset >> 5));
+    uint32_t  pixel = READ(pict, bits + (offset >> 5));
     uint32_t  a;
 #if BITMAP_BIT_ORDER == MSBFirst
     a = pixel >> (0x1f - (offset & 0x1f));
@@ -1170,7 +1166,7 @@ static FASTCALL uint32_t
 fbFetchPixel_g1 (bits_image_t *pict, int offset, int line)
 {
     uint32_t *bits = pict->bits + line*pict->rowstride;
-    uint32_t pixel = READ(bits + (offset >> 5));
+    uint32_t pixel = READ(pict, bits + (offset >> 5));
     const pixman_indexed_t * indexed = pict->indexed;
     uint32_t a;
 #if BITMAP_BIT_ORDER == MSBFirst
@@ -1236,15 +1232,15 @@ static fetchPixelProc fetchPixelProcForPicture (bits_image_t * pict)
     case PIXMAN_x8r8g8b8: return fbFetchPixel_x8r8g8b8;
     case PIXMAN_a8b8g8r8: return fbFetchPixel_a8b8g8r8;
     case PIXMAN_x8b8g8r8: return fbFetchPixel_x8b8g8r8;
-	
+
         /* 24bpp formats */
     case PIXMAN_r8g8b8: return fbFetchPixel_r8g8b8;
     case PIXMAN_b8g8r8: return fbFetchPixel_b8g8r8;
-	
+
         /* 16bpp formats */
     case PIXMAN_r5g6b5: return fbFetchPixel_r5g6b5;
     case PIXMAN_b5g6r5: return fbFetchPixel_b5g6r5;
-	
+
     case PIXMAN_a1r5g5b5: return fbFetchPixel_a1r5g5b5;
     case PIXMAN_x1r5g5b5: return fbFetchPixel_x1r5g5b5;
     case PIXMAN_a1b5g5r5: return fbFetchPixel_a1b5g5r5;
@@ -1253,7 +1249,7 @@ static fetchPixelProc fetchPixelProcForPicture (bits_image_t * pict)
     case PIXMAN_x4r4g4b4: return fbFetchPixel_x4r4g4b4;
     case PIXMAN_a4b4g4r4: return fbFetchPixel_a4b4g4r4;
     case PIXMAN_x4b4g4r4: return fbFetchPixel_x4b4g4r4;
-	
+
         /* 8bpp formats */
     case PIXMAN_a8: return  fbFetchPixel_a8;
     case PIXMAN_r3g3b2: return fbFetchPixel_r3g3b2;
@@ -1263,7 +1259,7 @@ static fetchPixelProc fetchPixelProcForPicture (bits_image_t * pict)
     case PIXMAN_c8: return  fbFetchPixel_c8;
     case PIXMAN_g8: return  fbFetchPixel_c8;
     case PIXMAN_x4a4: return fbFetchPixel_x4a4;
-	
+
         /* 4bpp formats */
     case PIXMAN_a4: return  fbFetchPixel_a4;
     case PIXMAN_r1g2b1: return fbFetchPixel_r1g2b1;
@@ -1272,7 +1268,7 @@ static fetchPixelProc fetchPixelProcForPicture (bits_image_t * pict)
     case PIXMAN_a1b1g1r1: return fbFetchPixel_a1b1g1r1;
     case PIXMAN_c4: return  fbFetchPixel_c4;
     case PIXMAN_g4: return  fbFetchPixel_c4;
-	
+
         /* 1bpp formats */
     case PIXMAN_a1: return  fbFetchPixel_a1;
     case PIXMAN_g1: return  fbFetchPixel_g1;
@@ -1281,11 +1277,9 @@ static fetchPixelProc fetchPixelProcForPicture (bits_image_t * pict)
     case PIXMAN_yuy2: return fbFetchPixel_yuy2;
     case PIXMAN_yv12: return fbFetchPixel_yv12;
     }
-    
+
     return NULL;
 }
-
-#undef image
 
 
 /*
@@ -1302,7 +1296,7 @@ static FASTCALL void
 fbStore_a8r8g8b8 (pixman_image_t *image,
 		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
 {
-    MEMCPY_WRAPPED(((uint32_t *)bits) + x, values, width*sizeof(uint32_t));
+    MEMCPY_WRAPPED(image, ((uint32_t *)bits) + x, values, width*sizeof(uint32_t));
 }
 
 static FASTCALL void
@@ -1312,7 +1306,7 @@ fbStore_x8r8g8b8 (pixman_image_t *image,
     int i;
     uint32_t *pixel = (uint32_t *)bits + x;
     for (i = 0; i < width; ++i)
-	WRITE(pixel++, values[i] & 0xffffff);
+	WRITE(image, pixel++, values[i] & 0xffffff);
 }
 
 static FASTCALL void
@@ -1322,7 +1316,7 @@ fbStore_a8b8g8r8 (pixman_image_t *image,
     int i;
     uint32_t *pixel = (uint32_t *)bits + x;
     for (i = 0; i < width; ++i)
-	WRITE(pixel++, (values[i] & 0xff00ff00) | ((values[i] >> 16) & 0xff) | ((values[i] & 0xff) << 16));
+	WRITE(image, pixel++, (values[i] & 0xff00ff00) | ((values[i] >> 16) & 0xff) | ((values[i] & 0xff) << 16));
 }
 
 static FASTCALL void
@@ -1332,7 +1326,7 @@ fbStore_x8b8g8r8 (pixman_image_t *image,
     int i;
     uint32_t *pixel = (uint32_t *)bits + x;
     for (i = 0; i < width; ++i)
-	WRITE(pixel++, (values[i] & 0x0000ff00) | ((values[i] >> 16) & 0xff) | ((values[i] & 0xff) << 16));
+	WRITE(image, pixel++, (values[i] & 0x0000ff00) | ((values[i] >> 16) & 0xff) | ((values[i] & 0xff) << 16));
 }
 
 static FASTCALL void
@@ -1343,7 +1337,7 @@ fbStore_r8g8b8 (pixman_image_t *image,
     int i;
     uint8_t *pixel = ((uint8_t *) bits) + 3*x;
     for (i = 0; i < width; ++i) {
-	Store24(pixel, values[i]);
+	Store24(image, pixel, values[i]);
 	pixel += 3;
     }
 }
@@ -1357,13 +1351,13 @@ fbStore_b8g8r8 (pixman_image_t *image,
     for (i = 0; i < width; ++i) {
 	uint32_t val = values[i];
 #if IMAGE_BYTE_ORDER == MSBFirst
-	WRITE(pixel++, Blue(val));
-	WRITE(pixel++, Green(val));
-	WRITE(pixel++, Red(val));
+	WRITE(image, pixel++, Blue(val));
+	WRITE(image, pixel++, Green(val));
+	WRITE(image, pixel++, Red(val));
 #else
-	WRITE(pixel++, Red(val));
-	WRITE(pixel++, Green(val));
-	WRITE(pixel++, Blue(val));
+	WRITE(image, pixel++, Red(val));
+	WRITE(image, pixel++, Green(val));
+	WRITE(image, pixel++, Blue(val));
 #endif
     }
 }
@@ -1376,7 +1370,7 @@ fbStore_r5g6b5 (pixman_image_t *image,
     uint16_t *pixel = ((uint16_t *) bits) + x;
     for (i = 0; i < width; ++i) {
 	uint32_t s = values[i];
-	WRITE(pixel++, ((s >> 3) & 0x001f) |
+	WRITE(image, pixel++, ((s >> 3) & 0x001f) |
 	      ((s >> 5) & 0x07e0) |
 	      ((s >> 8) & 0xf800));
     }
@@ -1390,7 +1384,7 @@ fbStore_b5g6r5 (pixman_image_t *image,
     uint16_t  *pixel = ((uint16_t *) bits) + x;
     for (i = 0; i < width; ++i) {
 	Split(values[i]);
-	WRITE(pixel++, ((b << 8) & 0xf800) |
+	WRITE(image, pixel++, ((b << 8) & 0xf800) |
 	      ((g << 3) & 0x07e0) |
 	      ((r >> 3)         ));
     }
@@ -1404,7 +1398,7 @@ fbStore_a1r5g5b5 (pixman_image_t *image,
     uint16_t  *pixel = ((uint16_t *) bits) + x;
     for (i = 0; i < width; ++i) {
 	Splita(values[i]);
-	WRITE(pixel++, ((a << 8) & 0x8000) |
+	WRITE(image, pixel++, ((a << 8) & 0x8000) |
 	      ((r << 7) & 0x7c00) |
 	      ((g << 2) & 0x03e0) |
 	      ((b >> 3)         ));
@@ -1419,7 +1413,7 @@ fbStore_x1r5g5b5 (pixman_image_t *image,
     uint16_t  *pixel = ((uint16_t *) bits) + x;
     for (i = 0; i < width; ++i) {
 	Split(values[i]);
-	WRITE(pixel++, ((r << 7) & 0x7c00) |
+	WRITE(image, pixel++, ((r << 7) & 0x7c00) |
 	      ((g << 2) & 0x03e0) |
 	      ((b >> 3)         ));
     }
@@ -1433,7 +1427,7 @@ fbStore_a1b5g5r5 (pixman_image_t *image,
     uint16_t  *pixel = ((uint16_t *) bits) + x;
     for (i = 0; i < width; ++i) {
 	Splita(values[i]);
-	WRITE(pixel++, ((a << 8) & 0x8000) |
+	WRITE(image, pixel++, ((a << 8) & 0x8000) |
 	      ((b << 7) & 0x7c00) |
 	      ((g << 2) & 0x03e0) |
 	      ((r >> 3)         ));
@@ -1448,7 +1442,7 @@ fbStore_x1b5g5r5 (pixman_image_t *image,
     uint16_t  *pixel = ((uint16_t *) bits) + x;
     for (i = 0; i < width; ++i) {
 	Split(values[i]);
-	WRITE(pixel++, ((b << 7) & 0x7c00) |
+	WRITE(image, pixel++, ((b << 7) & 0x7c00) |
 	      ((g << 2) & 0x03e0) |
 	      ((r >> 3)         ));
     }
@@ -1462,7 +1456,7 @@ fbStore_a4r4g4b4 (pixman_image_t *image,
     uint16_t  *pixel = ((uint16_t *) bits) + x;
     for (i = 0; i < width; ++i) {
 	Splita(values[i]);
-	WRITE(pixel++, ((a << 8) & 0xf000) |
+	WRITE(image, pixel++, ((a << 8) & 0xf000) |
 	      ((r << 4) & 0x0f00) |
 	      ((g     ) & 0x00f0) |
 	      ((b >> 4)         ));
@@ -1477,7 +1471,7 @@ fbStore_x4r4g4b4 (pixman_image_t *image,
     uint16_t  *pixel = ((uint16_t *) bits) + x;
     for (i = 0; i < width; ++i) {
 	Split(values[i]);
-	WRITE(pixel++, ((r << 4) & 0x0f00) |
+	WRITE(image, pixel++, ((r << 4) & 0x0f00) |
 	      ((g     ) & 0x00f0) |
 	      ((b >> 4)         ));
     }
@@ -1491,7 +1485,7 @@ fbStore_a4b4g4r4 (pixman_image_t *image,
     uint16_t  *pixel = ((uint16_t *) bits) + x;
     for (i = 0; i < width; ++i) {
 	Splita(values[i]);
-	WRITE(pixel++, ((a << 8) & 0xf000) |
+	WRITE(image, pixel++, ((a << 8) & 0xf000) |
 	      ((b << 4) & 0x0f00) |
 	      ((g     ) & 0x00f0) |
 	      ((r >> 4)         ));
@@ -1506,7 +1500,7 @@ fbStore_x4b4g4r4 (pixman_image_t *image,
     uint16_t  *pixel = ((uint16_t *) bits) + x;
     for (i = 0; i < width; ++i) {
 	Split(values[i]);
-	WRITE(pixel++, ((b << 4) & 0x0f00) |
+	WRITE(image, pixel++, ((b << 4) & 0x0f00) |
 	      ((g     ) & 0x00f0) |
 	      ((r >> 4)         ));
     }
@@ -1519,7 +1513,7 @@ fbStore_a8 (pixman_image_t *image,
     int i;
     uint8_t   *pixel = ((uint8_t *) bits) + x;
     for (i = 0; i < width; ++i) {
-	WRITE(pixel++, values[i] >> 24);
+	WRITE(image, pixel++, values[i] >> 24);
     }
 }
 
@@ -1531,7 +1525,7 @@ fbStore_r3g3b2 (pixman_image_t *image,
     uint8_t   *pixel = ((uint8_t *) bits) + x;
     for (i = 0; i < width; ++i) {
 	Split(values[i]);
-	WRITE(pixel++,
+	WRITE(image, pixel++,
 	      ((r     ) & 0xe0) |
 	      ((g >> 3) & 0x1c) |
 	      ((b >> 6)       ));
@@ -1546,7 +1540,7 @@ fbStore_b2g3r3 (pixman_image_t *image,
     uint8_t   *pixel = ((uint8_t *) bits) + x;
     for (i = 0; i < width; ++i) {
 	Split(values[i]);
-	WRITE(pixel++,
+	WRITE(image, pixel++,
 	      ((b     ) & 0xc0) |
 	      ((g >> 2) & 0x1c) |
 	      ((r >> 5)       ));
@@ -1561,7 +1555,7 @@ fbStore_a2r2g2b2 (pixman_image_t *image,
     uint8_t   *pixel = ((uint8_t *) bits) + x;
     for (i = 0; i < width; ++i) {
 	Splita(values[i]);
-	WRITE(pixel++, ((a     ) & 0xc0) |
+	WRITE(image, pixel++, ((a     ) & 0xc0) |
 	      ((r >> 2) & 0x30) |
 	      ((g >> 4) & 0x0c) |
 	      ((b >> 6)       ));
@@ -1575,7 +1569,7 @@ fbStore_c8 (pixman_image_t *image,
     int i;
     uint8_t   *pixel = ((uint8_t *) bits) + x;
     for (i = 0; i < width; ++i) {
-	WRITE(pixel++, miIndexToEnt24(indexed,values[i]));
+	WRITE(image, pixel++, miIndexToEnt24(indexed,values[i]));
     }
 }
 
@@ -1586,19 +1580,19 @@ fbStore_x4a4 (pixman_image_t *image,
     int i;
     uint8_t   *pixel = ((uint8_t *) bits) + x;
     for (i = 0; i < width; ++i) {
-	WRITE(pixel++, values[i] >> 28);
+	WRITE(image, pixel++, values[i] >> 28);
     }
 }
 
-#define Store8(l,o,v)  (WRITE((uint8_t *)(l) + ((o) >> 3), (v)))
+#define Store8(img,l,o,v)  (WRITE(img, (uint8_t *)(l) + ((o) >> 3), (v)))
 #if IMAGE_BYTE_ORDER == MSBFirst
-#define Store4(l,o,v)  Store8(l,o,((o) & 4 ?				\
-				   (Fetch8(l,o) & 0xf0) | (v) :		\
-				   (Fetch8(l,o) & 0x0f) | ((v) << 4)))
+#define Store4(img,l,o,v)  Store8(img,l,o,((o) & 4 ?				\
+				   (Fetch8(img,l,o) & 0xf0) | (v) :		\
+				   (Fetch8(img,l,o) & 0x0f) | ((v) << 4)))
 #else
-#define Store4(l,o,v)  Store8(l,o,((o) & 4 ?			       \
-				   (Fetch8(l,o) & 0x0f) | ((v) << 4) : \
-				   (Fetch8(l,o) & 0xf0) | (v)))
+#define Store4(img,l,o,v)  Store8(img,l,o,((o) & 4 ?			       \
+				   (Fetch8(img,l,o) & 0x0f) | ((v) << 4) : \
+				   (Fetch8(img,l,o) & 0xf0) | (v)))
 #endif
 
 static FASTCALL void
@@ -1607,7 +1601,7 @@ fbStore_a4 (pixman_image_t *image,
 {
     int i;
     for (i = 0; i < width; ++i) {
-	Store4(bits, i + x, values[i]>>28);
+	Store4(image, bits, i + x, values[i]>>28);
     }
 }
 
@@ -1618,12 +1612,12 @@ fbStore_r1g2b1 (pixman_image_t *image,
     int i;
     for (i = 0; i < width; ++i) {
 	uint32_t  pixel;
-	
+
 	Split(values[i]);
 	pixel = (((r >> 4) & 0x8) |
 		 ((g >> 5) & 0x6) |
 		 ((b >> 7)      ));
-	Store4(bits, i + x, pixel);
+	Store4(image, bits, i + x, pixel);
     }
 }
 
@@ -1634,12 +1628,12 @@ fbStore_b1g2r1 (pixman_image_t *image,
     int i;
     for (i = 0; i < width; ++i) {
 	uint32_t  pixel;
-	
+
 	Split(values[i]);
 	pixel = (((b >> 4) & 0x8) |
 		 ((g >> 5) & 0x6) |
 		 ((r >> 7)      ));
-	Store4(bits, i + x, pixel);
+	Store4(image, bits, i + x, pixel);
     }
 }
 
@@ -1655,7 +1649,7 @@ fbStore_a1r1g1b1 (pixman_image_t *image,
 		 ((r >> 5) & 0x4) |
 		 ((g >> 6) & 0x2) |
 		 ((b >> 7)      ));
-	Store4(bits, i + x, pixel);
+	Store4(image, bits, i + x, pixel);
     }
 }
 
@@ -1671,7 +1665,7 @@ fbStore_a1b1g1r1 (pixman_image_t *image,
 		 ((b >> 5) & 0x4) |
 		 ((g >> 6) & 0x2) |
 		 ((r >> 7)      ));
-	Store4(bits, i + x, pixel);
+	Store4(image, bits, i + x, pixel);
     }
 }
 
@@ -1682,9 +1676,9 @@ fbStore_c4 (pixman_image_t *image,
     int i;
     for (i = 0; i < width; ++i) {
 	uint32_t  pixel;
-	
+
 	pixel = miIndexToEnt24(indexed, values[i]);
-	Store4(bits, i + x, pixel);
+	Store4(image, bits, i + x, pixel);
     }
 }
 
@@ -1696,9 +1690,9 @@ fbStore_a1 (pixman_image_t *image,
     for (i = 0; i < width; ++i) {
 	uint32_t  *pixel = ((uint32_t *) bits) + ((i+x) >> 5);
 	uint32_t  mask = FbStipMask((i+x) & 0x1f, 1);
-	
+
 	uint32_t v = values[i] & 0x80000000 ? mask : 0;
-	WRITE(pixel, (READ(pixel) & ~mask) | v);
+	WRITE(image, pixel, (READ(image, pixel) & ~mask) | v);
     }
 }
 
@@ -1710,9 +1704,9 @@ fbStore_g1 (pixman_image_t *image,
     for (i = 0; i < width; ++i) {
 	uint32_t  *pixel = ((uint32_t *) bits) + ((i+x) >> 5);
 	uint32_t  mask = FbStipMask((i+x) & 0x1f, 1);
-	
+
 	uint32_t v = miIndexToEntY24(indexed,values[i]) ? mask : 0;
-	WRITE(pixel, (READ(pixel) & ~mask) | v);
+	WRITE(image, pixel, (READ(image, pixel) & ~mask) | v);
     }
 }
 
@@ -1724,15 +1718,15 @@ static storeProc storeProcForPicture (bits_image_t * pict)
     case PIXMAN_x8r8g8b8: return fbStore_x8r8g8b8;
     case PIXMAN_a8b8g8r8: return fbStore_a8b8g8r8;
     case PIXMAN_x8b8g8r8: return fbStore_x8b8g8r8;
-	
+
         /* 24bpp formats */
     case PIXMAN_r8g8b8: return fbStore_r8g8b8;
     case PIXMAN_b8g8r8: return fbStore_b8g8r8;
-	
+
         /* 16bpp formats */
     case PIXMAN_r5g6b5: return fbStore_r5g6b5;
     case PIXMAN_b5g6r5: return fbStore_b5g6r5;
-	
+
     case PIXMAN_a1r5g5b5: return fbStore_a1r5g5b5;
     case PIXMAN_x1r5g5b5: return fbStore_x1r5g5b5;
     case PIXMAN_a1b5g5r5: return fbStore_a1b5g5r5;
@@ -1741,7 +1735,7 @@ static storeProc storeProcForPicture (bits_image_t * pict)
     case PIXMAN_x4r4g4b4: return fbStore_x4r4g4b4;
     case PIXMAN_a4b4g4r4: return fbStore_a4b4g4r4;
     case PIXMAN_x4b4g4r4: return fbStore_x4b4g4r4;
-	
+
         /* 8bpp formats */
     case PIXMAN_a8: return  fbStore_a8;
     case PIXMAN_r3g3b2: return fbStore_r3g3b2;
@@ -1750,7 +1744,7 @@ static storeProc storeProcForPicture (bits_image_t * pict)
     case PIXMAN_c8: return  fbStore_c8;
     case PIXMAN_g8: return  fbStore_c8;
     case PIXMAN_x4a4: return fbStore_x4a4;
-	
+
         /* 4bpp formats */
     case PIXMAN_a4: return  fbStore_a4;
     case PIXMAN_r1g2b1: return fbStore_r1g2b1;
@@ -1759,7 +1753,7 @@ static storeProc storeProcForPicture (bits_image_t * pict)
     case PIXMAN_a1b1g1r1: return fbStore_a1b1g1r1;
     case PIXMAN_c4: return  fbStore_c4;
     case PIXMAN_g4: return  fbStore_c4;
-	
+
         /* 1bpp formats */
     case PIXMAN_a1: return  fbStore_a1;
     case PIXMAN_g1: return  fbStore_g1;
@@ -1809,7 +1803,7 @@ fbCombineOverU (uint32_t *dest, const uint32_t *src, int width)
         uint32_t s = *(src + i);
         uint32_t d = *(dest + i);
         uint32_t ia = Alpha(~s);
-	
+
         FbByteMulAdd(d, ia, s);
 	*(dest + i) = d;
     }
@@ -1885,7 +1879,7 @@ fbCombineAtopU (uint32_t *dest, const uint32_t *src, int width)
         uint32_t d = *(dest + i);
         uint32_t dest_a = Alpha(d);
         uint32_t src_ia = Alpha(~s);
-	
+
         FbByteAddMul(s, dest_a, d, src_ia);
 	*(dest + i) = s;
     }
@@ -1900,7 +1894,7 @@ fbCombineAtopReverseU (uint32_t *dest, const uint32_t *src, int width)
         uint32_t d = *(dest + i);
         uint32_t src_a = Alpha(s);
         uint32_t dest_ia = Alpha(~d);
-	
+
         FbByteAddMul(s, dest_ia, d, src_a);
 	*(dest + i) = s;
     }
@@ -1915,7 +1909,7 @@ fbCombineXorU (uint32_t *dest, const uint32_t *src, int width)
         uint32_t d = *(dest + i);
         uint32_t src_ia = Alpha(~s);
         uint32_t dest_ia = Alpha(~d);
-	
+
         FbByteAddMul(s, dest_ia, d, src_ia);
 	*(dest + i) = s;
     }
@@ -1941,7 +1935,7 @@ fbCombineSaturateU (uint32_t *dest, const uint32_t *src, int width)
         uint32_t  s = *(src + i);
         uint32_t d = *(dest + i);
         uint16_t  sa, da;
-	
+
         sa = s >> 24;
         da = ~d >> 24;
         if (sa > da)
@@ -1956,12 +1950,12 @@ fbCombineSaturateU (uint32_t *dest, const uint32_t *src, int width)
 
 /*
  * All of the disjoint composing functions
- 
+
  The four entries in the first column indicate what source contributions
  come from each of the four areas of the picture -- areas covered by neither
  A nor B, areas covered only by A, areas covered only by B and finally
  areas covered by both A and B.
- 
+
  Disjoint			Conjoint
  Fa		Fb		Fa		Fb
  (0,0,0,0)	0		0		0		0
@@ -1976,7 +1970,7 @@ fbCombineSaturateU (uint32_t *dest, const uint32_t *src, int width)
  (0,0,B,A)	max(1-(1-b)/a,0) min(1,(1-a)/b)	 min(1,b/a)	max(1-a/b,0)
  (0,A,0,B)	min(1,(1-b)/a)	max(1-(1-a)/b,0) max(1-b/a,0)	min(1,a/b)
  (0,A,B,0)	min(1,(1-b)/a)	min(1,(1-a)/b)	max(1-b/a,0)	max(1-a/b,0)
- 
+
 */
 
 #define CombineAOut 1
@@ -1998,7 +1992,7 @@ static INLINE uint8_t
 fbCombineDisjointOutPart (uint8_t a, uint8_t b)
 {
     /* min (1, (1-b) / a) */
-    
+
     b = ~b;		    /* 1 - b */
     if (b >= a)		    /* 1 - b >= a -> (1-b)/a >= 1 */
 	return 0xff;	    /* 1 */
@@ -2012,7 +2006,7 @@ fbCombineDisjointInPart (uint8_t a, uint8_t b)
     /* max (1-(1-b)/a,0) */
     /*  = - min ((1-b)/a - 1, 0) */
     /*  = 1 - min (1, (1-b)/a) */
-    
+
     b = ~b;		    /* 1 - b */
     if (b >= a)		    /* 1 - b >= a -> (1-b)/a >= 1 */
 	return 0;	    /* 1 - 1 */
@@ -2030,7 +2024,7 @@ fbCombineDisjointGeneralU (uint32_t *dest, const uint32_t *src, int width, uint8
         uint16_t Fa, Fb, t, u, v;
         uint8_t sa = s >> 24;
         uint8_t da = d >> 24;
-	
+
         switch (combine & CombineA) {
         default:
             Fa = 0;
@@ -2045,7 +2039,7 @@ fbCombineDisjointGeneralU (uint32_t *dest, const uint32_t *src, int width, uint8
             Fa = 0xff;
             break;
         }
-	
+
         switch (combine & CombineB) {
         default:
             Fb = 0;
@@ -2076,7 +2070,7 @@ fbCombineDisjointOverU (uint32_t *dest, const uint32_t *src, int width)
     for (i = 0; i < width; ++i) {
         uint32_t  s = *(src + i);
         uint16_t  a = s >> 24;
-	
+
         if (a != 0x00)
         {
             if (a != 0xff)
@@ -2139,9 +2133,9 @@ fbCombineConjointOutPart (uint8_t a, uint8_t b)
 {
     /* max (1-b/a,0) */
     /* = 1-min(b/a,1) */
-    
+
     /* min (1, (1-b) / a) */
-    
+
     if (b >= a)		    /* b >= a -> b/a >= 1 */
 	return 0x00;	    /* 0 */
     return ~FbIntDiv(b,a);   /* 1 - b/a */
@@ -2152,7 +2146,7 @@ static INLINE uint8_t
 fbCombineConjointInPart (uint8_t a, uint8_t b)
 {
     /* min (1,b/a) */
-    
+
     if (b >= a)		    /* b >= a -> b/a >= 1 */
 	return 0xff;	    /* 1 */
     return FbIntDiv(b,a);   /* b/a */
@@ -2169,7 +2163,7 @@ fbCombineConjointGeneralU (uint32_t *dest, const uint32_t *src, int width, uint8
         uint16_t  Fa, Fb, t, u, v;
         uint8_t sa = s >> 24;
         uint8_t da = d >> 24;
-	
+
         switch (combine & CombineA) {
         default:
             Fa = 0;
@@ -2184,7 +2178,7 @@ fbCombineConjointGeneralU (uint32_t *dest, const uint32_t *src, int width, uint8
             Fa = 0xff;
             break;
         }
-	
+
         switch (combine & CombineB) {
         default:
             Fb = 0;
@@ -2316,16 +2310,16 @@ static INLINE void
 fbCombineMaskC (uint32_t *src, uint32_t *mask)
 {
     uint32_t a = *mask;
-    
+
     uint32_t	x;
     uint16_t	xa;
-    
+
     if (!a)
     {
 	*(src) = 0;
 	return;
     }
-    
+
     x = *(src);
     if (a == 0xffffffff)
     {
@@ -2335,7 +2329,7 @@ fbCombineMaskC (uint32_t *src, uint32_t *mask)
 	*(mask) = x;
 	return;
     }
-    
+
     xa = x >> 24;
     FbByteMulC(x, a);
     *(src) = x;
@@ -2348,16 +2342,16 @@ fbCombineMaskValueC (uint32_t *src, const uint32_t *mask)
 {
     uint32_t a = *mask;
     uint32_t	x;
-    
+
     if (!a)
     {
 	*(src) = 0;
 	return;
     }
-    
+
     if (a == 0xffffffff)
 	return;
-    
+
     x = *(src);
     FbByteMulC(x, a);
     *(src) =x;
@@ -2368,10 +2362,10 @@ fbCombineMaskAlphaC (const uint32_t *src, uint32_t *mask)
 {
     uint32_t a = *(mask);
     uint32_t	x;
-    
+
     if (!a)
 	return;
-    
+
     x = *(src) >> 24;
     if (x == 0xff)
 	return;
@@ -2383,7 +2377,7 @@ fbCombineMaskAlphaC (const uint32_t *src, uint32_t *mask)
 	*(mask) = x;
 	return;
     }
-    
+
     FbByteMul(a, x);
     *(mask) = a;
 }
@@ -2398,13 +2392,13 @@ static FASTCALL void
 fbCombineSrcC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     int i;
-    
+
     for (i = 0; i < width; ++i) {
 	uint32_t s = *(src + i);
 	uint32_t m = *(mask + i);
-	
+
 	fbCombineMaskValueC (&s, &m);
-	
+
 	*(dest) = s;
     }
 }
@@ -2413,14 +2407,14 @@ static FASTCALL void
 fbCombineOverC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     int i;
-    
+
     for (i = 0; i < width; ++i) {
 	uint32_t s = *(src + i);
 	uint32_t m = *(mask + i);
 	uint32_t a;
-	
+
 	fbCombineMaskC (&s, &m);
-	
+
 	a = ~m;
         if (a != 0xffffffff)
         {
@@ -2439,18 +2433,18 @@ static FASTCALL void
 fbCombineOverReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     int i;
-    
+
     for (i = 0; i < width; ++i) {
         uint32_t d = *(dest + i);
         uint32_t a = ~d >> 24;
-	
+
         if (a)
         {
             uint32_t s = *(src + i);
 	    uint32_t m = *(mask + i);
-	    
+
 	    fbCombineMaskValueC (&s, &m);
-	    
+
             if (a != 0xff)
             {
                 FbByteMulAdd(s, a, d);
@@ -2464,7 +2458,7 @@ static FASTCALL void
 fbCombineInC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     int i;
-    
+
     for (i = 0; i < width; ++i) {
         uint32_t d = *(dest + i);
         uint16_t a = d >> 24;
@@ -2472,7 +2466,7 @@ fbCombineInC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
         if (a)
         {
 	    uint32_t m = *(mask + i);
-	    
+
 	    s = *(src + i);
 	    fbCombineMaskValueC (&s, &m);
             if (a != 0xff)
@@ -2488,14 +2482,14 @@ static FASTCALL void
 fbCombineInReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     int i;
-    
+
     for (i = 0; i < width; ++i) {
         uint32_t s = *(src + i);
         uint32_t m = *(mask + i);
         uint32_t a;
-	
+
 	fbCombineMaskAlphaC (&s, &m);
-	
+
 	a = m;
         if (a != 0xffffffff)
         {
@@ -2505,7 +2499,7 @@ fbCombineInReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
                 d = *(dest + i);
                 FbByteMulC(d, a);
             }
-	    *(dest + i) = d; 
+	    *(dest + i) = d;
         }
     }
 }
@@ -2514,7 +2508,7 @@ static FASTCALL void
 fbCombineOutC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     int i;
-    
+
     for (i = 0; i < width; ++i) {
         uint32_t d = *(dest + i);
         uint16_t a = ~d >> 24;
@@ -2522,10 +2516,10 @@ fbCombineOutC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
         if (a)
         {
 	    uint32_t m = *(mask + i);
-	    
+
 	    s = *(src + i);
 	    fbCombineMaskValueC (&s, &m);
-	    
+
             if (a != 0xff)
             {
                 FbByteMul(s, a);
@@ -2539,14 +2533,14 @@ static FASTCALL void
 fbCombineOutReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     int i;
-    
+
     for (i = 0; i < width; ++i) {
 	uint32_t s = *(src + i);
 	uint32_t m = *(mask + i);
 	uint32_t a;
-	
+
 	fbCombineMaskAlphaC (&s, &m);
-	
+
         a = ~m;
         if (a != 0xffffffff)
         {
@@ -2565,18 +2559,18 @@ static FASTCALL void
 fbCombineAtopC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     int i;
-    
+
     for (i = 0; i < width; ++i) {
         uint32_t d = *(dest + i);
         uint32_t s = *(src + i);
         uint32_t m = *(mask + i);
         uint32_t ad;
         uint16_t as = d >> 24;
-	
+
 	fbCombineMaskC (&s, &m);
-	
+
         ad = ~m;
-	
+
         FbByteAddMulC(d, ad, s, as);
 	*(dest + i) = d;
     }
@@ -2586,19 +2580,19 @@ static FASTCALL void
 fbCombineAtopReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     int i;
-    
+
     for (i = 0; i < width; ++i) {
-	
+
         uint32_t d = *(dest + i);
         uint32_t s = *(src + i);
         uint32_t m = *(mask + i);
         uint32_t ad;
         uint16_t as = ~d >> 24;
-	
+
 	fbCombineMaskC (&s, &m);
-	
+
 	ad = m;
-	
+
         FbByteAddMulC(d, ad, s, as);
 	*(dest + i) = d;
     }
@@ -2608,18 +2602,18 @@ static FASTCALL void
 fbCombineXorC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     int i;
-    
+
     for (i = 0; i < width; ++i) {
         uint32_t d = *(dest + i);
         uint32_t s = *(src + i);
         uint32_t m = *(mask + i);
         uint32_t ad;
         uint16_t as = ~d >> 24;
-	
+
 	fbCombineMaskC (&s, &m);
-	
+
 	ad = ~m;
-	
+
         FbByteAddMulC(d, ad, s, as);
 	*(dest + i) = d;
     }
@@ -2629,14 +2623,14 @@ static FASTCALL void
 fbCombineAddC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     int i;
-    
+
     for (i = 0; i < width; ++i) {
         uint32_t s = *(src + i);
         uint32_t m = *(mask + i);
         uint32_t d = *(dest + i);
-	
+
 	fbCombineMaskValueC (&s, &m);
-	
+
         FbByteAdd(d, s);
 	*(dest + i) = d;
     }
@@ -2646,45 +2640,45 @@ static FASTCALL void
 fbCombineSaturateC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     int i;
-    
+
     for (i = 0; i < width; ++i) {
         uint32_t  s, d;
         uint16_t  sa, sr, sg, sb, da;
         uint16_t  t, u, v;
         uint32_t  m,n,o,p;
-	
+
         d = *(dest + i);
         s = *(src + i);
 	m = *(mask + i);
-	
+
 	fbCombineMaskC (&s, &m);
-	
+
         sa = (m >> 24);
         sr = (m >> 16) & 0xff;
         sg = (m >>  8) & 0xff;
         sb = (m      ) & 0xff;
         da = ~d >> 24;
-	
+
         if (sb <= da)
             m = FbAdd(s,d,0,t);
         else
             m = FbGen (s, d, 0, (da << 8) / sb, 0xff, t, u, v);
-	
+
         if (sg <= da)
             n = FbAdd(s,d,8,t);
         else
             n = FbGen (s, d, 8, (da << 8) / sg, 0xff, t, u, v);
-	
+
         if (sr <= da)
             o = FbAdd(s,d,16,t);
         else
             o = FbGen (s, d, 16, (da << 8) / sr, 0xff, t, u, v);
-	
+
         if (sa <= da)
             p = FbAdd(s,d,24,t);
         else
             p = FbGen (s, d, 24, (da << 8) / sa, 0xff, t, u, v);
-	
+
 	*(dest + i) = m|n|o|p;
     }
 }
@@ -2693,7 +2687,7 @@ static FASTCALL void
 fbCombineDisjointGeneralC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width, uint8_t combine)
 {
     int i;
-    
+
     for (i = 0; i < width; ++i) {
         uint32_t  s, d;
         uint32_t  m,n,o,p;
@@ -2701,16 +2695,16 @@ fbCombineDisjointGeneralC (uint32_t *dest, uint32_t *src, uint32_t *mask, int wi
         uint16_t  t, u, v;
         uint32_t  sa;
         uint8_t   da;
-	
+
         s = *(src + i);
         m = *(mask + i);
         d = *(dest + i);
         da = d >> 24;
-	
+
 	fbCombineMaskC (&s, &m);
-	
+
 	sa = m;
-	
+
         switch (combine & CombineA) {
         default:
             Fa = 0;
@@ -2733,7 +2727,7 @@ fbCombineDisjointGeneralC (uint32_t *dest, uint32_t *src, uint32_t *mask, int wi
             Fa = 0xffffffff;
             break;
         }
-	
+
         switch (combine & CombineB) {
         default:
             Fb = 0;
@@ -2817,7 +2811,7 @@ static FASTCALL void
 fbCombineConjointGeneralC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width, uint8_t combine)
 {
     int i;
-    
+
     for (i = 0; i < width; ++i) {
         uint32_t  s, d;
         uint32_t  m,n,o,p;
@@ -2825,16 +2819,16 @@ fbCombineConjointGeneralC (uint32_t *dest, uint32_t *src, uint32_t *mask, int wi
         uint16_t  t, u, v;
         uint32_t  sa;
         uint8_t   da;
-	
+
         s = *(src + i);
         m = *(mask + i);
         d = *(dest + i);
         da = d >> 24;
-	
+
 	fbCombineMaskC (&s, &m);
-	
+
         sa = m;
-	
+
         switch (combine & CombineA) {
         default:
             Fa = 0;
@@ -2857,7 +2851,7 @@ fbCombineConjointGeneralC (uint32_t *dest, uint32_t *src, uint32_t *mask, int wi
             Fa = 0xffffffff;
             break;
         }
-	
+
         switch (combine & CombineB) {
         default:
             Fb = 0;
@@ -2996,9 +2990,9 @@ static void fbFetchSolid(bits_image_t * pict, int x, int y, int width, uint32_t 
     uint32_t color;
     uint32_t *end;
     fetchPixelProc fetch = fetchPixelProcForPicture(pict);
-    
+
     color = fetch(pict, 0, 0);
-    
+
     end = buffer + width;
     while (buffer < end)
 	*(buffer++) = color;
@@ -3008,7 +3002,7 @@ static void fbFetchSolid(bits_image_t * pict, int x, int y, int width, uint32_t 
 static void fbFetch(bits_image_t * pict, int x, int y, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
 {
     fetchProc fetch = fetchProcForPicture(pict);
-    
+
     fetch(pict, x, y, width, buffer);
 }
 
@@ -3038,11 +3032,11 @@ typedef struct
     int32_t       left_x;
     int32_t       right_x;
     int32_t       stepper;
-    
+
     pixman_gradient_stop_t	*stops;
     int                      num_stops;
     unsigned int             spread;
-    
+
     int		  need_reset;
 } GradientWalker;
 
@@ -3061,7 +3055,7 @@ _gradient_walker_init (GradientWalker  *walker,
     walker->right_ag  = 0;
     walker->right_rb  = 0;
     walker->spread    = spread;
-    
+
     walker->need_reset = TRUE;
 }
 
@@ -3073,9 +3067,9 @@ _gradient_walker_reset (GradientWalker  *walker,
     pixman_color_t          *left_c, *right_c;
     int                      n, count = walker->num_stops;
     pixman_gradient_stop_t *      stops = walker->stops;
-    
+
     static const pixman_color_t   transparent_black = { 0, 0, 0, 0 };
-    
+
     switch (walker->spread)
     {
     case PIXMAN_REPEAT_NORMAL:
@@ -3090,7 +3084,7 @@ _gradient_walker_reset (GradientWalker  *walker,
 	    left_x =  stops[n-1].x;
 	    left_c = &stops[n-1].color;
 	}
-	
+
 	if (n == count) {
 	    right_x =  stops[0].x + 0x10000;
 	    right_c = &stops[0].color;
@@ -3101,12 +3095,12 @@ _gradient_walker_reset (GradientWalker  *walker,
 	left_x  += (pos - x);
 	right_x += (pos - x);
 	break;
-	
+
     case PIXMAN_REPEAT_PAD:
 	for (n = 0; n < count; n++)
 	    if (pos < stops[n].x)
 		break;
-	
+
 	if (n == 0) {
 	    left_x =  INT32_MIN;
 	    left_c = &stops[0].color;
@@ -3114,7 +3108,7 @@ _gradient_walker_reset (GradientWalker  *walker,
 	    left_x =  stops[n-1].x;
 	    left_c = &stops[n-1].color;
 	}
-	
+
 	if (n == count) {
 	    right_x =  INT32_MAX;
 	    right_c = &stops[n-1].color;
@@ -3123,7 +3117,7 @@ _gradient_walker_reset (GradientWalker  *walker,
 	    right_c = &stops[n].color;
 	}
 	break;
-	
+
     case PIXMAN_REPEAT_REFLECT:
 	x = (int32_t)pos & 0xFFFF;
 	if ((int32_t)pos & 0x10000)
@@ -3131,7 +3125,7 @@ _gradient_walker_reset (GradientWalker  *walker,
 	for (n = 0; n < count; n++)
 	    if (x < stops[n].x)
 		break;
-	
+
 	if (n == 0) {
 	    left_x =  -stops[0].x;
 	    left_c = &stops[0].color;
@@ -3139,7 +3133,7 @@ _gradient_walker_reset (GradientWalker  *walker,
 	    left_x =  stops[n-1].x;
 	    left_c = &stops[n-1].color;
 	}
-	
+
 	if (n == count) {
 	    right_x = 0x20000 - stops[n-1].x;
 	    right_c = &stops[n-1].color;
@@ -3147,30 +3141,30 @@ _gradient_walker_reset (GradientWalker  *walker,
 	    right_x =  stops[n].x;
 	    right_c = &stops[n].color;
 	}
-	
+
 	if ((int32_t)pos & 0x10000) {
 	    pixman_color_t  *tmp_c;
 	    int32_t          tmp_x;
-	    
+
 	    tmp_x   = 0x10000 - right_x;
 	    right_x = 0x10000 - left_x;
 	    left_x  = tmp_x;
-	    
+
 	    tmp_c   = right_c;
 	    right_c = left_c;
 	    left_c  = tmp_c;
-	    
+
 	    x = 0x10000 - x;
 	}
 	left_x  += (pos - x);
 	right_x += (pos - x);
 	break;
-	
+
     default:  /* RepeatNone */
 	for (n = 0; n < count; n++)
 	    if (pos < stops[n].x)
 		break;
-	
+
 	if (n == 0)
 	{
 	    left_x  =  INT32_MIN;
@@ -3191,14 +3185,14 @@ _gradient_walker_reset (GradientWalker  *walker,
 	    right_c = &stops[n].color;
 	}
     }
-    
+
     walker->left_x   = left_x;
     walker->right_x  = right_x;
     walker->left_ag  = ((left_c->alpha >> 8) << 16)   | (left_c->green >> 8);
     walker->left_rb  = ((left_c->red & 0xff00) << 8)  | (left_c->blue >> 8);
     walker->right_ag = ((right_c->alpha >> 8) << 16)  | (right_c->green >> 8);
     walker->right_rb = ((right_c->red & 0xff00) << 8) | (right_c->blue >> 8);
-    
+
     if ( walker->left_x == walker->right_x                ||
 	 ( walker->left_ag == walker->right_ag &&
 	   walker->left_rb == walker->right_rb )   )
@@ -3210,7 +3204,7 @@ _gradient_walker_reset (GradientWalker  *walker,
 	int32_t width = right_x - left_x;
 	walker->stepper = ((1 << 24) + width/2)/width;
     }
-    
+
     walker->need_reset = FALSE;
 }
 
@@ -3225,29 +3219,29 @@ _gradient_walker_pixel (GradientWalker  *walker,
 {
     int  dist, idist;
     uint32_t  t1, t2, a, color;
-    
+
     if (GRADIENT_WALKER_NEED_RESET (walker, x))
         _gradient_walker_reset (walker, x);
-    
+
     dist  = ((int)(x - walker->left_x)*walker->stepper) >> 16;
     idist = 256 - dist;
-    
+
     /* combined INTERPOLATE and premultiply */
     t1 = walker->left_rb*idist + walker->right_rb*dist;
     t1 = (t1 >> 8) & 0xff00ff;
-    
+
     t2  = walker->left_ag*idist + walker->right_ag*dist;
     t2 &= 0xff00ff00;
-    
+
     color = t2 & 0xff000000;
     a     = t2 >> 24;
-    
+
     t1  = t1*a + 0x800080;
     t1  = (t1 + ((t1 >> 8) & 0xff00ff)) >> 8;
-    
+
     t2  = (t2 >> 8)*a + 0x800080;
     t2  = (t2 + ((t2 >> 8) & 0xff00ff));
-    
+
     return (color | (t1 & 0xff00ff) | (t2 & 0xff00));
 }
 
@@ -3259,27 +3253,27 @@ static void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width
     GradientWalker  walker;
     uint32_t       *end = buffer + width;
     gradient_t	    *gradient;
-    
+
     if (pict->common.type == SOLID)
     {
 	register uint32_t color = ((solid_fill_t *)pict)->color;
-	
+
 	while (buffer < end)
 	    *(buffer++) = color;
-	
+
 	return;
     }
-    
+
     gradient = (gradient_t *)pict;
-    
+
     _gradient_walker_init (&walker, gradient, pict->common.repeat);
-    
+
     if (pict->common.type == LINEAR) {
 	pixman_vector_t v, unit;
 	pixman_fixed_32_32_t l;
 	pixman_fixed_48_16_t dx, dy, a, b, off;
 	linear_gradient_t *linear = (linear_gradient_t *)pict;
-	
+
         /* reference point is the center of the pixel */
         v.vector[0] = pixman_int_to_fixed(x) + pixman_fixed_1/2;
         v.vector[1] = pixman_int_to_fixed(y) + pixman_fixed_1/2;
@@ -3295,7 +3289,7 @@ static void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width
             unit.vector[1] = 0;
             unit.vector[2] = 0;
         }
-	
+
         dx = linear->p2.x - linear->p1.x;
         dy = linear->p2.y - linear->p1.y;
         l = dx*dx + dy*dy;
@@ -3314,11 +3308,11 @@ static void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width
                 t = ((a*v.vector[0] + b*v.vector[1]) >> 16) + off;
                 inc = (a * unit.vector[0] + b * unit.vector[1]) >> 16;
             }
-	    
+
 	    if (pict->class == SOURCE_IMAGE_CLASS_VERTICAL)
 	    {
 		register uint32_t color;
-		
+
 		color = _gradient_walker_pixel( &walker, t );
 		while (buffer < end)
 		    *(buffer++) = color;
@@ -3347,11 +3341,11 @@ static void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width
 	else /* projective transformation */
 	{
 	    pixman_fixed_48_16_t t;
-	    
+
 	    if (pict->class == SOURCE_IMAGE_CLASS_VERTICAL)
 	    {
 		register uint32_t color;
-		
+
 		if (v.vector[2] == 0)
 		{
 		    t = 0;
@@ -3359,12 +3353,12 @@ static void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width
 		else
 		{
 		    pixman_fixed_48_16_t x, y;
-		    
+
 		    x = ((pixman_fixed_48_16_t) v.vector[0] << 16) / v.vector[2];
 		    y = ((pixman_fixed_48_16_t) v.vector[1] << 16) / v.vector[2];
 		    t = ((a * x + b * y) >> 16) + off;
 		}
-		
+
  		color = _gradient_walker_pixel( &walker, t );
 		while (buffer < end)
 		    *(buffer++) = color;
@@ -3393,7 +3387,7 @@ static void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width
             }
         }
     } else {
-	
+
 /*
  * In the radial gradient problem we are given two circles (c₁,r₁) and
  * (c₂,r₂) that define the gradient itself. Then, for any point p, we
@@ -3516,7 +3510,7 @@ static void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width
 	double rx = x + 0.5;
 	double ry = y + 0.5;
         double rz = 1.;
-	
+
         if (pict->common.transform) {
             pixman_vector_t v;
             /* reference point is the center of the pixel */
@@ -3525,7 +3519,7 @@ static void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width
             v.vector[2] = pixman_fixed_1;
             if (!pixman_transform_point_3d (pict->common.transform, &v))
                 return;
-	    
+
             cx = pict->common.transform->matrix[0][0]/65536.;
             cy = pict->common.transform->matrix[1][0]/65536.;
             cz = pict->common.transform->matrix[2][0]/65536.;
@@ -3534,7 +3528,7 @@ static void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width
             rz = v.vector[2]/65536.;
             affine = pict->common.transform->matrix[2][0] == 0 && v.vector[2] == pixman_fixed_1;
         }
-	
+
         if (pict->common.type == RADIAL) {
 	    radial_gradient_t *radial = (radial_gradient_t *)pict;
             if (affine) {
@@ -3548,28 +3542,28 @@ static void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width
 			double c1y = radial->c1.y / 65536.0;
 			double r1  = radial->c1.radius / 65536.0;
                         pixman_fixed_48_16_t t;
-			
+
 			pdx = rx - c1x;
 			pdy = ry - c1y;
-			
+
 			B = -2 * (  pdx * radial->cdx
 				    + pdy * radial->cdy
 				    + r1 * radial->dr);
 			C = (pdx * pdx + pdy * pdy - r1 * r1);
-			
+
                         det = (B * B) - (4 * radial->A * C);
 			if (det < 0.0)
 			    det = 0.0;
-			
+
 			if (radial->A < 0)
 			    t = (pixman_fixed_48_16_t) ((- B - sqrt(det)) / (2.0 * radial->A) * 65536);
 			else
 			    t = (pixman_fixed_48_16_t) ((- B + sqrt(det)) / (2.0 * radial->A) * 65536);
-			
+
 			*(buffer) = _gradient_walker_pixel (&walker, t);
 		    }
 		    ++buffer;
-		    
+
                     rx += cx;
                     ry += cy;
                 }
@@ -3586,35 +3580,35 @@ static void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width
 			double r1  = radial->c1.radius / 65536.0;
                         pixman_fixed_48_16_t t;
 			double x, y;
-			
+
 			if (rz != 0) {
 			    x = rx/rz;
 			    y = ry/rz;
 			} else {
 			    x = y = 0.;
 			}
-			
+
 			pdx = x - c1x;
 			pdy = y - c1y;
-			
+
 			B = -2 * (  pdx * radial->cdx
 				    + pdy * radial->cdy
 				    + r1 * radial->dr);
 			C = (pdx * pdx + pdy * pdy - r1 * r1);
-			
+
                         det = (B * B) - (4 * radial->A * C);
 			if (det < 0.0)
 			    det = 0.0;
-			
+
 			if (radial->A < 0)
 			    t = (pixman_fixed_48_16_t) ((- B - sqrt(det)) / (2.0 * radial->A) * 65536);
 			else
 			    t = (pixman_fixed_48_16_t) ((- B + sqrt(det)) / (2.0 * radial->A) * 65536);
-			
+
 			*(buffer) = _gradient_walker_pixel (&walker, t);
 		    }
 		    ++buffer;
-		    
+
                     rx += cx;
                     ry += cy;
 		    rz += cz;
@@ -3626,20 +3620,20 @@ static void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width
             if (affine) {
                 rx -= conical->center.x/65536.;
                 ry -= conical->center.y/65536.;
-		
+
                 while (buffer < end) {
 		    double angle;
-		    
+
                     if (!mask || *mask++ & maskBits)
 		    {
                         pixman_fixed_48_16_t   t;
-			
+
                         angle = atan2(ry, rx) + a;
 			t     = (pixman_fixed_48_16_t) (angle * (65536. / (2*M_PI)));
-			
+
 			*(buffer) = _gradient_walker_pixel (&walker, t);
 		    }
-		    
+
                     ++buffer;
                     rx += cx;
                     ry += cy;
@@ -3648,11 +3642,11 @@ static void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width
                 while (buffer < end) {
                     double x, y;
                     double angle;
-		    
+
                     if (!mask || *mask++ & maskBits)
                     {
 			pixman_fixed_48_16_t  t;
-			
+
 			if (rz != 0) {
 			    x = rx/rz;
 			    y = ry/rz;
@@ -3663,10 +3657,10 @@ static void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width
 			y -= conical->center.y/65536.;
 			angle = atan2(y, x) + a;
 			t     = (pixman_fixed_48_16_t) (angle * (65536. / (2*M_PI)));
-			
+
 			*(buffer) = _gradient_walker_pixel (&walker, t);
 		    }
-		    
+
                     ++buffer;
                     rx += cx;
                     ry += cy;
@@ -3687,17 +3681,17 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
     int         i;
     pixman_box16_t box;
     pixman_bool_t affine = TRUE;
-    
+
     fetch = fetchPixelProcForPicture(pict);
-    
+
     bits = pict->bits;
     stride = pict->rowstride;
-    
+
     /* reference point is the center of the pixel */
     v.vector[0] = pixman_int_to_fixed(x) + pixman_fixed_1 / 2;
     v.vector[1] = pixman_int_to_fixed(y) + pixman_fixed_1 / 2;
     v.vector[2] = pixman_fixed_1;
-    
+
     /* when using convolution filters one might get here without a transform */
     if (pict->common.transform)
     {
@@ -3717,7 +3711,7 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
         unit.vector[1] = 0;
         unit.vector[2] = 0;
     }
-    
+
     if (pict->common.filter == PIXMAN_FILTER_NEAREST || pict->common.filter == PIXMAN_FILTER_FAST)
     {
         if (pict->common.repeat == PIXMAN_REPEAT_NORMAL) {
@@ -3738,7 +3732,7 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 			    *(buffer + i) = fetch(pict, x, y);
 			}
 		    }
-		    
+
                     v.vector[0] += unit.vector[0];
                     v.vector[1] += unit.vector[1];
                     v.vector[2] += unit.vector[2];
@@ -3763,7 +3757,7 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 				*(buffer + i) = 0;
 			}
 		    }
-		    
+
                     v.vector[0] += unit.vector[0];
                     v.vector[1] += unit.vector[1];
                     v.vector[2] += unit.vector[2];
@@ -3828,7 +3822,7 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
         v.vector[1] -= v.vector[2] / 2;
         unit.vector[0] -= unit.vector[2] / 2;
         unit.vector[1] -= unit.vector[2] / 2;
-	
+
         if (pict->common.repeat == PIXMAN_REPEAT_NORMAL) {
             if (pixman_region_n_rects(pict->common.src_clip) == 1) {
                 for (i = 0; i < width; ++i) {
@@ -3840,7 +3834,7 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 			    int x1, x2, y1, y2, distx, idistx, disty, idisty;
 			    uint32_t tl, tr, bl, br, r;
 			    uint32_t ft, fb;
-			    
+
 			    if (!affine) {
 				pixman_fixed_48_16_t div;
 				div = ((pixman_fixed_48_16_t)v.vector[0] << 16)/v.vector[2];
@@ -3857,20 +3851,20 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 			    }
 			    x2 = x1 + 1;
 			    y2 = y1 + 1;
-			    
+
 			    idistx = 256 - distx;
 			    idisty = 256 - disty;
-			    
+
 			    x1 = MOD (x1, pict->width);
 			    x2 = MOD (x2, pict->width);
 			    y1 = MOD (y1, pict->height);
 			    y2 = MOD (y2, pict->height);
-			    
+
 			    tl = fetch(pict, x1, y1);
 			    tr = fetch(pict, x2, y1);
 			    bl = fetch(pict, x1, y2);
 			    br = fetch(pict, x2, y2);
-			    
+
 			    ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
 			    fb = FbGet8(bl,0) * idistx + FbGet8(br,0) * distx;
 			    r = (((ft * idisty + fb * disty) >> 16) & 0xff);
@@ -3900,7 +3894,7 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 			    int x1, x2, y1, y2, distx, idistx, disty, idisty;
 			    uint32_t tl, tr, bl, br, r;
 			    uint32_t ft, fb;
-			    
+
 			    if (!affine) {
 				pixman_fixed_48_16_t div;
 				div = ((pixman_fixed_48_16_t)v.vector[0] << 16)/v.vector[2];
@@ -3917,15 +3911,15 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 			    }
 			    x2 = x1 + 1;
 			    y2 = y1 + 1;
-			    
+
 			    idistx = 256 - distx;
 			    idisty = 256 - disty;
-			    
+
 			    x1 = MOD (x1, pict->width);
 			    x2 = MOD (x2, pict->width);
 			    y1 = MOD (y1, pict->height);
 			    y2 = MOD (y2, pict->height);
-			    
+
 			    tl = pixman_region_contains_point(pict->common.src_clip, x1, y1, &box)
 				? fetch(pict, x1, y1) : 0;
 			    tr = pixman_region_contains_point(pict->common.src_clip, x2, y1, &box)
@@ -3934,7 +3928,7 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 				? fetch(pict, x1, y2) : 0;
 			    br = pixman_region_contains_point(pict->common.src_clip, x2, y2, &box)
 				? fetch(pict, x2, y2) : 0;
-			    
+
 			    ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
 			    fb = FbGet8(bl,0) * idistx + FbGet8(br,0) * distx;
 			    r = (((ft * idisty + fb * disty) >> 16) & 0xff);
@@ -3950,7 +3944,7 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 			    *(buffer + i) = r;
 			}
 		    }
-		    
+
                     v.vector[0] += unit.vector[0];
                     v.vector[1] += unit.vector[1];
                     v.vector[2] += unit.vector[2];
@@ -3969,7 +3963,7 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 			    uint32_t tl, tr, bl, br, r;
 			    pixman_bool_t x1_out, x2_out, y1_out, y2_out;
 			    uint32_t ft, fb;
-			    
+
 			    if (!affine) {
 				pixman_fixed_48_16_t div;
 				div = ((pixman_fixed_48_16_t)v.vector[0] << 16)/v.vector[2];
@@ -3986,20 +3980,20 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 			    }
 			    x2 = x1 + 1;
 			    y2 = y1 + 1;
-			    
+
 			    idistx = 256 - distx;
 			    idisty = 256 - disty;
-			    
+
 			    x1_out = (x1 < box.x1) | (x1 >= box.x2);
 			    x2_out = (x2 < box.x1) | (x2 >= box.x2);
 			    y1_out = (y1 < box.y1) | (y1 >= box.y2);
 			    y2_out = (y2 < box.y1) | (y2 >= box.y2);
-			    
+
 			    tl = x1_out|y1_out ? 0 : fetch(pict, x1, y1);
 			    tr = x2_out|y1_out ? 0 : fetch(pict, x2, y1);
 			    bl = x1_out|y2_out ? 0 : fetch(pict, x1, y2);
 			    br = x2_out|y2_out ? 0 : fetch(pict, x2, y2);
-			    
+
 			    ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
 			    fb = FbGet8(bl,0) * idistx + FbGet8(br,0) * distx;
 			    r = (((ft * idisty + fb * disty) >> 16) & 0xff);
@@ -4015,7 +4009,7 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 			    *(buffer + i) = r;
 			}
 		    }
-		    
+
                     v.vector[0] += unit.vector[0];
                     v.vector[1] += unit.vector[1];
                     v.vector[2] += unit.vector[2];
@@ -4030,7 +4024,7 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 			    int x1, x2, y1, y2, distx, idistx, disty, idisty;
 			    uint32_t tl, tr, bl, br, r;
 			    uint32_t ft, fb;
-			    
+
 			    if (!affine) {
 				pixman_fixed_48_16_t div;
 				div = ((pixman_fixed_48_16_t)v.vector[0] << 16)/v.vector[2];
@@ -4047,10 +4041,10 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 			    }
 			    x2 = x1 + 1;
 			    y2 = y1 + 1;
-			    
+
 			    idistx = 256 - distx;
 			    idisty = 256 - disty;
-			    
+
 			    tl = pixman_region_contains_point(pict->common.src_clip, x1, y1, &box)
 				? fetch(pict, x1, y1) : 0;
 			    tr = pixman_region_contains_point(pict->common.src_clip, x2, y1, &box)
@@ -4059,7 +4053,7 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 				? fetch(pict, x1, y2) : 0;
 			    br = pixman_region_contains_point(pict->common.src_clip, x2, y2, &box)
 				? fetch(pict, x2, y2) : 0;
-			    
+
 			    ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
 			    fb = FbGet8(bl,0) * idistx + FbGet8(br,0) * distx;
 			    r = (((ft * idisty + fb * disty) >> 16) & 0xff);
@@ -4075,7 +4069,7 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 			    *(buffer + i) = r;
 			}
 		    }
-		    
+
                     v.vector[0] += unit.vector[0];
                     v.vector[1] += unit.vector[1];
                     v.vector[2] += unit.vector[2];
@@ -4098,7 +4092,7 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 		    int x1, x2, y1, y2, x, y;
 		    int32_t srtot, sgtot, sbtot, satot;
 		    pixman_fixed_t *p = params;
-		    
+
 		    if (!affine) {
 			pixman_fixed_48_16_t tmp;
 			tmp = ((pixman_fixed_48_16_t)v.vector[0] << 16)/v.vector[2] - xoff;
@@ -4111,9 +4105,9 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 		    }
 		    x2 = x1 + cwidth;
 		    y2 = y1 + cheight;
-		    
+
 		    srtot = sgtot = sbtot = satot = 0;
-		    
+
 		    for (y = y1; y < y2; y++) {
 			int ty = (pict->common.repeat == PIXMAN_REPEAT_NORMAL) ? MOD (y, pict->height) : y;
 			for (x = x1; x < x2; x++) {
@@ -4121,7 +4115,7 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 				int tx = (pict->common.repeat == PIXMAN_REPEAT_NORMAL) ? MOD (x, pict->width) : x;
 				if (pixman_region_contains_point (pict->common.src_clip, tx, ty, &box)) {
 				    uint32_t c = fetch(pict, tx, ty);
-				    
+
 				    srtot += Red(c) * *p;
 				    sgtot += Green(c) * *p;
 				    sbtot += Blue(c) * *p;
@@ -4131,17 +4125,17 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 			    p++;
 			}
 		    }
-		    
+
 		    satot >>= 16;
 		    srtot >>= 16;
 		    sgtot >>= 16;
 		    sbtot >>= 16;
-		    
+
 		    if (satot < 0) satot = 0; else if (satot > 0xff) satot = 0xff;
 		    if (srtot < 0) srtot = 0; else if (srtot > 0xff) srtot = 0xff;
 		    if (sgtot < 0) sgtot = 0; else if (sgtot > 0xff) sgtot = 0xff;
 		    if (sbtot < 0) sbtot = 0; else if (sbtot > 0xff) sbtot = 0xff;
-		    
+
 		    *(buffer + i) = ((satot << 24) |
 				     (srtot << 16) |
 				     (sgtot <<  8) |
@@ -4153,7 +4147,7 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
             v.vector[2] += unit.vector[2];
         }
     }
-    
+
     fbFinishAccess (pict->pDrawable);
 }
 
@@ -4163,14 +4157,14 @@ static void fbFetchExternalAlpha(bits_image_t * pict, int x, int y, int width, u
     int i;
     uint32_t _alpha_buffer[SCANLINE_BUFFER_LENGTH];
     uint32_t *alpha_buffer = _alpha_buffer;
-    
+
     if (!pict->common.alpha_map) {
         fbFetchTransformed (pict, x, y, width, buffer, mask, maskBits);
 	return;
     }
     if (width > SCANLINE_BUFFER_LENGTH)
         alpha_buffer = (uint32_t *) pixman_malloc_ab (width, sizeof(uint32_t));
-    
+
     fbFetchTransformed(pict, x, y, width, buffer, mask, maskBits);
     fbFetchTransformed((bits_image_t *)pict->common.alpha_map, x - pict->common.alpha_origin.x,
 		       y - pict->common.alpha_origin.y, width, alpha_buffer,
@@ -4185,7 +4179,7 @@ static void fbFetchExternalAlpha(bits_image_t * pict, int x, int y, int width, u
 		| (div_255(Blue(*(buffer + i)) * a));
 	}
     }
-    
+
     if (alpha_buffer != _alpha_buffer)
         free(alpha_buffer);
 }
@@ -4196,7 +4190,7 @@ static void fbStore(bits_image_t * pict, int x, int y, int width, uint32_t *buff
     uint32_t stride;
     storeProc store = storeProcForPicture(pict);
     const pixman_indexed_t * indexed = pict->indexed;
-    
+
     bits = pict->bits;
     stride = pict->rowstride;
     bits += y*stride;
@@ -4213,33 +4207,33 @@ static void fbStoreExternalAlpha(bits_image_t * pict, int x, int y, int width, u
     storeProc astore;
     const pixman_indexed_t * indexed = pict->indexed;
     const pixman_indexed_t * aindexed;
-    
+
     if (!pict->common.alpha_map) {
         fbStore(pict, x, y, width, buffer);
 	return;
     }
-    
+
     store = storeProcForPicture(pict);
     astore = storeProcForPicture(pict->common.alpha_map);
     aindexed = pict->common.alpha_map->indexed;
-    
+
     ax = x;
     ay = y;
-    
+
     bits = pict->bits;
     stride = pict->rowstride;
-    
+
     alpha_bits = pict->common.alpha_map->bits;
     astride = pict->common.alpha_map->rowstride;
-    
+
     bits       += y*stride;
     alpha_bits += (ay - pict->common.alpha_origin.y)*astride;
-    
-    
+
+
     store((pixman_image_t *)pict, bits, buffer, x, width, indexed);
     astore((pixman_image_t *)pict->common.alpha_map,
 	   alpha_bits, buffer, ax - pict->common.alpha_origin.x, width, aindexed);
-    
+
     fbFinishAccess (pict->alpha_map->pDrawable);
     fbFinishAccess (pict->pDrawable);
 }
@@ -4265,7 +4259,7 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
     uint32_t *bits;
     uint32_t stride;
     int xoff, yoff;
-    
+
     if (data->op == PIXMAN_OP_CLEAR)
         fetchSrc = NULL;
     else if (IS_SOURCE_IMAGE (data->src))
@@ -4278,7 +4272,7 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
     else
     {
 	bits_image_t *bits = (bits_image_t *)data->src;
-	
+
 	if (bits->common.alpha_map)
 	{
 	    fetchSrc = (scanFetchProc)fbFetchExternalAlpha;
@@ -4299,7 +4293,7 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 	    fetchSrc = (scanFetchProc)fbFetchTransformed;
 	}
     }
-    
+
     if (!data->mask || data->op == PIXMAN_OP_CLEAR)
     {
 	fetchMask = NULL;
@@ -4316,7 +4310,7 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 	else
 	{
 	    bits_image_t *bits = (bits_image_t *)data->mask;
-	    
+
 	    if (bits->common.alpha_map)
 	    {
 		fetchMask = (scanFetchProc)fbFetchExternalAlpha;
@@ -4333,12 +4327,12 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 		fetchMask = (scanFetchProc)fbFetchTransformed;
 	}
     }
-    
+
     if (data->dest->common.alpha_map)
     {
 	fetchDest = (scanFetchProc)fbFetchExternalAlpha;
 	store = (scanStoreProc)fbStoreExternalAlpha;
-	
+
 	if (data->op == PIXMAN_OP_CLEAR || data->op == PIXMAN_OP_SRC)
 	    fetchDest = NULL;
     }
@@ -4346,7 +4340,7 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
     {
 	fetchDest = (scanFetchProc)fbFetch;
 	store = (scanStoreProc)fbStore;
-	
+
 	switch (data->op)
 	{
 	case PIXMAN_OP_CLEAR:
@@ -4368,7 +4362,7 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 	    break;
 	}
     }
-    
+
     if (!store)
     {
 	bits = data->dest->bits.bits;
@@ -4381,11 +4375,11 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 	stride = 0;
 	xoff = yoff = 0;
     }
-    
+
     if (fetchSrc		   &&
 	fetchMask		   &&
 	data->mask		   &&
-	data->mask->common.type == BITS && 
+	data->mask->common.type == BITS &&
 	data->mask->common.component_alpha &&
 	PIXMAN_FORMAT_RGB (data->mask->bits.format))
     {
@@ -4393,7 +4387,7 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 	CombineFuncC compose = PIXMAN_COMPOSE_FUNCTIONS.combineC[data->op];
 	if (!compose)
 	    return;
-	
+
 	for (i = 0; i < data->height; ++i) {
 	    /* fill first half of scanline with source */
 	    if (fetchSrc)
@@ -4404,11 +4398,11 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 		       source can be optimized */
 		    fetchMask (data->mask, data->xMask, data->yMask + i,
 			       data->width, mask_buffer, 0, 0);
-		    
+
 		    if (maskClass == SOURCE_IMAGE_CLASS_HORIZONTAL)
 			fetchMask = NULL;
 		}
-		
+
 		if (srcClass == SOURCE_IMAGE_CLASS_HORIZONTAL)
 		{
 		    fetchSrc (data->src, data->xSrc, data->ySrc + i,
@@ -4427,17 +4421,17 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 		fetchMask (data->mask, data->xMask, data->yMask + i,
 			   data->width, mask_buffer, 0, 0);
 	    }
-	    
+
 	    if (store)
 	    {
 		/* fill dest into second half of scanline */
 		if (fetchDest)
 		    fetchDest (data->dest, data->xDest, data->yDest + i,
 			       data->width, dest_buffer, 0, 0);
-		
+
 		/* blend */
 		compose (dest_buffer, src_buffer, mask_buffer, data->width);
-		
+
 		/* write back */
 		store (data->dest, data->xDest, data->yDest + i, data->width,
 		       dest_buffer);
@@ -4457,10 +4451,10 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 	CombineFuncU compose = PIXMAN_COMPOSE_FUNCTIONS.combineU[data->op];
 	if (!compose)
 	    return;
-	
+
 	if (fetchMask)
 	    mask_buffer = dest_buffer + data->width;
-	
+
 	for (i = 0; i < data->height; ++i) {
 	    /* fill first half of scanline with source */
 	    if (fetchSrc)
@@ -4471,16 +4465,16 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 		       source can be optimized */
 		    fetchMask (data->mask, data->xMask, data->yMask + i,
 			       data->width, mask_buffer, 0, 0);
-		    
+
 		    if (maskClass == SOURCE_IMAGE_CLASS_HORIZONTAL)
 			fetchMask = NULL;
 		}
-		
+
 		if (srcClass == SOURCE_IMAGE_CLASS_HORIZONTAL)
 		{
 		    fetchSrc (data->src, data->xSrc, data->ySrc + i,
 			      data->width, src_buffer, 0, 0);
-		    
+
 		    if (mask_buffer)
 		    {
 			fbCombineInU (mask_buffer, src_buffer, data->width);
@@ -4488,7 +4482,7 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 		    }
 		    else
 			src_mask_buffer = src_buffer;
-		    
+
 		    fetchSrc = NULL;
 		}
 		else
@@ -4496,12 +4490,12 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 		    fetchSrc (data->src, data->xSrc, data->ySrc + i,
 			      data->width, src_buffer, mask_buffer,
 			      0xff000000);
-		    
+
 		    if (mask_buffer)
 			PIXMAN_COMPOSE_FUNCTIONS.combineMaskU (src_buffer,
 							       mask_buffer,
 							       data->width);
-		    
+
 		    src_mask_buffer = src_buffer;
 		}
 	    }
@@ -4509,22 +4503,22 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 	    {
 		fetchMask (data->mask, data->xMask, data->yMask + i,
 			   data->width, mask_buffer, 0, 0);
-		
+
 		fbCombineInU (mask_buffer, src_buffer, data->width);
-		
+
 		src_mask_buffer = mask_buffer;
 	    }
-	    
+
 	    if (store)
 	    {
 		/* fill dest into second half of scanline */
 		if (fetchDest)
 		    fetchDest (data->dest, data->xDest, data->yDest + i,
 			       data->width, dest_buffer, 0, 0);
-		
+
 		/* blend */
 		compose (dest_buffer, src_mask_buffer, data->width);
-		
+
 		/* write back */
 		store (data->dest, data->xDest, data->yDest + i, data->width,
 		       dest_buffer);
@@ -4538,7 +4532,7 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 	    }
 	}
     }
-    
+
     if (!store)
 	fbFinishAccess (data->dest->pDrawable);
 }
