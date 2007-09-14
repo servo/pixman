@@ -1437,35 +1437,7 @@ pixman_image_composite (pixman_op_t      op,
 	    maskTransform = FALSE;
     }
 
-    /* YUV is only used internally for XVideo */
-    if (pSrc->bits.format == PIXMAN_yv12 || pSrc->bits.format == PIXMAN_yuy2)
-    {
-#ifdef USE_MMX
-	/* non rotating transformation */
-	if (!pSrc->common.transform ||
-	    (pSrc->common.transform->matrix[0][1] == 0 &&
-	     pSrc->common.transform->matrix[1][0] == 0 &&
-	     pSrc->common.transform->matrix[2][0] == 0 &&
-	     pSrc->common.transform->matrix[2][1] == 0 &&
-	     pSrc->common.transform->matrix[2][2] == 1 << 16))
-	{
-	    switch (pDst->bits.format) {
-	    case PIXMAN_a8r8g8b8:
-	    case PIXMAN_x8r8g8b8:
-		if (pixman_have_mmx())
-		{
-		    if (pSrc->bits.format == PIXMAN_yv12)
-			func = fbCompositeSrc_yv12x8888mmx;
-		    else
-			func = fbCompositeSrc_yuy2x8888mmx;
-		}
-	    default:
-		break;
-	    }
-	}
-#endif
-    }
-    else if ((pSrc->type == BITS || can_get_solid (pSrc)) && (!pMask || pMask->type == BITS)
+    if ((pSrc->type == BITS || can_get_solid (pSrc)) && (!pMask || pMask->type == BITS)
         && !srcTransform && !maskTransform
         && !maskAlphaMap && !srcAlphaMap && !dstAlphaMap
         && (pSrc->common.filter != PIXMAN_FILTER_CONVOLUTION)

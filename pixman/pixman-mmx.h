@@ -312,32 +312,4 @@ fbCompositeOver_x888x8x8888mmx (pixman_op_t      op,
 				uint16_t     width,
 				uint16_t     height);
 
-void
-fbCompositeSrc_yv12x8888mmx (pixman_op_t      op,
-			     pixman_image_t * pSrc,
-			     pixman_image_t * pMask,
-			     pixman_image_t * pDst,
-			     int16_t    xSrc,
-			     int16_t    ySrc,
-			     int16_t    xMask,
-			     int16_t    yMask,
-			     int16_t    xDst,
-			     int16_t    yDst,
-			     uint16_t   width,
-			     uint16_t   height);
-
-void
-fbCompositeSrc_yuy2x8888mmx (pixman_op_t      op,
-			     pixman_image_t * pSrc,
-			     pixman_image_t * pMask,
-			     pixman_image_t * pDst,
-			     int16_t    xSrc,
-			     int16_t    ySrc,
-			     int16_t    xMask,
-			     int16_t    yMask,
-			     int16_t    xDst,
-			     int16_t    yDst,
-			     uint16_t   width,
-			     uint16_t   height);
-
 #endif /* USE_MMX */
