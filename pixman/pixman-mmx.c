@@ -1698,14 +1698,14 @@ pixman_fill_mmx (uint32_t *bits,
 
     if (bpp == 16)
     {
-	stride = stride * sizeof (uint32_t) / 2;
+	stride = stride * (int) sizeof (uint32_t) / 2;
 	byte_line = (uint8_t *)(((uint16_t *)bits) + stride * y + x);
 	byte_width = 2 * width;
 	stride *= 2;
     }
     else
     {
-	stride = stride * sizeof (uint32_t) / 4;
+	stride = stride * (int) sizeof (uint32_t) / 4;
 	byte_line = (uint8_t *)(((uint32_t *)bits) + stride * y + x);
 	byte_width = 4 * width;
 	stride *= 4;
@@ -2765,16 +2765,16 @@ pixman_blt_mmx (uint32_t *src_bits,
 
     if (src_bpp == 16)
     {
-	src_stride = src_stride * sizeof (uint32_t) / 2;
-	dst_stride = dst_stride * sizeof (uint32_t) / 2;
+	src_stride = src_stride * (int) sizeof (uint32_t) / 2;
+	dst_stride = dst_stride * (int) sizeof (uint32_t) / 2;
 	src_bytes = (uint8_t *)(((uint16_t *)src_bits) + src_stride * (src_y) + (src_x));
 	dst_bytes = (uint8_t *)(((uint16_t *)dst_bits) + dst_stride * (dst_y) + (dst_x));
 	byte_width = 2 * width;
 	src_stride *= 2;
 	dst_stride *= 2;
     } else if (src_bpp == 32) {
-	src_stride = src_stride * sizeof (uint32_t) / 4;
-	dst_stride = dst_stride * sizeof (uint32_t) / 4;
+	src_stride = src_stride * (int) sizeof (uint32_t) / 4;
+	dst_stride = dst_stride * (int) sizeof (uint32_t) / 4;
 	src_bytes = (uint8_t *)(((uint32_t *)src_bits) + src_stride * (src_y) + (src_x));
 	dst_bytes = (uint8_t *)(((uint32_t *)dst_bits) + dst_stride * (dst_y) + (dst_x));
 	byte_width = 4 * width;

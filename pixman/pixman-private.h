@@ -712,7 +712,7 @@ union pixman_image
 	__bits__ = pict->bits.bits;					\
 	__stride__ = pict->bits.rowstride;				\
 	__bpp__ = PIXMAN_FORMAT_BPP(pict->bits.format);			\
-	(out_stride) = __stride__ * sizeof (uint32_t) / sizeof (type);	\
+	(out_stride) = __stride__ * (int) sizeof (uint32_t) / (int) sizeof (type);	\
 	(line) = ((type *) __bits__) +					\
 	    (out_stride) * (y) + (mul) * (x);				\
     } while (0)
