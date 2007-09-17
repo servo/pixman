@@ -128,8 +128,8 @@ fbRasterizeEdges8 (pixman_image_t       *image,
     int fill_start = -1, fill_end = -1;
     int fill_size = 0;
     uint32_t *buf = (image)->bits.bits;
-    int32_t stride = (image)->bits.rowstride;
-    int32_t width = (image)->bits.width;
+    int stride = (image)->bits.rowstride;
+    int width = (image)->bits.width;
 
     line = buf + pixman_fixed_to_int (y) * stride;
 
