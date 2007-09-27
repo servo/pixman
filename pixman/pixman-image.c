@@ -359,8 +359,11 @@ pixman_image_create_bits (pixman_format_code_t  format,
     
     image = allocate_image();
 
-    if (!image)
+    if (!image) {
+	if (free_me)
+	    free (free_me);
 	return NULL;
+    }
     
     image->type = BITS;
     image->bits.format = format;
