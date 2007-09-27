@@ -350,7 +350,7 @@ pixman_image_create_bits (pixman_format_code_t  format,
     return_val_if_fail (bits == NULL ||
 			(rowstride_bytes % sizeof (uint32_t)) == 0, NULL); 
 
-    if (!bits)
+    if (!bits && width && height)
     {
 	free_me = bits = create_bits (format, width, height, &rowstride_bytes);
 	if (!bits)
