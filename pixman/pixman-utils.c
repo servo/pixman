@@ -371,6 +371,20 @@ pixman_line_fixed_edge_init (pixman_edge_t *e,
 		    bot->y + y_off_fixed);
 }
 
+pixman_bool_t
+pixman_multiply_overflows_int (unsigned int a,
+		               unsigned int b)
+{
+    return a >= INT32_MAX / b;
+}
+
+pixman_bool_t
+pixman_addition_overflows_int (unsigned int a,
+		               unsigned int b)
+{
+    return a > INT32_MAX - b;
+}
+
 void *
 pixman_malloc_ab(unsigned int a,
 		 unsigned int b)

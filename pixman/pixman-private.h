@@ -69,6 +69,8 @@
 /* Memory allocation helpers */
 void *pixman_malloc_ab (unsigned int n, unsigned int b);
 void *pixman_malloc_abc (unsigned int a, unsigned int b, unsigned int c);
+pixman_bool_t pixman_multiply_overflows_int (unsigned int a, unsigned int b);
+pixman_bool_t pixman_addition_overflows_int (unsigned int a, unsigned int b);
 
 #if DEBUG
 
