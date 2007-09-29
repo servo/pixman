@@ -498,7 +498,7 @@ pixman_bool_t   pixman_image_set_filter              (pixman_image_t            
 void            pixman_image_set_filter_params       (pixman_image_t               *image,
 						      pixman_fixed_t               *params,
 						      int                           n_params);
-void		pixman_image_set_source_cliping      (pixman_image_t		   *image,
+void		pixman_image_set_source_clipping     (pixman_image_t		   *image,
 						      pixman_bool_t                 source_clipping);
 void            pixman_image_set_alpha_map           (pixman_image_t               *image,
 						      pixman_image_t               *alpha_map,
