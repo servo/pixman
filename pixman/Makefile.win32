@@ -1,0 +1,31 @@
+LIBRARY = pixman-1
+
+CC = cl
+LINK = link
+
+CFLAGS = -MD -Zi -nologo -O2 -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE -I../pixman/src -I. -DPACKAGE=$(LIBRARY) -DPACKAGE_VERSION="" -DPACKAGE_BUGREPORT=""
+
+SOURCES = \
+	pixman-region.c		\
+	pixman-image.c		\
+	pixman-compose.c	\
+	pixman-compose-accessors.c	\
+	pixman-pict.c		\
+	pixman-utils.c		\
+	pixman-edge.c		\
+	pixman-edge-accessors.c		\
+	pixman-trap.c		\
+	pixman-compute-region.c \
+	pixman-timer.c		\
+	$(NULL)
+
+OBJECTS = $(subst .c,.obj,$(SOURCES))
+
+%.obj: %.c
+	@$(CC) -c $(CFLAGS) -Fo"$@" $<
+
+$(LIBRARY).lib: $(OBJECTS)
+	lib -NOLOGO -OUT:$@ $(OBJECTS)
+
+clean:
+	@rm -f *.obj *.lib *.pdb *.ilk || exit 0

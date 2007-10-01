@@ -22,7 +22,10 @@
  * Author:  Keith Packard, SuSE, Inc.
  */
 
+#ifdef HAVE_CONFIG_H
 #include <config.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1360,7 +1363,7 @@ pixman_image_composite_rect  (pixman_op_t                   op,
     
     if (width > SCANLINE_BUFFER_LENGTH)
     {
-	scanline_buffer = (uint32_t *)malloc (width * 3 * sizeof (uint32_t));
+	scanline_buffer = (uint32_t *)pixman_malloc_abc (width, 3, sizeof (uint32_t));
 
 	if (!scanline_buffer)
 	    return;
@@ -1434,6 +1437,7 @@ pixman_image_composite (pixman_op_t      op,
     {
 	maskRepeat = pMask->common.repeat == PIXMAN_REPEAT_NORMAL;
 
+	maskTransform = pMask->common.transform != 0;
 	if (pMask->common.filter == PIXMAN_FILTER_CONVOLUTION)
 	    maskTransform = TRUE;
 
@@ -1786,7 +1790,6 @@ pixman_image_composite (pixman_op_t      op,
 		    break;
 		case PIXMAN_x8r8g8b8:
 		    switch (pDst->bits.format) {
-		    case PIXMAN_a8r8g8b8:
 		    case PIXMAN_x8r8g8b8:
 #ifdef USE_MMX
 			if (pixman_have_mmx())
@@ -1798,7 +1801,6 @@ pixman_image_composite (pixman_op_t      op,
 		    }
 		case PIXMAN_x8b8g8r8:
 		    switch (pDst->bits.format) {
-		    case PIXMAN_a8b8g8r8:
 		    case PIXMAN_x8b8g8r8:
 #ifdef USE_MMX
 			if (pixman_have_mmx())

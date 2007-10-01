@@ -20,7 +20,9 @@
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#ifdef HAVE_CONFIG_H
 #include <config.h>
+#endif
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -44,7 +46,7 @@ init_gradient (gradient_t     *gradient,
 
     init_source_image (&gradient->common);
 
-    gradient->stops = malloc (n_stops * sizeof (pixman_gradient_stop_t));
+    gradient->stops = pixman_malloc_ab (n_stops, sizeof (pixman_gradient_stop_t));
     if (!gradient->stops)
 	return FALSE;
 
@@ -106,7 +108,8 @@ pixman_image_ref (pixman_image_t *image)
     return image;
 }
 
-void
+/* returns TRUE when the image is freed */
+pixman_bool_t
 pixman_image_unref (pixman_image_t *image)
 {
     image_common_t *common = (image_common_t *)image;
@@ -146,7 +149,11 @@ pixman_image_unref (pixman_image_t *image)
 	    free (image->bits.free_me);
 	
 	free (image);
+
+	return TRUE;
     }
+
+    return FALSE;
 }
 
 /* Constructors */
@@ -278,9 +285,32 @@ create_bits (pixman_format_code_t format,
     int stride;
     int buf_size;
     int bpp;
-    
+
+    /* what follows is a long-winded way, avoiding any possibility of integer
+     * overflows, of saying:
+     * stride = ((width * bpp + FB_MASK) >> FB_SHIFT) * sizeof (uint32_t);
+     */
+
     bpp = PIXMAN_FORMAT_BPP (format);
-    stride = ((width * bpp + FB_MASK) >> FB_SHIFT) * sizeof (uint32_t);
+    if (pixman_multiply_overflows_int (width, bpp))
+	return NULL;
+
+    stride = width * bpp;
+    if (pixman_addition_overflows_int (stride, FB_MASK))
+	return NULL;
+
+    stride += FB_MASK;
+    stride >>= FB_SHIFT;
+
+#if FB_SHIFT < 2
+    if (pixman_multiply_overflows_int (stride, sizeof (uint32_t)))
+	return NULL;
+#endif
+    stride *= sizeof (uint32_t);
+
+    if (pixman_multiply_overflows_int (height, stride))
+	return NULL;
+
     buf_size = height * stride;
 
     if (rowstride_bytes)
@@ -320,7 +350,7 @@ pixman_image_create_bits (pixman_format_code_t  format,
     return_val_if_fail (bits == NULL ||
 			(rowstride_bytes % sizeof (uint32_t)) == 0, NULL); 
 
-    if (!bits)
+    if (!bits && width && height)
     {
 	free_me = bits = create_bits (format, width, height, &rowstride_bytes);
 	if (!bits)
@@ -329,8 +359,11 @@ pixman_image_create_bits (pixman_format_code_t  format,
     
     image = allocate_image();
 
-    if (!image)
+    if (!image) {
+	if (free_me)
+	    free (free_me);
 	return NULL;
+    }
     
     image->type = BITS;
     image->bits.format = format;
@@ -398,25 +431,17 @@ pixman_image_set_transform (pixman_image_t           *image,
 
     if (memcmp (&id, transform, sizeof (pixman_transform_t)) == 0)
     {
-	transform = NULL;
+	free(common->transform);
+	common->transform = NULL;
 	return TRUE;
     }
     
-    if (common->transform)
-	free (common->transform);
-
-    if (transform)
-    {
+    if (common->transform == NULL)
 	common->transform = malloc (sizeof (pixman_transform_t));
-	if (!common->transform)
-	    return FALSE;
+    if (common->transform == NULL)
+	return FALSE;
 
-	*common->transform = *transform;
-    }
-    else
-    {
-	common->transform = NULL;
-    }
+    memcpy(common->transform, transform, sizeof(pixman_transform_t));
 
     return TRUE;
 }
@@ -443,7 +468,7 @@ pixman_image_set_filter (pixman_image_t       *image,
     new_params = NULL;
     if (params)
     {
-	new_params = malloc (n_params * sizeof (pixman_fixed_t));
+	new_params = pixman_malloc_ab (n_params, sizeof (pixman_fixed_t));
 	if (!new_params)
 	    return FALSE;
 
@@ -459,6 +484,18 @@ pixman_image_set_filter (pixman_image_t       *image,
     common->filter_params = new_params;
     common->n_filter_params = n_params;
     return TRUE;
+}
+
+void
+pixman_image_set_source_clipping (pixman_image_t  *image,
+				  pixman_bool_t    source_clipping)
+{
+    image_common_t *common = &image->common;
+
+    if (source_clipping)
+	common->src_clip = &common->clip_region;
+    else
+	common->src_clip = &common->full_region;
 }
 
 /* Unlike all the other property setters, this function does not

@@ -21,7 +21,11 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
+
+#ifdef HAVE_CONFIG_H
 #include <config.h>
+#endif
+
 #include <string.h>
 #include "pixman.h"
 #include "pixman-private.h"
@@ -128,8 +132,8 @@ fbRasterizeEdges8 (pixman_image_t       *image,
     int fill_start = -1, fill_end = -1;
     int fill_size = 0;
     uint32_t *buf = (image)->bits.bits;		
-    uint32_t stride = (image)->bits.rowstride;	
-    uint32_t width = (image)->bits.width;
+    int32_t stride = (image)->bits.rowstride;	
+    int32_t width = (image)->bits.width;
     
     line = buf + pixman_fixed_to_int (y) * stride;
     
@@ -321,13 +325,9 @@ pixman_rasterize_edges (pixman_image_t *image,
 			pixman_fixed_t	b)
 {
     if (image->common.read_func	|| image->common.write_func)
-    {
-	return pixman_rasterize_edges_accessors (image, l, r, t, b);
-    }
+	pixman_rasterize_edges_accessors (image, l, r, t, b);
     else
-    {
-	return pixman_rasterize_edges_no_accessors (image, l, r, t, b);
-    }
+	pixman_rasterize_edges_no_accessors (image, l, r, t, b);
 }
 
 #endif

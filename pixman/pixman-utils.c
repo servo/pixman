@@ -21,7 +21,11 @@
  * Author:  Keith Packard, SuSE, Inc.
  */
 
+#ifdef HAVE_CONFIG_H
 #include <config.h>
+#endif
+
+#include <stdlib.h>
 #include "pixman.h"
 #include "pixman-private.h"
 #include "pixman-mmx.h"
@@ -365,4 +369,41 @@ pixman_line_fixed_edge_init (pixman_edge_t *e,
 		    top->y + y_off_fixed,
 		    bot->x + x_off_fixed,
 		    bot->y + y_off_fixed);
+}
+
+pixman_bool_t
+pixman_multiply_overflows_int (unsigned int a,
+		               unsigned int b)
+{
+    return a >= INT32_MAX / b;
+}
+
+pixman_bool_t
+pixman_addition_overflows_int (unsigned int a,
+		               unsigned int b)
+{
+    return a > INT32_MAX - b;
+}
+
+void *
+pixman_malloc_ab(unsigned int a,
+		 unsigned int b)
+{
+    if (a >= INT32_MAX / b)
+	return NULL;
+
+    return malloc (a * b);
+}
+
+void *
+pixman_malloc_abc (unsigned int a,
+		   unsigned int b,
+		   unsigned int c)
+{
+    if (a >= INT32_MAX / b)
+	return NULL;
+    else if (a * b >= INT32_MAX / c)
+	return NULL;
+    else
+	return malloc (a * b * c);
 }
