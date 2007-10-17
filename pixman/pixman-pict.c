@@ -22,7 +22,10 @@
  * Author:  Keith Packard, SuSE, Inc.
  */
 
+#ifdef HAVE_CONFIG_H
 #include <config.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1426,6 +1429,7 @@ pixman_image_composite (pixman_op_t      op,
     {
 	maskRepeat = pMask->common.repeat == PIXMAN_REPEAT_NORMAL;
 
+	maskTransform = pMask->common.transform != 0;
 	if (pMask->common.filter == PIXMAN_FILTER_CONVOLUTION)
 	    maskTransform = TRUE;
 
