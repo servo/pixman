@@ -452,7 +452,7 @@ typedef enum {
 /* 1bpp formats */
     PIXMAN_a1 =		PIXMAN_FORMAT(1,PIXMAN_TYPE_A,1,0,0,0),
     
-    PIXMAN_g1 =		PIXMAN_FORMAT(1,PIXMAN_TYPE_GRAY,0,0,0,0),
+    PIXMAN_g1 =		PIXMAN_FORMAT(1,PIXMAN_TYPE_GRAY,0,0,0,0)
 } pixman_format_code_t;
 
 /* Constructors */
