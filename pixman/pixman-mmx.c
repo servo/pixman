@@ -35,10 +35,6 @@
 
 #ifdef USE_MMX
 
-#if defined(__amd64__) || defined(__x86_64__)
-#define USE_SSE
-#endif
-
 #include <mmintrin.h>
 #ifdef USE_SSE
 #include <xmmintrin.h> /* for _mm_shuffle_pi16 and _MM_SHUFFLE */
