@@ -27,6 +27,7 @@ config.h
 config.h.in
 .*.swp
 test/composite-test
+test/fetch-test
 test/gradient-test
 *.pdb
 *.dll
