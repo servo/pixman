@@ -1,0 +1,55 @@
+Here are the steps to follow to create a new pixman release:
+
+1) Ensure that there are no uncommitted changes or unpushed commits,
+   and that you are up to date with the latest commits in the central
+   repository. Here are a couple of useful commands:
+
+	# This should report "nothing to commit (working directory clean")
+	git status
+
+	# This should give no output, (note there are *3* dots)
+	git log master...origin
+
+2) Verify that the code passes "make distcheck".
+
+	NOTE: There is some test code in the test directory, but it's
+	not yet integrated into "make distcheck" yet. It might be
+	useful to run those programs, (but I don't know how to
+	interpret those results). Another very useful thing to do is
+	to run the cairo test suite against pixman. This can be done
+	by running the following commands with the latest cairo
+	release:
+
+		tar xzf cairo-X.Y.Z.tar.gz
+		cd cairo
+		CAIRO_TEST_TARGET=image make test
+
+3) Fill out an entry in the NEWS file
+
+	Sift through the logs since the last release. This is most
+	easily done with a command such as:
+
+		git log --stat pixman-X.Y.Z..
+
+	where X.Y.Z is the previous release version.
+
+	Summarize major changes briefly in a style similar to other
+	entries in NEWS. Take special care to note any additions in
+	the API. These should be easy to find by noting modifications
+	to pixman.h in the log command above. And more specifically,
+	the following command will show each patch that has changed the
+	public header file since the given version:
+
+		git log -p pixman-X..Z.. -- pixman/pixman.h
+
+4) Increment pixman_{major|minor|micro} in configure.ac according to
+   the directions in that file. Also note that if there is an ABI
+   change then there is further work to be done, (also described in
+   configure.in).
+
+5) Use "git commit" and "git push" to publish any changes made in steps
+   3 and 4.
+
+6) Generate the final tar files with:
+
+	make distcheck
