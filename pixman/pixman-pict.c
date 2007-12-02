@@ -1729,8 +1729,11 @@ pixman_image_composite (pixman_op_t      op,
 	    if (info->src_format == PIXMAN_solid)
 		srcRepeat = FALSE;
 
-	    if (info->mask_format == PIXMAN_solid)
+	    if (info->mask_format == PIXMAN_solid	||
+		info->flags & NEED_SOLID_MASK)
+	    {
 		maskRepeat = FALSE;
+	    }
 	}
     }
     
