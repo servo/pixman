@@ -1406,6 +1406,7 @@ typedef struct
     uint32_t			flags;
 } FastPathInfo;
 
+#ifdef USE_MMX
 const FastPathInfo mmx_fast_paths[] =
 {
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_r5g6b5,   fbCompositeSolidMask_nx8x0565mmx,     0 },
@@ -1490,6 +1491,7 @@ const FastPathInfo mmx_fast_paths[] =
     { PIXMAN_OP_IN,  PIXMAN_solid,     PIXMAN_a8,	PIXMAN_a8,	 fbCompositeIn_nx8x8mmx, 0 },
     { PIXMAN_OP_NONE },
 };
+#endif
 
 const FastPathInfo c_fast_paths[] =
 {
@@ -1714,8 +1716,10 @@ pixman_image_composite (pixman_op_t      op,
 	    !pMask->common.component_alpha	&&
 	    !maskRepeat;
 
+#ifdef USE_MMX
 	info = get_fast_path (mmx_fast_paths, op, pSrc, pMask, pDst, pixbuf);
 	if (!info)
+#endif
 	    info = get_fast_path (c_fast_paths, op, pSrc, pMask, pDst, pixbuf);
 
 	if (info)
