@@ -1577,6 +1577,9 @@ get_fast_path (const FastPathInfo *fast_paths,
 	pixman_bool_t valid_src		= FALSE;
 	pixman_bool_t valid_mask	= FALSE;
 
+	if (info->op != op)
+	    continue;
+
 	if ((info->src_format == PIXMAN_solid && can_get_solid (pSrc))		||
 	    (pSrc->type == BITS && info->src_format == pSrc->bits.format))
 	{
