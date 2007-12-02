@@ -1520,7 +1520,17 @@ const FastPathInfo c_fast_paths[] =
     { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,	PIXMAN_a8b8g8r8, fbCompositeSrc_8888x8888,	   0 },
     { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,	PIXMAN_x8b8g8r8, fbCompositeSrc_8888x8888,	   0 },
     { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,     PIXMAN_b5g6r5,   fbCompositeSrc_8888x0565,	   0 },
-    
+#if 0
+    /* FIXME */
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a1,	PIXMAN_r5g6b5,   fbCompositeSolidMask_nx1xn,	   0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a1,	PIXMAN_b5g6r5,   fbCompositeSolidMask_nx1xn,	   0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a1,	PIXMAN_r8g8b8,   fbCompositeSolidMask_nx1xn,	   0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a1,	PIXMAN_b8g8r8,   fbCompositeSolidMask_nx1xn,	   0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a1,	PIXMAN_a8r8g8b8, fbCompositeSolidMask_nx1xn,	   0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a1,	PIXMAN_a8b8g8r8, fbCompositeSolidMask_nx1xn,	   0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a1,	PIXMAN_x8r8g8b8, fbCompositeSolidMask_nx1xn,	   0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a1,	PIXMAN_x8b8g8r8, fbCompositeSolidMask_nx1xn,	   0 },
+#endif
     { PIXMAN_OP_ADD, PIXMAN_a8r8g8b8,  PIXMAN_null,	PIXMAN_a8r8g8b8, fbCompositeSrcAdd_8888x8888,   0 },
     { PIXMAN_OP_ADD, PIXMAN_a8b8g8r8,  PIXMAN_null,	PIXMAN_a8b8g8r8, fbCompositeSrcAdd_8888x8888,   0 },
     { PIXMAN_OP_ADD, PIXMAN_a8,        PIXMAN_null,     PIXMAN_a8,       fbCompositeSrcAdd_8000x8000,   0 },
@@ -1529,7 +1539,6 @@ const FastPathInfo c_fast_paths[] =
     { PIXMAN_OP_ADD, PIXMAN_a1,        PIXMAN_null,     PIXMAN_a1,       fbCompositeSrcAdd_1000x1000,   0 },
 #endif
     { PIXMAN_OP_ADD, PIXMAN_solid,     PIXMAN_a8,       PIXMAN_a8,       fbCompositeSrcAdd_8888x8x8,    0 },
-    
     { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_null,     PIXMAN_a8r8g8b8, fbCompositeSolidFill, 0 },
     { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_null,     PIXMAN_x8r8g8b8, fbCompositeSolidFill, 0 },
     { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_null,     PIXMAN_a8b8g8r8, fbCompositeSolidFill, 0 },
@@ -1540,6 +1549,15 @@ const FastPathInfo c_fast_paths[] =
     { PIXMAN_OP_SRC, PIXMAN_x8r8g8b8,  PIXMAN_null,     PIXMAN_x8r8g8b8, fbCompositeSrc_8888xx888, 0 },
     { PIXMAN_OP_SRC, PIXMAN_a8b8g8r8,  PIXMAN_null,     PIXMAN_x8b8g8r8, fbCompositeSrc_8888xx888, 0 },
     { PIXMAN_OP_SRC, PIXMAN_x8b8g8r8,  PIXMAN_null,     PIXMAN_x8b8g8r8, fbCompositeSrc_8888xx888, 0 },
+#if 0
+    /* FIXME */
+    { PIXMAN_OP_SRC, PIXMAN_a8r8g8b8,  PIXMAN_null,	PIXMAN_a8r8g8b8, fbCompositeSrcSrc_nxn, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_a8b8g8r8,  PIXMAN_null,	PIXMAN_a8b8g8r8, fbCompositeSrcSrc_nxn, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_x8r8g8b8,  PIXMAN_null,	PIXMAN_x8r8g8b8, fbCompositeSrcSrc_nxn, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_x8b8g8r8,  PIXMAN_null,	PIXMAN_x8b8g8r8, fbCompositeSrcSrc_nxn, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_r5g6b5,    PIXMAN_null,     PIXMAN_r5g6b5,   fbCompositeSrcSrc_nxn, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_b5g6r5,    PIXMAN_null,     PIXMAN_b5g6r5,   fbCompositeSrcSrc_nxn, 0 },
+#endif
     { PIXMAN_OP_IN,  PIXMAN_a8,        PIXMAN_null,     PIXMAN_a8,       fbCompositeSrcIn_8x8,   0 },
     { PIXMAN_OP_IN,  PIXMAN_solid,     PIXMAN_a8,	PIXMAN_a8,	 fbCompositeSolidMaskIn_nx8x8, 0 },
     { PIXMAN_OP_NONE },
