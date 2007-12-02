@@ -1392,7 +1392,7 @@ pixman_image_composite_rect  (pixman_op_t                   op,
 #define PIXMAN_solid		PIXMAN_FORMAT(0,1,0,0,0,0)
 
 #define NEED_COMPONENT_ALPHA		(1 << 0)
-#define NEED_NON_PREMUL			(1 << 1)
+#define NEED_PIXBUF			(1 << 1)
 #define NEED_SOLID_MASK		        (1 << 2)
 #define NEED_SAME_SRC_DST_FORMAT        (1 << 3)
 
@@ -1420,30 +1420,30 @@ const FastPathInfo mmx_fast_paths[] =
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8b8g8r8, PIXMAN_a8b8g8r8, fbCompositeSolidMask_nx8888x8888Cmmx, NEED_COMPONENT_ALPHA },
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8b8g8r8, PIXMAN_x8b8g8r8, fbCompositeSolidMask_nx8888x8888Cmmx, NEED_COMPONENT_ALPHA },
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8b8g8r8, PIXMAN_b5g6r5,   fbCompositeSolidMask_nx8888x0565Cmmx, NEED_COMPONENT_ALPHA },
-    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8r8g8b8, PIXMAN_a8r8g8b8, fbCompositeSrc_8888RevNPx8888mmx, NEED_NON_PREMUL },
-    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8b8g8r8, PIXMAN_a8r8g8b8, fbCompositeSrc_8888RevNPx8888mmx, NEED_NON_PREMUL },
-    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8r8g8b8, PIXMAN_x8r8g8b8, fbCompositeSrc_8888RevNPx8888mmx, NEED_NON_PREMUL },
-    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8b8g8r8, PIXMAN_x8r8g8b8, fbCompositeSrc_8888RevNPx8888mmx, NEED_NON_PREMUL },
-    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_a8r8g8b8, PIXMAN_a8r8g8b8, fbCompositeSrc_8888RevNPx8888mmx, NEED_NON_PREMUL },
-    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_a8b8g8r8, PIXMAN_a8r8g8b8, fbCompositeSrc_8888RevNPx8888mmx, NEED_NON_PREMUL },
-    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_a8r8g8b8, PIXMAN_x8r8g8b8, fbCompositeSrc_8888RevNPx8888mmx, NEED_NON_PREMUL },
-    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_a8b8g8r8, PIXMAN_x8r8g8b8, fbCompositeSrc_8888RevNPx8888mmx, NEED_NON_PREMUL },
-    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8r8g8b8, PIXMAN_r5g6b5,   fbCompositeSrc_8888RevNPx0565mmx, NEED_NON_PREMUL },
-    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8b8g8r8, PIXMAN_r5g6b5,   fbCompositeSrc_8888RevNPx0565mmx, NEED_NON_PREMUL },
-    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_a8r8g8b8, PIXMAN_r5g6b5,   fbCompositeSrc_8888RevNPx0565mmx, NEED_NON_PREMUL },
-    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_a8b8g8r8, PIXMAN_r5g6b5,   fbCompositeSrc_8888RevNPx0565mmx, NEED_NON_PREMUL },
-    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8r8g8b8, PIXMAN_a8b8g8r8, fbCompositeSrc_8888RevNPx8888mmx, NEED_NON_PREMUL },
-    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8b8g8r8, PIXMAN_a8b8g8r8, fbCompositeSrc_8888RevNPx8888mmx, NEED_NON_PREMUL },
-    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8r8g8b8, PIXMAN_x8b8g8r8, fbCompositeSrc_8888RevNPx8888mmx, NEED_NON_PREMUL },
-    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8b8g8r8, PIXMAN_x8b8g8r8, fbCompositeSrc_8888RevNPx8888mmx, NEED_NON_PREMUL },
-    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8r8g8b8, PIXMAN_a8b8g8r8, fbCompositeSrc_8888RevNPx8888mmx, NEED_NON_PREMUL },
-    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8b8g8r8, PIXMAN_a8b8g8r8, fbCompositeSrc_8888RevNPx8888mmx, NEED_NON_PREMUL },
-    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8r8g8b8, PIXMAN_x8b8g8r8, fbCompositeSrc_8888RevNPx8888mmx, NEED_NON_PREMUL },
-    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8b8g8r8, PIXMAN_x8b8g8r8, fbCompositeSrc_8888RevNPx8888mmx, NEED_NON_PREMUL },
-    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8r8g8b8, PIXMAN_b5g6r5,   fbCompositeSrc_8888RevNPx0565mmx, NEED_NON_PREMUL },
-    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8b8g8r8, PIXMAN_b5g6r5,   fbCompositeSrc_8888RevNPx0565mmx, NEED_NON_PREMUL },
-    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8r8g8b8, PIXMAN_b5g6r5,   fbCompositeSrc_8888RevNPx0565mmx, NEED_NON_PREMUL },
-    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8b8g8r8, PIXMAN_b5g6r5,   fbCompositeSrc_8888RevNPx0565mmx, NEED_NON_PREMUL },
+    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8r8g8b8, PIXMAN_a8r8g8b8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8b8g8r8, PIXMAN_a8r8g8b8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8r8g8b8, PIXMAN_x8r8g8b8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8b8g8r8, PIXMAN_x8r8g8b8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_a8r8g8b8, PIXMAN_a8r8g8b8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_a8b8g8r8, PIXMAN_a8r8g8b8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_a8r8g8b8, PIXMAN_x8r8g8b8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_a8b8g8r8, PIXMAN_x8r8g8b8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8r8g8b8, PIXMAN_r5g6b5,   fbCompositeSrc_8888RevNPx0565mmx, NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8b8g8r8, PIXMAN_r5g6b5,   fbCompositeSrc_8888RevNPx0565mmx, NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_a8r8g8b8, PIXMAN_r5g6b5,   fbCompositeSrc_8888RevNPx0565mmx, NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_a8b8g8r8, PIXMAN_r5g6b5,   fbCompositeSrc_8888RevNPx0565mmx, NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8r8g8b8, PIXMAN_a8b8g8r8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8b8g8r8, PIXMAN_a8b8g8r8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8r8g8b8, PIXMAN_x8b8g8r8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8b8g8r8, PIXMAN_x8b8g8r8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8r8g8b8, PIXMAN_a8b8g8r8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8b8g8r8, PIXMAN_a8b8g8r8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8r8g8b8, PIXMAN_x8b8g8r8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8b8g8r8, PIXMAN_x8b8g8r8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8r8g8b8, PIXMAN_b5g6r5,   fbCompositeSrc_8888RevNPx0565mmx, NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8b8g8r8, PIXMAN_b5g6r5,   fbCompositeSrc_8888RevNPx0565mmx, NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8r8g8b8, PIXMAN_b5g6r5,   fbCompositeSrc_8888RevNPx0565mmx, NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8b8g8r8, PIXMAN_b5g6r5,   fbCompositeSrc_8888RevNPx0565mmx, NEED_PIXBUF },
     { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8,       PIXMAN_a8r8g8b8, fbCompositeSrc_x888xnx8888mmx,    NEED_SOLID_MASK },
     { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8,       PIXMAN_x8r8g8b8, fbCompositeSrc_x888xnx8888mmx,	   NEED_SOLID_MASK },
     { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8,	PIXMAN_a8b8g8r8, fbCompositeSrc_x888xnx8888mmx,	   NEED_SOLID_MASK },
@@ -1488,6 +1488,7 @@ const FastPathInfo mmx_fast_paths[] =
     { PIXMAN_OP_SRC, PIXMAN_b5g6r5,    PIXMAN_null,     PIXMAN_b5g6r5,   fbCompositeCopyAreammx, 0 },
     { PIXMAN_OP_IN,  PIXMAN_a8,        PIXMAN_null,     PIXMAN_a8,       fbCompositeIn_8x8mmx,   0 },
     { PIXMAN_OP_IN,  PIXMAN_solid,     PIXMAN_a8,	PIXMAN_a8,	 fbCompositeIn_nx8x8mmx, 0 },
+    { PIXMAN_OP_NONE },
 };
 
 const FastPathInfo c_fast_paths[] =
@@ -1541,7 +1542,82 @@ const FastPathInfo c_fast_paths[] =
     { PIXMAN_OP_SRC, PIXMAN_x8b8g8r8,  PIXMAN_null,     PIXMAN_x8b8g8r8, fbCompositeSrc_8888xx888, 0 },
     { PIXMAN_OP_IN,  PIXMAN_a8,        PIXMAN_null,     PIXMAN_a8,       fbCompositeSrcIn_8x8,   0 },
     { PIXMAN_OP_IN,  PIXMAN_solid,     PIXMAN_a8,	PIXMAN_a8,	 fbCompositeSolidMaskIn_nx8x8, 0 },
+    { PIXMAN_OP_NONE },
 };
+
+static pixman_bool_t
+mask_is_solid (pixman_image_t *mask)
+{
+    if (mask->type == SOLID)
+	return TRUE;
+
+    if (mask->type == BITS &&
+	mask->common.repeat == PIXMAN_REPEAT_NORMAL &&
+	mask->bits.width == 1 &&
+	mask->bits.height == 1)
+    {
+	return TRUE;
+    }
+
+    return FALSE;
+}
+
+static const FastPathInfo *
+get_fast_path (const FastPathInfo *fast_paths,
+	       pixman_op_t   op,
+	       pixman_image_t *pSrc,
+	       pixman_image_t *pMask,
+	       pixman_image_t *pDst,
+	       pixman_bool_t   pixbuf)
+{
+    const FastPathInfo *info;
+
+    for (info = fast_paths; info->op != PIXMAN_OP_NONE; info++)
+    {
+	pixman_bool_t valid_src		= FALSE;
+	pixman_bool_t valid_mask	= FALSE;
+
+	if ((info->src_format == PIXMAN_solid && can_get_solid (pSrc))		||
+	    (pSrc->type == BITS && info->src_format == pSrc->bits.format))
+	{
+	    valid_src = TRUE;
+	}
+
+	if (!valid_src)
+	    continue;
+
+	if ((info->mask_format == PIXMAN_null && !pMask)			||
+	    (pMask && pMask->type == BITS && info->mask_format == pMask->bits.format))
+	{
+	    valid_mask = TRUE;
+
+	    if (info->flags & NEED_SOLID_MASK)
+	    {
+		if (!pMask || !mask_is_solid (pMask))
+		    valid_mask = FALSE;
+	    }
+
+	    if (info->flags & NEED_COMPONENT_ALPHA)
+	    {
+		if (!pMask || !pMask->common.component_alpha)
+		    valid_mask = FALSE;
+	    }
+	}
+
+	if (!valid_mask)
+	    continue;
+	
+	if (info->dest_format != pDst->bits.format)
+	    continue;
+
+	if ((info->flags & NEED_PIXBUF) && !pixbuf)
+	    continue;
+
+	return info;
+    }
+
+    return NULL;
+}
 
 void
 pixman_image_composite (pixman_op_t      op,
@@ -1604,6 +1680,36 @@ pixman_image_composite (pixman_op_t      op,
 	&& !pSrc->common.read_func && !pSrc->common.write_func
 	&& !(pMask && pMask->common.read_func) && !(pMask && pMask->common.write_func)
 	&& !pDst->common.read_func && !pDst->common.write_func)
+    {
+	const FastPathInfo *info;
+	pixman_bool_t pixbuf;
+
+	pixbuf =
+	    pSrc && pSrc->type == BITS		&&
+	    pMask && pMask->type == BITS	&&
+	    pSrc->bits.bits == pMask->bits.bits &&
+	    xSrc == xMask			&&
+	    ySrc == yMask			&&
+	    !pMask->common.component_alpha	&&
+	    !maskRepeat;
+
+	info = get_fast_path (mmx_fast_paths, op, pSrc, pMask, pDst, pixbuf);
+	if (!info)
+	    info = get_fast_path (c_fast_paths, op, pSrc, pMask, pDst, pixbuf);
+
+	if (info)
+	{
+	    func = info->func;
+
+	    if (info->src_format == PIXMAN_solid)
+		srcRepeat = FALSE;
+
+	    if (info->mask_format == PIXMAN_solid)
+		maskRepeat = FALSE;
+	}
+    }
+    
+#if 0
     switch (op) {
     case PIXMAN_OP_OVER:
 	if (pMask)
@@ -2167,6 +2273,7 @@ pixman_image_composite (pixman_op_t      op,
     default:
 	break;
     }
+#endif
 
     if ((srcRepeat			&&
 	 pSrc->bits.width == 1		&&
