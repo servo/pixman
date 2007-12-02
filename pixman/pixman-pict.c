@@ -1394,7 +1394,6 @@ pixman_image_composite_rect  (pixman_op_t                   op,
 #define NEED_COMPONENT_ALPHA		(1 << 0)
 #define NEED_PIXBUF			(1 << 1)
 #define NEED_SOLID_MASK		        (1 << 2)
-#define NEED_SAME_SRC_DST_FORMAT        (1 << 3)
 
 typedef struct
 {
@@ -1407,7 +1406,7 @@ typedef struct
 } FastPathInfo;
 
 #ifdef USE_MMX
-const FastPathInfo mmx_fast_paths[] =
+static const FastPathInfo mmx_fast_paths[] =
 {
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_r5g6b5,   fbCompositeSolidMask_nx8x0565mmx,     0 },
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_b5g6r5,   fbCompositeSolidMask_nx8x0565mmx,     0 },
@@ -1493,7 +1492,7 @@ const FastPathInfo mmx_fast_paths[] =
 };
 #endif
 
-const FastPathInfo c_fast_paths[] =
+static const FastPathInfo c_fast_paths[] =
 {
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_r5g6b5,   fbCompositeSolidMask_nx8x0565, 0 },
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_b5g6r5,   fbCompositeSolidMask_nx8x0565, 0 },
