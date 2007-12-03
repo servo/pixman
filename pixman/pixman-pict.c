@@ -1387,7 +1387,9 @@ pixman_image_composite_rect  (pixman_op_t                   op,
 	free (scanline_buffer);
 }
 
-/* These "formats" all have depth 0, so they will never clash with any real ones */
+/* These "formats" both have depth 0, so they
+ * will never clash with any real ones
+ */
 #define PIXMAN_null		PIXMAN_FORMAT(0,0,0,0,0,0)
 #define PIXMAN_solid		PIXMAN_FORMAT(0,1,0,0,0,0)
 
@@ -1583,11 +1585,11 @@ mask_is_solid (pixman_image_t *mask)
 
 static const FastPathInfo *
 get_fast_path (const FastPathInfo *fast_paths,
-	       pixman_op_t   op,
-	       pixman_image_t *pSrc,
-	       pixman_image_t *pMask,
-	       pixman_image_t *pDst,
-	       pixman_bool_t   pixbuf)
+	       pixman_op_t         op,
+	       pixman_image_t     *pSrc,
+	       pixman_image_t     *pMask,
+	       pixman_image_t     *pDst,
+	       pixman_bool_t       is_pixbuf)
 {
     const FastPathInfo *info;
 
@@ -1632,7 +1634,7 @@ get_fast_path (const FastPathInfo *fast_paths,
 	if (info->dest_format != pDst->bits.format)
 	    continue;
 
-	if ((info->flags & NEED_PIXBUF) && !pixbuf)
+	if ((info->flags & NEED_PIXBUF) && !is_pixbuf)
 	    continue;
 
 	return info;
