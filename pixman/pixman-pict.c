@@ -1718,7 +1718,9 @@ pixman_image_composite (pixman_op_t      op,
 	    !maskRepeat;
 
 #ifdef USE_MMX
-	info = get_fast_path (mmx_fast_paths, op, pSrc, pMask, pDst, pixbuf);
+	info = NULL;
+	if (pixman_have_mmx())
+	    info = get_fast_path (mmx_fast_paths, op, pSrc, pMask, pDst, pixbuf);
 	if (!info)
 #endif
 	    info = get_fast_path (c_fast_paths, op, pSrc, pMask, pDst, pixbuf);
