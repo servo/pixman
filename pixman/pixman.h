@@ -370,7 +370,7 @@ pixman_bool_t pixman_fill (uint32_t *bits,
 			   int y,
 			   int width,
 			   int height,
-			   uint32_t xor);
+			   uint32_t _xor);
 /*
  * Images
  */
