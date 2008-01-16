@@ -123,7 +123,12 @@ SourcePictureClassify (source_image_t *pict,
 		stride * pict->height; \
 	int offset1 = stride < 0 ? \
 		offset0 + ((-stride) >> 1) * ((pict->height) >> 1) : \
-		offset0 + (offset0 >> 2);
+		offset0 + (offset0 >> 2)
+/* Note n trailing semicolon on the above macro; if it's there, then
+ * the typical usage of YV12_SETUP(pict); will have an extra trailing ;
+ * that some compilers will interpret as a statement -- and then any further
+ * variable declarations will cause an error.
+ */
 
 #define YV12_Y(line)		\
     ((uint8_t *) ((bits) + (stride) * (line)))
