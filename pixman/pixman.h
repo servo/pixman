@@ -165,6 +165,7 @@ struct pixman_transform
     pixman_fixed_t	matrix[3][3];
 };
 
+PIXMAN_EXPORT
 pixman_bool_t pixman_transform_point_3d (pixman_transform_t *transform,
 					 pixman_vector_t    *vector);
 
