@@ -45,15 +45,14 @@ rasterizeEdges (pixman_image_t  *image,
 	int	lxi;
 	int rxi;
 
+	lx = l->x;
+	rx = r->x;
 #if N_BITS == 1
 	/* For the non-antialiased case, round the coordinates up, in effect
 	 * sampling the center of the pixel. (The AA case does a similar 
 	 * adjustment in RenderSamplesX) */
-	lx = l->x + X_FRAC_FIRST(1);
-	rx = r->x + X_FRAC_FIRST(1);
-#else
-	lx = l->x;
-	rx = r->x;
+	lx += X_FRAC_FIRST(1);
+	rx += X_FRAC_FIRST(1);
 #endif
 	/* clip X */
 	if (lx < 0)
