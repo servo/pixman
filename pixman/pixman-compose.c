@@ -3692,7 +3692,8 @@ fbFetchFromNoRegion(bits_image_t *pict, int x, int y, uint32_t *buffer, fetchPix
 static uint32_t
 fbFetchFromNRectangles(bits_image_t *pict, int x, int y, uint32_t *buffer, fetchPixelProc fetch, pixman_box16_t *box)
 {
-    if (pixman_region_contains_point (pict->common.src_clip, x, y, box))
+    pixman_box16_t box2;
+    if (pixman_region_contains_point (pict->common.src_clip, x, y, &box2))
         return fbFetchFromNoRegion(pict, x, y, buffer, fetch, box);
     else
         return 0;
@@ -3805,7 +3806,7 @@ fbFetchTransformed_Nearest_Pad(bits_image_t * pict, int width, uint32_t *buffer,
 static void
 fbFetchTransformed_Nearest_General(bits_image_t * pict, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits, pixman_bool_t affine, pixman_vector_t v, pixman_vector_t unit)
 {
-    pixman_box16_t *box;
+    pixman_box16_t *box = NULL;
     fetchPixelProc   fetch;
     fetchFromRegionProc fetchFromRegion;
     int x, y, i;
@@ -4002,7 +4003,7 @@ fbFetchTransformed_Bilinear_Pad(bits_image_t * pict, int width, uint32_t *buffer
 static void
 fbFetchTransformed_Bilinear_General(bits_image_t * pict, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits, pixman_bool_t affine, pixman_vector_t v, pixman_vector_t unit)
 {
-    pixman_box16_t *box;
+    pixman_box16_t *box = NULL;
     fetchPixelProc   fetch;
     fetchFromRegionProc fetchFromRegion;
     int i;
@@ -4183,7 +4184,6 @@ fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uint32_t *buffe
 {
     uint32_t     *bits;
     int32_t    stride;
-    int         i;
     pixman_vector_t v;
     pixman_vector_t unit;
     pixman_bool_t affine = TRUE;
