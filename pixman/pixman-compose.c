@@ -4082,7 +4082,7 @@ fbFetchTransformed_Bilinear_General(bits_image_t * pict, int width, uint32_t *bu
 static void
 fbFetchTransformed_Convolution(bits_image_t * pict, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits, pixman_bool_t affine, pixman_vector_t v, pixman_vector_t unit)
 {
-    pixman_box16_t *box = NULL;
+    pixman_box16_t dummy;
     fetchPixelProc fetch;
     int i;
 
@@ -4144,7 +4144,7 @@ fbFetchTransformed_Convolution(bits_image_t * pict, int width, uint32_t *buffer,
                                 default:
                                     tx = x;
                             }
-                            if (pixman_region_contains_point (pict->common.src_clip, tx, ty, box)) {
+                            if (pixman_region_contains_point (pict->common.src_clip, tx, ty, &dummy)) {
                                 uint32_t c = fetch(pict, tx, ty);
 
                                 srtot += Red(c) * *p;
