@@ -1,3 +1,4 @@
+/* -*- Mode: c; c-basic-offset: 4; tab-width: 8; indent-tabs-mode: t; -*- */
 /*
  * Copyright © 2000 SuSE, Inc.
  * Copyright © 2007 Red Hat, Inc.
@@ -1234,8 +1235,10 @@ pixman_walk_composite_region (pixman_op_t op,
     const pixman_box16_t *pbox;
     int		    w, h, w_this, h_this;
     int		    x_msk, y_msk, x_src, y_src, x_dst, y_dst;
+    int		    x_src_pad_backup = 0, y_src_pad_backup = 0;
     pixman_region16_t reg;
     pixman_region16_t *region;
+    pixman_bool_t srcPad = pSrc->type == BITS && pSrc->common.repeat == PIXMAN_REPEAT_PAD;
 
     pixman_region_init (&reg);
     if (!pixman_compute_composite_region (&reg, pSrc, pMask, pDst,
@@ -1272,6 +1275,24 @@ pixman_walk_composite_region (pixman_op_t op,
 		if (h_this > pSrc->bits.height - y_src)
 		    h_this = pSrc->bits.height - y_src;
 	    }
+	    else if (srcPad)
+	    {
+		y_src_pad_backup = y_src;
+		if (y_src < 0)
+		{
+		    y_src = 0;
+		    h_this = 1;
+		}
+		else if (y_src > pSrc->bits.height - 1)
+		{
+		    y_src = pSrc->bits.height - 1;
+		    h_this = 1;
+		}
+		else if (h_this > pSrc->bits.height - y_src)
+		{
+		    h_this = pSrc->bits.height - y_src;
+		}
+	    }
 	    while (w)
 	    {
 		w_this = w;
@@ -1287,14 +1308,36 @@ pixman_walk_composite_region (pixman_op_t op,
 		    if (w_this > pSrc->bits.width - x_src)
 			w_this = pSrc->bits.width - x_src;
 		}
+		else if (srcPad)
+		{
+		    x_src_pad_backup = x_src;
+		    if (x_src < 0)
+		    {
+			x_src = 0;
+			w_this = 1;
+		    }
+		    else if (x_src > pSrc->bits.width - 1)
+		    {
+			x_src = pSrc->bits.width - 1;
+			w_this = 1;
+		    }
+		    else if (w_this > pSrc->bits.width - x_src)
+		    {
+			w_this = pSrc->bits.width - x_src;
+		    }
+		}
 		(*compositeRect) (op, pSrc, pMask, pDst,
 				  x_src, y_src, x_msk, y_msk, x_dst, y_dst,
 				  w_this, h_this);
+		if (srcPad)
+		    x_src = x_src_pad_backup;
 		w -= w_this;
 		x_src += w_this;
 		x_msk += w_this;
 		x_dst += w_this;
 	    }
+	    if (srcPad)
+		y_src = y_src_pad_backup;
 	    h -= h_this;
 	    y_src += h_this;
 	    y_msk += h_this;
