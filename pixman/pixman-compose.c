@@ -4180,6 +4180,19 @@ fbFetchTransformed_Convolution(bits_image_t * pict, int width, uint32_t *buffer,
 }
 
 static void
+adjust (pixman_vector_t *v, pixman_vector_t *u, pixman_fixed_t adjustment)
+{
+    int delta_v = (adjustment * v->vector[2]) >> 16;
+    int delta_u = (adjustment * u->vector[2]) >> 16;
+    
+    v->vector[0] += delta_v;
+    v->vector[1] += delta_v;
+    
+    u->vector[0] += delta_u;
+    u->vector[1] += delta_u;
+}
+
+static void
 fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
 {
     uint32_t     *bits;
@@ -4192,8 +4205,8 @@ fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uint32_t *buffe
     stride = pict->rowstride;
 
     /* reference point is the center of the pixel */
-    v.vector[0] = pixman_int_to_fixed(x) + pixman_fixed_1 / 2 - 1;
-    v.vector[1] = pixman_int_to_fixed(y) + pixman_fixed_1 / 2 - 1;
+    v.vector[0] = pixman_int_to_fixed(x) + pixman_fixed_1 / 2;
+    v.vector[1] = pixman_int_to_fixed(y) + pixman_fixed_1 / 2;
     v.vector[2] = pixman_fixed_1;
 
     /* when using convolution filters or PIXMAN_REPEAT_PAD one might get here without a transform */
@@ -4216,8 +4229,14 @@ fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uint32_t *buffe
         unit.vector[2] = 0;
     }
 
+    /* This allows filtering code to pretend that pixels are located at integer coordinates */
+    adjust (&v, &unit, -(pixman_fixed_1 / 2));
+    
     if (pict->common.filter == PIXMAN_FILTER_NEAREST || pict->common.filter == PIXMAN_FILTER_FAST)
     {
+	/* Round down to closest integer, ensuring that 0.5 rounds to 0, not 1 */
+	adjust (&v, &unit, pixman_fixed_1 / 2 - pixman_fixed_e);
+	
         if (pict->common.repeat == PIXMAN_REPEAT_NORMAL)
         {
             fbFetchTransformed_Nearest_Normal(pict, width, buffer, mask, maskBits, affine, v, unit);
@@ -4235,12 +4254,6 @@ fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uint32_t *buffe
 	       pict->common.filter == PIXMAN_FILTER_GOOD	||
 	       pict->common.filter == PIXMAN_FILTER_BEST)
     {
-        /* adjust vector for maximum contribution at 0.5, 0.5 of each texel. */
-        v.vector[0] -= v.vector[2] / 2;
-        v.vector[1] -= v.vector[2] / 2;
-        unit.vector[0] -= unit.vector[2] / 2;
-        unit.vector[1] -= unit.vector[2] / 2;
-
         if (pict->common.repeat == PIXMAN_REPEAT_NORMAL)
         {
             fbFetchTransformed_Bilinear_Normal(pict, width, buffer, mask, maskBits, affine, v, unit);
@@ -4256,6 +4269,9 @@ fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uint32_t *buffe
     }
     else if (pict->common.filter == PIXMAN_FILTER_CONVOLUTION)
     {
+	/* Round to closest integer, ensuring that 0.5 rounds to 0, not 1 */
+	adjust (&v, &unit, pixman_fixed_1 / 2 - pixman_fixed_e);
+	
         fbFetchTransformed_Convolution(pict, width, buffer, mask, maskBits, affine, v, unit);
     }
 
