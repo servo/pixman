@@ -30,3 +30,16 @@ libpixman_mmx_la_CFLAGS = $(DEP_CFLAGS) $(MMX_CFLAGS)
 libpixman_mmx_la_LIBADD = $(DEP_LIBS)
 libpixman_1_la_LIBADD += libpixman-mmx.la
 endif
+
+
+# sse2 code
+if USE_SSE2
+noinst_LTLIBRARIES = libpixman-sse.la
+libpixman_sse_la_SOURCES = \
+	pixman-sse.c \
+	pixman-sse.h
+libpixman_sse_la_CFLAGS = $(DEP_CFLAGS) $(SSE_CFLAGS)
+libpixman_sse_la_LIBADD = $(DEP_LIBS)
+libpixman_1_la_LIBADD += libpixman-sse.la
+endif
+

@@ -33,6 +33,7 @@
 
 #include "pixman-private.h"
 #include "pixman-mmx.h"
+#include "pixman-sse.h"
 
 #define FbFullMask(n)   ((n) == 32 ? (uint32_t)-1 : ((((uint32_t) 1) << n) - 1))
 
@@ -1555,6 +1556,14 @@ static const FastPathInfo c_fast_paths[] =
     { PIXMAN_OP_NONE },
 };
 
+#ifdef USE_SSE2
+static const FastPathInfo sse_fast_paths[] =
+{
+    { PIXMAN_OP_NONE },
+};
+#endif
+
+
 static pixman_bool_t
 mask_is_solid (pixman_image_t *mask)
 {
@@ -1655,6 +1664,15 @@ pixman_image_composite (pixman_op_t      op,
     pixman_bool_t	dstAlphaMap = pDst->common.alpha_map != NULL;
     CompositeFunc   func = NULL;
 
+#ifdef USE_SSE2
+    static pixman_bool_t sse_setup = FALSE;
+    if (!sse_setup)
+    {
+        fbComposeSetupSSE();
+        sse_setup = TRUE;
+    }
+#endif
+    
 #ifdef USE_MMX
     static pixman_bool_t mmx_setup = FALSE;
     if (!mmx_setup)
@@ -1706,9 +1724,16 @@ pixman_image_composite (pixman_op_t      op,
 	    ySrc == yMask			&&
 	    !pMask->common.component_alpha	&&
 	    !maskRepeat;
+	info = NULL;
+	
+#ifdef USE_SSE2
+	if (pixman_have_sse ())
+	    info = get_fast_path (sse_fast_paths, op, pSrc, pMask, pDst, pixbuf);
+	if (!info)
+#endif
 
 #ifdef USE_MMX
-	info = NULL;
+
 	if (pixman_have_mmx())
 	    info = get_fast_path (mmx_fast_paths, op, pSrc, pMask, pDst, pixbuf);
 	if (!info)
@@ -1975,6 +2000,22 @@ pixman_have_mmx (void)
     }
 
     return mmx_present;
+}
+
+pixman_bool_t
+pixman_have_sse (void)
+{
+    static pixman_bool_t initialized = FALSE;
+    static pixman_bool_t sse_present;
+
+    if (!initialized)
+    {
+        unsigned int features = detectCPUFeatures();
+        sse_present = (features & (SSE|SSE2)) == (SSE|SSE2);
+        initialized = TRUE;
+    }
+
+    return sse_present;
 }
 #endif /* __amd64__ */
 #endif
