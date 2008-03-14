@@ -27,6 +27,8 @@
 #include <config.h>
 #endif
 
+#include "pixman-sse.h"
+
 #ifdef USE_SSE2
 
 void

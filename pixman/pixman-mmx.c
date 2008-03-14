@@ -951,7 +951,7 @@ fbComposeSetupMMX(void)
         pixman_composeFunctions.combineMaskU = mmxCombineMaskU;
     }
 
-    iniitialized = TRUE;
+    initialized = TRUE;
 }
 
 
@@ -2964,8 +2964,6 @@ fbCompositeOver_x888x8x8888mmx (pixman_op_t      op,
     uint32_t    *dst, *dstLine;
     uint8_t	*mask, *maskLine;
     int		 srcStride, maskStride, dstStride;
-    __m64 m;
-    uint32_t s, d;
     uint16_t w;
 
     fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
