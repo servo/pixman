@@ -1484,6 +1484,13 @@ static const FastPathInfo mmx_fast_paths[] =
 };
 #endif
 
+#ifdef USE_SSE2
+static const FastPathInfo sse_fast_paths[] =
+{
+    { PIXMAN_OP_NONE },
+};
+#endif
+
 static const FastPathInfo c_fast_paths[] =
 {
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_r5g6b5,   fbCompositeSolidMask_nx8x0565, 0 },
@@ -1555,14 +1562,6 @@ static const FastPathInfo c_fast_paths[] =
     { PIXMAN_OP_IN,  PIXMAN_solid,     PIXMAN_a8,	PIXMAN_a8,	 fbCompositeSolidMaskIn_nx8x8, 0 },
     { PIXMAN_OP_NONE },
 };
-
-#ifdef USE_SSE2
-static const FastPathInfo sse_fast_paths[] =
-{
-    { PIXMAN_OP_NONE },
-};
-#endif
-
 
 static pixman_bool_t
 mask_is_solid (pixman_image_t *mask)
@@ -1655,37 +1654,29 @@ pixman_image_composite (pixman_op_t      op,
 			uint16_t     width,
 			uint16_t     height)
 {
-    pixman_bool_t	    srcRepeat = pSrc->type == BITS && pSrc->common.repeat == PIXMAN_REPEAT_NORMAL;
-    pixman_bool_t	    maskRepeat = FALSE;
-    pixman_bool_t	    srcTransform = pSrc->common.transform != NULL;
-    pixman_bool_t	    maskTransform = FALSE;
-    pixman_bool_t	    srcAlphaMap = pSrc->common.alpha_map != NULL;
-    pixman_bool_t	maskAlphaMap = FALSE;
-    pixman_bool_t	dstAlphaMap = pDst->common.alpha_map != NULL;
-    CompositeFunc   func = NULL;
+    pixman_bool_t srcRepeat = pSrc->type == BITS && pSrc->common.repeat == PIXMAN_REPEAT_NORMAL;
+    pixman_bool_t maskRepeat = FALSE;
+    pixman_bool_t srcTransform = pSrc->common.transform != NULL;
+    pixman_bool_t maskTransform = FALSE;
+    pixman_bool_t srcAlphaMap = pSrc->common.alpha_map != NULL;
+    pixman_bool_t maskAlphaMap = FALSE;
+    pixman_bool_t dstAlphaMap = pDst->common.alpha_map != NULL;
+    CompositeFunc func = NULL;
 
 #ifdef USE_SSE2
-    static pixman_bool_t sse_setup = FALSE;
-    if (!sse_setup)
-    {
-        fbComposeSetupSSE();
-        sse_setup = TRUE;
-    }
+    fbComposeSetupSSE();
 #endif
     
 #ifdef USE_MMX
-    static pixman_bool_t mmx_setup = FALSE;
-    if (!mmx_setup)
-    {
-        fbComposeSetupMMX();
-        mmx_setup = TRUE;
-    }
+    fbComposeSetupMMX();
 #endif
 
     if (srcRepeat && srcTransform &&
 	pSrc->bits.width == 1 &&
 	pSrc->bits.height == 1)
+    {
 	srcTransform = FALSE;
+    }
 
     if (pMask && pMask->type == BITS)
     {
@@ -1700,7 +1691,9 @@ pixman_image_composite (pixman_op_t      op,
 	if (maskRepeat && maskTransform &&
 	    pMask->bits.width == 1 &&
 	    pMask->bits.height == 1)
+	{
 	    maskTransform = FALSE;
+	}
     }
 
     if ((pSrc->type == BITS || can_get_solid (pSrc)) && (!pMask || pMask->type == BITS)
@@ -2011,7 +2004,7 @@ pixman_have_sse (void)
     if (!initialized)
     {
         unsigned int features = detectCPUFeatures();
-        sse_present = (features & (SSE|SSE2)) == (SSE|SSE2);
+        sse_present = (features & (MMX|MMX_Extensions|SSE|SSE2)) == (MMX|MMX_Extensions|SSE|SSE2);
         initialized = TRUE;
     }
 

@@ -913,8 +913,14 @@ mmxCombineAddC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
     _mm_empty();
 }
 
-void fbComposeSetupMMX(void)
+void
+fbComposeSetupMMX(void)
 {
+    static pixman_bool_t initialized = FALSE;
+
+    if (initialized)
+	return;
+    
     /* check if we have MMX support and initialize accordingly */
     if (pixman_have_mmx())
     {
@@ -944,6 +950,8 @@ void fbComposeSetupMMX(void)
 
         pixman_composeFunctions.combineMaskU = mmxCombineMaskU;
     }
+
+    iniitialized = TRUE;
 }
 
 

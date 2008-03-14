@@ -29,12 +29,20 @@
 
 #ifdef USE_SSE2
 
-void fbComposeSetupSSE(void)
+void
+fbComposeSetupSSE(void)
 {
+    static pixman_bool_t initialized = FALSE;
+
+    if (initialized)
+	return;
+    
     /* check if we have SSE2 support and initialize accordingly */
     if (pixman_have_sse())
     {
     }
+
+    initialized = TRUE;
 }
 
 
