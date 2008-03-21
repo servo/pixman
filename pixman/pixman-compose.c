@@ -3373,7 +3373,7 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 
 		    if (mask_buffer)
 		    {
-			fbCombineInU (mask_buffer, src_buffer, data->width);
+			PIXMAN_COMPOSE_FUNCTIONS.combineU[PIXMAN_OP_IN] (mask_buffer, src_buffer, data->width);
 			src_mask_buffer = mask_buffer;
 		    }
 		    else
@@ -3400,7 +3400,7 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 		fetchMask (data->mask, data->xMask, data->yMask + i,
 			   data->width, mask_buffer, 0, 0);
 
-		fbCombineInU (mask_buffer, src_buffer, data->width);
+		PIXMAN_COMPOSE_FUNCTIONS.combineU[PIXMAN_OP_IN] (mask_buffer, src_buffer, data->width);
 
 		src_mask_buffer = mask_buffer;
 	    }

@@ -1,3 +1,8 @@
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#include <string.h>
 
 #include "pixman-private.h"
 /*
@@ -28,20 +33,20 @@ pixman_fbCombineMaskU (uint32_t *src, const uint32_t *mask, int width)
  * All of the composing functions
  */
 
-FASTCALL void
+FASTCALL static void
 fbCombineClear (uint32_t *dest, const uint32_t *src, int width)
 {
     memset(dest, 0, width*sizeof(uint32_t));
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineSrcU (uint32_t *dest, const uint32_t *src, int width)
 {
     memcpy(dest, src, width*sizeof(uint32_t));
 }
 
 /* if the Src is opaque, call fbCombineSrcU */
-FASTCALL void
+FASTCALL static void
 fbCombineOverU (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
@@ -56,7 +61,7 @@ fbCombineOverU (uint32_t *dest, const uint32_t *src, int width)
 }
 
 /* if the Dst is opaque, this is a noop */
-FASTCALL void
+FASTCALL static void
 fbCombineOverReverseU (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
@@ -70,7 +75,7 @@ fbCombineOverReverseU (uint32_t *dest, const uint32_t *src, int width)
 }
 
 /* if the Dst is opaque, call fbCombineSrcU */
-FASTCALL void
+FASTCALL static void
 fbCombineInU (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
@@ -83,7 +88,7 @@ fbCombineInU (uint32_t *dest, const uint32_t *src, int width)
 }
 
 /* if the Src is opaque, this is a noop */
-FASTCALL void
+FASTCALL static void
 fbCombineInReverseU (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
@@ -96,7 +101,7 @@ fbCombineInReverseU (uint32_t *dest, const uint32_t *src, int width)
 }
 
 /* if the Dst is opaque, call fbCombineClear */
-FASTCALL void
+FASTCALL static void
 fbCombineOutU (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
@@ -109,7 +114,7 @@ fbCombineOutU (uint32_t *dest, const uint32_t *src, int width)
 }
 
 /* if the Src is opaque, call fbCombineClear */
-FASTCALL void
+FASTCALL static void
 fbCombineOutReverseU (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
@@ -124,7 +129,7 @@ fbCombineOutReverseU (uint32_t *dest, const uint32_t *src, int width)
 /* if the Src is opaque, call fbCombineInU */
 /* if the Dst is opaque, call fbCombineOverU */
 /* if both the Src and Dst are opaque, call fbCombineSrcU */
-FASTCALL void
+FASTCALL static void
 fbCombineAtopU (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
@@ -142,7 +147,7 @@ fbCombineAtopU (uint32_t *dest, const uint32_t *src, int width)
 /* if the Src is opaque, call fbCombineOverReverseU */
 /* if the Dst is opaque, call fbCombineInReverseU */
 /* if both the Src and Dst are opaque, call fbCombineDstU */
-FASTCALL void
+FASTCALL static void
 fbCombineAtopReverseU (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
@@ -160,7 +165,7 @@ fbCombineAtopReverseU (uint32_t *dest, const uint32_t *src, int width)
 /* if the Src is opaque, call fbCombineOverU */
 /* if the Dst is opaque, call fbCombineOverReverseU */
 /* if both the Src and Dst are opaque, call fbCombineClear */
-FASTCALL void
+FASTCALL static void
 fbCombineXorU (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
@@ -175,7 +180,7 @@ fbCombineXorU (uint32_t *dest, const uint32_t *src, int width)
     }
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineAddU (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
@@ -190,7 +195,7 @@ fbCombineAddU (uint32_t *dest, const uint32_t *src, int width)
 /* if the Src is opaque, call fbCombineAddU */
 /* if the Dst is opaque, call fbCombineAddU */
 /* if both the Src and Dst are opaque, call fbCombineAddU */
-FASTCALL void
+FASTCALL static void
 fbCombineSaturateU (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
@@ -252,7 +257,7 @@ fbCombineSaturateU (uint32_t *dest, const uint32_t *src, int width)
 #define CombineXor	(CombineAOut|CombineBOut)
 
 /* portion covered by a but not b */
-FASTCALL uint8_t
+FASTCALL static uint8_t
 fbCombineDisjointOutPart (uint8_t a, uint8_t b)
 {
     /* min (1, (1-b) / a) */
@@ -264,7 +269,7 @@ fbCombineDisjointOutPart (uint8_t a, uint8_t b)
 }
 
 /* portion covered by both a and b */
-FASTCALL uint8_t
+FASTCALL static uint8_t
 fbCombineDisjointInPart (uint8_t a, uint8_t b)
 {
     /* max (1-(1-b)/a,0) */
@@ -278,7 +283,7 @@ fbCombineDisjointInPart (uint8_t a, uint8_t b)
 }
 
 /* portion covered by a but not b */
-FASTCALL uint8_t
+FASTCALL static uint8_t
 fbCombineConjointOutPart (uint8_t a, uint8_t b)
 {
     /* max (1-b/a,0) */
@@ -292,7 +297,7 @@ fbCombineConjointOutPart (uint8_t a, uint8_t b)
 }
 
 /* portion covered by both a and b */
-FASTCALL uint8_t
+FASTCALL static uint8_t
 fbCombineConjointInPart (uint8_t a, uint8_t b)
 {
     /* min (1,b/a) */
@@ -302,7 +307,7 @@ fbCombineConjointInPart (uint8_t a, uint8_t b)
     return FbIntDiv(b,a);   /* b/a */
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineDisjointGeneralU (uint32_t *dest, const uint32_t *src, int width, uint8_t combine)
 {
     int i;
@@ -352,7 +357,7 @@ fbCombineDisjointGeneralU (uint32_t *dest, const uint32_t *src, int width, uint8
     }
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineDisjointOverU (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
@@ -374,49 +379,49 @@ fbCombineDisjointOverU (uint32_t *dest, const uint32_t *src, int width)
     }
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineDisjointInU (uint32_t *dest, const uint32_t *src, int width)
 {
     fbCombineDisjointGeneralU (dest, src, width, CombineAIn);
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineDisjointInReverseU (uint32_t *dest, const uint32_t *src, int width)
 {
     fbCombineDisjointGeneralU (dest, src, width, CombineBIn);
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineDisjointOutU (uint32_t *dest, const uint32_t *src, int width)
 {
     fbCombineDisjointGeneralU (dest, src, width, CombineAOut);
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineDisjointOutReverseU (uint32_t *dest, const uint32_t *src, int width)
 {
     fbCombineDisjointGeneralU (dest, src, width, CombineBOut);
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineDisjointAtopU (uint32_t *dest, const uint32_t *src, int width)
 {
     fbCombineDisjointGeneralU (dest, src, width, CombineAAtop);
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineDisjointAtopReverseU (uint32_t *dest, const uint32_t *src, int width)
 {
     fbCombineDisjointGeneralU (dest, src, width, CombineBAtop);
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineDisjointXorU (uint32_t *dest, const uint32_t *src, int width)
 {
     fbCombineDisjointGeneralU (dest, src, width, CombineXor);
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineConjointGeneralU (uint32_t *dest, const uint32_t *src, int width, uint8_t combine)
 {
     int i;
@@ -466,58 +471,58 @@ fbCombineConjointGeneralU (uint32_t *dest, const uint32_t *src, int width, uint8
     }
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineConjointOverU (uint32_t *dest, const uint32_t *src, int width)
 {
     fbCombineConjointGeneralU (dest, src, width, CombineAOver);
 }
 
 
-FASTCALL void
+FASTCALL static void
 fbCombineConjointOverReverseU (uint32_t *dest, const uint32_t *src, int width)
 {
     fbCombineConjointGeneralU (dest, src, width, CombineBOver);
 }
 
 
-FASTCALL void
+FASTCALL static void
 fbCombineConjointInU (uint32_t *dest, const uint32_t *src, int width)
 {
     fbCombineConjointGeneralU (dest, src, width, CombineAIn);
 }
 
 
-FASTCALL void
+FASTCALL static void
 fbCombineConjointInReverseU (uint32_t *dest, const uint32_t *src, int width)
 {
     fbCombineConjointGeneralU (dest, src, width, CombineBIn);
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineConjointOutU (uint32_t *dest, const uint32_t *src, int width)
 {
     fbCombineConjointGeneralU (dest, src, width, CombineAOut);
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineConjointOutReverseU (uint32_t *dest, const uint32_t *src, int width)
 {
     fbCombineConjointGeneralU (dest, src, width, CombineBOut);
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineConjointAtopU (uint32_t *dest, const uint32_t *src, int width)
 {
     fbCombineConjointGeneralU (dest, src, width, CombineAAtop);
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineConjointAtopReverseU (uint32_t *dest, const uint32_t *src, int width)
 {
     fbCombineConjointGeneralU (dest, src, width, CombineBAtop);
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineConjointXorU (uint32_t *dest, const uint32_t *src, int width)
 {
     fbCombineConjointGeneralU (dest, src, width, CombineXor);
@@ -527,7 +532,7 @@ fbCombineConjointXorU (uint32_t *dest, const uint32_t *src, int width)
 /*************************** Per Channel functions ******************************/
 /********************************************************************************/
 
-FASTCALL void
+FASTCALL static void
 fbCombineMaskC (uint32_t *src, uint32_t *mask)
 {
     uint32_t a = *mask;
@@ -558,7 +563,7 @@ fbCombineMaskC (uint32_t *src, uint32_t *mask)
     *(mask) = a;
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineMaskValueC (uint32_t *src, const uint32_t *mask)
 {
     uint32_t a = *mask;
@@ -578,7 +583,7 @@ fbCombineMaskValueC (uint32_t *src, const uint32_t *mask)
     *(src) =x;
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineMaskAlphaC (const uint32_t *src, uint32_t *mask)
 {
     uint32_t a = *(mask);
@@ -605,13 +610,13 @@ fbCombineMaskAlphaC (const uint32_t *src, uint32_t *mask)
 
 
 
-FASTCALL void
+FASTCALL static void
 fbCombineClearC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     memset(dest, 0, width*sizeof(uint32_t));
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineSrcC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     int i;
@@ -626,7 +631,7 @@ fbCombineSrcC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
     }
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineOverC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     int i;
@@ -652,7 +657,7 @@ fbCombineOverC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
     }
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineOverReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     int i;
@@ -677,7 +682,7 @@ fbCombineOverReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
     }
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineInC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     int i;
@@ -701,7 +706,7 @@ fbCombineInC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
     }
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineInReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     int i;
@@ -727,7 +732,7 @@ fbCombineInReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
     }
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineOutC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     int i;
@@ -752,7 +757,7 @@ fbCombineOutC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
     }
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineOutReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     int i;
@@ -778,7 +783,7 @@ fbCombineOutReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
     }
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineAtopC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     int i;
@@ -799,7 +804,7 @@ fbCombineAtopC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
     }
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineAtopReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     int i;
@@ -821,7 +826,7 @@ fbCombineAtopReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
     }
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineXorC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     int i;
@@ -842,7 +847,7 @@ fbCombineXorC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
     }
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineAddC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     int i;
@@ -859,7 +864,7 @@ fbCombineAddC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
     }
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineSaturateC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     int i;
@@ -906,7 +911,7 @@ fbCombineSaturateC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
     }
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineDisjointGeneralC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width, uint8_t combine)
 {
     int i;
@@ -982,55 +987,55 @@ fbCombineDisjointGeneralC (uint32_t *dest, uint32_t *src, uint32_t *mask, int wi
     }
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineDisjointOverC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     fbCombineDisjointGeneralC (dest, src, mask, width, CombineAOver);
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineDisjointInC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     fbCombineDisjointGeneralC (dest, src, mask, width, CombineAIn);
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineDisjointInReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     fbCombineDisjointGeneralC (dest, src, mask, width, CombineBIn);
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineDisjointOutC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     fbCombineDisjointGeneralC (dest, src, mask, width, CombineAOut);
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineDisjointOutReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     fbCombineDisjointGeneralC (dest, src, mask, width, CombineBOut);
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineDisjointAtopC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     fbCombineDisjointGeneralC (dest, src, mask, width, CombineAAtop);
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineDisjointAtopReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     fbCombineDisjointGeneralC (dest, src, mask, width, CombineBAtop);
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineDisjointXorC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     fbCombineDisjointGeneralC (dest, src, mask, width, CombineXor);
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineConjointGeneralC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width, uint8_t combine)
 {
     int i;
@@ -1106,55 +1111,55 @@ fbCombineConjointGeneralC (uint32_t *dest, uint32_t *src, uint32_t *mask, int wi
     }
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineConjointOverC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     fbCombineConjointGeneralC (dest, src, mask, width, CombineAOver);
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineConjointOverReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     fbCombineConjointGeneralC (dest, src, mask, width, CombineBOver);
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineConjointInC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     fbCombineConjointGeneralC (dest, src, mask, width, CombineAIn);
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineConjointInReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     fbCombineConjointGeneralC (dest, src, mask, width, CombineBIn);
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineConjointOutC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     fbCombineConjointGeneralC (dest, src, mask, width, CombineAOut);
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineConjointOutReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     fbCombineConjointGeneralC (dest, src, mask, width, CombineBOut);
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineConjointAtopC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     fbCombineConjointGeneralC (dest, src, mask, width, CombineAAtop);
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineConjointAtopReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     fbCombineConjointGeneralC (dest, src, mask, width, CombineBAtop);
 }
 
-FASTCALL void
+FASTCALL static void
 fbCombineConjointXorC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 {
     fbCombineConjointGeneralC (dest, src, mask, width, CombineXor);

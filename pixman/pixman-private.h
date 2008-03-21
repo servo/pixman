@@ -300,8 +300,8 @@ union pixman_image
 };
 
 
-CombineFuncU pixman_fbCombineFuncU[];
-CombineFuncC pixman_fbCombineFuncC[];
+extern CombineFuncU pixman_fbCombineFuncU[];
+extern CombineFuncC pixman_fbCombineFuncC[];
 FASTCALL void pixman_fbCombineMaskU (uint32_t *src, const uint32_t *mask, int width);
 
 #define LOG2_BITMAP_PAD 5

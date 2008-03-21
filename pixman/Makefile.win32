@@ -24,7 +24,7 @@ endif
 SOURCES = \
 	pixman-region.c				\
 	pixman-image.c					\
-	pixman-compose-operators.c				\
+	pixman-combine.c				\
 	pixman-compose.c				\
 	pixman-compose-accessors.c	\
 	pixman-pict.c					\
