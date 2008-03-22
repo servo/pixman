@@ -1767,7 +1767,6 @@ static void fbFetchSolid(bits_image_t * pict, int x, int y, int width, uint32_t 
     end = buffer + width;
     while (buffer < end)
 	*(buffer++) = color;
-    fbFinishAccess (pict->pDrawable);
 }
 
 static void fbFetch(bits_image_t * pict, int x, int y, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
@@ -2977,10 +2976,7 @@ fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uint32_t *buffe
     if (pict->common.transform)
     {
         if (!pixman_transform_point_3d (pict->common.transform, &v))
-        {
-            fbFinishAccess (pict->pDrawable);
             return;
-        }
         unit.vector[0] = pict->common.transform->matrix[0][0];
         unit.vector[1] = pict->common.transform->matrix[1][0];
         unit.vector[2] = pict->common.transform->matrix[2][0];
@@ -3038,8 +3034,6 @@ fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uint32_t *buffe
 	
         fbFetchTransformed_Convolution(pict, width, buffer, mask, maskBits, affine, v, unit);
     }
-
-    fbFinishAccess (pict->pDrawable);
 }
 
 
@@ -3088,7 +3082,6 @@ fbStore(bits_image_t * pict, int x, int y, int width, uint32_t *buffer)
     stride = pict->rowstride;
     bits += y*stride;
     store((pixman_image_t *)pict, bits, buffer, x, width, indexed);
-    fbFinishAccess (pict->pDrawable);
 }
 
 static void
@@ -3127,9 +3120,6 @@ fbStoreExternalAlpha(bits_image_t * pict, int x, int y, int width, uint32_t *buf
     store((pixman_image_t *)pict, bits, buffer, x, width, indexed);
     astore((pixman_image_t *)pict->common.alpha_map,
 	   alpha_bits, buffer, ax - pict->common.alpha_origin.x, width, aindexed);
-
-    fbFinishAccess (pict->alpha_map->pDrawable);
-    fbFinishAccess (pict->pDrawable);
 }
 
 typedef void (*scanStoreProc)(pixman_image_t *, int, int, int, uint32_t *);
@@ -3428,9 +3418,6 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 	    }
 	}
     }
-
-    if (!store)
-	fbFinishAccess (data->dest->pDrawable);
 }
 
 #ifndef PIXMAN_FB_ACCESSORS

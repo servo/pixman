@@ -676,10 +676,6 @@ FASTCALL void pixman_fbCombineMaskU (uint32_t *src, const uint32_t *mask, int wi
 	}								\
     } while (0)
 
-/* FIXME */
-#define fbPrepareAccess(x)
-#define fbFinishAccess(x)
-
 #else
 
 #define READ(img, ptr)		(*(ptr))
@@ -688,8 +684,7 @@ FASTCALL void pixman_fbCombineMaskU (uint32_t *src, const uint32_t *mask, int wi
     memcpy(dst, src, size)
 #define MEMSET_WRAPPED(img, dst, val, size)					\
     memset(dst, val, size)
-#define fbPrepareAccess(x)
-#define fbFinishAccess(x)
+
 #endif
 
 #define fbComposeGetSolid(img, res, fmt)				\

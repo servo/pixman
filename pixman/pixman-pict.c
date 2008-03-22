@@ -149,9 +149,6 @@ fbCompositeOver_x888x8x8888 (pixman_op_t      op,
 	    dst++;
 	}
     }
-
-    fbFinishAccess (pMask->pDrawable);
-    fbFinishAccess (pDst->pDrawable);
 }
 
 static void
@@ -340,9 +337,6 @@ fbCompositeSolidMask_nx8x8888 (pixman_op_t      op,
 	    dst++;
 	}
     }
-
-    fbFinishAccess (pMask->pDrawable);
-    fbFinishAccess (pDst->pDrawable);
 }
 
 void
@@ -416,9 +410,6 @@ fbCompositeSolidMask_nx8888x8888C (pixman_op_t op,
 	    dst++;
 	}
     }
-
-    fbFinishAccess (pMask->pDrawable);
-    fbFinishAccess (pDst->pDrawable);
 }
 
 void
@@ -481,9 +472,6 @@ fbCompositeSolidMask_nx8x0888 (pixman_op_t op,
 	    dst += 3;
 	}
     }
-
-    fbFinishAccess (pMask->pDrawable);
-    fbFinishAccess (pDst->pDrawable);
 }
 
 void
@@ -547,9 +535,6 @@ fbCompositeSolidMask_nx8x0565 (pixman_op_t op,
 	    dst++;
 	}
     }
-
-    fbFinishAccess (pMask->pDrawable);
-    fbFinishAccess (pDst->pDrawable);
 }
 
 void
@@ -623,9 +608,6 @@ fbCompositeSolidMask_nx8888x0565C (pixman_op_t op,
 	    dst++;
 	}
     }
-
-    fbFinishAccess (pMask->pDrawable);
-    fbFinishAccess (pDst->pDrawable);
 }
 
 void
@@ -672,9 +654,6 @@ fbCompositeSrc_8888x8888 (pixman_op_t op,
 	    dst++;
 	}
     }
-
-    fbFinishAccess (pSrc->pDrawable);
-    fbFinishAccess (pDst->pDrawable);
 }
 
 void
@@ -724,9 +703,6 @@ fbCompositeSrc_8888x0888 (pixman_op_t op,
 	    dst += 3;
 	}
     }
-
-    fbFinishAccess (pSrc->pDrawable);
-    fbFinishAccess (pDst->pDrawable);
 }
 
 void
@@ -779,9 +755,6 @@ fbCompositeSrc_8888x0565 (pixman_op_t op,
 	    dst++;
 	}
     }
-
-    fbFinishAccess (pDst->pDrawable);
-    fbFinishAccess (pSrc->pDrawable);
 }
 
 void
@@ -832,9 +805,6 @@ fbCompositeSrcAdd_8000x8000 (pixman_op_t	op,
 	    dst++;
 	}
     }
-
-    fbFinishAccess (pDst->pDrawable);
-    fbFinishAccess (pSrc->pDrawable);
 }
 
 void
@@ -892,9 +862,6 @@ fbCompositeSrcAdd_8888x8888 (pixman_op_t	op,
 	    dst++;
 	}
     }
-
-    fbFinishAccess (pDst->pDrawable);
-    fbFinishAccess (pSrc->pDrawable);
 }
 
 static void
@@ -947,9 +914,6 @@ fbCompositeSrcAdd_8888x8x8 (pixman_op_t op,
 	    WRITE(pDst, dst++, r);
 	}
     }
-
-    fbFinishAccess(pDst->pDrawable);
-    fbFinishAccess(pMask->pDrawable);
 }
 
 void
@@ -997,8 +961,6 @@ fbCompositeSrcAdd_1000x1000 (pixman_op_t	op,
 	   FALSE,
 	   FALSE);
 
-    fbFinishAccess(pDst->pDrawable);
-    fbFinishAccess(pSrc->pDrawable);
 #endif
 }
 
@@ -1059,8 +1021,6 @@ fbCompositeSolidMask_nx1xn (pixman_op_t op,
 	      FB_ALLONES,
 	      0x0);
 
-    fbFinishAccess (pDst->pDrawable);
-    fbFinishAccess (pMask->pDrawable);
 #endif
 }
 
@@ -1131,9 +1091,6 @@ fbCompositeSrcSrc_nxn  (pixman_op_t	   op,
 
 	   reverse,
 	   upsidedown);
-
-    fbFinishAccess(pSrc->pDrawable);
-    fbFinishAccess(pDst->pDrawable);
 #endif
 }
 
@@ -1210,9 +1167,6 @@ fbCompositeSrc_8888xx888 (pixman_op_t op,
 	dst += dstStride;
 	src += srcStride;
     }
-
-    fbFinishAccess(pSrc->pDrawable);
-    fbFinishAccess(pDst->pDrawable);
 }
 
 static void

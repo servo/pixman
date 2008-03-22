@@ -83,8 +83,6 @@ pixman_add_traps (pixman_image_t *	image,
 	}
 	traps++;
     }
-
-    fbFinishAccess (pPicture->pDrawable);
 }
 
 static void
