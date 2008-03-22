@@ -33,12 +33,12 @@ endif
 
 # vmx code
 if USE_VMX
-noinst_LTLIBRARIES += libpixman-vmx.la
+noinst_LTLIBRARIES = libpixman-vmx.la
 libpixman_vmx_la_SOURCES = \
 	pixman-vmx.c		\
 	pixman-vmx.h
 libpixman_vmx_la_CFLAGS = $(DEP_CFLAGS) $(VMX_CFLAGS)
 libpixman_vmx_la_LIBADD = $(DEP_LIBS)
-libpixman_la_LIBADD += libpixman-vmx.la
+libpixman_1_la_LIBADD += libpixman-vmx.la
 endif
 
