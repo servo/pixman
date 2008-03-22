@@ -188,6 +188,9 @@ fetchProc pixman_fetchProcForPicture_accessors (bits_image_t *);
 fetchPixelProc pixman_fetchPixelProcForPicture_accessors (bits_image_t *);
 storeProc pixman_storeProcForPicture_accessors (bits_image_t *);
 
+void pixmanFetchSourcePict(source_image_t *, int x, int y, int width,
+                           uint32_t *buffer, uint32_t *mask, uint32_t maskBits);
+
 /* end */
 
 typedef enum
