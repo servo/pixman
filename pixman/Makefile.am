@@ -3,6 +3,8 @@ libpixman_1_la_LDFLAGS = -version-info $(LT_VERSION_INFO)
 libpixman_1_la_LIBADD = @DEP_LIBS@ -lm
 libpixman_1_la_SOURCES =		\
 	pixman.h		\
+	pixman-access.c		\
+	pixman-access-accessors.c	\
 	pixman-region.c		\
 	pixman-private.h	\
 	pixman-image.c		\

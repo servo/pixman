@@ -146,6 +146,12 @@ typedef struct point point_t;
 typedef FASTCALL void (*CombineMaskU) (uint32_t *src, const uint32_t *mask, int width);
 typedef FASTCALL void (*CombineFuncU) (uint32_t *dest, const uint32_t *src, int width);
 typedef FASTCALL void (*CombineFuncC) (uint32_t *dest, uint32_t *src, uint32_t *mask, int width);
+typedef FASTCALL void (*fetchProc)(bits_image_t *pict, int x, int y, int width,
+                                   uint32_t *buffer);
+typedef FASTCALL uint32_t (*fetchPixelProc)(bits_image_t *pict, int offset, int line);
+typedef FASTCALL void (*storeProc)(pixman_image_t *, uint32_t *bits,
+                                   const uint32_t *values, int x, int width,
+                                   const pixman_indexed_t *);
 
 typedef struct _FbComposeData {
     uint8_t	 op;
@@ -174,6 +180,13 @@ void pixman_composite_rect_general_accessors (const FbComposeData *data,
 					      uint32_t *scanline_buffer);
 void pixman_composite_rect_general (const FbComposeData *data,
 				    uint32_t *scanline_buffer);
+
+fetchProc pixman_fetchProcForPicture (bits_image_t *);
+fetchPixelProc pixman_fetchPixelProcForPicture (bits_image_t *);
+storeProc pixman_storeProcForPicture (bits_image_t *);
+fetchProc pixman_fetchProcForPicture_accessors (bits_image_t *);
+fetchPixelProc pixman_fetchPixelProcForPicture_accessors (bits_image_t *);
+storeProc pixman_storeProcForPicture_accessors (bits_image_t *);
 
 /* end */
 
