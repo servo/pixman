@@ -191,6 +191,22 @@ storeProc pixman_storeProcForPicture_accessors (bits_image_t *);
 void pixmanFetchSourcePict(source_image_t *, int x, int y, int width,
                            uint32_t *buffer, uint32_t *mask, uint32_t maskBits);
 
+void fbFetchTransformed(bits_image_t *, int x, int y, int width,
+                        uint32_t *buffer, uint32_t *mask, uint32_t maskBits);
+void fbStoreExternalAlpha(bits_image_t *, int x, int y, int width,
+                          uint32_t *buffer);
+void fbFetchExternalAlpha(bits_image_t *, int x, int y, int width,
+                          uint32_t *buffer, uint32_t *mask, uint32_t maskBits);
+
+void fbFetchTransformed_accessors(bits_image_t *, int x, int y, int width,
+                                  uint32_t *buffer, uint32_t *mask,
+                                  uint32_t maskBits);
+void fbStoreExternalAlpha_accessors(bits_image_t *, int x, int y, int width,
+                                    uint32_t *buffer);
+void fbFetchExternalAlpha_accessors(bits_image_t *, int x, int y, int width,
+                                    uint32_t *buffer, uint32_t *mask,
+                                    uint32_t maskBits);
+
 /* end */
 
 typedef enum

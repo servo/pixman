@@ -13,6 +13,8 @@ libpixman_1_la_SOURCES =		\
 	pixman-compose-accessors.c	\
 	pixman-pict.c		\
 	pixman-source.c		\
+	pixman-transformed.c	\
+	pixman-transformed-accessors.c	\
 	pixman-utils.c		\
 	pixman-edge.c		\
 	pixman-edge-accessors.c		\
