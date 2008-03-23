@@ -1,31 +1,86 @@
-LIBRARY = pixman-1
+LIBRARY     = pixman-1
 
-CC = cl
+CC   = cl
 LINK = link
 
-CFLAGS = -MD -Zi -nologo -O2 -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE -I../pixman/src -I. -DPACKAGE=$(LIBRARY) -DPACKAGE_VERSION="" -DPACKAGE_BUGREPORT=""
+ifeq ($(CFG),)
+CFG=release
+endif
+
+ifeq ($(MMX),)
+MMX=1
+endif
+
+CFLAGS     = -MD -nologo -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE -I../pixman/src -I. -DPACKAGE=$(LIBRARY) -DPACKAGE_VERSION="" -DPACKAGE_BUGREPORT=""
+MMX_CFLAGS = -DUSE_MMX -w14710 -w14714
+
+# optimization flags
+ifeq ($(CFG),debug)
+CFLAGS += -Od -Zi
+else
+CFLAGS += -O2
+endif
 
 SOURCES = \
-	pixman-region.c		\
-	pixman-image.c		\
-	pixman-compose.c	\
+	pixman-region.c				\
+	pixman-image.c					\
+	pixman-compose.c				\
 	pixman-compose-accessors.c	\
-	pixman-pict.c		\
-	pixman-utils.c		\
-	pixman-edge.c		\
+	pixman-pict.c					\
+	pixman-utils.c					\
+	pixman-edge.c					\
 	pixman-edge-accessors.c		\
-	pixman-trap.c		\
-	pixman-compute-region.c \
-	pixman-timer.c		\
+	pixman-trap.c					\
+	pixman-compute-region.c		\
+	pixman-timer.c					\
 	$(NULL)
 
-OBJECTS = $(subst .c,.obj,$(SOURCES))
+# MMX compilation flags
+ifeq ($(MMX),1)
+CFLAGS += $(MMX_CFLAGS)
+SOURCES += pixman-mmx.c
+endif
 
-%.obj: %.c
+OBJECTS     = $(patsubst %.c, $(CFG)/%.obj, $(SOURCES))
+
+# targets
+all: inform informMMX $(CFG)/$(LIBRARY).lib
+	@exit 0
+clean: inform clean_r 
+	@exit 0
+pixman: inform informMMX $(CFG)/$(LIBRARY).lib 
+	@exit 0
+
+inform:
+ifneq ($(CFG),release)
+ifneq ($(CFG),debug)
+	@echo "Invalid specified configuration option : "$(CFG)"."
+	@echo
+	@echo -n "Possible choices for configuration are "
+	@echo "'release' and 'debug'"
+	@echo ""
+	@exit 1
+endif
+endif
+
+informMMX:
+ifneq ($(MMX),0)
+ifneq ($(MMX),1)
+	@echo "Invalid specified MMX option : "$(MMX)"."
+	@echo
+	@echo -n "Possible choices for MMX are 0 or 1"
+	@echo ""
+	@exit 1
+endif
+endif
+
+# pixman compilation and linking
+$(CFG)/%.obj: %.c
+	@mkdir -p $(CFG)
 	@$(CC) -c $(CFLAGS) -Fo"$@" $<
 
-$(LIBRARY).lib: $(OBJECTS)
-	lib -NOLOGO -OUT:$@ $(OBJECTS)
+$(CFG)/$(LIBRARY).lib: $(OBJECTS)
+	lib -NOLOGO -OUT:$@ $(OBJECTS) || exit 0
 
-clean:
-	@rm -f *.obj *.lib *.pdb *.ilk || exit 0
+clean_r:
+	@rm -f $(CFG)/*.obj $(CFG)/*.lib $(CFG)/*.pdb $(CFG)/*.ilk || exit 0

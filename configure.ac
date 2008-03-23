@@ -165,8 +165,37 @@ fi
 
 AM_CONDITIONAL(USE_SSE, test $have_sse_intrinsics = yes)
 
+
+dnl ===========================================================================
+dnl Check for SSE2
+
+SSE_CFLAGS="-mmmx -msse2 -Winline --param inline-unit-growth=10000 --param large-function-growth=10000"
+
+have_sse2_intrinsics=no
+AC_MSG_CHECKING(whether to use SSE2 intrinsics)
+xserver_save_CFLAGS=$CFLAGS
+CFLAGS="$CFLAGS -msse2 $MMX_CFLAGS"
+
+AC_COMPILE_IFELSE([
+#include <mmintrin.h>
+#include <xmmintrin.h>
+int main () {
+    __m128i a, b, c;
+	c = _mm_xor_si128 (a, b);
+    return 0;
+}], have_sse2_intrinsics=yes)
+CFLAGS=$xserver_save_CFLAGS
+AC_MSG_RESULT($have_sse2_intrinsics)
+
+if test $have_sse2_intrinsics = yes ; then
+   AC_DEFINE(USE_SSE2, 1, [use SSE compiler intrinsics])
+fi
+
+AM_CONDITIONAL(USE_SSE2, test $have_sse2_intrinsics = yes)
+
 dnl ========================================================
 AC_SUBST(MMX_CFLAGS)
+AC_SUBST(SSE_CFLAGS)
 
 dnl Check for VMX/Altivec
 if test -n "`$CC -v 2>&1 | grep version | grep Apple`"; then

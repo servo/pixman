@@ -1,3 +1,4 @@
+/* -*- Mode: c; c-basic-offset: 4; tab-width: 8; indent-tabs-mode: t; -*- */
 /*
  * Copyright © 2000 SuSE, Inc.
  * Copyright © 2007 Red Hat, Inc.
@@ -33,6 +34,7 @@
 #include "pixman-private.h"
 #include "pixman-mmx.h"
 #include "pixman-vmx.h"
+#include "pixman-sse.h"
 
 #define FbFullMask(n)   ((n) == 32 ? (uint32_t)-1 : ((((uint32_t) 1) << n) - 1))
 
@@ -1427,26 +1429,14 @@ static const FastPathInfo mmx_fast_paths[] =
     { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8b8g8r8, PIXMAN_a8r8g8b8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
     { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8r8g8b8, PIXMAN_x8r8g8b8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
     { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8b8g8r8, PIXMAN_x8r8g8b8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
-    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_a8r8g8b8, PIXMAN_a8r8g8b8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
-    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_a8b8g8r8, PIXMAN_a8r8g8b8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
-    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_a8r8g8b8, PIXMAN_x8r8g8b8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
-    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_a8b8g8r8, PIXMAN_x8r8g8b8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
     { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8r8g8b8, PIXMAN_r5g6b5,   fbCompositeSrc_8888RevNPx0565mmx, NEED_PIXBUF },
     { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8b8g8r8, PIXMAN_r5g6b5,   fbCompositeSrc_8888RevNPx0565mmx, NEED_PIXBUF },
-    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_a8r8g8b8, PIXMAN_r5g6b5,   fbCompositeSrc_8888RevNPx0565mmx, NEED_PIXBUF },
-    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_a8b8g8r8, PIXMAN_r5g6b5,   fbCompositeSrc_8888RevNPx0565mmx, NEED_PIXBUF },
     { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8r8g8b8, PIXMAN_a8b8g8r8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
     { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8b8g8r8, PIXMAN_a8b8g8r8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
     { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8r8g8b8, PIXMAN_x8b8g8r8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
     { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8b8g8r8, PIXMAN_x8b8g8r8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
-    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8r8g8b8, PIXMAN_a8b8g8r8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
-    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8b8g8r8, PIXMAN_a8b8g8r8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
-    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8r8g8b8, PIXMAN_x8b8g8r8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
-    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8b8g8r8, PIXMAN_x8b8g8r8, fbCompositeSrc_8888RevNPx8888mmx, NEED_PIXBUF },
     { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8r8g8b8, PIXMAN_b5g6r5,   fbCompositeSrc_8888RevNPx0565mmx, NEED_PIXBUF },
     { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8b8g8r8, PIXMAN_b5g6r5,   fbCompositeSrc_8888RevNPx0565mmx, NEED_PIXBUF },
-    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8r8g8b8, PIXMAN_b5g6r5,   fbCompositeSrc_8888RevNPx0565mmx, NEED_PIXBUF },
-    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8b8g8r8, PIXMAN_b5g6r5,   fbCompositeSrc_8888RevNPx0565mmx, NEED_PIXBUF },
     { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8,       PIXMAN_a8r8g8b8, fbCompositeSrc_x888xnx8888mmx,    NEED_SOLID_MASK },
     { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8,       PIXMAN_x8r8g8b8, fbCompositeSrc_x888xnx8888mmx,	   NEED_SOLID_MASK },
     { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8,	PIXMAN_a8b8g8r8, fbCompositeSrc_x888xnx8888mmx,	   NEED_SOLID_MASK },
@@ -1494,6 +1484,21 @@ static const FastPathInfo mmx_fast_paths[] =
     { PIXMAN_OP_NONE },
 };
 #endif
+
+#ifdef USE_SSE2
+static const FastPathInfo sse_fast_paths[] =
+{
+    { PIXMAN_OP_NONE },
+};
+#endif
+
+#ifdef USE_VMX
+static const FastPathInfo vmx_fast_paths[] =
+{
+    { PIXMAN_OP_NONE },
+};
+#endif
+
 
 static const FastPathInfo c_fast_paths[] =
 {
@@ -1658,35 +1663,33 @@ pixman_image_composite (pixman_op_t      op,
 			uint16_t     width,
 			uint16_t     height)
 {
-    pixman_bool_t	    srcRepeat = pSrc->type == BITS && pSrc->common.repeat == PIXMAN_REPEAT_NORMAL;
-    pixman_bool_t	    maskRepeat = FALSE;
-    pixman_bool_t	    srcTransform = pSrc->common.transform != NULL;
-    pixman_bool_t	    maskTransform = FALSE;
-    pixman_bool_t	    srcAlphaMap = pSrc->common.alpha_map != NULL;
-    pixman_bool_t	maskAlphaMap = FALSE;
-    pixman_bool_t	dstAlphaMap = pDst->common.alpha_map != NULL;
-    CompositeFunc   func = NULL;
+    pixman_bool_t srcRepeat = pSrc->type == BITS && pSrc->common.repeat == PIXMAN_REPEAT_NORMAL;
+    pixman_bool_t maskRepeat = FALSE;
+    pixman_bool_t srcTransform = pSrc->common.transform != NULL;
+    pixman_bool_t maskTransform = FALSE;
+    pixman_bool_t srcAlphaMap = pSrc->common.alpha_map != NULL;
+    pixman_bool_t maskAlphaMap = FALSE;
+    pixman_bool_t dstAlphaMap = pDst->common.alpha_map != NULL;
+    CompositeFunc func = NULL;
 
-#ifdef USE_MMX
-    static pixman_bool_t mmx_setup = FALSE;
-    if (!mmx_setup)
-    {
-        fbComposeSetupMMX();
-        mmx_setup = TRUE;
-    }
+#ifdef USE_SSE2
+    fbComposeSetupSSE();
 #endif
+    
+#ifdef USE_MMX
+    fbComposeSetupMMX();
+#endif
+
 #ifdef USE_VMX
-    static pixman_bool_t vmx_setup = FALSE;
-    if (!vmx_setup) {
-        fbComposeSetupVMX();
-        vmx_setup = TRUE;
-    }
+    fbComposeSetupVMX();
 #endif
 
     if (srcRepeat && srcTransform &&
 	pSrc->bits.width == 1 &&
 	pSrc->bits.height == 1)
+    {
 	srcTransform = FALSE;
+    }
 
     if (pMask && pMask->type == BITS)
     {
@@ -1701,14 +1704,17 @@ pixman_image_composite (pixman_op_t      op,
 	if (maskRepeat && maskTransform &&
 	    pMask->bits.width == 1 &&
 	    pMask->bits.height == 1)
+	{
 	    maskTransform = FALSE;
+	}
     }
 
     if ((pSrc->type == BITS || can_get_solid (pSrc)) && (!pMask || pMask->type == BITS)
         && !srcTransform && !maskTransform
         && !maskAlphaMap && !srcAlphaMap && !dstAlphaMap
         && (pSrc->common.filter != PIXMAN_FILTER_CONVOLUTION)
-        && (!pMask || pMask->common.filter != PIXMAN_FILTER_CONVOLUTION)
+        && (pSrc->common.repeat != PIXMAN_REPEAT_PAD)
+        && (!pMask || (pMask->common.filter != PIXMAN_FILTER_CONVOLUTION && pMask->common.repeat != PIXMAN_REPEAT_PAD))
 	&& !pSrc->common.read_func && !pSrc->common.write_func
 	&& !(pMask && pMask->common.read_func) && !(pMask && pMask->common.write_func)
 	&& !pDst->common.read_func && !pDst->common.write_func)
@@ -1724,13 +1730,28 @@ pixman_image_composite (pixman_op_t      op,
 	    ySrc == yMask			&&
 	    !pMask->common.component_alpha	&&
 	    !maskRepeat;
+	info = NULL;
+	
+#ifdef USE_SSE2
+	if (pixman_have_sse ())
+	    info = get_fast_path (sse_fast_paths, op, pSrc, pMask, pDst, pixbuf);
+	if (!info)
+#endif
 
 #ifdef USE_MMX
-	info = NULL;
+
 	if (pixman_have_mmx())
 	    info = get_fast_path (mmx_fast_paths, op, pSrc, pMask, pDst, pixbuf);
 	if (!info)
 #endif
+
+#ifdef USE_VMX
+
+	if (pixman_have_vmx())
+	    info = get_fast_path (vmx_fast_paths, op, pSrc, pMask, pDst, pixbuf);
+	if (!info)
+#endif
+
 	    info = get_fast_path (c_fast_paths, op, pSrc, pMask, pDst, pixbuf);
 
 	if (info)
@@ -1788,7 +1809,7 @@ pixman_image_composite (pixman_op_t      op,
 	    srcRepeat = FALSE;
 
 	if (maskTransform)
-	    maskTransform = FALSE;
+	    maskRepeat = FALSE;
     }
 
     pixman_walk_composite_region (op, pSrc, pMask, pDst, xSrc, ySrc,
@@ -1860,6 +1881,7 @@ enum CPUFeatures {
     NoFeatures = 0,
     MMX = 0x1,
     MMX_Extensions = 0x2,
+    VMX = 0x4,
     SSE = 0x6,
     SSE2 = 0x8,
     CMOV = 0x10
@@ -2040,6 +2062,22 @@ pixman_have_mmx (void)
     }
 
     return mmx_present;
+}
+
+pixman_bool_t
+pixman_have_sse (void)
+{
+    static pixman_bool_t initialized = FALSE;
+    static pixman_bool_t sse_present;
+
+    if (!initialized)
+    {
+        unsigned int features = detectCPUFeatures();
+        sse_present = (features & (MMX|MMX_Extensions|SSE|SSE2)) == (MMX|MMX_Extensions|SSE|SSE2);
+        initialized = TRUE;
+    }
+
+    return sse_present;
 }
 #endif /* __amd64__ */
 #endif
