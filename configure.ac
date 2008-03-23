@@ -205,7 +205,7 @@ else
 fi
 
 have_vmx_intrinsics=no
-AC_MSG_CHECKING(For VMX/Altivec intrinsics in the compiler)
+AC_MSG_CHECKING(whether to use VMX/Altivec intrinsics)
 xserver_save_CFLAGS=$CFLAGS
 CFLAGS="$CFLAGS $VMX_CFLAGS"
 AC_COMPILE_IFELSE([
