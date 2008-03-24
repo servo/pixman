@@ -72,8 +72,12 @@ m4_define([lt_age], [pixman_minor])
 
 LT_VERSION_INFO="lt_current:lt_revision:lt_age"
 
-PIXMAN_MAJOR=pixman_major
-AC_SUBST(PIXMAN_MAJOR)
+PIXMAN_VERSION_MAJOR=pixman_major()
+AC_SUBST(PIXMAN_VERSION_MAJOR)
+PIXMAN_VERSION_MINOR=pixman_minor()
+AC_SUBST(PIXMAN_VERSION_MINOR)
+PIXMAN_VERSION_MICRO=pixman_micro()
+AC_SUBST(PIXMAN_VERSION_MICRO)
 
 AC_SUBST(LT_VERSION_INFO)
 
@@ -212,4 +216,5 @@ AC_SUBST(DEP_LIBS)
 AC_OUTPUT([pixman-1.pc
            Makefile
 	   pixman/Makefile
+	   pixman/pixman-version.h
 	   test/Makefile])

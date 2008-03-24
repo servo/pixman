@@ -26,6 +26,7 @@ stamp-h?
 config.h
 config.h.in
 .*.swp
+pixman/pixman-version.h
 test/composite-test
 test/fetch-test
 test/gradient-test

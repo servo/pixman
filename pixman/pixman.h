@@ -69,6 +69,8 @@ SOFTWARE.
 #ifndef PIXMAN_H__
 #define PIXMAN_H__
 
+#include <pixman-version.h>
+
 /*
  * Standard integers
  */
@@ -271,6 +273,12 @@ typedef enum
     PIXMAN_REGION_IN,
     PIXMAN_REGION_PART
 } pixman_region_overlap_t;
+
+PIXMAN_EXPORT
+int			pixman_version (void);
+
+PIXMAN_EXPORT
+const char*		pixman_version_string (void);
 
 /* This function exists only to make it possible to preserve the X ABI - it should
  * go away at first opportunity.
