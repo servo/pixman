@@ -25,6 +25,10 @@ AC_PREREQ([2.57])
 #   Pixman versioning scheme
 #
 #   - If the changes don't affect API or ABI, then increment pixman_micro
+#     Note: This number is incremented immediately before *and*
+#           immediately after a release. This gurantees that the micro
+#           component is always an even number in any release.
+#
 #   - If API is added, then increment PIXMAN_MINOR, and set MICRO to 0
 #
 #   - If you break ABI, then
@@ -42,7 +46,7 @@ AC_PREREQ([2.57])
 
 m4_define([pixman_major], 0)
 m4_define([pixman_minor], 9)
-m4_define([pixman_micro], 6)
+m4_define([pixman_micro], 7)
 
 m4_define([pixman_version],[pixman_major.pixman_minor.pixman_micro])
 
