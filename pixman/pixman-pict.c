@@ -1949,6 +1949,7 @@ pixman_have_mmx (void)
     return mmx_present;
 }
 
+#ifdef USE_SSE2
 pixman_bool_t
 pixman_have_sse (void)
 {
@@ -1964,5 +1965,7 @@ pixman_have_sse (void)
 
     return sse_present;
 }
+#endif
+
 #endif /* __amd64__ */
 #endif
