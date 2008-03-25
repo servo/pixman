@@ -503,6 +503,13 @@ typedef enum {
     PIXMAN_yv12 =	PIXMAN_FORMAT(12,PIXMAN_TYPE_YV12,0,0,0,0),
 } pixman_format_code_t;
 
+/* Querying supported format values. */
+PIXMAN_EXPORT
+pixman_bool_t	pixman_format_supported_destination (pixman_format_code_t format);
+
+PIXMAN_EXPORT
+pixman_bool_t	pixman_format_supported_source (pixman_format_code_t format);
+
 /* Constructors */
 PIXMAN_EXPORT
 pixman_image_t *pixman_image_create_solid_fill       (pixman_color_t               *color);
