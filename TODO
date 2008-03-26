@@ -21,6 +21,10 @@
 
       - There should only be one trap rasterization API.
 
+      - The PIXMAN_g8/c8/etc formats should use the A channel
+        to indicate the actual depth. That way PIXMAN_x4c4 and PIXMAN_c8
+	won't collide.
+
   - Make pixman_region_point_in() survive a NULL box, then fix up
     pixman-compose.c
 
