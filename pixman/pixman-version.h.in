@@ -27,6 +27,10 @@
 #ifndef PIXMAN_VERSION_H__
 #define PIXMAN_VERSION_H__
 
+#ifndef PIXMAN_H__
+#  error pixman-version.h should only be included by pixman.h
+#endif
+
 #define PIXMAN_VERSION_MAJOR @PIXMAN_VERSION_MAJOR@
 #define PIXMAN_VERSION_MINOR @PIXMAN_VERSION_MINOR@
 #define PIXMAN_VERSION_MICRO @PIXMAN_VERSION_MICRO@
