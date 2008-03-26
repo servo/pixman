@@ -24,25 +24,36 @@ AC_PREREQ([2.57])
 
 #   Pixman versioning scheme
 #
-#   - If the changes don't affect API or ABI, then increment pixman_micro
-#     Note: This number is incremented immediately before *and*
-#           immediately after a release. This gurantees that the micro
-#           component is always an even number in any release.
+#   - The git version must at all times have an odd MICRO version
+#     number.
 #
-#   - If API is added, then increment PIXMAN_MINOR, and set MICRO to 0
+#   - If you add API, increment the MICRO version to the next largest
+#     odd number.
 #
-#   - If you break ABI, then
-#        - In the first development release where you break ABI, find all instances of
-#          "pixman-n" and change it to pixman-(n+1)
+#   - If you release a version that contains new API, then increment
+#     MINOR and set MICRO to 0. 
+#
+#   - If you release a new version that does not contain new API, then
+#     increment MICRO to the next even number.
+#
+#   - After doing a release, increment MICRO again to make the version 
+#     number in git odd.
+#
+#   - If you break the ABI, then
+#
+#        - increment MAJOR
+#
+#        - In the first development release where you break ABI, find
+#          all instances of "pixman-n" and change them to pixman-(n+1)
 #
 #          This needs to be done at least in 
 #                    configure.ac
 #                    all Makefile.am's
 #                    pixman-n.pc.in
 #
-#      This ensures that binary incompatible versions can be installed in parallel.
-#      See http://www106.pair.com/rhp/parallel.html for more information
-#
+#      This ensures that binary incompatible versions can be installed
+#      in parallel.  See http://www106.pair.com/rhp/parallel.html for
+#      more information
 
 m4_define([pixman_major], 0)
 m4_define([pixman_minor], 9)

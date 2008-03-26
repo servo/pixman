@@ -408,6 +408,49 @@ pixman_malloc_abc (unsigned int a,
 	return malloc (a * b * c);
 }
 
+
+/**
+ * pixman_version:
+ *
+ * Returns the version of the pixman library encoded in a single
+ * integer as per %PIXMAN_VERSION_ENCODE. The encoding ensures that
+ * later versions compare greater than earlier versions.
+ *
+ * A run-time comparison to check that pixman's version is greater than
+ * or equal to version X.Y.Z could be performed as follows:
+ *
+ * <informalexample><programlisting>
+ * if (pixman_version() >= PIXMAN_VERSION_ENCODE(X,Y,Z)) {...}
+ * </programlisting></informalexample>
+ *
+ * See also pixman_version_string() as well as the compile-time
+ * equivalents %PIXMAN_VERSION and %PIXMAN_VERSION_STRING.
+ *
+ * Return value: the encoded version.
+ **/
+int
+pixman_version (void)
+{
+    return PIXMAN_VERSION;
+}
+
+/**
+ * pixman_version_string:
+ *
+ * Returns the version of the pixman library as a human-readable string
+ * of the form "X.Y.Z".
+ *
+ * See also pixman_version() as well as the compile-time equivalents
+ * %PIXMAN_VERSION_STRING and %PIXMAN_VERSION.
+ *
+ * Return value: a string containing the version.
+ **/
+const char*
+pixman_version_string (void)
+{
+    return PIXMAN_VERSION_STRING;
+}
+
 /**
  * pixman_format_supported_destination:
  * @format: A pixman_format_code_t format
