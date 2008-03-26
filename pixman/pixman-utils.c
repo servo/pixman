@@ -450,8 +450,12 @@ pixman_format_supported_destination (pixman_format_code_t format)
     case PIXMAN_c8:
     case PIXMAN_g8:
     case PIXMAN_x4a4:
+    /* Collides with PIXMAN_c8
     case PIXMAN_x4c4:
+    */
+    /* Collides with PIXMAN_g8
     case PIXMAN_x4g4:
+    */
     /* 4bpp formats */
     case PIXMAN_a4:
     case PIXMAN_r1g2b1:
@@ -514,8 +518,12 @@ pixman_format_supported_source (pixman_format_code_t format)
     case PIXMAN_c8:
     case PIXMAN_g8:
     case PIXMAN_x4a4:
+    /* Collides with PIXMAN_c8
     case PIXMAN_x4c4:
+    */
+    /* Collides with PIXMAN_g8
     case PIXMAN_x4g4:
+    */
     /* 4bpp formats */
     case PIXMAN_a4:
     case PIXMAN_r1g2b1:
