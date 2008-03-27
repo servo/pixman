@@ -27,6 +27,8 @@ libpixmanincludedir = $(includedir)/pixman-1/
 libpixmaninclude_HEADERS = pixman.h pixman-version.h
 noinst_LTLIBRARIES = 
 
+EXTRA_DIST = Makefile.win32
+
 # mmx code
 if USE_MMX
 noinst_LTLIBRARIES += libpixman-mmx.la

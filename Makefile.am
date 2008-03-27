@@ -10,11 +10,12 @@ snapshot:
 	test -d "$(srcdir)/.git" && distdir=$$distdir-`cd "$(srcdir)" && git-rev-parse HEAD | cut -c 1-6`; \
 	$(MAKE) $(AM_MAKEFLAGS) distdir="$$distdir" dist
 
+USERNAME=$$USER
 RELEASE_OR_SNAPSHOT = $$(if test "x$(CAIRO_VERSION_MINOR)" = "x$$(echo "$(CAIRO_VERSION_MINOR)/2*2" | bc)" ; then echo release; else echo snapshot; fi)
-RELEASE_CAIRO_HOST =	cairographics.org
+RELEASE_CAIRO_HOST =	$(USERNAME)@cairographics.org
 RELEASE_CAIRO_DIR =	/srv/cairo.freedesktop.org/www/releases
 RELEASE_CAIRO_URL = 	http://cairographics.org/releases
-RELEASE_XORG_HOST =	xorg.freedesktop.org
+RELEASE_XORG_HOST =	$(USERNAME)@xorg.freedesktop.org
 RELEASE_XORG_DIR =	/srv/xorg.freedesktop.org/archive/individual/lib
 RELEASE_ANNOUNCE_LIST = cairo-announce@cairographics.org
 
@@ -32,6 +33,10 @@ $(gpg_file): $(sha1_file)
 
 release-verify-newer:
 	@echo -n "Checking that no $(VERSION) release already exists..."
+	@ssh $(RELEASE_XORG_HOST) test ! -e $(RELEASE_XORG_DIR)/$(tar_gz) \
+		|| (echo "Ouch." && echo "Found: $(RELEASE_XORG_HOST):$(RELEASE_XORG_DIR)/$(tar_gz)" \
+		&& echo "Refusing to try to generate a new release of the same name." \
+		&& false)
 	@ssh $(RELEASE_CAIRO_HOST) test ! -e $(RELEASE_CAIRO_DIR)/$(tar_gz) \
 		|| (echo "Ouch." && echo "Found: $(RELEASE_CAIRO_HOST):$(RELEASE_CAIRO_DIR)/$(tar_gz)" \
 		&& echo "Refusing to try to generate a new release of the same name." \
