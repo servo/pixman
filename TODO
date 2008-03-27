@@ -1,3 +1,5 @@
+  - Update the RLEASING file
+
   - Things to keep in mind if breaking ABI:
 
       - There should be a guard #ifndef I_AM_EITHER_CAIRO_OR_THE_X_SERVER
