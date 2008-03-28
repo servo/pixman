@@ -17,7 +17,7 @@
 /*
  * Combine src and mask
  */
-FASTCALL void
+FASTCALL static void
 pixman_fbCombineMaskU (uint32_t *src, const uint32_t *mask, int width)
 {
     int i;
@@ -1165,7 +1165,7 @@ fbCombineConjointXorC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
     fbCombineConjointGeneralC (dest, src, mask, width, CombineXor);
 }
 
-CombineFuncU pixman_fbCombineFuncU[] = {
+static CombineFuncU pixman_fbCombineFuncU[] = {
     fbCombineClear,
     fbCombineSrcU,
     NULL, /* CombineDst */
@@ -1212,7 +1212,7 @@ CombineFuncU pixman_fbCombineFuncU[] = {
     fbCombineConjointXorU,
 };
 
-CombineFuncC pixman_fbCombineFuncC[] = {
+static CombineFuncC pixman_fbCombineFuncC[] = {
     fbCombineClearC,
     fbCombineSrcC,
     NULL, /* Dest */
@@ -1257,4 +1257,10 @@ CombineFuncC pixman_fbCombineFuncC[] = {
     fbCombineConjointAtopC,
     fbCombineConjointAtopReverseC,
     fbCombineConjointXorC,
+};
+
+FbComposeFunctions pixman_composeFunctions = {
+    pixman_fbCombineFuncU,
+    pixman_fbCombineFuncC,
+    pixman_fbCombineMaskU
 };
