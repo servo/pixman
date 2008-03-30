@@ -563,10 +563,6 @@ pixman_bool_t   pixman_image_set_filter              (pixman_image_t            
 						      const pixman_fixed_t         *filter_params,
 						      int                           n_filter_params);
 PIXMAN_EXPORT
-void            pixman_image_set_filter_params       (pixman_image_t               *image,
-						      pixman_fixed_t               *params,
-						      int                           n_params);
-PIXMAN_EXPORT
 void		pixman_image_set_source_clipping     (pixman_image_t		   *image,
 						      pixman_bool_t                 source_clipping);
 PIXMAN_EXPORT
