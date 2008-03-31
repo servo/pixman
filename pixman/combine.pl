@@ -1,0 +1,3 @@
+while (<STDIN>) {
+    print $_;
+}

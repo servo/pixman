@@ -8,7 +8,7 @@ libpixman_1_la_SOURCES =		\
 	pixman-region.c			\
 	pixman-private.h		\
 	pixman-image.c			\
-	pixman-combine.c		\
+	pixman-combine32.c		\
 	pixman-compose.c		\
 	pixman-compose-accessors.c	\
 	pixman-pict.c			\
@@ -27,7 +27,11 @@ libpixmanincludedir = $(includedir)/pixman-1/
 libpixmaninclude_HEADERS = pixman.h pixman-version.h
 noinst_LTLIBRARIES = 
 
-EXTRA_DIST = Makefile.win32
+pixman-combine32.c : combine.inc combine.pl
+	$(PERL) $(srcdir)/combine.pl 8 < $< > $@ || ($(RM) $@; exit 1)
+
+EXTRA_DIST = Makefile.win32 combine.inc combine.pl
+CLEANFILES = pixman-combine32.c
 
 # mmx code
 if USE_MMX

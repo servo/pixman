@@ -102,6 +102,12 @@ if test "x$GCC" = "xyes"; then
   *) CFLAGS="$CFLAGS -Wall" ;;
   esac fi changequote([,])dnl
 
+AC_PATH_PROG(PERL, perl, no)
+if test "x$PERL" = xno; then
+    AC_MSG_ERROR([Perl is required to build pixman.])
+fi
+AC_SUBST(PERL)
+
 dnl =========================================================================
 dnl -fvisibility stuff
 
