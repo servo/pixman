@@ -302,7 +302,7 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 	PIXMAN_FORMAT_RGB (data->mask->bits.format))
     {
 	uint32_t *mask_buffer = dest_buffer + data->width;
-	CombineFuncC compose = pixman_composeFunctions.combineC[data->op];
+	CombineFuncC32 compose = pixman_composeFunctions.combineC[data->op];
 	if (!compose)
 	    return;
 
@@ -366,7 +366,7 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
     else
     {
 	uint32_t *src_mask_buffer = 0, *mask_buffer = 0;
-	CombineFuncU compose = pixman_composeFunctions.combineU[data->op];
+	CombineFuncU32 compose = pixman_composeFunctions.combineU[data->op];
 	if (!compose)
 	    return;
 

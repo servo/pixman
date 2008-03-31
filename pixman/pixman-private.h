@@ -143,15 +143,19 @@ typedef struct point point_t;
  */
 
 #define FASTCALL
-typedef FASTCALL void (*CombineMaskU) (uint32_t *src, const uint32_t *mask, int width);
-typedef FASTCALL void (*CombineFuncU) (uint32_t *dest, const uint32_t *src, int width);
-typedef FASTCALL void (*CombineFuncC) (uint32_t *dest, uint32_t *src, uint32_t *mask, int width);
+typedef FASTCALL void (*CombineMaskU32) (uint32_t *src, const uint32_t *mask, int width);
+typedef FASTCALL void (*CombineFuncU32) (uint32_t *dest, const uint32_t *src, int width);
+typedef FASTCALL void (*CombineFuncC32) (uint32_t *dest, uint32_t *src, uint32_t *mask, int width);
 typedef FASTCALL void (*fetchProc)(bits_image_t *pict, int x, int y, int width,
                                    uint32_t *buffer);
 typedef FASTCALL uint32_t (*fetchPixelProc)(bits_image_t *pict, int offset, int line);
 typedef FASTCALL void (*storeProc)(pixman_image_t *, uint32_t *bits,
                                    const uint32_t *values, int x, int width,
                                    const pixman_indexed_t *);
+
+typedef FASTCALL void (*CombineMaskU64) (uint64_t *src, const uint64_t *mask, int width);
+typedef FASTCALL void (*CombineFuncU64) (uint64_t *dest, const uint64_t *src, int width);
+typedef FASTCALL void (*CombineFuncC64) (uint64_t *dest, uint64_t *src, uint64_t *mask, int width);
 
 typedef struct _FbComposeData {
     uint8_t	 op;
@@ -168,13 +172,19 @@ typedef struct _FbComposeData {
     uint16_t	 height;
 } FbComposeData;
 
-typedef struct _FbComposeFunctions {
-    CombineFuncU *combineU;
-    CombineFuncC *combineC;
-    CombineMaskU combineMaskU;
-} FbComposeFunctions;
+typedef struct _FbComposeFunctions32 {
+    CombineFuncU32 *combineU;
+    CombineFuncC32 *combineC;
+    CombineMaskU32 combineMaskU;
+} FbComposeFunctions32;
 
-extern FbComposeFunctions pixman_composeFunctions;
+typedef struct _FbComposeFunctions64 {
+    CombineFuncU64 *combineU;
+    CombineFuncC64 *combineC;
+    CombineMaskU64 combineMaskU;
+} FbComposeFunctions64;
+
+extern FbComposeFunctions32 pixman_composeFunctions;
 
 void pixman_composite_rect_general_accessors (const FbComposeData *data,
 					      uint32_t *scanline_buffer);
