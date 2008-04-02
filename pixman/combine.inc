@@ -10,9 +10,17 @@
  * Helper macros.
  */
 
-#define FbGen(x,y,i,ax,ay,t,u,v) ((t) = (FbIntMult(FbGet8(y,i),ay,(u)) + \
-					 FbIntMult(FbGet8(x,i),ax,(v))), \
-				  (comp4_t) ((comp1_t) ((t) |		 \
+#define IntMult(a,b,t) ( (t) = (a) * (b) + ONE_HALF, ( ( ( (t)>>G_SHIFT ) + (t) )>>G_SHIFT ) )
+#define IntDiv(a,b)    (((comp2_t) (a) * MASK) / (b))
+
+#define GetComp(v,i)   ((comp2_t) (comp1_t) ((v) >> i))
+
+#define Add(x,y,i,t)   ((t) = GetComp(x,i) + GetComp(y,i),              \
+                        (comp4_t) ((comp1_t) ((t) | (0 - ((t) >> G_SHIFT)))) << (i))
+
+#define FbGen(x,y,i,ax,ay,t,u,v) ((t) = (IntMult(GetComp(y,i),ay,(u)) + \
+					 IntMult(GetComp(x,i),ax,(v))), \
+				  (comp4_t) ((comp1_t) ((t) |		\
 							 (0 - ((t) >> G_SHIFT)))) << (i))
 
 /*
@@ -398,7 +406,7 @@ fbCombineSaturateU (comp4_t *dest, const comp4_t *src, int width)
         da = ~d >> A_SHIFT;
         if (sa > da)
         {
-            sa = FbIntDiv(da, sa);
+            sa = IntDiv(da, sa);
             FbByteMul(s, sa);
         };
         FbByteAdd(d, s);
@@ -455,7 +463,7 @@ fbCombineDisjointOutPart (comp1_t a, comp1_t b)
     b = ~b;		    /* 1 - b */
     if (b >= a)		    /* 1 - b >= a -> (1-b)/a >= 1 */
 	return MASK;	    /* 1 */
-    return FbIntDiv(b,a);   /* (1-b) / a */
+    return IntDiv(b,a);     /* (1-b) / a */
 }
 
 /* portion covered by both a and b */
@@ -469,7 +477,7 @@ fbCombineDisjointInPart (comp1_t a, comp1_t b)
     b = ~b;		    /* 1 - b */
     if (b >= a)		    /* 1 - b >= a -> (1-b)/a >= 1 */
 	return 0;	    /* 1 - 1 */
-    return ~FbIntDiv(b,a);  /* 1 - (1-b) / a */
+    return ~IntDiv(b,a);    /* 1 - (1-b) / a */
 }
 
 /* portion covered by a but not b */
@@ -483,7 +491,7 @@ fbCombineConjointOutPart (comp1_t a, comp1_t b)
 
     if (b >= a)		    /* b >= a -> b/a >= 1 */
 	return 0x00;	    /* 0 */
-    return ~FbIntDiv(b,a);   /* 1 - b/a */
+    return ~IntDiv(b,a);    /* 1 - b/a */
 }
 
 /* portion covered by both a and b */
@@ -494,7 +502,7 @@ fbCombineConjointInPart (comp1_t a, comp1_t b)
 
     if (b >= a)		    /* b >= a -> b/a >= 1 */
 	return MASK;	    /* 1 */
-    return FbIntDiv(b,a);   /* b/a */
+    return IntDiv(b,a);     /* b/a */
 }
 
 FASTCALL static void
@@ -1078,22 +1086,22 @@ fbCombineSaturateC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width)
         da = ~d >> A_SHIFT;
 
         if (sb <= da)
-            m = FbAdd(s,d,0,t);
+            m = Add(s,d,0,t);
         else
             m = FbGen (s, d, 0, (da << G_SHIFT) / sb, MASK, t, u, v);
 
         if (sg <= da)
-            n = FbAdd(s,d,G_SHIFT,t);
+            n = Add(s,d,G_SHIFT,t);
         else
             n = FbGen (s, d, G_SHIFT, (da << G_SHIFT) / sg, MASK, t, u, v);
 
         if (sr <= da)
-            o = FbAdd(s,d,B_SHIFT,t);
+            o = Add(s,d,B_SHIFT,t);
         else
             o = FbGen (s, d, B_SHIFT, (da << G_SHIFT) / sr, MASK, t, u, v);
 
         if (sa <= da)
-            p = FbAdd(s,d,A_SHIFT,t);
+            p = Add(s,d,A_SHIFT,t);
         else
             p = FbGen (s, d, A_SHIFT, (da << G_SHIFT) / sa, MASK, t, u, v);
 
@@ -1128,17 +1136,17 @@ fbCombineDisjointGeneralC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width
             Fa = 0;
             break;
         case CombineAOut:
-            m = fbCombineDisjointOutPart ((comp1_t) (sa >> 0), da);
-            n = fbCombineDisjointOutPart ((comp1_t) (sa >> G_SHIFT), da) << G_SHIFT;
-            o = fbCombineDisjointOutPart ((comp1_t) (sa >> B_SHIFT), da) << B_SHIFT;
-            p = fbCombineDisjointOutPart ((comp1_t) (sa >> A_SHIFT), da) << A_SHIFT;
+            m = (comp4_t)fbCombineDisjointOutPart ((comp1_t) (sa >> 0), da);
+            n = (comp4_t)fbCombineDisjointOutPart ((comp1_t) (sa >> G_SHIFT), da) << G_SHIFT;
+            o = (comp4_t)fbCombineDisjointOutPart ((comp1_t) (sa >> B_SHIFT), da) << B_SHIFT;
+            p = (comp4_t)fbCombineDisjointOutPart ((comp1_t) (sa >> A_SHIFT), da) << A_SHIFT;
             Fa = m|n|o|p;
             break;
         case CombineAIn:
-            m = fbCombineDisjointInPart ((comp1_t) (sa >> 0), da);
-            n = fbCombineDisjointInPart ((comp1_t) (sa >> G_SHIFT), da) << G_SHIFT;
-            o = fbCombineDisjointInPart ((comp1_t) (sa >> B_SHIFT), da) << B_SHIFT;
-            p = fbCombineDisjointInPart ((comp1_t) (sa >> A_SHIFT), da) << A_SHIFT;
+            m = (comp4_t)fbCombineDisjointInPart ((comp1_t) (sa >> 0), da);
+            n = (comp4_t)fbCombineDisjointInPart ((comp1_t) (sa >> G_SHIFT), da) << G_SHIFT;
+            o = (comp4_t)fbCombineDisjointInPart ((comp1_t) (sa >> B_SHIFT), da) << B_SHIFT;
+            p = (comp4_t)fbCombineDisjointInPart ((comp1_t) (sa >> A_SHIFT), da) << A_SHIFT;
             Fa = m|n|o|p;
             break;
         case CombineA:
@@ -1151,27 +1159,27 @@ fbCombineDisjointGeneralC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width
             Fb = 0;
             break;
         case CombineBOut:
-            m = fbCombineDisjointOutPart (da, (comp1_t) (sa >> 0));
-            n = fbCombineDisjointOutPart (da, (comp1_t) (sa >> G_SHIFT)) << G_SHIFT;
-            o = fbCombineDisjointOutPart (da, (comp1_t) (sa >> B_SHIFT)) << B_SHIFT;
-            p = fbCombineDisjointOutPart (da, (comp1_t) (sa >> A_SHIFT)) << A_SHIFT;
+            m = (comp4_t)fbCombineDisjointOutPart (da, (comp1_t) (sa >> 0));
+            n = (comp4_t)fbCombineDisjointOutPart (da, (comp1_t) (sa >> G_SHIFT)) << G_SHIFT;
+            o = (comp4_t)fbCombineDisjointOutPart (da, (comp1_t) (sa >> B_SHIFT)) << B_SHIFT;
+            p = (comp4_t)fbCombineDisjointOutPart (da, (comp1_t) (sa >> A_SHIFT)) << A_SHIFT;
             Fb = m|n|o|p;
             break;
         case CombineBIn:
-            m = fbCombineDisjointInPart (da, (comp1_t) (sa >> 0));
-            n = fbCombineDisjointInPart (da, (comp1_t) (sa >> G_SHIFT)) << G_SHIFT;
-            o = fbCombineDisjointInPart (da, (comp1_t) (sa >> B_SHIFT)) << B_SHIFT;
-            p = fbCombineDisjointInPart (da, (comp1_t) (sa >> A_SHIFT)) << A_SHIFT;
+            m = (comp4_t)fbCombineDisjointInPart (da, (comp1_t) (sa >> 0));
+            n = (comp4_t)fbCombineDisjointInPart (da, (comp1_t) (sa >> G_SHIFT)) << G_SHIFT;
+            o = (comp4_t)fbCombineDisjointInPart (da, (comp1_t) (sa >> B_SHIFT)) << B_SHIFT;
+            p = (comp4_t)fbCombineDisjointInPart (da, (comp1_t) (sa >> A_SHIFT)) << A_SHIFT;
             Fb = m|n|o|p;
             break;
         case CombineB:
             Fb = ~0;
             break;
         }
-        m = FbGen (s,d,0,FbGet8(Fa,0),FbGet8(Fb,0),t, u, v);
-        n = FbGen (s,d,G_SHIFT,FbGet8(Fa,G_SHIFT),FbGet8(Fb,G_SHIFT),t, u, v);
-        o = FbGen (s,d,B_SHIFT,FbGet8(Fa,B_SHIFT),FbGet8(Fb,B_SHIFT),t, u, v);
-        p = FbGen (s,d,A_SHIFT,FbGet8(Fa,A_SHIFT),FbGet8(Fb,A_SHIFT),t, u, v);
+        m = FbGen (s,d,0,GetComp(Fa,0),GetComp(Fb,0),t, u, v);
+        n = FbGen (s,d,G_SHIFT,GetComp(Fa,G_SHIFT),GetComp(Fb,G_SHIFT),t, u, v);
+        o = FbGen (s,d,B_SHIFT,GetComp(Fa,B_SHIFT),GetComp(Fb,B_SHIFT),t, u, v);
+        p = FbGen (s,d,A_SHIFT,GetComp(Fa,A_SHIFT),GetComp(Fb,A_SHIFT),t, u, v);
         s = m|n|o|p;
 	*(dest + i) = s;
     }
@@ -1252,17 +1260,17 @@ fbCombineConjointGeneralC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width
             Fa = 0;
             break;
         case CombineAOut:
-            m = fbCombineConjointOutPart ((comp1_t) (sa >> 0), da);
-            n = fbCombineConjointOutPart ((comp1_t) (sa >> G_SHIFT), da) << G_SHIFT;
-            o = fbCombineConjointOutPart ((comp1_t) (sa >> B_SHIFT), da) << B_SHIFT;
-            p = fbCombineConjointOutPart ((comp1_t) (sa >> A_SHIFT), da) << A_SHIFT;
+            m = (comp4_t)fbCombineConjointOutPart ((comp1_t) (sa >> 0), da);
+            n = (comp4_t)fbCombineConjointOutPart ((comp1_t) (sa >> G_SHIFT), da) << G_SHIFT;
+            o = (comp4_t)fbCombineConjointOutPart ((comp1_t) (sa >> B_SHIFT), da) << B_SHIFT;
+            p = (comp4_t)fbCombineConjointOutPart ((comp1_t) (sa >> A_SHIFT), da) << A_SHIFT;
             Fa = m|n|o|p;
             break;
         case CombineAIn:
-            m = fbCombineConjointInPart ((comp1_t) (sa >> 0), da);
-            n = fbCombineConjointInPart ((comp1_t) (sa >> G_SHIFT), da) << G_SHIFT;
-            o = fbCombineConjointInPart ((comp1_t) (sa >> B_SHIFT), da) << B_SHIFT;
-            p = fbCombineConjointInPart ((comp1_t) (sa >> A_SHIFT), da) << A_SHIFT;
+            m = (comp4_t)fbCombineConjointInPart ((comp1_t) (sa >> 0), da);
+            n = (comp4_t)fbCombineConjointInPart ((comp1_t) (sa >> G_SHIFT), da) << G_SHIFT;
+            o = (comp4_t)fbCombineConjointInPart ((comp1_t) (sa >> B_SHIFT), da) << B_SHIFT;
+            p = (comp4_t)fbCombineConjointInPart ((comp1_t) (sa >> A_SHIFT), da) << A_SHIFT;
             Fa = m|n|o|p;
             break;
         case CombineA:
@@ -1275,27 +1283,27 @@ fbCombineConjointGeneralC (comp4_t *dest, comp4_t *src, comp4_t *mask, int width
             Fb = 0;
             break;
         case CombineBOut:
-            m = fbCombineConjointOutPart (da, (comp1_t) (sa >> 0));
-            n = fbCombineConjointOutPart (da, (comp1_t) (sa >> G_SHIFT)) << G_SHIFT;
-            o = fbCombineConjointOutPart (da, (comp1_t) (sa >> B_SHIFT)) << B_SHIFT;
-            p = fbCombineConjointOutPart (da, (comp1_t) (sa >> A_SHIFT)) << A_SHIFT;
+            m = (comp4_t)fbCombineConjointOutPart (da, (comp1_t) (sa >> 0));
+            n = (comp4_t)fbCombineConjointOutPart (da, (comp1_t) (sa >> G_SHIFT)) << G_SHIFT;
+            o = (comp4_t)fbCombineConjointOutPart (da, (comp1_t) (sa >> B_SHIFT)) << B_SHIFT;
+            p = (comp4_t)fbCombineConjointOutPart (da, (comp1_t) (sa >> A_SHIFT)) << A_SHIFT;
             Fb = m|n|o|p;
             break;
         case CombineBIn:
-            m = fbCombineConjointInPart (da, (comp1_t) (sa >> 0));
-            n = fbCombineConjointInPart (da, (comp1_t) (sa >> G_SHIFT)) << G_SHIFT;
-            o = fbCombineConjointInPart (da, (comp1_t) (sa >> B_SHIFT)) << B_SHIFT;
-            p = fbCombineConjointInPart (da, (comp1_t) (sa >> A_SHIFT)) << A_SHIFT;
+            m = (comp4_t)fbCombineConjointInPart (da, (comp1_t) (sa >> 0));
+            n = (comp4_t)fbCombineConjointInPart (da, (comp1_t) (sa >> G_SHIFT)) << G_SHIFT;
+            o = (comp4_t)fbCombineConjointInPart (da, (comp1_t) (sa >> B_SHIFT)) << B_SHIFT;
+            p = (comp4_t)fbCombineConjointInPart (da, (comp1_t) (sa >> A_SHIFT)) << A_SHIFT;
             Fb = m|n|o|p;
             break;
         case CombineB:
             Fb = ~0;
             break;
         }
-        m = FbGen (s,d,0,FbGet8(Fa,0),FbGet8(Fb,0),t, u, v);
-        n = FbGen (s,d,G_SHIFT,FbGet8(Fa,G_SHIFT),FbGet8(Fb,G_SHIFT),t, u, v);
-        o = FbGen (s,d,B_SHIFT,FbGet8(Fa,B_SHIFT),FbGet8(Fb,B_SHIFT),t, u, v);
-        p = FbGen (s,d,A_SHIFT,FbGet8(Fa,A_SHIFT),FbGet8(Fb,A_SHIFT),t, u, v);
+        m = FbGen (s,d,0,GetComp(Fa,0),GetComp(Fb,0),t, u, v);
+        n = FbGen (s,d,G_SHIFT,GetComp(Fa,G_SHIFT),GetComp(Fb,G_SHIFT),t, u, v);
+        o = FbGen (s,d,B_SHIFT,GetComp(Fa,B_SHIFT),GetComp(Fb,B_SHIFT),t, u, v);
+        p = FbGen (s,d,A_SHIFT,GetComp(Fa,A_SHIFT),GetComp(Fb,A_SHIFT),t, u, v);
         s = m|n|o|p;
 	*(dest + i) = s;
     }

@@ -62,5 +62,8 @@ while (<STDIN>) {
     s/comp2_t/uint${half_pixel_size}_t/g;
     s/comp4_t/uint${pixel_size}_t/g;
 
+    # Change the function table name for the 64-bit version.
+    s/pixman_composeFunctions/pixman_composeFunctions64/ if $size == 16;
+
     print;
 }

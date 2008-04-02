@@ -185,6 +185,7 @@ typedef struct _FbComposeFunctions64 {
 } FbComposeFunctions64;
 
 extern FbComposeFunctions32 pixman_composeFunctions;
+extern FbComposeFunctions64 pixman_composeFunctions64;
 
 void pixman_composite_rect_general_accessors (const FbComposeData *data,
 					      uint32_t *scanline_buffer);
