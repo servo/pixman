@@ -1428,6 +1428,8 @@ static const FastPathInfo mmx_fast_paths[] =
 
     { PIXMAN_OP_SRC, PIXMAN_a8r8g8b8,  PIXMAN_null,	PIXMAN_a8r8g8b8, fbCompositeCopyAreammx, 0 },
     { PIXMAN_OP_SRC, PIXMAN_a8b8g8r8,  PIXMAN_null,	PIXMAN_a8b8g8r8, fbCompositeCopyAreammx, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_a8r8g8b8,  PIXMAN_null,	PIXMAN_x8r8g8b8, fbCompositeCopyAreammx, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_a8b8g8r8,  PIXMAN_null,	PIXMAN_x8b8g8r8, fbCompositeCopyAreammx, 0 },
     { PIXMAN_OP_SRC, PIXMAN_x8r8g8b8,  PIXMAN_null,	PIXMAN_x8r8g8b8, fbCompositeCopyAreammx, 0 },
     { PIXMAN_OP_SRC, PIXMAN_x8b8g8r8,  PIXMAN_null,	PIXMAN_x8b8g8r8, fbCompositeCopyAreammx, 0 },
     { PIXMAN_OP_SRC, PIXMAN_r5g6b5,    PIXMAN_null,     PIXMAN_r5g6b5,   fbCompositeCopyAreammx, 0 },
