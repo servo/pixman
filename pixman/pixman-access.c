@@ -31,16 +31,6 @@
 
 #include "pixman-private.h"
 
-#ifdef PIXMAN_FB_ACCESSORS
-#define FETCH_PROC_FOR_PICTURE pixman_fetchProcForPicture_accessors
-#define FETCH_PIXEL_PROC_FOR_PICTURE pixman_fetchPixelProcForPicture_accessors
-#define STORE_PROC_FOR_PICTURE pixman_storeProcForPicture_accessors
-#else
-#define FETCH_PROC_FOR_PICTURE pixman_fetchProcForPicture
-#define FETCH_PIXEL_PROC_FOR_PICTURE pixman_fetchPixelProcForPicture
-#define STORE_PROC_FOR_PICTURE pixman_storeProcForPicture
-#endif
-
 /*
  * YV12 setup and access macros
  */
@@ -643,7 +633,7 @@ fbFetch_yv12 (bits_image_t *pict, int x, int line, int width, uint32_t *buffer)
     }
 }
 
-fetchProc FETCH_PROC_FOR_PICTURE (bits_image_t * pict)
+fetchProc ACCESS(pixman_fetchProcForPicture) (bits_image_t * pict)
 {
     switch(pict->format) {
     case PIXMAN_a8r8g8b8: return fbFetch_a8r8g8b8;
@@ -1154,7 +1144,7 @@ fbFetchPixel_yv12 (bits_image_t *pict, int offset, int line)
 	(b >= 0 ? b < 0x1000000 ? (b >> 16) & 0x0000ff : 0x0000ff : 0);
 }
 
-fetchPixelProc FETCH_PIXEL_PROC_FOR_PICTURE (bits_image_t * pict)
+fetchPixelProc ACCESS(pixman_fetchPixelProcForPicture) (bits_image_t * pict)
 {
     switch(pict->format) {
     case PIXMAN_a8r8g8b8: return fbFetchPixel_a8r8g8b8;
@@ -1634,7 +1624,7 @@ fbStore_g1 (pixman_image_t *image,
 }
 
 
-storeProc STORE_PROC_FOR_PICTURE (bits_image_t * pict)
+storeProc ACCESS(pixman_storeProcForPicture) (bits_image_t * pict)
 {
     switch(pict->format) {
     case PIXMAN_a8r8g8b8: return fbStore_a8r8g8b8;

@@ -510,6 +510,8 @@ union pixman_image
 
 #ifdef PIXMAN_FB_ACCESSORS
 
+#define ACCESS(sym) sym##_accessors
+
 #define READ(img, ptr)							\
     ((img)->common.read_func ((ptr), sizeof(*(ptr))))
 #define WRITE(img, ptr,val)						\
@@ -534,6 +536,8 @@ union pixman_image
     } while (0)
 
 #else
+
+#define ACCESS(sym) sym
 
 #define READ(img, ptr)		(*(ptr))
 #define WRITE(img, ptr, val)	(*(ptr) = (val))
