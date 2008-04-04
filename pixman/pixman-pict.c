@@ -1261,8 +1261,6 @@ pixman_walk_composite_region (pixman_op_t op,
     pixman_region_fini (&reg);
 }
 
-#define SCANLINE_BUFFER_LENGTH 2048
-
 static void
 pixman_image_composite_rect  (pixman_op_t                   op,
 			      pixman_image_t               *src,
@@ -1278,19 +1276,9 @@ pixman_image_composite_rect  (pixman_op_t                   op,
 			      uint16_t                      height)
 {
     FbComposeData compose_data;
-    uint32_t _scanline_buffer[SCANLINE_BUFFER_LENGTH * 3];
-    uint32_t *scanline_buffer = _scanline_buffer;
 
     return_if_fail (src != NULL);
     return_if_fail (dest != NULL);
-
-    if (width > SCANLINE_BUFFER_LENGTH)
-    {
-	scanline_buffer = (uint32_t *)pixman_malloc_abc (width, 3, sizeof (uint32_t));
-
-	if (!scanline_buffer)
-	    return;
-    }
 
     compose_data.op = op;
     compose_data.src = src;
@@ -1305,10 +1293,7 @@ pixman_image_composite_rect  (pixman_op_t                   op,
     compose_data.width = width;
     compose_data.height = height;
 
-    pixman_composite_rect_general (&compose_data, scanline_buffer);
-
-    if (scanline_buffer != _scanline_buffer)
-	free (scanline_buffer);
+    pixman_composite_rect_general (&compose_data);
 }
 
 /* These "formats" both have depth 0, so they
