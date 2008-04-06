@@ -24,8 +24,7 @@ libpixman_1_la_SOURCES =		\
 	pixman-timer.c
 
 libpixmanincludedir = $(includedir)/pixman-1/
-libpixmaninclude_HEADERS = pixman.h
-nodist_libpixmaninclude_HEADERS = pixman-version.h
+libpixmaninclude_HEADERS = pixman.h pixman-version.h
 noinst_LTLIBRARIES = 
 
 EXTRA_DIST = Makefile.win32
