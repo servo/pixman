@@ -1465,7 +1465,7 @@ fbStore_b2g3r3 (pixman_image_t *image,
 	Split(values[i]);
 	WRITE(image, pixel++,
 	      ((b     ) & 0xc0) |
-	      ((g >> 2) & 0x1c) |
+	      ((g >> 2) & 0x38) |
 	      ((r >> 5)       ));
     }
 }
