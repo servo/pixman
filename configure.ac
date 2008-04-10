@@ -164,6 +164,9 @@ xserver_save_CFLAGS=$CFLAGS
 CFLAGS="$CFLAGS -msse $MMX_CFLAGS"
 
 AC_COMPILE_IFELSE([
+#if defined(__GNUC__) && (__GNUC__ < 3 || (__GNUC__ == 3 && __GNUC_MINOR__ < 4))
+#error "Need GCC >= 3.4 for SSE intrinsics"
+#endif
 #if !defined(__amd64__) && !defined(__x86_64__)
 #error "Need x86-64 for SSE"
 #endif
@@ -193,11 +196,15 @@ SSE_CFLAGS="-mmmx -msse2 -Winline --param inline-unit-growth=10000 --param large
 have_sse2_intrinsics=no
 AC_MSG_CHECKING(whether to use SSE2 intrinsics)
 xserver_save_CFLAGS=$CFLAGS
-CFLAGS="$CFLAGS -msse2 $MMX_CFLAGS"
+CFLAGS="$CFLAGS -msse2 $SSE_CFLAGS"
 
 AC_COMPILE_IFELSE([
+#if defined(__GNUC__) && (__GNUC__ < 3 || (__GNUC__ == 3 && __GNUC_MINOR__ < 4))
+#error "Need GCC >= 3.4 for SSE2 intrinsics"
+#endif
 #include <mmintrin.h>
 #include <xmmintrin.h>
+#include <emmintrin.h>
 int main () {
     __m128i a, b, c;
 	c = _mm_xor_si128 (a, b);
