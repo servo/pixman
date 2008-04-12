@@ -50,7 +50,7 @@ endif
 
 # vmx code
 if USE_VMX
-noinst_LTLIBRARIES = libpixman-vmx.la
+noinst_LTLIBRARIES += libpixman-vmx.la
 libpixman_vmx_la_SOURCES = \
 	pixman-vmx.c		\
 	pixman-vmx.h
