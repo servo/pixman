@@ -1,3 +1,5 @@
+  - Update the RLEASING file
+
   - Things to keep in mind if breaking ABI:
 
       - There should be a guard #ifndef I_AM_EITHER_CAIRO_OR_THE_X_SERVER
@@ -20,6 +22,10 @@
       - Regions should become 32 bit
 
       - There should only be one trap rasterization API.
+
+      - The PIXMAN_g8/c8/etc formats should use the A channel
+        to indicate the actual depth. That way PIXMAN_x4c4 and PIXMAN_c8
+	won't collide.
 
   - Make pixman_region_point_in() survive a NULL box, then fix up
     pixman-compose.c

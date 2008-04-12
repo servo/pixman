@@ -143,9 +143,19 @@ typedef struct point point_t;
  */
 
 #define FASTCALL
-typedef FASTCALL void (*CombineMaskU) (uint32_t *src, const uint32_t *mask, int width);
-typedef FASTCALL void (*CombineFuncU) (uint32_t *dest, const uint32_t *src, int width);
-typedef FASTCALL void (*CombineFuncC) (uint32_t *dest, uint32_t *src, uint32_t *mask, int width);
+typedef FASTCALL void (*CombineMaskU32) (uint32_t *src, const uint32_t *mask, int width);
+typedef FASTCALL void (*CombineFuncU32) (uint32_t *dest, const uint32_t *src, int width);
+typedef FASTCALL void (*CombineFuncC32) (uint32_t *dest, uint32_t *src, uint32_t *mask, int width);
+typedef FASTCALL void (*fetchProc)(bits_image_t *pict, int x, int y, int width,
+                                   uint32_t *buffer);
+typedef FASTCALL uint32_t (*fetchPixelProc)(bits_image_t *pict, int offset, int line);
+typedef FASTCALL void (*storeProc)(pixman_image_t *, uint32_t *bits,
+                                   const uint32_t *values, int x, int width,
+                                   const pixman_indexed_t *);
+
+typedef FASTCALL void (*CombineMaskU64) (uint64_t *src, const uint64_t *mask, int width);
+typedef FASTCALL void (*CombineFuncU64) (uint64_t *dest, const uint64_t *src, int width);
+typedef FASTCALL void (*CombineFuncC64) (uint64_t *dest, uint64_t *src, uint64_t *mask, int width);
 
 typedef struct _FbComposeData {
     uint8_t	 op;
@@ -162,18 +172,51 @@ typedef struct _FbComposeData {
     uint16_t	 height;
 } FbComposeData;
 
-typedef struct _FbComposeFunctions {
-    CombineFuncU *combineU;
-    CombineFuncC *combineC;
-    CombineMaskU combineMaskU;
-} FbComposeFunctions;
+typedef struct _FbComposeFunctions32 {
+    CombineFuncU32 *combineU;
+    CombineFuncC32 *combineC;
+    CombineMaskU32 combineMaskU;
+} FbComposeFunctions32;
 
-extern FbComposeFunctions pixman_composeFunctions;
+typedef struct _FbComposeFunctions64 {
+    CombineFuncU64 *combineU;
+    CombineFuncC64 *combineC;
+    CombineMaskU64 combineMaskU;
+} FbComposeFunctions64;
+
+extern FbComposeFunctions32 pixman_composeFunctions;
+extern FbComposeFunctions64 pixman_composeFunctions64;
 
 void pixman_composite_rect_general_accessors (const FbComposeData *data,
 					      uint32_t *scanline_buffer);
 void pixman_composite_rect_general (const FbComposeData *data,
 				    uint32_t *scanline_buffer);
+
+fetchProc pixman_fetchProcForPicture (bits_image_t *);
+fetchPixelProc pixman_fetchPixelProcForPicture (bits_image_t *);
+storeProc pixman_storeProcForPicture (bits_image_t *);
+fetchProc pixman_fetchProcForPicture_accessors (bits_image_t *);
+fetchPixelProc pixman_fetchPixelProcForPicture_accessors (bits_image_t *);
+storeProc pixman_storeProcForPicture_accessors (bits_image_t *);
+
+void pixmanFetchSourcePict(source_image_t *, int x, int y, int width,
+                           uint32_t *buffer, uint32_t *mask, uint32_t maskBits);
+
+void fbFetchTransformed(bits_image_t *, int x, int y, int width,
+                        uint32_t *buffer, uint32_t *mask, uint32_t maskBits);
+void fbStoreExternalAlpha(bits_image_t *, int x, int y, int width,
+                          uint32_t *buffer);
+void fbFetchExternalAlpha(bits_image_t *, int x, int y, int width,
+                          uint32_t *buffer, uint32_t *mask, uint32_t maskBits);
+
+void fbFetchTransformed_accessors(bits_image_t *, int x, int y, int width,
+                                  uint32_t *buffer, uint32_t *mask,
+                                  uint32_t maskBits);
+void fbStoreExternalAlpha_accessors(bits_image_t *, int x, int y, int width,
+                                    uint32_t *buffer);
+void fbFetchExternalAlpha_accessors(bits_image_t *, int x, int y, int width,
+                                    uint32_t *buffer, uint32_t *mask,
+                                    uint32_t maskBits);
 
 /* end */
 
@@ -299,6 +342,7 @@ union pixman_image
     solid_fill_t		solid;
 };
 
+
 #define LOG2_BITMAP_PAD 5
 #define FB_STIP_SHIFT	LOG2_BITMAP_PAD
 #define FB_STIP_UNIT	(1 << FB_STIP_SHIFT)
@@ -408,190 +452,8 @@ union pixman_image
 
 #define FbInC(x,i,a,t) ((uint32_t) FbIntMult(FbGet8(x,i),FbGet8(a,i),(t)) << (i))
 
-#define FbGen(x,y,i,ax,ay,t,u,v) ((t) = (FbIntMult(FbGet8(y,i),ay,(u)) + \
-					 FbIntMult(FbGet8(x,i),ax,(v))), \
-				  (uint32_t) ((uint8_t) ((t) |		\
-							 (0 - ((t) >> 8)))) << (i))
-
 #define FbAdd(x,y,i,t)	((t) = FbGet8(x,i) + FbGet8(y,i),		\
 			 (uint32_t) ((uint8_t) ((t) | (0 - ((t) >> 8)))) << (i))
-
-
-/*
-  The methods below use some tricks to be able to do two color
-  components at the same time.
-*/
-
-/*
-  x_c = (x_c * a) / 255
-*/
-#define FbByteMul(x, a) do {					    \
-        uint32_t t = ((x & 0xff00ff) * a) + 0x800080;               \
-        t = (t + ((t >> 8) & 0xff00ff)) >> 8;			    \
-        t &= 0xff00ff;						    \
-								    \
-        x = (((x >> 8) & 0xff00ff) * a) + 0x800080;		    \
-        x = (x + ((x >> 8) & 0xff00ff));			    \
-        x &= 0xff00ff00;					    \
-        x += t;							    \
-    } while (0)
-
-/*
-  x_c = (x_c * a) / 255 + y
-*/
-#define FbByteMulAdd(x, a, y) do {				    \
-        uint32_t t = ((x & 0xff00ff) * a) + 0x800080;               \
-        t = (t + ((t >> 8) & 0xff00ff)) >> 8;			    \
-        t &= 0xff00ff;						    \
-        t += y & 0xff00ff;					    \
-        t |= 0x1000100 - ((t >> 8) & 0xff00ff);			    \
-        t &= 0xff00ff;						    \
-								    \
-        x = (((x >> 8) & 0xff00ff) * a) + 0x800080;                 \
-        x = (x + ((x >> 8) & 0xff00ff)) >> 8;                       \
-        x &= 0xff00ff;                                              \
-        x += (y >> 8) & 0xff00ff;                                   \
-        x |= 0x1000100 - ((x >> 8) & 0xff00ff);                     \
-        x &= 0xff00ff;                                              \
-        x <<= 8;                                                    \
-        x += t;                                                     \
-    } while (0)
-
-/*
-  x_c = (x_c * a + y_c * b) / 255
-*/
-#define FbByteAddMul(x, a, y, b) do {                                   \
-        uint32_t t;							\
-        uint32_t r = (x >> 24) * a + (y >> 24) * b + 0x80;		\
-        r += (r >> 8);                                                  \
-        r >>= 8;                                                        \
-									\
-        t = (x & 0xff00) * a + (y & 0xff00) * b;                        \
-        t += (t >> 8) + 0x8000;                                         \
-        t >>= 16;                                                       \
-									\
-        t |= r << 16;                                                   \
-        t |= 0x1000100 - ((t >> 8) & 0xff00ff);                         \
-        t &= 0xff00ff;                                                  \
-        t <<= 8;                                                        \
-									\
-        r = ((x >> 16) & 0xff) * a + ((y >> 16) & 0xff) * b + 0x80;     \
-        r += (r >> 8);                                                  \
-        r >>= 8;                                                        \
-									\
-        x = (x & 0xff) * a + (y & 0xff) * b + 0x80;                     \
-        x += (x >> 8);                                                  \
-        x >>= 8;                                                        \
-        x |= r << 16;                                                   \
-        x |= 0x1000100 - ((x >> 8) & 0xff00ff);                         \
-        x &= 0xff00ff;                                                  \
-        x |= t;                                                         \
-    } while (0)
-
-/*
-  x_c = (x_c * a + y_c *b) / 256
-*/
-#define FbByteAddMul_256(x, a, y, b) do {                               \
-        uint32_t t = (x & 0xff00ff) * a + (y & 0xff00ff) * b;		\
-        t >>= 8;                                                        \
-        t &= 0xff00ff;                                                  \
-									\
-        x = ((x >> 8) & 0xff00ff) * a + ((y >> 8) & 0xff00ff) * b;      \
-        x &= 0xff00ff00;                                                \
-        x += t;                                                         \
-    } while (0)
-
-/*
-  x_c = (x_c * a_c) / 255
-*/
-#define FbByteMulC(x, a) do {				  \
-        uint32_t t;                                       \
-        uint32_t r = (x & 0xff) * (a & 0xff);             \
-        r |= (x & 0xff0000) * ((a >> 16) & 0xff);	  \
-	r += 0x800080;					  \
-        r = (r + ((r >> 8) & 0xff00ff)) >> 8;		  \
-        r &= 0xff00ff;					  \
-							  \
-        x >>= 8;					  \
-        t = (x & 0xff) * ((a >> 8) & 0xff);		  \
-        t |= (x & 0xff0000) * (a >> 24);		  \
-        t += 0x800080;					  \
-        t = t + ((t >> 8) & 0xff00ff);			  \
-        x = r | (t & 0xff00ff00);			  \
-							  \
-    } while (0)
-
-/*
-  x_c = (x_c * a) / 255 + y
-*/
-#define FbByteMulAddC(x, a, y) do {				      \
-        uint32_t t;                                                   \
-        uint32_t r = (x & 0xff) * (a & 0xff);                         \
-        r |= (x & 0xff0000) * ((a >> 16) & 0xff);		      \
-	r += 0x800080;						      \
-	r = (r + ((r >> 8) & 0xff00ff)) >> 8;			      \
-        r &= 0xff00ff;						      \
-        r += y & 0xff00ff;					      \
-        r |= 0x1000100 - ((r >> 8) & 0xff00ff);			      \
-        r &= 0xff00ff;						      \
-								      \
-        x >>= 8;                                                       \
-        t = (x & 0xff) * ((a >> 8) & 0xff);                            \
-        t |= (x & 0xff0000) * (a >> 24);                               \
-	t += 0x800080;                                                 \
-        t = (t + ((t >> 8) & 0xff00ff)) >> 8;			       \
-        t &= 0xff00ff;                                                 \
-        t += (y >> 8) & 0xff00ff;                                      \
-        t |= 0x1000100 - ((t >> 8) & 0xff00ff);                        \
-        t &= 0xff00ff;                                                 \
-        x = r | (t << 8);                                              \
-    } while (0)
-
-/*
-  x_c = (x_c * a_c + y_c * b) / 255
-*/
-#define FbByteAddMulC(x, a, y, b) do {                                  \
-        uint32_t t;							\
-        uint32_t r = (x >> 24) * (a >> 24) + (y >> 24) * b;		\
-        r += (r >> 8) + 0x80;                                           \
-        r >>= 8;                                                        \
-									\
-        t = (x & 0xff00) * ((a >> 8) & 0xff) + (y & 0xff00) * b;        \
-        t += (t >> 8) + 0x8000;                                         \
-        t >>= 16;                                                       \
-									\
-        t |= r << 16;                                                   \
-        t |= 0x1000100 - ((t >> 8) & 0xff00ff);                         \
-        t &= 0xff00ff;                                                  \
-        t <<= 8;                                                        \
-									\
-        r = ((x >> 16) & 0xff) * ((a >> 16) & 0xff) + ((y >> 16) & 0xff) * b + 0x80; \
-        r += (r >> 8);                                                  \
-        r >>= 8;                                                        \
-									\
-        x = (x & 0xff) * (a & 0xff) + (y & 0xff) * b + 0x80;            \
-        x += (x >> 8);                                                  \
-        x >>= 8;                                                        \
-        x |= r << 16;                                                   \
-        x |= 0x1000100 - ((x >> 8) & 0xff00ff);                         \
-        x &= 0xff00ff;                                                  \
-        x |= t;                                                         \
-    } while (0)
-
-/*
-  x_c = min(x_c + y_c, 255)
-*/
-#define FbByteAdd(x, y) do {                                            \
-        uint32_t t;							\
-        uint32_t r = (x & 0xff00ff) + (y & 0xff00ff);			\
-        r |= 0x1000100 - ((r >> 8) & 0xff00ff);                         \
-        r &= 0xff00ff;                                                  \
-									\
-        t = ((x >> 8) & 0xff00ff) + ((y >> 8) & 0xff00ff);              \
-        t |= 0x1000100 - ((t >> 8) & 0xff00ff);                         \
-        r |= (t & 0xff00ff) << 8;                                       \
-        x = r;                                                          \
-    } while (0)
 
 #define div_255(x) (((x) + 0x80 + (((x) + 0x80) >> 8)) >> 8)
 
@@ -648,6 +510,8 @@ union pixman_image
 
 #ifdef PIXMAN_FB_ACCESSORS
 
+#define ACCESS(sym) sym##_accessors
+
 #define READ(img, ptr)							\
     ((img)->common.read_func ((ptr), sizeof(*(ptr))))
 #define WRITE(img, ptr,val)						\
@@ -671,11 +535,9 @@ union pixman_image
 	}								\
     } while (0)
 
-/* FIXME */
-#define fbPrepareAccess(x)
-#define fbFinishAccess(x)
-
 #else
+
+#define ACCESS(sym) sym
 
 #define READ(img, ptr)		(*(ptr))
 #define WRITE(img, ptr, val)	(*(ptr) = (val))
@@ -683,8 +545,7 @@ union pixman_image
     memcpy(dst, src, size)
 #define MEMSET_WRAPPED(img, dst, val, size)					\
     memset(dst, val, size)
-#define fbPrepareAccess(x)
-#define fbFinishAccess(x)
+
 #endif
 
 #define fbComposeGetSolid(img, res, fmt)				\
@@ -808,6 +669,12 @@ pixman_rasterize_edges_accessors (pixman_image_t *image,
 				  pixman_edge_t	*r,
 				  pixman_fixed_t	t,
 				  pixman_fixed_t	b);
+
+pixman_bool_t
+pixman_image_is_opaque(pixman_image_t *image);
+
+pixman_bool_t
+pixman_image_can_get_solid (pixman_image_t *image);
 
 
 #ifdef PIXMAN_TIMING

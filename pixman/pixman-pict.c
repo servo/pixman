@@ -30,7 +30,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "pixman.h"
 #include "pixman-private.h"
 #include "pixman-mmx.h"
 #include "pixman-vmx.h"
@@ -150,9 +149,6 @@ fbCompositeOver_x888x8x8888 (pixman_op_t      op,
 	    dst++;
 	}
     }
-
-    fbFinishAccess (pMask->pDrawable);
-    fbFinishAccess (pDst->pDrawable);
 }
 
 static void
@@ -341,9 +337,6 @@ fbCompositeSolidMask_nx8x8888 (pixman_op_t      op,
 	    dst++;
 	}
     }
-
-    fbFinishAccess (pMask->pDrawable);
-    fbFinishAccess (pDst->pDrawable);
 }
 
 void
@@ -417,9 +410,6 @@ fbCompositeSolidMask_nx8888x8888C (pixman_op_t op,
 	    dst++;
 	}
     }
-
-    fbFinishAccess (pMask->pDrawable);
-    fbFinishAccess (pDst->pDrawable);
 }
 
 void
@@ -482,9 +472,6 @@ fbCompositeSolidMask_nx8x0888 (pixman_op_t op,
 	    dst += 3;
 	}
     }
-
-    fbFinishAccess (pMask->pDrawable);
-    fbFinishAccess (pDst->pDrawable);
 }
 
 void
@@ -548,9 +535,6 @@ fbCompositeSolidMask_nx8x0565 (pixman_op_t op,
 	    dst++;
 	}
     }
-
-    fbFinishAccess (pMask->pDrawable);
-    fbFinishAccess (pDst->pDrawable);
 }
 
 void
@@ -624,9 +608,6 @@ fbCompositeSolidMask_nx8888x0565C (pixman_op_t op,
 	    dst++;
 	}
     }
-
-    fbFinishAccess (pMask->pDrawable);
-    fbFinishAccess (pDst->pDrawable);
 }
 
 void
@@ -673,9 +654,6 @@ fbCompositeSrc_8888x8888 (pixman_op_t op,
 	    dst++;
 	}
     }
-
-    fbFinishAccess (pSrc->pDrawable);
-    fbFinishAccess (pDst->pDrawable);
 }
 
 void
@@ -725,9 +703,6 @@ fbCompositeSrc_8888x0888 (pixman_op_t op,
 	    dst += 3;
 	}
     }
-
-    fbFinishAccess (pSrc->pDrawable);
-    fbFinishAccess (pDst->pDrawable);
 }
 
 void
@@ -780,9 +755,6 @@ fbCompositeSrc_8888x0565 (pixman_op_t op,
 	    dst++;
 	}
     }
-
-    fbFinishAccess (pDst->pDrawable);
-    fbFinishAccess (pSrc->pDrawable);
 }
 
 void
@@ -833,9 +805,6 @@ fbCompositeSrcAdd_8000x8000 (pixman_op_t	op,
 	    dst++;
 	}
     }
-
-    fbFinishAccess (pDst->pDrawable);
-    fbFinishAccess (pSrc->pDrawable);
 }
 
 void
@@ -893,9 +862,6 @@ fbCompositeSrcAdd_8888x8888 (pixman_op_t	op,
 	    dst++;
 	}
     }
-
-    fbFinishAccess (pDst->pDrawable);
-    fbFinishAccess (pSrc->pDrawable);
 }
 
 static void
@@ -948,9 +914,6 @@ fbCompositeSrcAdd_8888x8x8 (pixman_op_t op,
 	    WRITE(pDst, dst++, r);
 	}
     }
-
-    fbFinishAccess(pDst->pDrawable);
-    fbFinishAccess(pMask->pDrawable);
 }
 
 void
@@ -998,8 +961,6 @@ fbCompositeSrcAdd_1000x1000 (pixman_op_t	op,
 	   FALSE,
 	   FALSE);
 
-    fbFinishAccess(pDst->pDrawable);
-    fbFinishAccess(pSrc->pDrawable);
 #endif
 }
 
@@ -1060,8 +1021,6 @@ fbCompositeSolidMask_nx1xn (pixman_op_t op,
 	      FB_ALLONES,
 	      0x0);
 
-    fbFinishAccess (pDst->pDrawable);
-    fbFinishAccess (pMask->pDrawable);
 #endif
 }
 
@@ -1132,9 +1091,6 @@ fbCompositeSrcSrc_nxn  (pixman_op_t	   op,
 
 	   reverse,
 	   upsidedown);
-
-    fbFinishAccess(pSrc->pDrawable);
-    fbFinishAccess(pDst->pDrawable);
 #endif
 }
 
@@ -1211,9 +1167,6 @@ fbCompositeSrc_8888xx888 (pixman_op_t op,
 	dst += dstStride;
 	src += srcStride;
     }
-
-    fbFinishAccess(pSrc->pDrawable);
-    fbFinishAccess(pDst->pDrawable);
 }
 
 static void
@@ -1306,38 +1259,6 @@ pixman_walk_composite_region (pixman_op_t op,
 	pbox++;
     }
     pixman_region_fini (&reg);
-}
-
-static pixman_bool_t
-can_get_solid (pixman_image_t *image)
-{
-    if (image->type == SOLID)
-	return TRUE;
-
-    if (image->type != BITS	||
-	image->bits.width != 1	||
-	image->bits.height != 1)
-    {
-	return FALSE;
-    }
-
-    if (image->common.repeat != PIXMAN_REPEAT_NORMAL)
-	return FALSE;
-
-    switch (image->bits.format)
-    {
-    case PIXMAN_a8r8g8b8:
-    case PIXMAN_x8r8g8b8:
-    case PIXMAN_a8b8g8r8:
-    case PIXMAN_x8b8g8r8:
-    case PIXMAN_r8g8b8:
-    case PIXMAN_b8g8r8:
-    case PIXMAN_r5g6b5:
-    case PIXMAN_b5g6r5:
-	return TRUE;
-    default:
-	return FALSE;
-    }
 }
 
 #define SCANLINE_BUFFER_LENGTH 2048
@@ -1475,6 +1396,8 @@ static const FastPathInfo mmx_fast_paths[] =
 
     { PIXMAN_OP_SRC, PIXMAN_a8r8g8b8,  PIXMAN_null,	PIXMAN_a8r8g8b8, fbCompositeCopyAreammx, 0 },
     { PIXMAN_OP_SRC, PIXMAN_a8b8g8r8,  PIXMAN_null,	PIXMAN_a8b8g8r8, fbCompositeCopyAreammx, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_a8r8g8b8,  PIXMAN_null,	PIXMAN_x8r8g8b8, fbCompositeCopyAreammx, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_a8b8g8r8,  PIXMAN_null,	PIXMAN_x8b8g8r8, fbCompositeCopyAreammx, 0 },
     { PIXMAN_OP_SRC, PIXMAN_x8r8g8b8,  PIXMAN_null,	PIXMAN_x8r8g8b8, fbCompositeCopyAreammx, 0 },
     { PIXMAN_OP_SRC, PIXMAN_x8b8g8r8,  PIXMAN_null,	PIXMAN_x8b8g8r8, fbCompositeCopyAreammx, 0 },
     { PIXMAN_OP_SRC, PIXMAN_r5g6b5,    PIXMAN_null,     PIXMAN_r5g6b5,   fbCompositeCopyAreammx, 0 },
@@ -1607,7 +1530,7 @@ get_fast_path (const FastPathInfo *fast_paths,
 	if (info->op != op)
 	    continue;
 
-	if ((info->src_format == PIXMAN_solid && can_get_solid (pSrc))		||
+	if ((info->src_format == PIXMAN_solid && pixman_image_can_get_solid (pSrc))		||
 	    (pSrc->type == BITS && info->src_format == pSrc->bits.format))
 	{
 	    valid_src = TRUE;
@@ -1648,6 +1571,82 @@ get_fast_path (const FastPathInfo *fast_paths,
 
     return NULL;
 }
+
+/*
+ * Operator optimizations based on source or destination opacity
+ */
+typedef struct
+{
+    pixman_op_t			op;
+    pixman_op_t			opSrcDstOpaque;
+    pixman_op_t			opSrcOpaque;
+    pixman_op_t			opDstOpaque;
+} OptimizedOperatorInfo;
+
+static const OptimizedOperatorInfo optimized_operators[] =
+{
+    /* Input Operator           SRC&DST Opaque          SRC Opaque              DST Opaque      */
+    { PIXMAN_OP_OVER,           PIXMAN_OP_SRC,          PIXMAN_OP_SRC,          PIXMAN_OP_OVER },
+    { PIXMAN_OP_OVER_REVERSE,   PIXMAN_OP_DST,          PIXMAN_OP_OVER_REVERSE, PIXMAN_OP_DST },
+    { PIXMAN_OP_IN,             PIXMAN_OP_SRC,          PIXMAN_OP_IN,           PIXMAN_OP_SRC },
+    { PIXMAN_OP_IN_REVERSE,     PIXMAN_OP_DST,          PIXMAN_OP_DST,          PIXMAN_OP_IN_REVERSE },
+    { PIXMAN_OP_OUT,            PIXMAN_OP_CLEAR,        PIXMAN_OP_OUT,          PIXMAN_OP_CLEAR },
+    { PIXMAN_OP_OUT_REVERSE,    PIXMAN_OP_CLEAR,        PIXMAN_OP_CLEAR,        PIXMAN_OP_OUT_REVERSE },
+    { PIXMAN_OP_ATOP,           PIXMAN_OP_SRC,          PIXMAN_OP_IN,           PIXMAN_OP_OVER },
+    { PIXMAN_OP_ATOP_REVERSE,   PIXMAN_OP_DST,          PIXMAN_OP_OVER_REVERSE, PIXMAN_OP_IN_REVERSE },
+    { PIXMAN_OP_XOR,            PIXMAN_OP_CLEAR,        PIXMAN_OP_OUT,          PIXMAN_OP_OUT_REVERSE },
+    { PIXMAN_OP_SATURATE,       PIXMAN_OP_DST,          PIXMAN_OP_OVER_REVERSE, PIXMAN_OP_DST },
+    { PIXMAN_OP_NONE }
+};
+
+
+/*
+ * Check if the current operator could be optimized
+ */
+static const OptimizedOperatorInfo*
+pixman_operator_can_be_optimized(pixman_op_t op)
+{
+    const OptimizedOperatorInfo *info;
+
+    for (info = optimized_operators; info->op != PIXMAN_OP_NONE; info++)
+    {
+        if(info->op == op)
+            return info;
+    }
+    return NULL;
+}
+
+/*
+ * Optimize the current operator based on opacity of source or destination
+ * The output operator should be mathematically equivalent to the source.
+ */
+static pixman_op_t
+pixman_optimize_operator(pixman_op_t op, pixman_image_t *pSrc, pixman_image_t *pMask, pixman_image_t *pDst )
+{
+    pixman_bool_t is_source_opaque;
+    pixman_bool_t is_dest_opaque;
+    const OptimizedOperatorInfo *info = pixman_operator_can_be_optimized(op);
+
+    if(!info || pMask)
+        return op;
+
+    is_source_opaque = pixman_image_is_opaque(pSrc);
+    is_dest_opaque = pixman_image_is_opaque(pDst);
+
+    if(is_source_opaque == FALSE && is_dest_opaque == FALSE)
+        return op;
+
+    if(is_source_opaque && is_dest_opaque)
+        return info->opSrcDstOpaque;
+    else if(is_source_opaque)
+        return info->opSrcOpaque;
+    else if(is_dest_opaque)
+        return info->opDstOpaque;
+
+    return op;
+
+}
+
 
 void
 pixman_image_composite (pixman_op_t      op,
@@ -1709,7 +1708,15 @@ pixman_image_composite (pixman_op_t      op,
 	}
     }
 
-    if ((pSrc->type == BITS || can_get_solid (pSrc)) && (!pMask || pMask->type == BITS)
+    /*
+    * Check if we can replace our operator by a simpler one if the src or dest are opaque
+    * The output operator should be mathematically equivalent to the source.
+    */
+    op = pixman_optimize_operator(op, pSrc, pMask, pDst);
+    if(op == PIXMAN_OP_DST)
+        return;
+
+    if ((pSrc->type == BITS || pixman_image_can_get_solid (pSrc)) && (!pMask || pMask->type == BITS)
         && !srcTransform && !maskTransform
         && !maskAlphaMap && !srcAlphaMap && !dstAlphaMap
         && (pSrc->common.filter != PIXMAN_FILTER_CONVOLUTION)
@@ -2064,6 +2071,7 @@ pixman_have_mmx (void)
     return mmx_present;
 }
 
+#ifdef USE_SSE2
 pixman_bool_t
 pixman_have_sse (void)
 {
@@ -2079,5 +2087,7 @@ pixman_have_sse (void)
 
     return sse_present;
 }
+#endif
+
 #endif /* __amd64__ */
 #endif

@@ -24,25 +24,40 @@ AC_PREREQ([2.57])
 
 #   Pixman versioning scheme
 #
-#   - If the changes don't affect API or ABI, then increment pixman_micro
-#   - If API is added, then increment PIXMAN_MINOR, and set MICRO to 0
+#   - The git version must at all times have an odd MICRO version
+#     number.
 #
-#   - If you break ABI, then
-#        - In the first development release where you break ABI, find all instances of
-#          "pixman-n" and change it to pixman-(n+1)
+#   - If you add API, increment the MICRO version to the next largest
+#     odd number.
+#
+#   - If you release a version that contains new API, then increment
+#     MINOR and set MICRO to 0. 
+#
+#   - If you release a new version that does not contain new API, then
+#     increment MICRO to the next even number.
+#
+#   - After doing a release, increment MICRO again to make the version 
+#     number in git odd.
+#
+#   - If you break the ABI, then
+#
+#        - increment MAJOR
+#
+#        - In the first development release where you break ABI, find
+#          all instances of "pixman-n" and change them to pixman-(n+1)
 #
 #          This needs to be done at least in 
 #                    configure.ac
 #                    all Makefile.am's
 #                    pixman-n.pc.in
 #
-#      This ensures that binary incompatible versions can be installed in parallel.
-#      See http://www106.pair.com/rhp/parallel.html for more information
-#
+#      This ensures that binary incompatible versions can be installed
+#      in parallel.  See http://www106.pair.com/rhp/parallel.html for
+#      more information
 
 m4_define([pixman_major], 0)
-m4_define([pixman_minor], 9)
-m4_define([pixman_micro], 6)
+m4_define([pixman_minor], 11)
+m4_define([pixman_micro], 1)
 
 m4_define([pixman_version],[pixman_major.pixman_minor.pixman_micro])
 
@@ -68,8 +83,12 @@ m4_define([lt_age], [pixman_minor])
 
 LT_VERSION_INFO="lt_current:lt_revision:lt_age"
 
-PIXMAN_MAJOR=pixman_major
-AC_SUBST(PIXMAN_MAJOR)
+PIXMAN_VERSION_MAJOR=pixman_major()
+AC_SUBST(PIXMAN_VERSION_MAJOR)
+PIXMAN_VERSION_MINOR=pixman_minor()
+AC_SUBST(PIXMAN_VERSION_MINOR)
+PIXMAN_VERSION_MICRO=pixman_micro()
+AC_SUBST(PIXMAN_VERSION_MICRO)
 
 AC_SUBST(LT_VERSION_INFO)
 
@@ -82,6 +101,12 @@ if test "x$GCC" = "xyes"; then
   *[\ \	]-Wall[\ \	]*) ;;
   *) CFLAGS="$CFLAGS -Wall" ;;
   esac fi changequote([,])dnl
+
+AC_PATH_PROG(PERL, perl, no)
+if test "x$PERL" = xno; then
+    AC_MSG_ERROR([Perl is required to build pixman.])
+fi
+AC_SUBST(PERL)
 
 dnl =========================================================================
 dnl -fvisibility stuff
@@ -104,7 +129,7 @@ AC_MSG_RESULT($have_gcc4)
 dnl ===========================================================================
 dnl Check for MMX
 
-MMX_CFLAGS="-mmmx -Winline --param inline-unit-growth=10000 --param large-function-growth=10000"
+MMX_CFLAGS="-mmmx -Winline"
 
 have_mmx_intrinsics=no
 AC_MSG_CHECKING(whether to use MMX intrinsics)
@@ -145,6 +170,9 @@ xserver_save_CFLAGS=$CFLAGS
 CFLAGS="$CFLAGS -msse $MMX_CFLAGS"
 
 AC_COMPILE_IFELSE([
+#if defined(__GNUC__) && (__GNUC__ < 3 || (__GNUC__ == 3 && __GNUC_MINOR__ < 4))
+#error "Need GCC >= 3.4 for SSE intrinsics"
+#endif
 #if !defined(__amd64__) && !defined(__x86_64__)
 #error "Need x86-64 for SSE"
 #endif
@@ -169,16 +197,20 @@ AM_CONDITIONAL(USE_SSE, test $have_sse_intrinsics = yes)
 dnl ===========================================================================
 dnl Check for SSE2
 
-SSE_CFLAGS="-mmmx -msse2 -Winline --param inline-unit-growth=10000 --param large-function-growth=10000"
+SSE_CFLAGS="-mmmx -msse2 -Winline"
 
 have_sse2_intrinsics=no
 AC_MSG_CHECKING(whether to use SSE2 intrinsics)
 xserver_save_CFLAGS=$CFLAGS
-CFLAGS="$CFLAGS -msse2 $MMX_CFLAGS"
+CFLAGS="$CFLAGS -msse2 $SSE_CFLAGS"
 
 AC_COMPILE_IFELSE([
+#if defined(__GNUC__) && (__GNUC__ < 3 || (__GNUC__ == 3 && __GNUC_MINOR__ < 4))
+#error "Need GCC >= 3.4 for SSE2 intrinsics"
+#endif
 #include <mmintrin.h>
 #include <xmmintrin.h>
+#include <emmintrin.h>
 int main () {
     __m128i a, b, c;
 	c = _mm_xor_si128 (a, b);
@@ -243,4 +275,5 @@ AC_SUBST(DEP_LIBS)
 AC_OUTPUT([pixman-1.pc
            Makefile
 	   pixman/Makefile
+	   pixman/pixman-version.h
 	   test/Makefile])

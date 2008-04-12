@@ -76,9 +76,8 @@
 
 /* --------------- MMX primitivess ------------------------------------ */
 
-typedef unsigned long long ullong;
-
 #ifdef __GNUC__
+typedef unsigned long long ullong;
 typedef ullong mmxdatafield;
 #endif
 #ifdef _MSC_VER
@@ -143,28 +142,33 @@ static const MMXData c =
 #endif
 };
 
-#ifdef _MSC_VER
-#undef inline
-#define inline __forceinline
+#ifdef __GNUC__
+#    ifdef __ICC
+#        define MC(x)  M64(c.mmx_##x)
+#    else
+#        define MC(x) ((__m64)c.mmx_##x)
+#    endif
+#    define inline __inline__ __attribute__ ((__always_inline__))
 #endif
 
-#ifdef __GNUC__
-#define MC(x) ((__m64) c.mmx_##x)
-#endif
 #ifdef _MSC_VER
-#define MC(x) c.mmx_##x
+#    define MC(x) c.mmx_##x
+#    undef inline
+#    define inline __forceinline
 #endif
 
 static inline __m64
 M64 (ullong x)
 {
-#ifdef __GNUC__
+#ifdef __ICC
+    return _mm_cvtsi64_m64 (x);
+#elif defined (__GNUC__)
     return (__m64)x;
 #endif
 
 #ifdef _MSC_VER
     __m64 res;
-    
+
     res.m64_u64 = x;
     return res;
 #endif
@@ -173,7 +177,9 @@ M64 (ullong x)
 static inline ullong
 ULLONG (__m64 x)
 {
-#ifdef __GNUC__
+#ifdef __ICC
+    return _mm_cvtm64_si64 (x);
+#elif defined (__GNUC__)
     return (ullong)x;
 #endif
 
@@ -1624,7 +1630,7 @@ fbCompositeSolidMask_nx8x8888mmx (pixman_op_t op,
     if (srca == 0)
 	return;
 
-    srcsrc = (unsigned long long)src << 32 | src;
+    srcsrc = (ullong)src << 32 | src;
 
     fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
     fbComposeGetStart (pMask, xMask, yMask, uint8_t, maskStride, maskLine, 1);
@@ -1667,7 +1673,7 @@ fbCompositeSolidMask_nx8x8888mmx (pixman_op_t op,
 
 	    if (srca == 0xff && (m0 & m1) == 0xff)
 	    {
-		*(unsigned long long *)dst = srcsrc;
+		*(ullong *)dst = srcsrc;
 	    }
 	    else if (m0 | m1)
 	    {
@@ -1988,7 +1994,7 @@ fbCompositeSolidMask_nx8x0565mmx (pixman_op_t op,
     int	dstStride, maskStride;
     uint16_t	w;
     __m64	vsrc, vsrca, tmp;
-    unsigned long long srcsrcsrcsrc, src16;
+    ullong srcsrcsrcsrc, src16;
 
     CHECKPOINT();
 
@@ -2050,7 +2056,7 @@ fbCompositeSolidMask_nx8x0565mmx (pixman_op_t op,
 
 	    if (srca == 0xff && (m0 & m1 & m2 & m3) == 0xff)
 	    {
-		*(unsigned long long *)dst = srcsrcsrcsrc;
+		*(ullong *)dst = srcsrcsrcsrc;
 	    }
 	    else if (m0 | m1 | m2 | m3)
 	    {

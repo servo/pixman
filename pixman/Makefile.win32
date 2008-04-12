@@ -24,9 +24,15 @@ endif
 SOURCES = \
 	pixman-region.c				\
 	pixman-image.c					\
+	pixman-access.c					\
+	pixman-access-accessors.c			\
+	pixman-combine.c				\
 	pixman-compose.c				\
 	pixman-compose-accessors.c	\
 	pixman-pict.c					\
+	pixman-source.c					\
+	pixman-transformed.c				\
+	pixman-transformed-accessors.c			\
 	pixman-utils.c					\
 	pixman-edge.c					\
 	pixman-edge-accessors.c		\

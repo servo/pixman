@@ -47,9 +47,21 @@ Here are the steps to follow to create a new pixman release:
    change then there is further work to be done, (also described in
    configure.in).
 
-5) Use "git commit" and "git push" to publish any changes made in steps
-   3 and 4.
+5) Use "git commit" record any changes made in steps 3 and 4.
 
-6) Generate the final tar files with:
+6) Generate the final tar files with
 
 	make distcheck
+
+   And publish the tar files to everywhere appropriate.
+
+   Note: There's a "make release-publish" target to help with this
+   step, (creating the tar file and publishing it), but it depends on
+   getting gpg setup first. It's probably the right way to go in the
+   future, though.
+
+7) Increment pixman_micro to the next larger (odd) number in
+   configure.ac. Commit this change, and push all commits created
+   during this process.
+
+8) Send email announcements of the release to everywhere appropriate.
