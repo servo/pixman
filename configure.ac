@@ -129,7 +129,7 @@ AC_MSG_RESULT($have_gcc4)
 dnl ===========================================================================
 dnl Check for MMX
 
-MMX_CFLAGS="-mmmx -Winline --param inline-unit-growth=10000 --param large-function-growth=10000"
+MMX_CFLAGS="-mmmx -Winline"
 
 have_mmx_intrinsics=no
 AC_MSG_CHECKING(whether to use MMX intrinsics)
@@ -197,7 +197,7 @@ AM_CONDITIONAL(USE_SSE, test $have_sse_intrinsics = yes)
 dnl ===========================================================================
 dnl Check for SSE2
 
-SSE_CFLAGS="-mmmx -msse2 -Winline --param inline-unit-growth=10000 --param large-function-growth=10000"
+SSE_CFLAGS="-mmmx -msse2 -Winline"
 
 have_sse2_intrinsics=no
 AC_MSG_CHECKING(whether to use SSE2 intrinsics)

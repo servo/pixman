@@ -142,28 +142,33 @@ static const MMXData c =
 #endif
 };
 
-#ifdef _MSC_VER
-#undef inline
-#define inline __forceinline
+#ifdef __GNUC__
+#    ifdef __ICC
+#        define MC(x)  M64(c.mmx_##x)
+#    else
+#        define MC(x) ((__m64)c.mmx_##x)
+#    endif
+#    define inline __inline__ __attribute__ ((__always_inline__))
 #endif
 
-#ifdef __GNUC__
-#define MC(x) ((__m64) c.mmx_##x)
-#endif
 #ifdef _MSC_VER
-#define MC(x) c.mmx_##x
+#    define MC(x) c.mmx_##x
+#    undef inline
+#    define inline __forceinline
 #endif
 
 static inline __m64
 M64 (ullong x)
 {
-#ifdef __GNUC__
+#ifdef __ICC
+    return _mm_cvtsi64_m64 (x);
+#elif defined (__GNUC__)
     return (__m64)x;
 #endif
 
 #ifdef _MSC_VER
     __m64 res;
-    
+
     res.m64_u64 = x;
     return res;
 #endif
@@ -172,7 +177,9 @@ M64 (ullong x)
 static inline ullong
 ULLONG (__m64 x)
 {
-#ifdef __GNUC__
+#ifdef __ICC
+    return _mm_cvtm64_si64 (x);
+#elif defined (__GNUC__)
     return (ullong)x;
 #endif
 
