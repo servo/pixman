@@ -105,7 +105,7 @@ static void fbFetchSolid(bits_image_t * pict, int x, int y, int width, uint32_t 
 {
     uint32_t color;
     uint32_t *end;
-    fetchPixelProc fetch = ACCESS(pixman_fetchPixelProcForPicture)(pict);
+    fetchPixelProc32 fetch = ACCESS(pixman_fetchPixelProcForPicture32)(pict);
 
     color = fetch(pict, 0, 0);
 
@@ -116,7 +116,7 @@ static void fbFetchSolid(bits_image_t * pict, int x, int y, int width, uint32_t 
 
 static void fbFetch(bits_image_t * pict, int x, int y, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
 {
-    fetchProc fetch = ACCESS(pixman_fetchProcForPicture)(pict);
+    fetchProc32 fetch = ACCESS(pixman_fetchProcForPicture32)(pict);
 
     fetch(pict, x, y, width, buffer);
 }
@@ -126,7 +126,7 @@ fbStore(bits_image_t * pict, int x, int y, int width, uint32_t *buffer)
 {
     uint32_t *bits;
     int32_t stride;
-    storeProc store = ACCESS(pixman_storeProcForPicture)(pict);
+    storeProc32 store = ACCESS(pixman_storeProcForPicture32)(pict);
     const pixman_indexed_t * indexed = pict->indexed;
 
     bits = pict->bits;

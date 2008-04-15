@@ -633,7 +633,7 @@ fbFetch_yv12 (bits_image_t *pict, int x, int line, int width, uint32_t *buffer)
     }
 }
 
-fetchProc ACCESS(pixman_fetchProcForPicture) (bits_image_t * pict)
+fetchProc32 ACCESS(pixman_fetchProcForPicture32) (bits_image_t * pict)
 {
     switch(pict->format) {
     case PIXMAN_a8r8g8b8: return fbFetch_a8r8g8b8;
@@ -1144,7 +1144,7 @@ fbFetchPixel_yv12 (bits_image_t *pict, int offset, int line)
 	(b >= 0 ? b < 0x1000000 ? (b >> 16) & 0x0000ff : 0x0000ff : 0);
 }
 
-fetchPixelProc ACCESS(pixman_fetchPixelProcForPicture) (bits_image_t * pict)
+fetchPixelProc32 ACCESS(pixman_fetchPixelProcForPicture32) (bits_image_t * pict)
 {
     switch(pict->format) {
     case PIXMAN_a8r8g8b8: return fbFetchPixel_a8r8g8b8;
@@ -1624,7 +1624,7 @@ fbStore_g1 (pixman_image_t *image,
 }
 
 
-storeProc ACCESS(pixman_storeProcForPicture) (bits_image_t * pict)
+storeProc32 ACCESS(pixman_storeProcForPicture32) (bits_image_t * pict)
 {
     switch(pict->format) {
     case PIXMAN_a8r8g8b8: return fbStore_a8r8g8b8;
