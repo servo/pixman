@@ -145,7 +145,7 @@ static
 void
 PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 			       void *src_buffer, void *mask_buffer, 
-			       void *dest_buffer)
+			       void *dest_buffer, const int wide)
 {
     int i;
     scanStoreProc store;
@@ -437,20 +437,22 @@ void
 pixman_composite_rect_general (const FbComposeData *data)
 {
     uint32_t _scanline_buffer[SCANLINE_BUFFER_LENGTH * 3];
-    uint32_t *scanline_buffer = _scanline_buffer;
-    uint32_t *src_buffer, *mask_buffer, *dest_buffer;
+    const int wide = 0;
+    const int Bpp = wide ? 8 : 4;
+    uint8_t *scanline_buffer = (uint8_t*)_scanline_buffer;
+    uint8_t *src_buffer, *mask_buffer, *dest_buffer;
 
-    if (data->width > SCANLINE_BUFFER_LENGTH)
+    if (data->width * Bpp > SCANLINE_BUFFER_LENGTH * sizeof(uint32_t))
     {
-	scanline_buffer = (uint32_t *)pixman_malloc_abc (data->width, 3, sizeof (uint32_t));
+	scanline_buffer = pixman_malloc_abc (data->width, 3, Bpp);
 
 	if (!scanline_buffer)
 	    return;
     }
 
     src_buffer = scanline_buffer;
-    mask_buffer = src_buffer + data->width;
-    dest_buffer = mask_buffer + data->width;
+    mask_buffer = src_buffer + data->width * Bpp;
+    dest_buffer = mask_buffer + data->width * Bpp;
 
     if (data->src->common.read_func			||
 	data->src->common.write_func			||
@@ -460,15 +462,16 @@ pixman_composite_rect_general (const FbComposeData *data)
 	data->dest->common.write_func)
     {
 	pixman_composite_rect_general_accessors (data, src_buffer, mask_buffer,
-						 dest_buffer);
+						 dest_buffer, wide);
     }
     else
     {
 	pixman_composite_rect_general_no_accessors (data, src_buffer,
-						    mask_buffer, dest_buffer);
+						    mask_buffer, dest_buffer,
+						    wide);
     }
 
-    if (scanline_buffer != _scanline_buffer)
+    if ((void*)scanline_buffer != (void*)_scanline_buffer)
 	free (scanline_buffer);
 }
 

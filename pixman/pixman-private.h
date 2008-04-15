@@ -196,7 +196,8 @@ extern FbComposeFunctions64 pixman_composeFunctions64;
 void pixman_composite_rect_general_accessors (const FbComposeData *data,
                                               void *src_buffer,
                                               void *mask_buffer,
-                                              void *dest_buffer);
+                                              void *dest_buffer,
+                                              const int wide);
 void pixman_composite_rect_general (const FbComposeData *data);
 
 fetchProc32 pixman_fetchProcForPicture32 (bits_image_t *);
