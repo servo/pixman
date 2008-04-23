@@ -1826,44 +1826,38 @@ pixman_image_composite (pixman_op_t      op,
  * "-maltivec -mabi=altivec", as gcc would try to save vector register
  * across function calls causing SIGILL on cpus without Altivec/vmx.
  */
+static pixman_bool_t initialized = FALSE;
+static volatile pixman_bool_t have_vmx = TRUE;
+
 #ifdef __APPLE__
 #include <sys/sysctl.h>
 
 pixman_bool_t pixman_have_vmx (void) {
-    int hasVMX = 0;
-    size_t length = sizeof ( hasVMX );
-    int error = sysctlbyname ("hw.optional.altivec", &hasVMX, &length, NULL, 0);
-    if ( 0 != error ) return 0;
-    return hasVMX;
+    if(!initialized) {
+        size_t length = sizeof(have_vmx);
+        int error =
+            sysctlbyname("hw.optional.altivec", &have_vmx, &length, NULL, 0);
+        if(error) have_vmx = FALSE;
+        initialized = TRUE;
+    }
+    return have_vmx;
 }
 
 #else
 #include <signal.h>
-#include <setjmp.h>
-
-static sigjmp_buf jmp;
-static volatile sig_atomic_t in_test = 0;
 
 static void vmx_test (int sig) {
-    if (! in_test) {
-        signal (sig, SIG_DFL);
-        raise (sig);
-    }
-    in_test = 0;
-    siglongjmp (jmp, 1);
+    have_vmx = FALSE;
 }
 
 pixman_bool_t pixman_have_vmx (void) {
-    signal (SIGILL, vmx_test);
-    if (sigsetjmp (jmp, 1)) {
-        signal (SIGILL, SIG_DFL);
-    } else {
-        in_test = 1;
+    if (!initialized) {
+        signal(SIGILL, vmx_test);
         asm volatile ( "vor 0, 0, 0" );
-        signal (SIGILL, SIG_DFL);
-        return 1;
+        signal(SIGILL, SIG_DFL);
+        initialized = TRUE;
     }
-    return 0;
+    return have_vmx;
 }
 #endif /* __APPLE__ */
 #endif /* USE_VMX */
