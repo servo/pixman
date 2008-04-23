@@ -1742,23 +1742,19 @@ pixman_image_composite (pixman_op_t      op,
 #ifdef USE_SSE2
 	if (pixman_have_sse ())
 	    info = get_fast_path (sse_fast_paths, op, pSrc, pMask, pDst, pixbuf);
-	if (!info)
 #endif
 
 #ifdef USE_MMX
-
-	if (pixman_have_mmx())
+	if (!info && pixman_have_mmx())
 	    info = get_fast_path (mmx_fast_paths, op, pSrc, pMask, pDst, pixbuf);
-	if (!info)
 #endif
 
 #ifdef USE_VMX
 
-	if (pixman_have_vmx())
+	if (!info && pixman_have_vmx())
 	    info = get_fast_path (vmx_fast_paths, op, pSrc, pMask, pDst, pixbuf);
-	if (!info)
 #endif
-
+        if (!info)
 	    info = get_fast_path (c_fast_paths, op, pSrc, pMask, pDst, pixbuf);
 
 	if (info)
