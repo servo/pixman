@@ -338,11 +338,6 @@ over (vector unsigned int src, vector unsigned int srca,
 /* notice you have to declare temp vars...
  * Note: tmp3 and tmp4 must remain untouched!
  */
-#define LOAD_VECTOR (source) \
-        tmp1 = (typeof(v ## source))vec_ld(0, source); \
-        tmp2 = (typeof(v ## source))vec_ld(15, source); \
-        v ## source = (typeof(v ## source)) \
-                       vec_perm(tmp1, tmp2, source ## _mask);
 
 #define LOAD_VECTORS(dest, source) \
         tmp1 = (typeof(tmp1))vec_ld(0, source); \
