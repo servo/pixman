@@ -29,6 +29,10 @@
 #include "pixman-vmx.h"
 #include <altivec.h>
 
+#ifdef __GNUC__
+#   define inline __inline__ __attribute__ ((__always_inline__))
+#endif
+
 /*
   x_c = (x_c * a) / 255
 */
