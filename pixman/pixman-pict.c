@@ -1878,7 +1878,6 @@ enum CPUFeatures {
     NoFeatures = 0,
     MMX = 0x1,
     MMX_Extensions = 0x2,
-    VMX = 0x4,
     SSE = 0x6,
     SSE2 = 0x8,
     CMOV = 0x10
