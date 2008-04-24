@@ -281,7 +281,9 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 	data->mask->common.component_alpha &&
 	PIXMAN_FORMAT_RGB (data->mask->bits.format))
     {
-	CombineFuncC32 compose = pixman_composeFunctions.combineC[data->op];
+	CombineFuncC32 compose =
+	    wide ? (CombineFuncC32)pixman_composeFunctions64.combineC[data->op] :
+		   pixman_composeFunctions.combineC[data->op];
 	if (!compose)
 	    return;
 
@@ -346,7 +348,9 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
     {
 	void *src_mask_buffer = 0;
 	const int useMask = (fetchMask != NULL);
-	CombineFuncU32 compose = pixman_composeFunctions.combineU[data->op];
+	CombineFuncU32 compose =
+	    wide ? (CombineFuncU32)pixman_composeFunctions64.combineU[data->op] :
+		   pixman_composeFunctions.combineU[data->op];
 	if (!compose)
 	    return;
 
@@ -372,7 +376,11 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 
 		    if (useMask)
 		    {
-			pixman_composeFunctions.combineU[PIXMAN_OP_IN] (mask_buffer, src_buffer, data->width);
+			if (wide)
+			    pixman_composeFunctions64.combineU[PIXMAN_OP_IN] (mask_buffer, src_buffer, data->width);
+			else
+			    pixman_composeFunctions.combineU[PIXMAN_OP_IN] (mask_buffer, src_buffer, data->width);
+
 			src_mask_buffer = mask_buffer;
 		    }
 		    else
@@ -386,10 +394,16 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 			      data->width, src_buffer,
 			      useMask ? mask_buffer : NULL, 0xff000000);
 
-		    if (useMask)
-			pixman_composeFunctions.combineMaskU (src_buffer,
-							      mask_buffer,
-							      data->width);
+		    if (useMask) {
+			if (wide)
+			    pixman_composeFunctions64.combineMaskU (src_buffer,
+								    mask_buffer,
+								    data->width);
+			else
+			    pixman_composeFunctions.combineMaskU (src_buffer,
+								  mask_buffer,
+								  data->width);
+		    }
 
 		    src_mask_buffer = src_buffer;
 		}
@@ -399,7 +413,10 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 		fetchMask (data->mask, data->xMask, data->yMask + i,
 			   data->width, mask_buffer, 0, 0);
 
-		pixman_composeFunctions.combineU[PIXMAN_OP_IN] (mask_buffer, src_buffer, data->width);
+		if (wide)
+		    pixman_composeFunctions64.combineU[PIXMAN_OP_IN] (mask_buffer, src_buffer, data->width);
+		else
+		    pixman_composeFunctions.combineU[PIXMAN_OP_IN] (mask_buffer, src_buffer, data->width);
 
 		src_mask_buffer = mask_buffer;
 	    }
