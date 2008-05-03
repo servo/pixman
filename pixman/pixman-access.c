@@ -31,6 +31,10 @@
 
 #include "pixman-private.h"
 
+#define Red(x) (((x) >> 16) & 0xff)
+#define Green(x) (((x) >> 8) & 0xff)
+#define Blue(x) ((x) & 0xff)
+
 /*
  * YV12 setup and access macros
  */

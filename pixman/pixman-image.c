@@ -30,6 +30,8 @@
 
 #include "pixman-private.h"
 
+#define Alpha(x) ((x) >> 24)
+
 static void
 init_source_image (source_image_t *image)
 {

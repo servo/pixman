@@ -419,11 +419,6 @@ union pixman_image
      WRITE(img, (a)+2, (uint8_t) ((v) >> 16))))
 #endif
 
-#define Alpha(x) ((x) >> 24)
-#define Red(x) (((x) >> 16) & 0xff)
-#define Green(x) (((x) >> 8) & 0xff)
-#define Blue(x) ((x) & 0xff)
-
 #define CvtR8G8B8toY15(s)       (((((s) >> 16) & 0xff) * 153 + \
                                   (((s) >>  8) & 0xff) * 301 +		\
                                   (((s)      ) & 0xff) * 58) >> 2)

@@ -6,6 +6,8 @@
 
 #include "pixman-private.h"
 
+#define Alpha(x) ((x) >> A_SHIFT)
+
 /*
  * Helper macros.
  */
