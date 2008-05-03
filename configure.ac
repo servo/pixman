@@ -237,7 +237,17 @@ dnl ========================================================
 AC_SUBST(MMX_CFLAGS)
 AC_SUBST(SSE_CFLAGS)
 
-PKG_CHECK_MODULES(GTK, [gtk+-2.0], [HAVE_GTK=yes], [HAVE_GTK=no])
+AC_ARG_ENABLE(gtk,
+   [AC_HELP_STRING([--disable-gtk],
+                   [disable tests using GTK+])],
+   [disable_gtk=yes], [disable_gtk=no])
+
+if test $disable_gtk = no ; then
+   PKG_CHECK_MODULES(GTK, [gtk+-2.0], [HAVE_GTK=yes], [HAVE_GTK=no])
+else
+   HAVE_GTK=no
+fi
+
 AM_CONDITIONAL(HAVE_GTK, [test "x$HAVE_GTK" = xyes])
 
 AC_SUBST(GTK_CFLAGS)
