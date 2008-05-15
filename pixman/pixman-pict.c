@@ -1715,7 +1715,23 @@ pixman_optimize_operator(pixman_op_t op, pixman_image_t *pSrc, pixman_image_t *p
 
 }
 
+#if defined(USE_SSE2) && defined (__GNUC__)
 
+/*
+ * Work around GCC bug causing crashes in Mozilla with SSE2
+ * 
+ * When using SSE2 intrinsics, gcc assumes that the stack is 16 byte
+ * aligned. Unfortunately some code, such as Mozilla and Mono contain
+ * code that aligns the stack to 4 bytes.
+ *
+ * The __force_align_arg_pointer__ makes gcc generate a prologue that
+ * realigns the stack pointer to 16 bytes.
+ *
+ * See https://bugs.freedesktop.org/show_bug.cgi?id=15693
+ */
+
+__attribute__((__force_align_arg_pointer__))
+#endif
 void
 pixman_image_composite (pixman_op_t      op,
 			pixman_image_t * pSrc,
