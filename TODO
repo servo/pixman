@@ -8,13 +8,6 @@
 
       - Use pixmanFillsse2 and pixmanBltsse2
 
-      - Crashes in Mozilla because of unaligned stack. Possible fixes
-
-        - Make use of gcc 4.2 feature to align the stack
-
-        - Write some sort of trampoline that aligns the stack
-          before calling SSE functions.
-
   - Update the RLEASING file
 
   - Things to keep in mind if breaking ABI:
@@ -150,6 +143,12 @@
     What about color spaces such a linear vs. srGB etc.?
 
 done:
+
+- SSE2 issues:
+    - Crashes in Mozilla because of unaligned stack. Possible fixes
+        - Make use of gcc 4.2 feature to align the stack
+        - Write some sort of trampoline that aligns the stack
+          before calling SSE functions.
 
 - Get rid of the switch-of-doom; replace it with a big table
   describing the various fast paths.
