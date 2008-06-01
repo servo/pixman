@@ -1,3 +1,13 @@
+  - SSE 2 issues:
+
+      - Commented-out uses of fbCompositeCopyAreasse2()
+
+      - Use MM_HINT_NTA instead of MM_HINT_T0
+
+      - Use of fbCompositeOver_x888x8x8888sse2()
+
+      - Use pixmanFillsse2 and pixmanBltsse2
+
   - Update the RLEASING file
 
   - Things to keep in mind if breaking ABI:
@@ -29,6 +39,8 @@
 
   - Make pixman_region_point_in() survive a NULL box, then fix up
     pixman-compose.c
+
+    - Possibly look into inlining the fetch functions
 
   - Test suite
 
@@ -131,6 +143,12 @@
     What about color spaces such a linear vs. srGB etc.?
 
 done:
+
+- SSE2 issues:
+    - Crashes in Mozilla because of unaligned stack. Possible fixes
+        - Make use of gcc 4.2 feature to align the stack
+        - Write some sort of trampoline that aligns the stack
+          before calling SSE functions.
 
 - Get rid of the switch-of-doom; replace it with a big table
   describing the various fast paths.

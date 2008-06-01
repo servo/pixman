@@ -29,10 +29,10 @@ libpixmaninclude_HEADERS = pixman.h pixman-version.h
 noinst_LTLIBRARIES = 
 
 pixman-combine32.c : combine.inc combine.pl
-	$(PERL) $(srcdir)/combine.pl 8 < $< > $@ || ($(RM) $@; exit 1)
+	$(PERL) $(srcdir)/combine.pl 8 < $(srcdir)/combine.inc > $@ || ($(RM) $@; exit 1)
 
 pixman-combine64.c : combine.inc combine.pl
-	$(PERL) $(srcdir)/combine.pl 16 < $< > $@ || ($(RM) $@; exit 1)
+	$(PERL) $(srcdir)/combine.pl 16 < $(srcdir)/combine.inc > $@ || ($(RM) $@; exit 1)
 
 EXTRA_DIST = Makefile.win32 combine.inc combine.pl
 CLEANFILES = pixman-combine32.c pixman-combine64.c

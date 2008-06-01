@@ -1733,13 +1733,27 @@ pixman_fill_mmx (uint32_t *bits,
     __m64	v1, v2, v3, v4, v5, v6, v7;
 #endif
 
+    if (bpp != 16 && bpp != 32 && bpp != 8)
+	return FALSE;
+
     if (bpp == 16 && (xor >> 16 != (xor & 0xffff)))
 	return FALSE;
 
-    if (bpp != 16 && bpp != 32)
+    if (bpp == 8 &&
+	((xor >> 16 != (xor & 0xffff)) ||
+	 (xor >> 24 != (xor & 0x00ff) >> 16)))
+    {
 	return FALSE;
-
-    if (bpp == 16)
+    }
+    
+    if (bpp == 8)
+    {
+	stride = stride * (int) sizeof (uint32_t) / 1;
+	byte_line = (uint8_t *)(((uint8_t *)bits) + stride * y + x);
+	byte_width = width;
+	stride *= 1;
+    }
+    else if (bpp == 16)
     {
 	stride = stride * (int) sizeof (uint32_t) / 2;
 	byte_line = (uint8_t *)(((uint16_t *)bits) + stride * y + x);
@@ -1778,6 +1792,13 @@ pixman_fill_mmx (uint32_t *bits,
 	byte_line += stride;
 	w = byte_width;
 
+	while (w >= 1 && ((unsigned long)d & 1))
+	{
+	    *(uint8_t *)d = (xor & 0xff);
+	    w--;
+	    d++;
+	}
+	
 	while (w >= 2 && ((unsigned long)d & 3))
 	{
 	    *(uint16_t *)d = xor;
@@ -1831,12 +1852,19 @@ pixman_fill_mmx (uint32_t *bits,
 	    w -= 4;
 	    d += 4;
 	}
-	if (w >= 2)
+	while (w >= 2)
 	{
 	    *(uint16_t *)d = xor;
 	    w -= 2;
 	    d += 2;
 	}
+	while (w >= 1)
+	{
+	    *(uint8_t *)d = (xor & 0xff);
+	    w--;
+	    d++;
+	}
+	
     }
 
     _mm_empty();

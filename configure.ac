@@ -131,6 +131,10 @@ dnl Check for MMX
 
 MMX_CFLAGS="-mmmx -Winline"
 
+if test "x$GCC" = "xyes"; then
+    MMX_CFLAGS="$MMX_CFLAGS --param inline-unit-growth=10000 --param large-function-growth=10000"
+fi
+
 have_mmx_intrinsics=no
 AC_MSG_CHECKING(whether to use MMX intrinsics)
 xserver_save_CFLAGS=$CFLAGS
@@ -199,14 +203,18 @@ dnl Check for SSE2
 
 SSE_CFLAGS="-mmmx -msse2 -Winline"
 
+if test "x$GCC" = "xyes"; then
+    SSE_CFLAGS="$SSE_CFLAGS --param inline-unit-growth=10000 --param large-function-growth=10000 --param  max-inline-insns-single=6000"
+fi
+
 have_sse2_intrinsics=no
 AC_MSG_CHECKING(whether to use SSE2 intrinsics)
 xserver_save_CFLAGS=$CFLAGS
 CFLAGS="$CFLAGS -msse2 $SSE_CFLAGS"
 
 AC_COMPILE_IFELSE([
-#if defined(__GNUC__) && (__GNUC__ < 3 || (__GNUC__ == 3 && __GNUC_MINOR__ < 4))
-#error "Need GCC >= 3.4 for SSE2 intrinsics"
+#if defined(__GNUC__) && (__GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 2))
+#error "Need GCC >= 4.2 for SSE2 intrinsics"
 #endif
 #include <mmintrin.h>
 #include <xmmintrin.h>
@@ -262,9 +270,17 @@ AC_SUBST(VMX_CFLAGS)
 
 AM_CONDITIONAL(USE_VMX, test $have_vmx_intrinsics = yes)
 
-dnl ===========================================================================
+AC_ARG_ENABLE(gtk,
+   [AC_HELP_STRING([--disable-gtk],
+                   [disable tests using GTK+])],
+   [disable_gtk=yes], [disable_gtk=no])
 
-PKG_CHECK_MODULES(GTK, [gtk+-2.0], [HAVE_GTK=yes], [HAVE_GTK=no])
+if test $disable_gtk = no ; then
+   PKG_CHECK_MODULES(GTK, [gtk+-2.0], [HAVE_GTK=yes], [HAVE_GTK=no])
+else
+   HAVE_GTK=no
+fi
+
 AM_CONDITIONAL(HAVE_GTK, [test "x$HAVE_GTK" = xyes])
 
 AC_SUBST(GTK_CFLAGS)

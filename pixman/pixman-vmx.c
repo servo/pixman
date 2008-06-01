@@ -33,6 +33,8 @@
 #   define inline __inline__ __attribute__ ((__always_inline__))
 #endif
 
+#define Alpha(x) ((x) >> 24)
+
 /*
   x_c = (x_c * a) / 255
 */

@@ -105,7 +105,7 @@ static void fbFetchSolid(bits_image_t * pict, int x, int y, int width, uint32_t 
 {
     uint32_t color;
     uint32_t *end;
-    fetchPixelProc fetch = ACCESS(pixman_fetchPixelProcForPicture)(pict);
+    fetchPixelProc32 fetch = ACCESS(pixman_fetchPixelProcForPicture32)(pict);
 
     color = fetch(pict, 0, 0);
 
@@ -116,7 +116,7 @@ static void fbFetchSolid(bits_image_t * pict, int x, int y, int width, uint32_t 
 
 static void fbFetch(bits_image_t * pict, int x, int y, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
 {
-    fetchProc fetch = ACCESS(pixman_fetchProcForPicture)(pict);
+    fetchProc32 fetch = ACCESS(pixman_fetchProcForPicture32)(pict);
 
     fetch(pict, x, y, width, buffer);
 }
@@ -126,7 +126,7 @@ fbStore(bits_image_t * pict, int x, int y, int width, uint32_t *buffer)
 {
     uint32_t *bits;
     int32_t stride;
-    storeProc store = ACCESS(pixman_storeProcForPicture)(pict);
+    storeProc32 store = ACCESS(pixman_storeProcForPicture32)(pict);
     const pixman_indexed_t * indexed = pict->indexed;
 
     bits = pict->bits;
@@ -144,10 +144,9 @@ static
 #endif
 void
 PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
-			       uint32_t *scanline_buffer)
+			       void *src_buffer, void *mask_buffer, 
+			       void *dest_buffer, const int wide)
 {
-    uint32_t *src_buffer = scanline_buffer;
-    uint32_t *dest_buffer = src_buffer + data->width;
     int i;
     scanStoreProc store;
     scanFetchProc fetchSrc = NULL, fetchMask = NULL, fetchDest = NULL;
@@ -282,8 +281,9 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 	data->mask->common.component_alpha &&
 	PIXMAN_FORMAT_RGB (data->mask->bits.format))
     {
-	uint32_t *mask_buffer = dest_buffer + data->width;
-	CombineFuncC32 compose = pixman_composeFunctions.combineC[data->op];
+	CombineFuncC32 compose =
+	    wide ? (CombineFuncC32)pixman_composeFunctions64.combineC[data->op] :
+		   pixman_composeFunctions.combineC[data->op];
 	if (!compose)
 	    return;
 
@@ -346,13 +346,13 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
     }
     else
     {
-	uint32_t *src_mask_buffer = 0, *mask_buffer = 0;
-	CombineFuncU32 compose = pixman_composeFunctions.combineU[data->op];
+	void *src_mask_buffer = 0;
+	const int useMask = (fetchMask != NULL);
+	CombineFuncU32 compose =
+	    wide ? (CombineFuncU32)pixman_composeFunctions64.combineU[data->op] :
+		   pixman_composeFunctions.combineU[data->op];
 	if (!compose)
 	    return;
-
-	if (fetchMask)
-	    mask_buffer = dest_buffer + data->width;
 
 	for (i = 0; i < data->height; ++i) {
 	    /* fill first half of scanline with source */
@@ -374,9 +374,13 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 		    fetchSrc (data->src, data->xSrc, data->ySrc + i,
 			      data->width, src_buffer, 0, 0);
 
-		    if (mask_buffer)
+		    if (useMask)
 		    {
-			pixman_composeFunctions.combineU[PIXMAN_OP_IN] (mask_buffer, src_buffer, data->width);
+			if (wide)
+			    pixman_composeFunctions64.combineU[PIXMAN_OP_IN] (mask_buffer, src_buffer, data->width);
+			else
+			    pixman_composeFunctions.combineU[PIXMAN_OP_IN] (mask_buffer, src_buffer, data->width);
+
 			src_mask_buffer = mask_buffer;
 		    }
 		    else
@@ -387,13 +391,19 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 		else
 		{
 		    fetchSrc (data->src, data->xSrc, data->ySrc + i,
-			      data->width, src_buffer, mask_buffer,
-			      0xff000000);
+			      data->width, src_buffer,
+			      useMask ? mask_buffer : NULL, 0xff000000);
 
-		    if (mask_buffer)
-			pixman_composeFunctions.combineMaskU (src_buffer,
-							      mask_buffer,
-							      data->width);
+		    if (useMask) {
+			if (wide)
+			    pixman_composeFunctions64.combineMaskU (src_buffer,
+								    mask_buffer,
+								    data->width);
+			else
+			    pixman_composeFunctions.combineMaskU (src_buffer,
+								  mask_buffer,
+								  data->width);
+		    }
 
 		    src_mask_buffer = src_buffer;
 		}
@@ -403,7 +413,10 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 		fetchMask (data->mask, data->xMask, data->yMask + i,
 			   data->width, mask_buffer, 0, 0);
 
-		pixman_composeFunctions.combineU[PIXMAN_OP_IN] (mask_buffer, src_buffer, data->width);
+		if (wide)
+		    pixman_composeFunctions64.combineU[PIXMAN_OP_IN] (mask_buffer, src_buffer, data->width);
+		else
+		    pixman_composeFunctions.combineU[PIXMAN_OP_IN] (mask_buffer, src_buffer, data->width);
 
 		src_mask_buffer = mask_buffer;
 	    }
@@ -435,10 +448,29 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 
 #ifndef PIXMAN_FB_ACCESSORS
 
+#define SCANLINE_BUFFER_LENGTH 2048
+
 void
-pixman_composite_rect_general (const FbComposeData *data,
-			       uint32_t *scanline_buffer)
+pixman_composite_rect_general (const FbComposeData *data)
 {
+    uint32_t _scanline_buffer[SCANLINE_BUFFER_LENGTH * 3];
+    const int wide = 0;
+    const int Bpp = wide ? 8 : 4;
+    uint8_t *scanline_buffer = (uint8_t*)_scanline_buffer;
+    uint8_t *src_buffer, *mask_buffer, *dest_buffer;
+
+    if (data->width * Bpp > SCANLINE_BUFFER_LENGTH * sizeof(uint32_t))
+    {
+	scanline_buffer = pixman_malloc_abc (data->width, 3, Bpp);
+
+	if (!scanline_buffer)
+	    return;
+    }
+
+    src_buffer = scanline_buffer;
+    mask_buffer = src_buffer + data->width * Bpp;
+    dest_buffer = mask_buffer + data->width * Bpp;
+
     if (data->src->common.read_func			||
 	data->src->common.write_func			||
 	(data->mask && data->mask->common.read_func)	||
@@ -446,12 +478,18 @@ pixman_composite_rect_general (const FbComposeData *data,
 	data->dest->common.read_func			||
 	data->dest->common.write_func)
     {
-	pixman_composite_rect_general_accessors (data, scanline_buffer);
+	pixman_composite_rect_general_accessors (data, src_buffer, mask_buffer,
+						 dest_buffer, wide);
     }
     else
     {
-	pixman_composite_rect_general_no_accessors (data, scanline_buffer);
+	pixman_composite_rect_general_no_accessors (data, src_buffer,
+						    mask_buffer, dest_buffer,
+						    wide);
     }
+
+    if ((void*)scanline_buffer != (void*)_scanline_buffer)
+	free (scanline_buffer);
 }
 
 #endif

@@ -146,16 +146,22 @@ typedef struct point point_t;
 typedef FASTCALL void (*CombineMaskU32) (uint32_t *src, const uint32_t *mask, int width);
 typedef FASTCALL void (*CombineFuncU32) (uint32_t *dest, const uint32_t *src, int width);
 typedef FASTCALL void (*CombineFuncC32) (uint32_t *dest, uint32_t *src, uint32_t *mask, int width);
-typedef FASTCALL void (*fetchProc)(bits_image_t *pict, int x, int y, int width,
-                                   uint32_t *buffer);
-typedef FASTCALL uint32_t (*fetchPixelProc)(bits_image_t *pict, int offset, int line);
-typedef FASTCALL void (*storeProc)(pixman_image_t *, uint32_t *bits,
-                                   const uint32_t *values, int x, int width,
-                                   const pixman_indexed_t *);
+typedef FASTCALL void (*fetchProc32)(bits_image_t *pict, int x, int y, int width,
+                                     uint32_t *buffer);
+typedef FASTCALL uint32_t (*fetchPixelProc32)(bits_image_t *pict, int offset, int line);
+typedef FASTCALL void (*storeProc32)(pixman_image_t *, uint32_t *bits,
+                                     const uint32_t *values, int x, int width,
+                                     const pixman_indexed_t *);
 
 typedef FASTCALL void (*CombineMaskU64) (uint64_t *src, const uint64_t *mask, int width);
 typedef FASTCALL void (*CombineFuncU64) (uint64_t *dest, const uint64_t *src, int width);
 typedef FASTCALL void (*CombineFuncC64) (uint64_t *dest, uint64_t *src, uint64_t *mask, int width);
+typedef FASTCALL void (*fetchProc64)(bits_image_t *pict, int x, int y, int width,
+                                     uint64_t *buffer);
+typedef FASTCALL uint64_t (*fetchPixelProc64)(bits_image_t *pict, int offset, int line);
+typedef FASTCALL void (*storeProc64)(pixman_image_t *, uint32_t *bits,
+                                     const uint64_t *values, int x, int width,
+                                     const pixman_indexed_t *);
 
 typedef struct _FbComposeData {
     uint8_t	 op;
@@ -188,16 +194,25 @@ extern FbComposeFunctions32 pixman_composeFunctions;
 extern FbComposeFunctions64 pixman_composeFunctions64;
 
 void pixman_composite_rect_general_accessors (const FbComposeData *data,
-					      uint32_t *scanline_buffer);
-void pixman_composite_rect_general (const FbComposeData *data,
-				    uint32_t *scanline_buffer);
+                                              void *src_buffer,
+                                              void *mask_buffer,
+                                              void *dest_buffer,
+                                              const int wide);
+void pixman_composite_rect_general (const FbComposeData *data);
 
-fetchProc pixman_fetchProcForPicture (bits_image_t *);
-fetchPixelProc pixman_fetchPixelProcForPicture (bits_image_t *);
-storeProc pixman_storeProcForPicture (bits_image_t *);
-fetchProc pixman_fetchProcForPicture_accessors (bits_image_t *);
-fetchPixelProc pixman_fetchPixelProcForPicture_accessors (bits_image_t *);
-storeProc pixman_storeProcForPicture_accessors (bits_image_t *);
+fetchProc32 pixman_fetchProcForPicture32 (bits_image_t *);
+fetchPixelProc32 pixman_fetchPixelProcForPicture32 (bits_image_t *);
+storeProc32 pixman_storeProcForPicture32 (bits_image_t *);
+fetchProc32 pixman_fetchProcForPicture32_accessors (bits_image_t *);
+fetchPixelProc32 pixman_fetchPixelProcForPicture32_accessors (bits_image_t *);
+storeProc32 pixman_storeProcForPicture32_accessors (bits_image_t *);
+
+fetchProc64 pixman_fetchProcForPicture64 (bits_image_t *);
+fetchPixelProc64 pixman_fetchPixelProcForPicture64 (bits_image_t *);
+storeProc64 pixman_storeProcForPicture64 (bits_image_t *);
+fetchProc64 pixman_fetchProcForPicture64_accessors (bits_image_t *);
+fetchPixelProc64 pixman_fetchPixelProcForPicture64_accessors (bits_image_t *);
+storeProc64 pixman_storeProcForPicture64_accessors (bits_image_t *);
 
 void pixmanFetchSourcePict(source_image_t *, int x, int y, int width,
                            uint32_t *buffer, uint32_t *mask, uint32_t maskBits);
@@ -403,11 +418,6 @@ union pixman_image
     (WRITE(img, (uint16_t *) (a), (uint16_t) (v)),		\
      WRITE(img, (a)+2, (uint8_t) ((v) >> 16))))
 #endif
-
-#define Alpha(x) ((x) >> 24)
-#define Red(x) (((x) >> 16) & 0xff)
-#define Green(x) (((x) >> 8) & 0xff)
-#define Blue(x) ((x) & 0xff)
 
 #define CvtR8G8B8toY15(s)       (((((s) >> 16) & 0xff) * 153 + \
                                   (((s) >>  8) & 0xff) * 301 +		\
