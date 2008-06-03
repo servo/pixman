@@ -77,7 +77,7 @@ SOFTWARE.
 #if defined (__SVR4) && defined (__sun)
 #  include <sys/int_types.h>
 #  include <stdint.h>
-#elif defined (__OpenBSD__)
+#elif defined (__OpenBSD__) || defined (__sgi)
 #  include <inttypes.h>
 #elif defined (_MSC_VER)
 typedef __int8 int8_t;
