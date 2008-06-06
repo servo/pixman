@@ -1678,3 +1678,49 @@ storeProc32 ACCESS(pixman_storeProcForPicture32) (bits_image_t * pict)
         return NULL;
     }
 }
+
+#ifndef PIXMAN_FB_ACCESSORS
+/*
+ * This function expands images from ARGB8 format to ARGB16.  To preserve
+ * precision, it needs to know the original source format.  For example, if the
+ * source was PIXMAN_x1r5g5b5 and the red component contained bits 12345, then
+ * the expanded value is 12345123.  To correctly expand this to 16 bits, it
+ * should be 1234512345123451 and not 1234512312345123.
+ *
+ * XXX[AGP]: For now, this just does naïve byte replication.
+ */
+void pixman_expand(uint64_t *dst, const uint32_t *src,
+                   pixman_format_code_t format, int width)
+{
+    /* Start at the end so that we can do the expansion in place when src == dst */
+    for (width--; width >= 0; width--)
+    {
+        const uint8_t a = src[width] >> 24,
+                      r = src[width] >> 16,
+                      g = src[width] >> 8,
+                      b = src[width];
+        dst[width] = (uint64_t)a << 56 | (uint64_t) a << 48 |
+                     (uint64_t)r << 40 | (uint64_t) r << 32 |
+                     (uint64_t)g << 24 | (uint64_t) g << 16 |
+                     (uint64_t)b << 8 | (uint64_t)b;
+    }
+}
+
+/*
+ * Contracting is easier than expanding.  We just need to truncate the
+ * components.
+ */
+void pixman_contract(uint32_t *dst, const uint64_t *src, int width)
+{
+    /* Start at the beginning so that we can do the contraction in place when
+     * src == dst */
+    for (width--; width >= 0; width--, src++, dst++)
+    {
+        const uint8_t a = *src >> 56,
+                      r = *src >> 40,
+                      g = *src >> 24,
+                      b = *src >> 8;
+        *dst = a << 24 | r << 16 | g << 8 | b;
+    }
+}
+#endif // PIXMAN_FB_ACCESSORS

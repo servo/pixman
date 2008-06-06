@@ -214,6 +214,9 @@ fetchProc64 pixman_fetchProcForPicture64_accessors (bits_image_t *);
 fetchPixelProc64 pixman_fetchPixelProcForPicture64_accessors (bits_image_t *);
 storeProc64 pixman_storeProcForPicture64_accessors (bits_image_t *);
 
+void pixman_expand(uint64_t *dst, const uint32_t *src, pixman_format_code_t, int width);
+void pixman_contract(uint32_t *dst, const uint64_t *src, int width);
+
 void pixmanFetchSourcePict(source_image_t *, int x, int y, int width,
                            uint32_t *buffer, uint32_t *mask, uint32_t maskBits);
 
