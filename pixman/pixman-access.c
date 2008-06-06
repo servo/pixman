@@ -2,6 +2,7 @@
  *
  * Copyright © 2000 Keith Packard, member of The XFree86 Project, Inc.
  *             2005 Lars Knoll & Zack Rusin, Trolltech
+ *             2008 Aaron Plattner, NVIDIA Corporation
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that
@@ -27,7 +28,9 @@
 #include <config.h>
 #endif
 
+#include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #include "pixman-private.h"
 
@@ -113,6 +116,52 @@ fbFetch_x8b8g8r8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
 	    (p & 0x0000ff00) |
 	    ((p >> 16) & 0xff) |
 	    ((p & 0xff) << 16);
+    }
+}
+
+static FASTCALL void
+fbFetch_a2b10g10r10 (bits_image_t *pict, int x, int y, int width, uint64_t *buffer)
+{
+    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const uint32_t *pixel = bits + x;
+    const uint32_t *end = pixel + width;
+    while (pixel < end) {
+        uint32_t p = READ(pict, pixel++);
+        uint64_t a = p >> 30;
+        uint64_t b = (p >> 20) & 0x3ff;
+        uint64_t g = (p >> 10) & 0x3ff;
+        uint64_t r = p & 0x3ff;
+
+        r = r << 6 | r >> 4;
+        g = g << 6 | g >> 4;
+        b = b << 6 | b >> 4;
+
+        a <<= 62;
+        a |= a >> 2;
+        a |= a >> 4;
+        a |= a >> 8;
+
+        *buffer++ = a << 48 | r << 32 | g << 16 | b;
+    }
+}
+
+static FASTCALL void
+fbFetch_x2b10g10r10 (bits_image_t *pict, int x, int y, int width, uint64_t *buffer)
+{
+    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const uint32_t *pixel = (uint32_t *)bits + x;
+    const uint32_t *end = pixel + width;
+    while (pixel < end) {
+        uint32_t p = READ(pict, pixel++);
+        uint64_t b = (p >> 20) & 0x3ff;
+        uint64_t g = (p >> 10) & 0x3ff;
+        uint64_t r = p & 0x3ff;
+
+        r = r << 6 | r >> 4;
+        g = g << 6 | g >> 4;
+        b = b << 6 | b >> 4;
+
+        *buffer++ = 0xffffULL << 48 | r << 32 | g << 16 | b;
     }
 }
 
@@ -644,6 +693,9 @@ fetchProc32 ACCESS(pixman_fetchProcForPicture32) (bits_image_t * pict)
     case PIXMAN_x8r8g8b8: return fbFetch_x8r8g8b8;
     case PIXMAN_a8b8g8r8: return fbFetch_a8b8g8r8;
     case PIXMAN_x8b8g8r8: return fbFetch_x8b8g8r8;
+    /* These two require wide compositing */
+    case PIXMAN_a2b10g10r10: return NULL;
+    case PIXMAN_x2b10g10r10: return NULL;
 
         /* 24bpp formats */
     case PIXMAN_r8g8b8: return fbFetch_r8g8b8;
@@ -693,7 +745,65 @@ fetchProc32 ACCESS(pixman_fetchProcForPicture32) (bits_image_t * pict)
     return NULL;
 }
 
+static FASTCALL void
+fbFetch64_generic (bits_image_t *pict, int x, int y, int width, uint64_t *buffer)
+{
+    fetchProc32 fetch32 = ACCESS(pixman_fetchProcForPicture32) (pict);
+
+    // Fetch the pixels into the first half of buffer and then expand them in
+    // place.
+    fetch32(pict, x, y, width, (uint32_t*)buffer);
+    pixman_expand(buffer, (uint32_t*)buffer, pict->format, width);
+}
+
+fetchProc64 ACCESS(pixman_fetchProcForPicture64) (bits_image_t * pict)
+{
+    switch(pict->format) {
+    case PIXMAN_a2b10g10r10: return fbFetch_a2b10g10r10;
+    case PIXMAN_x2b10g10r10: return fbFetch_x2b10g10r10;
+    default: return fbFetch64_generic;
+    }
+}
+
 /**************************** Pixel wise fetching *****************************/
+
+static FASTCALL uint64_t
+fbFetchPixel_a2b10g10r10 (bits_image_t *pict, int offset, int line)
+{
+    uint32_t *bits = pict->bits + line*pict->rowstride;
+    uint32_t p = READ(pict, bits + offset);
+    uint64_t a = p >> 30;
+    uint64_t b = (p >> 20) & 0x3ff;
+    uint64_t g = (p >> 10) & 0x3ff;
+    uint64_t r = p & 0x3ff;
+
+    r = r << 6 | r >> 4;
+    g = g << 6 | g >> 4;
+    b = b << 6 | b >> 4;
+
+    a <<= 62;
+    a |= a >> 2;
+    a |= a >> 4;
+    a |= a >> 8;
+
+    return a << 48 | r << 32 | g << 16 | b;
+}
+
+static FASTCALL uint64_t
+fbFetchPixel_x2b10g10r10 (bits_image_t *pict, int offset, int line)
+{
+    uint32_t *bits = pict->bits + line*pict->rowstride;
+    uint32_t p = READ(pict, bits + offset);
+    uint64_t b = (p >> 20) & 0x3ff;
+    uint64_t g = (p >> 10) & 0x3ff;
+    uint64_t r = p & 0x3ff;
+
+    r = r << 6 | r >> 4;
+    g = g << 6 | g >> 4;
+    b = b << 6 | b >> 4;
+
+    return 0xffffULL << 48 | r << 32 | g << 16 | b;
+}
 
 static FASTCALL uint32_t
 fbFetchPixel_a8r8g8b8 (bits_image_t *pict, int offset, int line)
@@ -1155,6 +1265,9 @@ fetchPixelProc32 ACCESS(pixman_fetchPixelProcForPicture32) (bits_image_t * pict)
     case PIXMAN_x8r8g8b8: return fbFetchPixel_x8r8g8b8;
     case PIXMAN_a8b8g8r8: return fbFetchPixel_a8b8g8r8;
     case PIXMAN_x8b8g8r8: return fbFetchPixel_x8b8g8r8;
+    /* These two require wide compositing */
+    case PIXMAN_a2b10g10r10: return NULL;
+    case PIXMAN_x2b10g10r10: return NULL;
 
         /* 24bpp formats */
     case PIXMAN_r8g8b8: return fbFetchPixel_r8g8b8;
@@ -1204,10 +1317,60 @@ fetchPixelProc32 ACCESS(pixman_fetchPixelProcForPicture32) (bits_image_t * pict)
     return NULL;
 }
 
+static FASTCALL uint64_t
+fbFetchPixel64_generic (bits_image_t *pict, int offset, int line)
+{
+    fetchPixelProc32 fetchPixel32 = ACCESS(pixman_fetchPixelProcForPicture32) (pict);
+    uint32_t argb8Pixel = fetchPixel32(pict, offset, line);
+    uint64_t argb16Pixel;
+
+    pixman_expand(&argb16Pixel, &argb8Pixel, pict->format, 1);
+
+    return argb16Pixel;
+}
+
+fetchPixelProc64 ACCESS(pixman_fetchPixelProcForPicture64) (bits_image_t * pict)
+{
+    switch(pict->format) {
+    case PIXMAN_a2b10g10r10: return fbFetchPixel_a2b10g10r10;
+    case PIXMAN_x2b10g10r10: return fbFetchPixel_x2b10g10r10;
+    default: return fbFetchPixel64_generic;
+    }
+}
+
 /*********************************** Store ************************************/
 
 #define Splita(v)	uint32_t	a = ((v) >> 24), r = ((v) >> 16) & 0xff, g = ((v) >> 8) & 0xff, b = (v) & 0xff
 #define Split(v)	uint32_t	r = ((v) >> 16) & 0xff, g = ((v) >> 8) & 0xff, b = (v) & 0xff
+
+static FASTCALL void
+fbStore_a2b10g10r10 (pixman_image_t *image,
+		     uint32_t *bits, const uint64_t *values, int x, int width, const pixman_indexed_t * indexed)
+{
+    int i;
+    uint32_t *pixel = bits + x;
+    for (i = 0; i < width; ++i) {
+        WRITE(image, pixel++,
+            ((values[i] >> 32) & 0xc0000000) | // A
+            ((values[i] >> 38) & 0x3ff) |      // R
+            ((values[i] >> 12) & 0xffc00) |    // G
+            ((values[i] << 14) & 0x3ff00000)); // B
+    }
+}
+
+static FASTCALL void
+fbStore_x2b10g10r10 (pixman_image_t *image,
+		     uint32_t *bits, const uint64_t *values, int x, int width, const pixman_indexed_t * indexed)
+{
+    int i;
+    uint32_t *pixel = bits + x;
+    for (i = 0; i < width; ++i) {
+        WRITE(image, pixel++,
+            ((values[i] >> 38) & 0x3ff) |      // R
+            ((values[i] >> 12) & 0xffc00) |    // G
+            ((values[i] << 14) & 0x3ff00000)); // B
+    }
+}
 
 static FASTCALL void
 fbStore_a8r8g8b8 (pixman_image_t *image,
@@ -1676,6 +1839,41 @@ storeProc32 ACCESS(pixman_storeProcForPicture32) (bits_image_t * pict)
     case PIXMAN_g1: return  fbStore_g1;
     default:
         return NULL;
+    }
+}
+
+/*
+ * Contracts a 64bpp image to 32bpp and then stores it using a regular 32-bit
+ * store proc.
+ */
+static FASTCALL void
+fbStore64_generic (pixman_image_t *image,
+		   uint32_t *bits, const uint64_t *values, int x, int width, const pixman_indexed_t * indexed)
+{
+    bits_image_t *pict = (bits_image_t*)image;
+    storeProc32 store32 = ACCESS(pixman_storeProcForPicture32) (pict);
+    uint32_t *argb8Pixels;
+
+    assert(image->common.type == BITS);
+    assert(store32);
+
+    argb8Pixels = malloc(sizeof(uint32_t) * width);
+    if (!argb8Pixels) return;
+
+    // Contract the scanline.  We could do this in place if values weren't
+    // const.
+    pixman_contract(argb8Pixels, values, width);
+    store32(image, bits, argb8Pixels, x, width, indexed);
+
+    free(argb8Pixels);
+}
+
+storeProc64 ACCESS(pixman_storeProcForPicture64) (bits_image_t * pict)
+{
+    switch(pict->format) {
+    case PIXMAN_a2b10g10r10: return fbStore_a2b10g10r10;
+    case PIXMAN_x2b10g10r10: return fbStore_x2b10g10r10;
+    default: return fbStore64_generic;
     }
 }
 

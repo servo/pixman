@@ -2,6 +2,7 @@
  *
  * Copyright © 2000 Keith Packard, member of The XFree86 Project, Inc.
  *             2005 Lars Knoll & Zack Rusin, Trolltech
+ *             2008 Aaron Plattner, NVIDIA Corporation
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that
@@ -114,9 +115,29 @@ static void fbFetchSolid(bits_image_t * pict, int x, int y, int width, uint32_t 
 	*(buffer++) = color;
 }
 
+static void fbFetchSolid64(bits_image_t * pict, int x, int y, int width, uint64_t *buffer, void *unused, uint32_t unused2)
+{
+    uint64_t color;
+    uint64_t *end;
+    fetchPixelProc64 fetch = ACCESS(pixman_fetchPixelProcForPicture64)(pict);
+
+    color = fetch(pict, 0, 0);
+
+    end = buffer + width;
+    while (buffer < end)
+	*(buffer++) = color;
+}
+
 static void fbFetch(bits_image_t * pict, int x, int y, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
 {
     fetchProc32 fetch = ACCESS(pixman_fetchProcForPicture32)(pict);
+
+    fetch(pict, x, y, width, buffer);
+}
+
+static void fbFetch64(bits_image_t * pict, int x, int y, int width, uint64_t *buffer, void *unused, uint32_t unused2)
+{
+    fetchProc64 fetch = ACCESS(pixman_fetchProcForPicture64)(pict);
 
     fetch(pict, x, y, width, buffer);
 }
@@ -127,6 +148,20 @@ fbStore(bits_image_t * pict, int x, int y, int width, uint32_t *buffer)
     uint32_t *bits;
     int32_t stride;
     storeProc32 store = ACCESS(pixman_storeProcForPicture32)(pict);
+    const pixman_indexed_t * indexed = pict->indexed;
+
+    bits = pict->bits;
+    stride = pict->rowstride;
+    bits += y*stride;
+    store((pixman_image_t *)pict, bits, buffer, x, width, indexed);
+}
+
+static void
+fbStore64(bits_image_t * pict, int x, int y, int width, uint64_t *buffer)
+{
+    uint32_t *bits;
+    int32_t stride;
+    storeProc64 store = ACCESS(pixman_storeProcForPicture64)(pict);
     const pixman_indexed_t * indexed = pict->indexed;
 
     bits = pict->bits;
@@ -171,22 +206,24 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 
 	if (bits->common.alpha_map)
 	{
+	    // TODO: Need wide external alpha routine.
 	    fetchSrc = (scanFetchProc)ACCESS(fbFetchExternalAlpha);
 	}
 	else if ((bits->common.repeat == PIXMAN_REPEAT_NORMAL || bits->common.repeat == PIXMAN_REPEAT_PAD) &&
 		 bits->width == 1 &&
 		 bits->height == 1)
 	{
-	    fetchSrc = (scanFetchProc)fbFetchSolid;
+	    fetchSrc = wide ? (scanFetchProc)fbFetchSolid64 : (scanFetchProc)fbFetchSolid;
 	    srcClass = SOURCE_IMAGE_CLASS_HORIZONTAL;
 	}
 	else if (!bits->common.transform && bits->common.filter != PIXMAN_FILTER_CONVOLUTION
                 && bits->common.repeat != PIXMAN_REPEAT_PAD)
 	{
-	    fetchSrc = (scanFetchProc)fbFetch;
+	    fetchSrc = wide ? (scanFetchProc)fbFetch64 : (scanFetchProc)fbFetch;
 	}
 	else
 	{
+	    // TODO: Need wide transformed fetch.
 	    fetchSrc = (scanFetchProc)ACCESS(fbFetchTransformed);
 	}
     }
@@ -210,24 +247,27 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 
 	    if (bits->common.alpha_map)
 	    {
+		// TODO: Need wide external alpha routine.
 		fetchMask = (scanFetchProc)ACCESS(fbFetchExternalAlpha);
 	    }
 	    else if ((bits->common.repeat == PIXMAN_REPEAT_NORMAL || bits->common.repeat == PIXMAN_REPEAT_PAD) &&
 		     bits->width == 1 && bits->height == 1)
 	    {
-		fetchMask = (scanFetchProc)fbFetchSolid;
+		fetchMask = wide ? (scanFetchProc)fbFetchSolid64 : (scanFetchProc)fbFetchSolid;
 		maskClass = SOURCE_IMAGE_CLASS_HORIZONTAL;
 	    }
 	    else if (!bits->common.transform && bits->common.filter != PIXMAN_FILTER_CONVOLUTION
                     && bits->common.repeat != PIXMAN_REPEAT_PAD)
-		fetchMask = (scanFetchProc)fbFetch;
+		fetchMask = wide ? (scanFetchProc)fbFetch64 : (scanFetchProc)fbFetch;
 	    else
+		// TODO: Need wide transformed fetch.
 		fetchMask = (scanFetchProc)ACCESS(fbFetchTransformed);
 	}
     }
 
     if (data->dest->common.alpha_map)
     {
+	// TODO: Need wide external alpha routine.
 	fetchDest = (scanFetchProc)ACCESS(fbFetchExternalAlpha);
 	store = (scanStoreProc)ACCESS(fbStoreExternalAlpha);
 
@@ -236,8 +276,8 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
     }
     else
     {
-	fetchDest = (scanFetchProc)fbFetch;
-	store = (scanStoreProc)fbStore;
+	fetchDest = wide ? (scanFetchProc)fbFetch64 : (scanFetchProc)fbFetch;
+	store = wide ? (scanStoreProc)fbStore64 : (scanStoreProc)fbStore;
 
 	switch (data->op)
 	{
@@ -251,7 +291,11 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 	    switch (data->dest->bits.format) {
 	    case PIXMAN_a8r8g8b8:
 	    case PIXMAN_x8r8g8b8:
-		store = NULL;
+		// Skip the store step and composite directly into the
+		// destination if the output format of the compose func matches
+		// the destination format.
+		if (!wide)
+		    store = NULL;
 		break;
 	    default:
 		break;
