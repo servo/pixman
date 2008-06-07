@@ -56,8 +56,9 @@ endif
 if USE_VMX
 noinst_LTLIBRARIES += libpixman-vmx.la
 libpixman_vmx_la_SOURCES = \
-	pixman-vmx.c		\
-	pixman-vmx.h
+	pixman-vmx.c \
+	pixman-vmx.h \
+	pixman-combine.h
 libpixman_vmx_la_CFLAGS = $(DEP_CFLAGS) $(VMX_CFLAGS)
 libpixman_vmx_la_LIBADD = $(DEP_LIBS)
 libpixman_1_la_LIBADD += libpixman-vmx.la
