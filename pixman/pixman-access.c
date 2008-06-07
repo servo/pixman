@@ -1890,17 +1890,19 @@ storeProc64 ACCESS(pixman_storeProcForPicture64) (bits_image_t * pict)
 void pixman_expand(uint64_t *dst, const uint32_t *src,
                    pixman_format_code_t format, int width)
 {
+    int i;
+
     /* Start at the end so that we can do the expansion in place when src == dst */
-    for (width--; width >= 0; width--)
+    for (i = width - 1; i >= 0; i--)
     {
-        const uint8_t a = src[width] >> 24,
-                      r = src[width] >> 16,
-                      g = src[width] >> 8,
-                      b = src[width];
-        dst[width] = (uint64_t)a << 56 | (uint64_t) a << 48 |
-                     (uint64_t)r << 40 | (uint64_t) r << 32 |
-                     (uint64_t)g << 24 | (uint64_t) g << 16 |
-                     (uint64_t)b << 8 | (uint64_t)b;
+        const uint8_t a = src[i] >> 24,
+                      r = src[i] >> 16,
+                      g = src[i] >> 8,
+                      b = src[i];
+        dst[i] = (uint64_t)a << 56 | (uint64_t) a << 48 |
+                 (uint64_t)r << 40 | (uint64_t) r << 32 |
+                 (uint64_t)g << 24 | (uint64_t) g << 16 |
+                 (uint64_t)b << 8 | (uint64_t)b;
     }
 }
 
@@ -1910,15 +1912,17 @@ void pixman_expand(uint64_t *dst, const uint32_t *src,
  */
 void pixman_contract(uint32_t *dst, const uint64_t *src, int width)
 {
+    int i;
+
     /* Start at the beginning so that we can do the contraction in place when
      * src == dst */
-    for (width--; width >= 0; width--, src++, dst++)
+    for (i = 0; i < width; i++)
     {
-        const uint8_t a = *src >> 56,
-                      r = *src >> 40,
-                      g = *src >> 24,
-                      b = *src >> 8;
-        *dst = a << 24 | r << 16 | g << 8 | b;
+        const uint8_t a = src[i] >> 56,
+                      r = src[i] >> 40,
+                      g = src[i] >> 24,
+                      b = src[i] >> 8;
+        dst[i] = a << 24 | r << 16 | g << 8 | b;
     }
 }
 #endif // PIXMAN_FB_ACCESSORS
