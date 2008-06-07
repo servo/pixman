@@ -549,7 +549,13 @@ void
 pixman_composite_rect_general (const FbComposeData *data)
 {
     uint32_t _scanline_buffer[SCANLINE_BUFFER_LENGTH * 3];
-    const int wide = 0;
+    const pixman_format_code_t srcFormat = data->src->type == BITS ? data->src->bits.format : 0;
+    const pixman_format_code_t maskFormat = data->mask && data->mask->type == BITS ? data->mask->bits.format : 0;
+    const pixman_format_code_t destFormat = data->dest->type == BITS ? data->dest->bits.format : 0;
+    const int srcWide = PIXMAN_FORMAT_16BPC(srcFormat);
+    const int maskWide = data->mask && PIXMAN_FORMAT_16BPC(maskFormat);
+    const int destWide = PIXMAN_FORMAT_16BPC(destFormat);
+    const int wide = srcWide || maskWide || destWide;
     const int Bpp = wide ? 8 : 4;
     uint8_t *scanline_buffer = (uint8_t*)_scanline_buffer;
     uint8_t *src_buffer, *mask_buffer, *dest_buffer;
