@@ -28,14 +28,18 @@ libpixmanincludedir = $(includedir)/pixman-1/
 libpixmaninclude_HEADERS = pixman.h pixman-version.h
 noinst_LTLIBRARIES = 
 
-pixman-combine32.c : combine.inc combine.pl
+pixman-combine32.c : combine.inc pixman-combine.h combine.pl
 	$(PERL) $(srcdir)/combine.pl 8 < $(srcdir)/combine.inc > $@ || ($(RM) $@; exit 1)
+pixman-combine.h : combine.h.inc combine.pl
+	$(PERL) $(srcdir)/combine.pl 8 < $(srcdir)/combine.h.inc > $@ || ($(RM) $@; exit 1)
 
-pixman-combine64.c : combine.inc combine.pl
+pixman-combine64.c : combine.inc pixman-combine64.h combine.pl
 	$(PERL) $(srcdir)/combine.pl 16 < $(srcdir)/combine.inc > $@ || ($(RM) $@; exit 1)
+pixman-combine64.h : combine.h.inc combine.pl
+	$(PERL) $(srcdir)/combine.pl 16 < $(srcdir)/combine.h.inc > $@ || ($(RM) $@; exit 1)
 
 EXTRA_DIST = Makefile.win32 combine.inc combine.pl
-CLEANFILES = pixman-combine32.c pixman-combine64.c
+CLEANFILES = pixman-combine32.c pixman-combine64.c pixman-combine.h pixman-combine64.h
 
 # mmx code
 if USE_MMX
