@@ -219,6 +219,8 @@ void pixman_contract(uint32_t *dst, const uint64_t *src, int width);
 
 void pixmanFetchSourcePict(source_image_t *, int x, int y, int width,
                            uint32_t *buffer, uint32_t *mask, uint32_t maskBits);
+void pixmanFetchSourcePict64(source_image_t *, int x, int y, int width,
+                             uint64_t *buffer, uint64_t *mask, uint32_t maskBits);
 
 void fbFetchTransformed(bits_image_t *, int x, int y, int width,
                         uint32_t *buffer, uint32_t *mask, uint32_t maskBits);
@@ -235,6 +237,22 @@ void fbStoreExternalAlpha_accessors(bits_image_t *, int x, int y, int width,
 void fbFetchExternalAlpha_accessors(bits_image_t *, int x, int y, int width,
                                     uint32_t *buffer, uint32_t *mask,
                                     uint32_t maskBits);
+
+void fbFetchTransformed64(bits_image_t *, int x, int y, int width,
+                          uint64_t *buffer, uint64_t *mask, uint32_t maskBits);
+void fbStoreExternalAlpha64(bits_image_t *, int x, int y, int width,
+                            uint64_t *buffer);
+void fbFetchExternalAlpha64(bits_image_t *, int x, int y, int width,
+                            uint64_t *buffer, uint64_t *mask, uint32_t maskBits);
+
+void fbFetchTransformed64_accessors(bits_image_t *, int x, int y, int width,
+                                    uint64_t *buffer, uint64_t *mask,
+                                    uint32_t maskBits);
+void fbStoreExternalAlpha64_accessors(bits_image_t *, int x, int y, int width,
+                                      uint64_t *buffer);
+void fbFetchExternalAlpha64_accessors(bits_image_t *, int x, int y, int width,
+                                      uint64_t *buffer, uint64_t *mask,
+                                      uint32_t maskBits);
 
 /* end */
 
@@ -469,6 +487,7 @@ union pixman_image
 			 (uint32_t) ((uint8_t) ((t) | (0 - ((t) >> 8)))) << (i))
 
 #define div_255(x) (((x) + 0x80 + (((x) + 0x80) >> 8)) >> 8)
+#define div_65535(x) (((x) + 0x8000 + (((x) + 0x8000) >> 16)) >> 16)
 
 #define MOD(a,b) ((a) < 0 ? ((b) - ((-(a) - 1) % (b))) - 1 : (a) % (b))
 

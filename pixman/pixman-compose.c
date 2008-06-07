@@ -174,6 +174,62 @@ typedef void (*scanStoreProc)(pixman_image_t *, int, int, int, uint32_t *);
 typedef void (*scanFetchProc)(pixman_image_t *, int, int, int, uint32_t *,
 			      uint32_t *, uint32_t);
 
+static inline scanFetchProc get_fetch_source_pict(const int wide)
+{
+    if (wide)
+	return (scanFetchProc)pixmanFetchSourcePict64;
+    else
+	return (scanFetchProc)pixmanFetchSourcePict;
+}
+
+static inline scanFetchProc get_fetch_solid(const int wide)
+{
+    if (wide)
+	return (scanFetchProc)fbFetchSolid64;
+    else
+	return (scanFetchProc)fbFetchSolid;
+}
+
+static inline scanFetchProc get_fetch(const int wide)
+{
+    if (wide)
+	return (scanFetchProc)fbFetch64;
+    else
+	return (scanFetchProc)fbFetch;
+}
+
+static inline scanFetchProc get_fetch_external_alpha(const int wide)
+{
+    if (wide)
+	return (scanFetchProc)ACCESS(fbFetchExternalAlpha64);
+    else
+	return (scanFetchProc)ACCESS(fbFetchExternalAlpha);
+}
+
+static inline scanFetchProc get_fetch_transformed(const int wide)
+{
+    if (wide)
+	return (scanFetchProc)ACCESS(fbFetchTransformed64);
+    else
+	return (scanFetchProc)ACCESS(fbFetchTransformed);
+}
+
+static inline scanStoreProc get_store(const int wide)
+{
+    if (wide)
+	return (scanStoreProc)fbStore64;
+    else
+	return (scanStoreProc)fbStore;
+}
+
+static inline scanStoreProc get_store_external_alpha(const int wide)
+{
+    if (wide)
+	return (scanStoreProc)ACCESS(fbStoreExternalAlpha64);
+    else
+	return (scanStoreProc)ACCESS(fbStoreExternalAlpha);
+}
+
 #ifndef PIXMAN_FB_ACCESSORS
 static
 #endif
@@ -195,7 +251,7 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
         fetchSrc = NULL;
     else if (IS_SOURCE_IMAGE (data->src))
     {
-	fetchSrc = (scanFetchProc)pixmanFetchSourcePict;
+	fetchSrc = get_fetch_source_pict(wide);
 	srcClass = SourcePictureClassify ((source_image_t *)data->src,
 					  data->xSrc, data->ySrc,
 					  data->width, data->height);
@@ -206,25 +262,23 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 
 	if (bits->common.alpha_map)
 	{
-	    // TODO: Need wide external alpha routine.
-	    fetchSrc = (scanFetchProc)ACCESS(fbFetchExternalAlpha);
+	    fetchSrc = get_fetch_external_alpha(wide);
 	}
 	else if ((bits->common.repeat == PIXMAN_REPEAT_NORMAL || bits->common.repeat == PIXMAN_REPEAT_PAD) &&
 		 bits->width == 1 &&
 		 bits->height == 1)
 	{
-	    fetchSrc = wide ? (scanFetchProc)fbFetchSolid64 : (scanFetchProc)fbFetchSolid;
+	    fetchSrc = get_fetch_solid(wide);
 	    srcClass = SOURCE_IMAGE_CLASS_HORIZONTAL;
 	}
 	else if (!bits->common.transform && bits->common.filter != PIXMAN_FILTER_CONVOLUTION
                 && bits->common.repeat != PIXMAN_REPEAT_PAD)
 	{
-	    fetchSrc = wide ? (scanFetchProc)fbFetch64 : (scanFetchProc)fbFetch;
+	    fetchSrc = get_fetch(wide);
 	}
 	else
 	{
-	    // TODO: Need wide transformed fetch.
-	    fetchSrc = (scanFetchProc)ACCESS(fbFetchTransformed);
+	    fetchSrc = get_fetch_transformed(wide);
 	}
     }
 
@@ -247,37 +301,34 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 
 	    if (bits->common.alpha_map)
 	    {
-		// TODO: Need wide external alpha routine.
-		fetchMask = (scanFetchProc)ACCESS(fbFetchExternalAlpha);
+		fetchMask = get_fetch_external_alpha(wide);
 	    }
 	    else if ((bits->common.repeat == PIXMAN_REPEAT_NORMAL || bits->common.repeat == PIXMAN_REPEAT_PAD) &&
 		     bits->width == 1 && bits->height == 1)
 	    {
-		fetchMask = wide ? (scanFetchProc)fbFetchSolid64 : (scanFetchProc)fbFetchSolid;
+		fetchMask = get_fetch_solid(wide);
 		maskClass = SOURCE_IMAGE_CLASS_HORIZONTAL;
 	    }
 	    else if (!bits->common.transform && bits->common.filter != PIXMAN_FILTER_CONVOLUTION
                     && bits->common.repeat != PIXMAN_REPEAT_PAD)
-		fetchMask = wide ? (scanFetchProc)fbFetch64 : (scanFetchProc)fbFetch;
+		fetchMask = get_fetch(wide);
 	    else
-		// TODO: Need wide transformed fetch.
-		fetchMask = (scanFetchProc)ACCESS(fbFetchTransformed);
+		fetchMask = get_fetch_transformed(wide);
 	}
     }
 
     if (data->dest->common.alpha_map)
     {
-	// TODO: Need wide external alpha routine.
-	fetchDest = (scanFetchProc)ACCESS(fbFetchExternalAlpha);
-	store = (scanStoreProc)ACCESS(fbStoreExternalAlpha);
+	fetchDest = get_fetch_external_alpha(wide);
+	store = get_store_external_alpha(wide);
 
 	if (data->op == PIXMAN_OP_CLEAR || data->op == PIXMAN_OP_SRC)
 	    fetchDest = NULL;
     }
     else
     {
-	fetchDest = wide ? (scanFetchProc)fbFetch64 : (scanFetchProc)fbFetch;
-	store = wide ? (scanStoreProc)fbStore64 : (scanStoreProc)fbStore;
+	fetchDest = get_fetch(wide);
+	store = get_store(wide);
 
 	switch (data->op)
 	{
