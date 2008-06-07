@@ -1923,15 +1923,19 @@ pixman_bool_t pixman_have_vmx (void) {
 #else
 #include <signal.h>
 
-static void vmx_test (int sig) {
+static void vmx_test(int sig, siginfo_t *si, void *unused) {
     have_vmx = FALSE;
 }
 
 pixman_bool_t pixman_have_vmx (void) {
+    struct sigaction sa, osa;
     if (!initialized) {
-        signal(SIGILL, vmx_test);
+        sa.sa_flags = SA_SIGINFO;
+        sigemptyset(&sa.sa_mask);
+        sa.sa_sigaction = vmx_test;
+        sigaction(SIGILL, &sa, &osa);
         asm volatile ( "vor 0, 0, 0" );
-        signal(SIGILL, SIG_DFL);
+        sigaction(SIGILL, &osa, NULL);
         initialized = TRUE;
     }
     return have_vmx;
