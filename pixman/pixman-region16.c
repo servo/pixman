@@ -22,6 +22,13 @@
  *
  * Author: Soren Sandmann <sandmann@redhat.com>
  */
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#include "pixman-private.h"
+
+typedef pixman_box16_t box_type_t;
 
 #define PREFIX(x) x
 
