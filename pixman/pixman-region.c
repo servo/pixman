@@ -79,13 +79,13 @@ SOFTWARE.
 #undef MAX
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 
-static const box_type_t _pixman_region_emptyBox = {0, 0, 0, 0};
-static const region_data_type_t _pixman_region_emptyData = {0, 0};
-static const region_data_type_t _pixman_brokendata = {0, 0};
+static const box_type_t PREFIX(pixman_region_emptyBox_) = {0, 0, 0, 0};
+static const region_data_type_t PREFIX(pixman_region_emptyData_) = {0, 0};
+static const region_data_type_t PREFIX(pixman_region_brokendata_) = {0, 0};
 
-static box_type_t *pixman_region_emptyBox = (box_type_t *)&_pixman_region_emptyBox;
-static region_data_type_t *pixman_region_emptyData = (region_data_type_t *)&_pixman_region_emptyData;
-static region_data_type_t *pixman_brokendata = (region_data_type_t *)&_pixman_brokendata;
+static box_type_t *pixman_region_emptyBox = (box_type_t *)&PREFIX(pixman_region_emptyBox_);
+static region_data_type_t *pixman_region_emptyData = (region_data_type_t *)&PREFIX(pixman_region_emptyData_);
+static region_data_type_t *pixman_brokendata = (region_data_type_t *)&PREFIX(pixman_region_brokendata_);
 
 /* This function exists only to make it possible to preserve the X ABI - it should
  * go away at first opportunity.
