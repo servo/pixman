@@ -6,6 +6,7 @@ libpixman_1_la_SOURCES =		\
 	pixman-access.c			\
 	pixman-access-accessors.c	\
 	pixman-region16.c		\
+	pixman-region32.c		\
 	pixman-private.h		\
 	pixman-image.c			\
 	pixman-combine32.c		\
