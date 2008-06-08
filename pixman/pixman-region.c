@@ -2081,35 +2081,6 @@ PREFIX(pixman_region_translate) (region_type_t * region, int x, int y)
     }
 }
 
-/* XXX: Do we need this?
-static pixman_bool_t
-pixman_region16_data_copy(region_type_t * dst, region_type_t * src)
-{
-    good(dst);
-    good(src);
-    if (dst->data)
-	return TRUE;
-    if (dst == src)
-	return TRUE;
-    if (!src->data || !src->data->size)
-    {
-	freeData(dst);
-	dst->data = (region_data_type_t *)NULL;
-	return TRUE;
-    }
-    if (!dst->data || (dst->data->size < src->data->numRects))
-    {
-	freeData(dst);
-	dst->data = allocData(src->data->numRects);
-	if (!dst->data)
-	    return pixman_break (dst);
-    }
-    dst->data->size = src->data->size;
-    dst->data->numRects = src->data->numRects;
-    return TRUE;
-}
-*/
-
 void
 PREFIX(pixman_region_reset) (region_type_t *region, box_type_t *box)
 {
@@ -2161,15 +2132,6 @@ PREFIX(pixman_region_not_empty) (region_type_t * region)
     good(region);
     return(!PIXREGION_NIL(region));
 }
-
-/* XXX: Do we need this?
-static int
-pixman_region16_broken(region_type_t * region)
-{
-    good(region);
-    return (PIXREGION_NAR(region));
-}
-*/
 
 void
 PREFIX(pixman_region_empty) (region_type_t * region)
