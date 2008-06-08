@@ -27,7 +27,7 @@
 
 #include <config.h>
 #include "pixman-vmx.h"
-#include "pixman-combine.h"
+#include "pixman-combine32.h"
 #include <altivec.h>
 
 #ifdef __GNUC__
