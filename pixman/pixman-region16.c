@@ -30,6 +30,10 @@
 
 typedef pixman_box16_t box_type_t;
 
+typedef struct {
+    int x, y;
+} point_type_t;
+
 #define PREFIX(x) x
 
 #include "pixman-region.c"

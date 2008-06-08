@@ -50,10 +50,6 @@ SOFTWARE.
 #include <string.h>
 #include <stdio.h>
 
-typedef struct pixman_region16_point {
-    int x, y;
-} pixman_region16_point_t;
-
 #define PIXREGION_NIL(reg) ((reg)->data && !(reg)->data->numRects)
 /* not a region */
 #define PIXREGION_NAR(reg)	((reg)->data == pixman_brokendata)
@@ -2194,7 +2190,7 @@ PREFIX(pixman_region_extents) (pixman_region16_t * region)
 
 #define ExchangeSpans(a, b)				    \
 {							    \
-    pixman_region16_point_t tpt;					    \
+    point_type_t tpt;					    \
     int    tw;						    \
 							    \
     tpt = spans[a]; spans[a] = spans[b]; spans[b] = tpt;    \
@@ -2207,13 +2203,13 @@ PREFIX(pixman_region_extents) (pixman_region16_t * region)
 */
 
 static void QuickSortSpans(
-    pixman_region16_point_t spans[],
+    point_type_t spans[],
     int	    widths[],
     int	    numSpans)
 {
     int	    y;
     int	    i, j, m;
-    pixman_region16_point_t *r;
+    point_type_t *r;
 
     /* Always called with numSpans > 1 */
     /* Sorts only by y, doesn't bother to sort by x */
@@ -2233,7 +2229,7 @@ static void QuickSortSpans(
 		if (yprev > y)
 		{
 		    /* spans[i] is out of order.  Move into proper location. */
-		    pixman_region16_point_t tpt;
+		    point_type_t tpt;
 		    int	    tw, k;
 
 		    for (j = 0; y >= spans[j].y; j++) {}
@@ -2314,14 +2310,14 @@ static void QuickSortSpans(
 static int
 pixman_region16_clip_spans(
     pixman_region16_t 		*prgnDst,
-    pixman_region16_point_t 	*ppt,
+    point_type_t 	*ppt,
     int	    		*pwidth,
     int			nspans,
-    pixman_region16_point_t 	*pptNew,
+    point_type_t 	*pptNew,
     int			*pwidthNew,
     int			fSorted)
 {
-    pixman_region16_point_t 	*pptLast;
+    point_type_t 	*pptLast;
     int			*pwidthNewStart;	/* the vengeance of Xerox! */
     int	y, x1, x2;
     int	numRects;
