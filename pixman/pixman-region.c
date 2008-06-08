@@ -275,7 +275,7 @@ PREFIX(pixman_region_equal) (reg1, reg2)
 }
 
 int
-PREFIX(pixman_region16_print) (rgn)
+PREFIX(pixman_region_print) (rgn)
     region_type_t * rgn;
 {
     int num, size;
@@ -2186,117 +2186,6 @@ PREFIX(pixman_region_extents) (region_type_t * region)
 {
     good(region);
     return(&region->extents);
-}
-
-#define ExchangeSpans(a, b)				    \
-{							    \
-    point_type_t tpt;					    \
-    int    tw;						    \
-							    \
-    tpt = spans[a]; spans[a] = spans[b]; spans[b] = tpt;    \
-    tw = widths[a]; widths[a] = widths[b]; widths[b] = tw;  \
-}
-
-/* ||| I should apply the merge sort code to rectangle sorting above, and see
-   if mapping time can be improved.  But right now I've been at work 12 hours,
-   so forget it.
-*/
-
-static void QuickSortSpans(
-    point_type_t spans[],
-    int	    widths[],
-    int	    numSpans)
-{
-    int	    y;
-    int	    i, j, m;
-    point_type_t *r;
-
-    /* Always called with numSpans > 1 */
-    /* Sorts only by y, doesn't bother to sort by x */
-
-    do
-    {
-	if (numSpans < 9)
-	{
-	    /* Do insertion sort */
-	    int yprev;
-
-	    yprev = spans[0].y;
-	    i = 1;
-	    do
-	    { /* while i != numSpans */
-		y = spans[i].y;
-		if (yprev > y)
-		{
-		    /* spans[i] is out of order.  Move into proper location. */
-		    point_type_t tpt;
-		    int	    tw, k;
-
-		    for (j = 0; y >= spans[j].y; j++) {}
-		    tpt = spans[i];
-		    tw  = widths[i];
-		    for (k = i; k != j; k--)
-		    {
-			spans[k] = spans[k-1];
-			widths[k] = widths[k-1];
-		    }
-		    spans[j] = tpt;
-		    widths[j] = tw;
-		    y = spans[i].y;
-		} /* if out of order */
-		yprev = y;
-		i++;
-	    } while (i != numSpans);
-	    return;
-	}
-
-	/* Choose partition element, stick in location 0 */
-	m = numSpans / 2;
-	if (spans[m].y > spans[0].y)		ExchangeSpans(m, 0);
-	if (spans[m].y > spans[numSpans-1].y)   ExchangeSpans(m, numSpans-1);
-	if (spans[m].y > spans[0].y)		ExchangeSpans(m, 0);
-	y = spans[0].y;
-
-        /* Partition array */
-        i = 0;
-        j = numSpans;
-        do
-	{
-	    r = &(spans[i]);
-	    do
-	    {
-		r++;
-		i++;
-            } while (i != numSpans && r->y < y);
-	    r = &(spans[j]);
-	    do
-	    {
-		r--;
-		j--;
-            } while (y < r->y);
-            if (i < j)
-		ExchangeSpans(i, j);
-        } while (i < j);
-
-        /* Move partition element back to middle */
-        ExchangeSpans(0, j);
-
-	/* Recurse */
-        if (numSpans-j-1 > 1)
-	    QuickSortSpans(&spans[j+1], &widths[j+1], numSpans-j-1);
-        numSpans = j;
-    } while (numSpans > 1);
-}
-
-#define NextBand()						    \
-{								    \
-    clipy1 = pboxBandStart->y1;					    \
-    clipy2 = pboxBandStart->y2;					    \
-    pboxBandEnd = pboxBandStart + 1;				    \
-    while (pboxBandEnd != pboxLast && pboxBandEnd->y1 == clipy1) {  \
-	pboxBandEnd++;						    \
-    }								    \
-    for (; ppt != pptLast && ppt->y < clipy1; ppt++, pwidth++) {} \
 }
 
 /*
