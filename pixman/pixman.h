@@ -274,12 +274,6 @@ typedef enum
     PIXMAN_REGION_PART
 } pixman_region_overlap_t;
 
-PIXMAN_EXPORT
-int			pixman_version (void);
-
-PIXMAN_EXPORT
-const char*		pixman_version_string (void);
-
 /* This function exists only to make it possible to preserve the X ABI - it should
  * go away at first opportunity.
  */
@@ -359,6 +353,115 @@ void			pixman_region_reset (pixman_region16_t *region, pixman_box16_t *box);
 PIXMAN_EXPORT
 pixman_bool_t		pixman_region_init_rects (pixman_region16_t *region,
 						  pixman_box16_t *boxes, int count);
+
+/*
+ * 32 bit regions
+ */
+typedef struct pixman_region32_data	pixman_region32_data_t;
+typedef struct pixman_box32		pixman_box32_t;
+typedef struct pixman_rectangle32	pixman_rectangle32_t;
+typedef struct pixman_region32		pixman_region32_t;
+
+struct pixman_region32_data {
+    long		size;
+    long		numRects;
+/*  pixman_box32_t	rects[size];   in memory but not explicitly declared */
+};
+
+struct pixman_rectangle32
+{
+    int32_t x, y;
+    uint32_t width, height;
+};
+
+struct pixman_box32
+{
+    int32_t x1, y1, x2, y2;
+};
+
+struct pixman_region32
+{
+    pixman_box32_t          extents;
+    pixman_region32_data_t  *data;
+};
+
+/* creation/destruction */
+PIXMAN_EXPORT
+void                    pixman_region32_init               (pixman_region32_t *region);
+PIXMAN_EXPORT
+void                    pixman_region32_init_rect          (pixman_region32_t *region,
+							    int                x,
+							    int                y,
+							    unsigned int       width,
+							    unsigned int       height);
+PIXMAN_EXPORT
+void                    pixman_region32_init_with_extents  (pixman_region32_t *region,
+							    pixman_box32_t    *extents);
+PIXMAN_EXPORT
+void                    pixman_region32_fini               (pixman_region32_t *region);
+
+
+/* manipulation */
+PIXMAN_EXPORT
+void                    pixman_region32_translate          (pixman_region32_t *region,
+							    int                x,
+							    int                y);
+PIXMAN_EXPORT
+pixman_bool_t           pixman_region32_copy               (pixman_region32_t *dest,
+							    pixman_region32_t *source);
+PIXMAN_EXPORT
+pixman_bool_t           pixman_region32_intersect          (pixman_region32_t *newReg,
+							    pixman_region32_t *reg1,
+							    pixman_region32_t *reg2);
+PIXMAN_EXPORT
+pixman_bool_t           pixman_region32_union              (pixman_region32_t *newReg,
+							    pixman_region32_t *reg1,
+							    pixman_region32_t *reg2);
+PIXMAN_EXPORT
+pixman_bool_t           pixman_region32_union_rect         (pixman_region32_t *dest,
+							    pixman_region32_t *source,
+							    int                x,
+							    int                y,
+							    unsigned int       width,
+							    unsigned int       height);
+PIXMAN_EXPORT
+pixman_bool_t           pixman_region32_subtract           (pixman_region32_t *regD,
+							    pixman_region32_t *regM,
+							    pixman_region32_t *regS);
+PIXMAN_EXPORT
+pixman_bool_t           pixman_region32_inverse            (pixman_region32_t *newReg,
+							    pixman_region32_t *reg1,
+							    pixman_box32_t    *invRect);
+PIXMAN_EXPORT
+pixman_bool_t           pixman_region32_contains_point     (pixman_region32_t *region,
+							    int                x,
+							    int                y,
+							    pixman_box32_t    *box);
+PIXMAN_EXPORT
+pixman_region_overlap_t pixman_region32_contains_rectangle (pixman_region32_t *region,
+							    pixman_box32_t    *prect);
+PIXMAN_EXPORT
+pixman_bool_t           pixman_region32_not_empty          (pixman_region32_t *region);
+PIXMAN_EXPORT
+pixman_box32_t *        pixman_region32_extents            (pixman_region32_t *region);
+PIXMAN_EXPORT
+int                     pixman_region32_n_rects            (pixman_region32_t *region);
+PIXMAN_EXPORT
+pixman_box32_t *        pixman_region32_rectangles         (pixman_region32_t *region,
+							    int               *n_rects);
+PIXMAN_EXPORT
+pixman_bool_t           pixman_region32_equal              (pixman_region32_t *region1,
+							    pixman_region32_t *region2);
+PIXMAN_EXPORT
+pixman_bool_t           pixman_region32_selfcheck          (pixman_region32_t *region);
+PIXMAN_EXPORT
+void                    pixman_region32_reset              (pixman_region32_t *region,
+							    pixman_box32_t    *box);
+PIXMAN_EXPORT
+pixman_bool_t           pixman_region32_init_rects         (pixman_region32_t *region,
+							    pixman_box32_t    *boxes,
+							    int                count);
+
 
 /* Copy / Fill */
 PIXMAN_EXPORT
