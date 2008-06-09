@@ -118,7 +118,7 @@ release-publish-message: $(sha1_tgz) $(md5_tgz) $(sha1_tbz2) $(md5_tbz2) ensure-
 	@echo "	tag: $(PACKAGE)-$(VERSION)"
 	@echo ""
 	@echo "Log:"
-	@git-log --no-merges "$(PACKAGE)-$(PREV)".."$(PACKAGE)-$(VERSION)" | git shortlog | awk '{ printf "\t"; print ; }' | cut -b0-80
+	@git-log --no-merges "$(PACKAGE)-$(PREV)".."$(PACKAGE)-$(VERSION)" | git shortlog | awk '{ printf "\t"; print ; }' | cut -b1-80
 	@echo "============================== CUT HERE =============================="
 	@echo ""
 
