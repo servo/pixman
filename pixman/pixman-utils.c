@@ -428,7 +428,7 @@ pixman_malloc_abc (unsigned int a,
  *
  * Return value: the encoded version.
  **/
-int
+PIXMAN_EXPORT int
 pixman_version (void)
 {
     return PIXMAN_VERSION;
@@ -445,7 +445,7 @@ pixman_version (void)
  *
  * Return value: a string containing the version.
  **/
-const char*
+PIXMAN_EXPORT const char*
 pixman_version_string (void)
 {
     return PIXMAN_VERSION_STRING;
