@@ -24,24 +24,6 @@ Here are the steps to follow to create a new pixman release:
 		cd cairo
 		CAIRO_TEST_TARGET=image make test
 
-3) Fill out an entry in the NEWS file
-
-	Sift through the logs since the last release. This is most
-	easily done with a command such as:
-
-		git log --stat pixman-X.Y.Z..
-
-	where X.Y.Z is the previous release version.
-
-	Summarize major changes briefly in a style similar to other
-	entries in NEWS. Take special care to note any additions in
-	the API. These should be easy to find by noting modifications
-	to pixman.h in the log command above. And more specifically,
-	the following command will show each patch that has changed the
-	public header file since the given version:
-
-		git log -p pixman-X..Z.. -- pixman/pixman.h
-
 4) Increment pixman_{major|minor|micro} in configure.ac according to
    the directions in that file. Also note that if there is an ABI
    change then there is further work to be done, (also described in
