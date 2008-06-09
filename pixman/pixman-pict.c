@@ -30,9 +30,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include "pixman-private.h"
 #include "pixman-mmx.h"
+#include "pixman-vmx.h"
 #include "pixman-sse.h"
 
 #define FbFullMask(n)   ((n) == 32 ? (uint32_t)-1 : ((((uint32_t) 1) << n) - 1))
@@ -1477,6 +1477,14 @@ static const FastPathInfo sse_fast_paths[] =
 };
 #endif
 
+#ifdef USE_VMX
+static const FastPathInfo vmx_fast_paths[] =
+{
+    { PIXMAN_OP_NONE },
+};
+#endif
+
+
 static const FastPathInfo c_fast_paths[] =
 {
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_r5g6b5,   fbCompositeSolidMask_nx8x0565, 0 },
@@ -1744,6 +1752,10 @@ pixman_image_composite (pixman_op_t      op,
     fbComposeSetupMMX();
 #endif
 
+#ifdef USE_VMX
+    fbComposeSetupVMX();
+#endif
+
 #ifdef USE_SSE2
     fbComposeSetupSSE();
 #endif
@@ -1807,15 +1819,19 @@ pixman_image_composite (pixman_op_t      op,
 #ifdef USE_SSE2
 	if (pixman_have_sse ())
 	    info = get_fast_path (sse_fast_paths, op, pSrc, pMask, pDst, pixbuf);
-	if (!info)
 #endif
 
 #ifdef USE_MMX
-
-	if (pixman_have_mmx())
+	if (!info && pixman_have_mmx())
 	    info = get_fast_path (mmx_fast_paths, op, pSrc, pMask, pDst, pixbuf);
-	if (!info)
 #endif
+
+#ifdef USE_VMX
+
+	if (!info && pixman_have_vmx())
+	    info = get_fast_path (vmx_fast_paths, op, pSrc, pMask, pDst, pixbuf);
+#endif
+        if (!info)
 	    info = get_fast_path (c_fast_paths, op, pSrc, pMask, pDst, pixbuf);
 
 	if (info)
@@ -1882,6 +1898,50 @@ pixman_image_composite (pixman_op_t      op,
 }
 
 
+#ifdef USE_VMX
+/* The CPU detection code needs to be in a file not compiled with
+ * "-maltivec -mabi=altivec", as gcc would try to save vector register
+ * across function calls causing SIGILL on cpus without Altivec/vmx.
+ */
+static pixman_bool_t initialized = FALSE;
+static volatile pixman_bool_t have_vmx = TRUE;
+
+#ifdef __APPLE__
+#include <sys/sysctl.h>
+
+pixman_bool_t pixman_have_vmx (void) {
+    if(!initialized) {
+        size_t length = sizeof(have_vmx);
+        int error =
+            sysctlbyname("hw.optional.altivec", &have_vmx, &length, NULL, 0);
+        if(error) have_vmx = FALSE;
+        initialized = TRUE;
+    }
+    return have_vmx;
+}
+
+#else
+#include <signal.h>
+
+static void vmx_test(int sig, siginfo_t *si, void *unused) {
+    have_vmx = FALSE;
+}
+
+pixman_bool_t pixman_have_vmx (void) {
+    struct sigaction sa, osa;
+    if (!initialized) {
+        sa.sa_flags = SA_SIGINFO;
+        sigemptyset(&sa.sa_mask);
+        sa.sa_sigaction = vmx_test;
+        sigaction(SIGILL, &sa, &osa);
+        asm volatile ( "vor 0, 0, 0" );
+        sigaction(SIGILL, &osa, NULL);
+        initialized = TRUE;
+    }
+    return have_vmx;
+}
+#endif /* __APPLE__ */
+#endif /* USE_VMX */
 
 #ifdef USE_MMX
 /* The CPU detection code needs to be in a file not compiled with

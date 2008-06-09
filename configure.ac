@@ -237,6 +237,39 @@ dnl ========================================================
 AC_SUBST(MMX_CFLAGS)
 AC_SUBST(SSE_CFLAGS)
 
+dnl Check for VMX/Altivec
+if test -n "`$CC -v 2>&1 | grep version | grep Apple`"; then
+    VMX_CFLAGS="-faltivec"
+else
+    VMX_CFLAGS="-maltivec -mabi=altivec"
+fi
+
+have_vmx_intrinsics=no
+AC_MSG_CHECKING(whether to use VMX/Altivec intrinsics)
+xserver_save_CFLAGS=$CFLAGS
+CFLAGS="$CFLAGS $VMX_CFLAGS"
+AC_COMPILE_IFELSE([
+#if defined(__GNUC__) && (__GNUC__ < 3 || (__GNUC__ == 3 && __GNUC_MINOR__ < 4))
+#error "Need GCC >= 3.4 for sane altivec support"
+#endif
+#include <altivec.h>
+int main () {
+    vector unsigned int v = vec_splat_u32 (1);
+    v = vec_sub (v, v);
+    return 0;
+}], have_vmx_intrinsics=yes)
+CFLAGS=$xserver_save_CFLAGS
+AC_MSG_RESULT($have_vmx_intrinsics)
+
+if test $have_vmx_intrinsics = yes ; then
+   AC_DEFINE(USE_VMX, 1, [use VMX compiler intrinsics])
+else
+   VMX_CFLAGS=
+fi
+AC_SUBST(VMX_CFLAGS)
+
+AM_CONDITIONAL(USE_VMX, test $have_vmx_intrinsics = yes)
+
 AC_ARG_ENABLE(gtk,
    [AC_HELP_STRING([--disable-gtk],
                    [disable tests using GTK+])],
