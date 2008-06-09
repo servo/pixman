@@ -687,6 +687,13 @@ pixman_bool_t
 pixman_image_can_get_solid (pixman_image_t *image);
 
 
+/* GCC visibility */
+#if defined(__GNUC__) && __GNUC__ >= 4
+#define PIXMAN_EXPORT __attribute__ ((visibility("default")))
+#else
+#define PIXMAN_EXPORT
+#endif
+
 #ifdef PIXMAN_TIMING
 
 /* Timing */

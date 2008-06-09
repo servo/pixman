@@ -92,13 +92,6 @@ typedef unsigned __int64 uint64_t;
 #  include <stdint.h>
 #endif
 
-/* GCC visibility */
-#if defined(__GNUC__) && __GNUC__ >= 4
-#define PIXMAN_EXPORT __attribute__ ((visibility("default")))
-#else
-#define PIXMAN_EXPORT
-#endif
-
 /*
  * Boolean
  */
@@ -166,10 +159,6 @@ struct pixman_transform
 {
     pixman_fixed_t	matrix[3][3];
 };
-
-PIXMAN_EXPORT
-pixman_bool_t pixman_transform_point_3d (pixman_transform_t *transform,
-					 pixman_vector_t    *vector);
 
 /* Don't blame me, blame XRender */
 typedef enum
@@ -426,26 +415,30 @@ pixman_bool_t           pixman_region32_init_rects         (pixman_region32_t *r
 							    int                count);
 
 
-/* Copy / Fill */
-PIXMAN_EXPORT
-pixman_bool_t pixman_blt (uint32_t *src_bits,
-			  uint32_t *dst_bits,
-			  int src_stride,
-			  int dst_stride,
-			  int src_bpp,
-			  int dst_bpp,
-			  int src_x, int src_y,
-			  int dst_x, int dst_y,
-			  int width, int height);
-PIXMAN_EXPORT
+/* Copy / Fill / Misc */
+pixman_bool_t pixman_blt  (uint32_t *src_bits,
+			   uint32_t *dst_bits,
+			   int       src_stride,
+			   int       dst_stride,
+			   int       src_bpp,
+			   int       dst_bpp,
+			   int       src_x,
+			   int       src_y,
+			   int       dst_x,
+			   int       dst_y,
+			   int       width,
+			   int       height);
 pixman_bool_t pixman_fill (uint32_t *bits,
-			   int stride,
-			   int bpp,
-			   int x,
-			   int y,
-			   int width,
-			   int height,
-			   uint32_t _xor);
+			   int       stride,
+			   int       bpp,
+			   int       x,
+			   int       y,
+			   int       width,
+			   int       height,
+			   uint32_t  _xor);
+pixman_bool_t pixman_transform_point_3d (pixman_transform_t *transform,
+					 pixman_vector_t    *vector);
+
 /*
  * Images
  */
@@ -570,33 +563,25 @@ typedef enum {
 } pixman_format_code_t;
 
 /* Querying supported format values. */
-PIXMAN_EXPORT
-pixman_bool_t	pixman_format_supported_destination (pixman_format_code_t format);
-
-PIXMAN_EXPORT
-pixman_bool_t	pixman_format_supported_source (pixman_format_code_t format);
+pixman_bool_t pixman_format_supported_destination (pixman_format_code_t format);
+pixman_bool_t pixman_format_supported_source      (pixman_format_code_t format);
 
 /* Constructors */
-PIXMAN_EXPORT
 pixman_image_t *pixman_image_create_solid_fill       (pixman_color_t               *color);
-PIXMAN_EXPORT
 pixman_image_t *pixman_image_create_linear_gradient  (pixman_point_fixed_t         *p1,
 						      pixman_point_fixed_t         *p2,
 						      const pixman_gradient_stop_t *stops,
 						      int                           n_stops);
-PIXMAN_EXPORT
 pixman_image_t *pixman_image_create_radial_gradient  (pixman_point_fixed_t         *inner,
 						      pixman_point_fixed_t         *outer,
 						      pixman_fixed_t                inner_radius,
 						      pixman_fixed_t                outer_radius,
 						      const pixman_gradient_stop_t *stops,
 						      int                           n_stops);
-PIXMAN_EXPORT
 pixman_image_t *pixman_image_create_conical_gradient (pixman_point_fixed_t         *center,
 						      pixman_fixed_t                angle,
 						      const pixman_gradient_stop_t *stops,
 						      int                           n_stops);
-PIXMAN_EXPORT
 pixman_image_t *pixman_image_create_bits             (pixman_format_code_t          format,
 						      int                           width,
 						      int                           height,
@@ -604,67 +589,48 @@ pixman_image_t *pixman_image_create_bits             (pixman_format_code_t      
 						      int                           rowstride_bytes);
 
 /* Destructor */
-PIXMAN_EXPORT
 pixman_image_t *pixman_image_ref                     (pixman_image_t               *image);
-PIXMAN_EXPORT
 pixman_bool_t   pixman_image_unref                   (pixman_image_t               *image);
 
 
 /* Set properties */
-PIXMAN_EXPORT
 pixman_bool_t   pixman_image_set_clip_region         (pixman_image_t               *image,
 						      pixman_region16_t            *region);
-PIXMAN_EXPORT
 void		pixman_image_set_has_client_clip     (pixman_image_t               *image,
 						      pixman_bool_t		    clien_clip);
-PIXMAN_EXPORT
 pixman_bool_t   pixman_image_set_transform           (pixman_image_t               *image,
 						      const pixman_transform_t     *transform);
-PIXMAN_EXPORT
 void            pixman_image_set_repeat              (pixman_image_t               *image,
 						      pixman_repeat_t               repeat);
-PIXMAN_EXPORT
 pixman_bool_t   pixman_image_set_filter              (pixman_image_t               *image,
 						      pixman_filter_t               filter,
 						      const pixman_fixed_t         *filter_params,
 						      int                           n_filter_params);
-PIXMAN_EXPORT
 void		pixman_image_set_source_clipping     (pixman_image_t		   *image,
 						      pixman_bool_t                 source_clipping);
-PIXMAN_EXPORT
 void            pixman_image_set_alpha_map           (pixman_image_t               *image,
 						      pixman_image_t               *alpha_map,
 						      int16_t                       x,
 						      int16_t                       y);
-PIXMAN_EXPORT
 void            pixman_image_set_component_alpha     (pixman_image_t               *image,
 						      pixman_bool_t                 component_alpha);
-PIXMAN_EXPORT
 void		pixman_image_set_accessors	     (pixman_image_t		   *image,
 						      pixman_read_memory_func_t	    read_func,
 						      pixman_write_memory_func_t    write_func);
-PIXMAN_EXPORT
 void		pixman_image_set_indexed	     (pixman_image_t		   *image,
 						      const pixman_indexed_t	   *indexed);
-PIXMAN_EXPORT
 uint32_t       *pixman_image_get_data                (pixman_image_t               *image);
-PIXMAN_EXPORT
 int		pixman_image_get_width               (pixman_image_t               *image);
-PIXMAN_EXPORT
 int             pixman_image_get_height              (pixman_image_t               *image);
-PIXMAN_EXPORT
 int		pixman_image_get_stride              (pixman_image_t               *image);
-PIXMAN_EXPORT
 int		pixman_image_get_depth               (pixman_image_t		   *image);
-PIXMAN_EXPORT
 pixman_bool_t	pixman_image_fill_rectangles	     (pixman_op_t		    op,
 						      pixman_image_t		   *image,
 						      pixman_color_t		   *color,
 						      int			    n_rects,
-						      const pixman_rectangle16_t	   *rects);
+						      const pixman_rectangle16_t   *rects);
 
 /* Composite */
-PIXMAN_EXPORT
 pixman_bool_t   pixman_compute_composite_region (pixman_region16_t *	pRegion,
 						 pixman_image_t *	pSrc,
 						 pixman_image_t *	pMask,
@@ -677,7 +643,6 @@ pixman_bool_t   pixman_compute_composite_region (pixman_region16_t *	pRegion,
 						 int16_t		yDst,
 						 uint16_t		width,
 						 uint16_t		height);
-PIXMAN_EXPORT
 void		pixman_image_composite          (pixman_op_t		    op,
 						 pixman_image_t		   *src,
 						 pixman_image_t               *mask,
@@ -742,52 +707,43 @@ struct pixman_trap
     pixman_span_fix_t	top, bot;
 };
 
-PIXMAN_EXPORT
-pixman_fixed_t pixman_sample_ceil_y        (pixman_fixed_t       y,
-					    int                  bpp);
-PIXMAN_EXPORT
-pixman_fixed_t pixman_sample_floor_y       (pixman_fixed_t       y,
-					    int                  bpp);
-PIXMAN_EXPORT
-void           pixman_edge_step            (pixman_edge_t       *e,
-					    int                  n);
-PIXMAN_EXPORT
-void           pixman_edge_init            (pixman_edge_t       *e,
-					    int                  bpp,
-					    pixman_fixed_t       y_start,
-					    pixman_fixed_t       x_top,
-					    pixman_fixed_t       y_top,
-					    pixman_fixed_t       x_bot,
-					    pixman_fixed_t       y_bot);
-PIXMAN_EXPORT
-void           pixman_line_fixed_edge_init (pixman_edge_t       *e,
-					    int                  bpp,
-					    pixman_fixed_t       y,
+pixman_fixed_t pixman_sample_ceil_y        (pixman_fixed_t             y,
+					    int                        bpp);
+pixman_fixed_t pixman_sample_floor_y       (pixman_fixed_t             y,
+					    int                        bpp);
+void           pixman_edge_step            (pixman_edge_t             *e,
+					    int                        n);
+void           pixman_edge_init            (pixman_edge_t             *e,
+					    int                        bpp,
+					    pixman_fixed_t             y_start,
+					    pixman_fixed_t             x_top,
+					    pixman_fixed_t             y_top,
+					    pixman_fixed_t             x_bot,
+					    pixman_fixed_t             y_bot);
+void           pixman_line_fixed_edge_init (pixman_edge_t             *e,
+					    int                        bpp,
+					    pixman_fixed_t             y,
 					    const pixman_line_fixed_t *line,
-					    int                  x_off,
-					    int                  y_off);
-PIXMAN_EXPORT
-void           pixman_rasterize_edges      (pixman_image_t      *image,
-					    pixman_edge_t       *l,
-					    pixman_edge_t       *r,
-					    pixman_fixed_t       t,
-					    pixman_fixed_t       b);
-PIXMAN_EXPORT
-void           pixman_add_traps            (pixman_image_t      *image,
-					    int16_t              x_off,
-					    int16_t              y_off,
-					    int                  ntrap,
-					    pixman_trap_t       *traps);
-PIXMAN_EXPORT
-void	       pixman_add_trapezoids       (pixman_image_t      *image,
-					    int16_t              x_off,
-					    int                  y_off,
-					    int                  ntraps,
+					    int                        x_off,
+					    int                        y_off);
+void           pixman_rasterize_edges      (pixman_image_t            *image,
+					    pixman_edge_t             *l,
+					    pixman_edge_t             *r,
+					    pixman_fixed_t             t,
+					    pixman_fixed_t             b);
+void           pixman_add_traps            (pixman_image_t            *image,
+					    int16_t                    x_off,
+					    int16_t                    y_off,
+					    int                        ntrap,
+					    pixman_trap_t             *traps);
+void           pixman_add_trapezoids       (pixman_image_t            *image,
+					    int16_t                    x_off,
+					    int                        y_off,
+					    int                        ntraps,
 					    const pixman_trapezoid_t  *traps);
-PIXMAN_EXPORT
-void           pixman_rasterize_trapezoid  (pixman_image_t      *image,
+void           pixman_rasterize_trapezoid  (pixman_image_t            *image,
 					    const pixman_trapezoid_t  *trap,
-					    int                  x_off,
-					    int                  y_off);
+					    int                        x_off,
+					    int                        y_off);
 
 #endif /* PIXMAN_H__ */

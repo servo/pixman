@@ -1725,7 +1725,7 @@ pixman_optimize_operator(pixman_op_t op, pixman_image_t *pSrc, pixman_image_t *p
 
 __attribute__((__force_align_arg_pointer__))
 #endif
-void
+PIXMAN_EXPORT void
 pixman_image_composite (pixman_op_t      op,
 			pixman_image_t * pSrc,
 			pixman_image_t * pMask,
