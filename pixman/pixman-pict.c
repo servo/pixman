@@ -1187,22 +1187,22 @@ pixman_walk_composite_region (pixman_op_t op,
 			      CompositeFunc compositeRect)
 {
     int		    n;
-    const pixman_box16_t *pbox;
+    const pixman_box32_t *pbox;
     int		    w, h, w_this, h_this;
     int		    x_msk, y_msk, x_src, y_src, x_dst, y_dst;
-    pixman_region16_t reg;
-    pixman_region16_t *region;
+    pixman_region32_t reg;
+    pixman_region32_t *region;
 
-    pixman_region_init (&reg);
-    if (!pixman_compute_composite_region (&reg, pSrc, pMask, pDst,
-					  xSrc, ySrc, xMask, yMask, xDst, yDst, width, height))
+    pixman_region32_init (&reg);
+    if (!pixman_compute_composite_region32 (&reg, pSrc, pMask, pDst,
+					    xSrc, ySrc, xMask, yMask, xDst, yDst, width, height))
     {
 	return;
     }
 
     region = &reg;
 
-    pbox = pixman_region_rectangles (region, &n);
+    pbox = pixman_region32_rectangles (region, &n);
     while (n--)
     {
 	h = pbox->y2 - pbox->y1;
@@ -1258,7 +1258,7 @@ pixman_walk_composite_region (pixman_op_t op,
 	}
 	pbox++;
     }
-    pixman_region_fini (&reg);
+    pixman_region32_fini (&reg);
 }
 
 static void
@@ -1725,7 +1725,7 @@ pixman_optimize_operator(pixman_op_t op, pixman_image_t *pSrc, pixman_image_t *p
 
 __attribute__((__force_align_arg_pointer__))
 #endif
-void
+PIXMAN_EXPORT void
 pixman_image_composite (pixman_op_t      op,
 			pixman_image_t * pSrc,
 			pixman_image_t * pMask,

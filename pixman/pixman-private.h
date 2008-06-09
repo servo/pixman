@@ -262,9 +262,9 @@ struct image_common
 {
     image_type_t		type;
     int32_t			ref_count;
-    pixman_region16_t		full_region;
-    pixman_region16_t		clip_region;
-    pixman_region16_t	       *src_clip;
+    pixman_region32_t		full_region;
+    pixman_region32_t		clip_region;
+    pixman_region32_t	       *src_clip;
     pixman_bool_t               has_client_clip;
     pixman_transform_t	       *transform;
     pixman_repeat_t		repeat;
@@ -686,6 +686,32 @@ pixman_image_is_opaque(pixman_image_t *image);
 pixman_bool_t
 pixman_image_can_get_solid (pixman_image_t *image);
 
+pixman_bool_t
+pixman_compute_composite_region32 (pixman_region32_t *	pRegion,
+				   pixman_image_t *	pSrc,
+				   pixman_image_t *	pMask,
+				   pixman_image_t *	pDst,
+				   int16_t		xSrc,
+				   int16_t		ySrc,
+				   int16_t		xMask,
+				   int16_t		yMask,
+				   int16_t		xDst,
+				   int16_t		yDst,
+				   uint16_t		width,
+				   uint16_t		height);
+
+/* GCC visibility */
+#if defined(__GNUC__) && __GNUC__ >= 4
+#define PIXMAN_EXPORT __attribute__ ((visibility("default")))
+#else
+#define PIXMAN_EXPORT
+#endif
+
+/* Region Helpers */
+pixman_bool_t pixman_region32_copy_from_region16 (pixman_region32_t *dst,
+						  pixman_region16_t *src);
+pixman_bool_t pixman_region16_copy_from_region32 (pixman_region16_t *dst,
+						  pixman_region32_t *src);
 
 #ifdef PIXMAN_TIMING
 

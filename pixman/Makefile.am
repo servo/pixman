@@ -1,11 +1,13 @@
 lib_LTLIBRARIES = libpixman-1.la
 libpixman_1_la_LDFLAGS = -version-info $(LT_VERSION_INFO)
 libpixman_1_la_LIBADD = @DEP_LIBS@ -lm
+libpixman_1_la_CFLAGS = -DPIXMAN_DISABLE_DEPRECATED
 libpixman_1_la_SOURCES =		\
 	pixman.h			\
 	pixman-access.c			\
 	pixman-access-accessors.c	\
-	pixman-region.c			\
+	pixman-region16.c		\
+	pixman-region32.c		\
 	pixman-private.h		\
 	pixman-image.c			\
 	pixman-combine32.c		\
@@ -38,7 +40,7 @@ pixman-combine64.c : combine.inc pixman-combine64.h combine.pl
 pixman-combine64.h : combine.h.inc combine.pl
 	$(PERL) $(srcdir)/combine.pl 16 < $(srcdir)/combine.h.inc > $@ || ($(RM) $@; exit 1)
 
-EXTRA_DIST = Makefile.win32 combine.inc combine.pl combine.h.inc
+EXTRA_DIST = Makefile.win32 combine.inc combine.pl pixman-region.c combine.h.inc
 CLEANFILES = pixman-combine32.c pixman-combine64.c pixman-combine32.h pixman-combine64.h
 
 # mmx code
