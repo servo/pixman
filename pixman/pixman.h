@@ -416,28 +416,32 @@ void                    pixman_region32_reset              (pixman_region32_t *r
 
 
 /* Copy / Fill / Misc */
-pixman_bool_t pixman_blt  (uint32_t *src_bits,
-			   uint32_t *dst_bits,
-			   int       src_stride,
-			   int       dst_stride,
-			   int       src_bpp,
-			   int       dst_bpp,
-			   int       src_x,
-			   int       src_y,
-			   int       dst_x,
-			   int       dst_y,
-			   int       width,
-			   int       height);
-pixman_bool_t pixman_fill (uint32_t *bits,
-			   int       stride,
-			   int       bpp,
-			   int       x,
-			   int       y,
-			   int       width,
-			   int       height,
-			   uint32_t  _xor);
+pixman_bool_t pixman_blt                (uint32_t           *src_bits,
+					 uint32_t           *dst_bits,
+					 int                 src_stride,
+					 int                 dst_stride,
+					 int                 src_bpp,
+					 int                 dst_bpp,
+					 int                 src_x,
+					 int                 src_y,
+					 int                 dst_x,
+					 int                 dst_y,
+					 int                 width,
+					 int                 height);
+pixman_bool_t pixman_fill               (uint32_t           *bits,
+					 int                 stride,
+					 int                 bpp,
+					 int                 x,
+					 int                 y,
+					 int                 width,
+					 int                 height,
+					 uint32_t            _xor);
+
 pixman_bool_t pixman_transform_point_3d (pixman_transform_t *transform,
 					 pixman_vector_t    *vector);
+
+int           pixman_version            (void);
+const char*   pixman_version_string     (void);
 
 /*
  * Images
