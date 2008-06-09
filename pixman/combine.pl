@@ -75,6 +75,7 @@ while (<STDIN>) {
 
     # Change the header for the 64-bit version
     s/pixman-combine.h/pixman-combine64.h/ if $size == 16;
+    s/pixman-combine.h/pixman-combine32.h/ if $size == 8;
 
     print;
 }
