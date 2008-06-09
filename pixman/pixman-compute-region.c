@@ -123,7 +123,7 @@ miClipPictureSrc (pixman_region32_t *	pRegion,
  * an allocation failure, but rendering ignores those anyways.
  */
 
-static pixman_bool_t
+pixman_bool_t
 pixman_compute_composite_region32 (pixman_region32_t *	pRegion,
 				   pixman_image_t *	pSrc,
 				   pixman_image_t *	pMask,

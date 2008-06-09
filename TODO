@@ -1,3 +1,5 @@
+  - Behdad's MMX issue - see list
+
   - SSE 2 issues:
 
       - Commented-out uses of fbCompositeCopyAreasse2()

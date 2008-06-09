@@ -686,6 +686,19 @@ pixman_image_is_opaque(pixman_image_t *image);
 pixman_bool_t
 pixman_image_can_get_solid (pixman_image_t *image);
 
+pixman_bool_t
+pixman_compute_composite_region32 (pixman_region32_t *	pRegion,
+				   pixman_image_t *	pSrc,
+				   pixman_image_t *	pMask,
+				   pixman_image_t *	pDst,
+				   int16_t		xSrc,
+				   int16_t		ySrc,
+				   int16_t		xMask,
+				   int16_t		yMask,
+				   int16_t		xDst,
+				   int16_t		yDst,
+				   uint16_t		width,
+				   uint16_t		height);
 
 /* GCC visibility */
 #if defined(__GNUC__) && __GNUC__ >= 4
