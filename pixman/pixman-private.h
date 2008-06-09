@@ -694,10 +694,11 @@ pixman_image_can_get_solid (pixman_image_t *image);
 #define PIXMAN_EXPORT
 #endif
 
-/* Helper for 32 bit regions */
-pixman_bool_t
-pixman_region32_copy_from_region16 (pixman_region32_t *dst,
-				    pixman_region16_t *src);
+/* Region Helpers */
+pixman_bool_t pixman_region32_copy_from_region16 (pixman_region32_t *dst,
+						  pixman_region16_t *src);
+pixman_bool_t pixman_region16_copy_from_region32 (pixman_region16_t *dst,
+						  pixman_region32_t *src);
 
 #ifdef PIXMAN_TIMING
 

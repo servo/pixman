@@ -227,12 +227,15 @@ pixman_compute_composite_region (pixman_region16_t *	pRegion,
 
     pixman_region32_init (&r32);
     
-    if (!pixman_region32_copy_from_region16 (&r32, pRegion))
-	return FALSE;
-
     retval = pixman_compute_composite_region32 (&r32, pSrc, pMask, pDst,
 						xSrc, ySrc, xMask, yMask, xDst, yDst,
 						width, height);
+
+    if (retval)
+    {
+	if (!pixman_region16_copy_from_region32 (pRegion, &r32))
+	    retval = FALSE;
+    }
     
     pixman_region32_fini (&r32);
     return retval;
