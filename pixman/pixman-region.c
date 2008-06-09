@@ -614,8 +614,8 @@ typedef pixman_bool_t (*OverlapProcPtr)(
     box_type_t *r1End,
     box_type_t *r2,
     box_type_t *r2End,
-    short    	 y1,
-    short    	 y2,
+    int    	 y1,
+    int    	 y2,
     int		 *pOverlap);
 
 static pixman_bool_t
@@ -635,8 +635,8 @@ pixman_op(
     box_type_t * r2;			    /* Pointer into 2d region	     */
     box_type_t *	    r1End;		    /* End of 1st region	     */
     box_type_t *	    r2End;		    /* End of 2d region		     */
-    short	    ybot;		    /* Bottom of intersection	     */
-    short	    ytop;		    /* Top of intersection	     */
+    int	    ybot;		    /* Bottom of intersection	     */
+    int	    ytop;		    /* Top of intersection	     */
     region_data_type_t *	    oldData;		    /* Old data for newReg	     */
     int		    prevBand;		    /* Index of start of
 					     * previous band in newReg       */
@@ -644,8 +644,8 @@ pixman_op(
 					     * band in newReg		     */
     box_type_t * r1BandEnd;		    /* End of current band in r1     */
     box_type_t * r2BandEnd;		    /* End of current band in r2     */
-    short	    top;		    /* Top of non-overlapping band   */
-    short	    bot;		    /* Bottom of non-overlapping band*/
+    int	    top;		    /* Top of non-overlapping band   */
+    int	    bot;		    /* Bottom of non-overlapping band*/
     int    r1y1;		    /* Temps for r1->y1 and r2->y1   */
     int    r2y1;
     int		    newSize;
@@ -921,8 +921,8 @@ pixman_region_intersectO (region_type_t *region,
 			  box_type_t    *r1End,
 			  box_type_t    *r2,
 			  box_type_t    *r2End,
-			  short    	     y1,
-			  short    	     y2,
+			  int    	     y1,
+			  int    	     y2,
 			  int		    *pOverlap)
 {
     int  	x1;
@@ -1062,8 +1062,8 @@ pixman_region_unionO (
     box_type_t *r1End,
     box_type_t *r2,
     box_type_t *r2End,
-    short	  y1,
-    short	  y2,
+    int	  y1,
+    int	  y2,
     int		  *pOverlap)
 {
     box_type_t *     pNextRect;
@@ -1649,8 +1649,8 @@ pixman_region_subtractO (
     box_type_t *  	  	r1End,
     box_type_t *	r2,
     box_type_t *  	  	r2End,
-    short  	y1,
-             short  	y2,
+    int  	y1,
+    int  	y2,
     int		*pOverlap)
 {
     box_type_t *	pNextRect;

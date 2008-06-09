@@ -3,7 +3,8 @@
 #include <stdio.h>
 #include "pixman.h"
 
-/* This seems to go into an infinite loop
+/* This used to go into an infinite loop before pixman-region.c
+ * was fixed to not use explict "short" variables
  */
 int
 main ()
