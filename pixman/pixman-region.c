@@ -248,7 +248,7 @@ if (!(pReg)->data || (((pReg)->data->numRects + (n)) > (pReg)->data->size)) \
 	}								\
     }
 
-pixman_bool_t
+PIXMAN_EXPORT pixman_bool_t
 PREFIX(_equal) (reg1, reg2)
     region_type_t * reg1;
     region_type_t * reg2;
