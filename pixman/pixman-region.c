@@ -95,7 +95,7 @@ static region_data_type_t *pixman_brokendata = (region_data_type_t *)&PREFIX(_br
  * the addresses of those structs which makes the existing code continue to
  * work.
  */
-void
+PIXMAN_EXPORT void
 PREFIX(_set_static_pointers) (box_type_t *empty_box,
 				   region_data_type_t *empty_data,
 				   region_data_type_t *broken_data)
@@ -296,14 +296,14 @@ PREFIX(_print) (rgn)
 }
 
 
-void
+PIXMAN_EXPORT void
 PREFIX(_init) (region_type_t *region)
 {
     region->extents = *pixman_region_emptyBox;
     region->data = pixman_region_emptyData;
 }
 
-void
+PIXMAN_EXPORT void
 PREFIX(_init_rect) (region_type_t *region,
 			 int x, int y, unsigned int width, unsigned int height)
 {
@@ -314,33 +314,33 @@ PREFIX(_init_rect) (region_type_t *region,
     region->data = NULL;
 }
 
-void
+PIXMAN_EXPORT void
 PREFIX(_init_with_extents) (region_type_t *region, box_type_t *extents)
 {
     region->extents = *extents;
     region->data = NULL;
 }
 
-void
+PIXMAN_EXPORT void
 PREFIX(_fini) (region_type_t *region)
 {
     good (region);
     freeData (region);
 }
 
-int
+PIXMAN_EXPORT int
 PREFIX(_n_rects) (region_type_t *region)
 {
     return PIXREGION_NUM_RECTS (region);
 }
 
-box_type_t *
+PIXMAN_EXPORT box_type_t *
 PREFIX(_rects) (region_type_t *region)
 {
     return PIXREGION_RECTS (region);
 }
 
-box_type_t *
+PIXMAN_EXPORT box_type_t *
 PREFIX(_rectangles) (region_type_t *region,
 				  int		    *n_rects)
 {
@@ -403,7 +403,7 @@ pixman_rect_alloc (region_type_t * region, int n)
     return TRUE;
 }
 
-pixman_bool_t
+PIXMAN_EXPORT pixman_bool_t
 PREFIX(_copy) (region_type_t *dst, region_type_t *src)
 {
     good(dst);
@@ -967,7 +967,7 @@ pixman_region_intersectO (region_type_t *region,
     return TRUE;
 }
 
-pixman_bool_t
+PIXMAN_EXPORT pixman_bool_t
 PREFIX(_intersect) (region_type_t * 	newReg,
 			 region_type_t * 	reg1,
 			 region_type_t *	reg2)
@@ -1124,7 +1124,7 @@ pixman_region_unionO (
 /* Convenience function for performing union of region with a
  * single rectangle
  */
-pixman_bool_t
+PIXMAN_EXPORT pixman_bool_t
 PREFIX(_union_rect) (region_type_t *dest,
 			  region_type_t *source,
 			  int x, int y,
@@ -1143,7 +1143,7 @@ PREFIX(_union_rect) (region_type_t *dest,
     return PREFIX(_union) (dest, source, &region);
 }
 
-pixman_bool_t
+PIXMAN_EXPORT pixman_bool_t
 PREFIX(_union) (region_type_t *newReg,
 		     region_type_t *reg1,
 		     region_type_t *reg2)
@@ -1243,7 +1243,7 @@ PREFIX(_union) (region_type_t *newReg,
  *      dstrgn is modified if rgn has rectangles.
  *
  */
-pixman_bool_t
+PIXMAN_EXPORT pixman_bool_t
 PREFIX(_append) (region_type_t * dstrgn,
 		      region_type_t * rgn)
 {
@@ -1428,7 +1428,7 @@ QuickSortRects(
  *-----------------------------------------------------------------------
  */
 
-pixman_bool_t
+PIXMAN_EXPORT pixman_bool_t
 PREFIX(_validate) (region_type_t * badreg,
 		       int *pOverlap)
 {
@@ -1771,7 +1771,7 @@ pixman_region_subtractO (
  *
  *-----------------------------------------------------------------------
  */
-pixman_bool_t
+PIXMAN_EXPORT pixman_bool_t
 PREFIX(_subtract) (region_type_t *	regD,
 		       region_type_t * 	regM,
 		       region_type_t *	regS)
@@ -1836,7 +1836,7 @@ PREFIX(_subtract) (region_type_t *	regD,
  *-----------------------------------------------------------------------
  */
 pixman_bool_t
-PREFIX(_inverse) (region_type_t * 	  newReg,       /* Destination region */
+PIXMAN_EXPORT PREFIX(_inverse) (region_type_t * 	  newReg,       /* Destination region */
 		      region_type_t * 	  reg1,         /* Region to invert */
 		      box_type_t *     	  invRect) 	/* Bounding box for inversion */
 {
@@ -1895,7 +1895,7 @@ PREFIX(_inverse) (region_type_t * 	  newReg,       /* Destination region */
  */
 
 pixman_region_overlap_t
-PREFIX(_contains_rectangle) (region_type_t *  region,
+PIXMAN_EXPORT PREFIX(_contains_rectangle) (region_type_t *  region,
 				 box_type_t *     prect)
 {
     int	x;
@@ -1999,7 +1999,7 @@ PREFIX(_contains_rectangle) (region_type_t *  region,
    translates in place
 */
 
-void
+PIXMAN_EXPORT void
 PREFIX(_translate) (region_type_t * region, int x, int y)
 {
     int x1, x2, y1, y2;
@@ -2081,7 +2081,7 @@ PREFIX(_translate) (region_type_t * region, int x, int y)
     }
 }
 
-void
+PIXMAN_EXPORT void
 PREFIX(_reset) (region_type_t *region, box_type_t *box)
 {
     good(region);
@@ -2093,7 +2093,7 @@ PREFIX(_reset) (region_type_t *region, box_type_t *box)
 }
 
 /* box is "return" value */
-int
+PIXMAN_EXPORT int
 PREFIX(_contains_point) (region_type_t * region,
 			     int x, int y,
 			     box_type_t * box)
@@ -2126,14 +2126,14 @@ PREFIX(_contains_point) (region_type_t * region,
     return(FALSE);
 }
 
-int
+PIXMAN_EXPORT int
 PREFIX(_not_empty) (region_type_t * region)
 {
     good(region);
     return(!PIXREGION_NIL(region));
 }
 
-void
+PIXMAN_EXPORT void
 PREFIX(_empty) (region_type_t * region)
 {
     good(region);
@@ -2143,7 +2143,7 @@ PREFIX(_empty) (region_type_t * region)
     region->data = pixman_region_emptyData;
 }
 
-box_type_t *
+PIXMAN_EXPORT box_type_t *
 PREFIX(_extents) (region_type_t * region)
 {
     good(region);
@@ -2157,7 +2157,7 @@ PREFIX(_extents) (region_type_t * region)
     returns the number of new, clipped scanlines.
 */
 
-pixman_bool_t
+PIXMAN_EXPORT pixman_bool_t
 PREFIX(_selfcheck) (reg)
     region_type_t * reg;
 {
@@ -2203,7 +2203,7 @@ PREFIX(_selfcheck) (reg)
     }
 }
 
-pixman_bool_t
+PIXMAN_EXPORT pixman_bool_t
 PREFIX(_init_rects) (region_type_t *region,
 			  box_type_t *boxes, int count)
 {

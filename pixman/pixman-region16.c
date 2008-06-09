@@ -26,6 +26,8 @@
 #include <config.h>
 #endif
 
+#undef PIXMAN_DISABLE_DEPRECATED
+
 #include "pixman-private.h"
 
 typedef pixman_box16_t		box_type_t;
