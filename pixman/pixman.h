@@ -596,6 +596,8 @@ pixman_bool_t   pixman_image_unref                   (pixman_image_t            
 /* Set properties */
 pixman_bool_t   pixman_image_set_clip_region         (pixman_image_t               *image,
 						      pixman_region16_t            *region);
+pixman_bool_t   pixman_image_set_clip_region32       (pixman_image_t               *image,
+						      pixman_region32_t            *region);
 void		pixman_image_set_has_client_clip     (pixman_image_t               *image,
 						      pixman_bool_t		    clien_clip);
 pixman_bool_t   pixman_image_set_transform           (pixman_image_t               *image,

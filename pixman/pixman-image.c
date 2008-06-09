@@ -387,6 +387,25 @@ pixman_image_create_bits (pixman_format_code_t  format,
 }
 
 PIXMAN_EXPORT pixman_bool_t
+pixman_image_set_clip_region32 (pixman_image_t *image,
+				pixman_region32_t *region)
+{
+    image_common_t *common = (image_common_t *)image;
+
+    if (region)
+    {
+	return pixman_region32_copy (&common->clip_region, region);
+    }
+    else
+    {
+	reset_clip_region (image);
+
+	return TRUE;
+    }
+}
+
+
+PIXMAN_EXPORT pixman_bool_t
 pixman_image_set_clip_region (pixman_image_t    *image,
 			      pixman_region16_t *region)
 {
