@@ -2334,6 +2334,8 @@ fbComposeSetupSSE(void)
     }
 
     initialized = TRUE;
+
+    _mm_empty();
 }
 
 
