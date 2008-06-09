@@ -81,8 +81,8 @@ allocate_image (void)
     {
 	image_common_t *common = &image->common;
 
-	pixman_region_init (&common->full_region);
-	pixman_region_init (&common->clip_region);
+	pixman_region32_init (&common->full_region);
+	pixman_region32_init (&common->clip_region);
 	common->src_clip = &common->full_region;
 	common->has_client_clip = FALSE;
 	common->transform = NULL;
@@ -119,8 +119,8 @@ pixman_image_unref (pixman_image_t *image)
 
     if (common->ref_count == 0)
     {
-	pixman_region_fini (&common->clip_region);
-	pixman_region_fini (&common->full_region);
+	pixman_region32_fini (&common->clip_region);
+	pixman_region32_fini (&common->full_region);
 
 	if (common->transform)
 	    free (common->transform);
@@ -323,16 +323,16 @@ create_bits (pixman_format_code_t format,
 static void
 reset_clip_region (pixman_image_t *image)
 {
-    pixman_region_fini (&image->common.clip_region);
+    pixman_region32_fini (&image->common.clip_region);
 
     if (image->type == BITS)
     {
-	pixman_region_init_rect (&image->common.clip_region, 0, 0,
-				 image->bits.width, image->bits.height);
+	pixman_region32_init_rect (&image->common.clip_region, 0, 0,
+				   image->bits.width, image->bits.height);
     }
     else
     {
-	pixman_region_init (&image->common.clip_region);
+	pixman_region32_init (&image->common.clip_region);
     }
 }
 
@@ -378,9 +378,9 @@ pixman_image_create_bits (pixman_format_code_t  format,
 								  */
     image->bits.indexed = NULL;
 
-    pixman_region_fini (&image->common.full_region);
-    pixman_region_init_rect (&image->common.full_region, 0, 0,
-			     image->bits.width, image->bits.height);
+    pixman_region32_fini (&image->common.full_region);
+    pixman_region32_init_rect (&image->common.full_region, 0, 0,
+			       image->bits.width, image->bits.height);
 
     reset_clip_region (image);
     return image;
@@ -394,7 +394,7 @@ pixman_image_set_clip_region (pixman_image_t    *image,
 
     if (region)
     {
-	return pixman_region_copy (&common->clip_region, region);
+	return pixman_region32_copy_from_region16 (&common->clip_region, region);
     }
     else
     {
@@ -679,23 +679,23 @@ pixman_image_fill_rectangles (pixman_op_t		    op,
 	{
 	    for (i = 0; i < n_rects; ++i)
 	    {
-		pixman_region16_t fill_region;
+		pixman_region32_t fill_region;
 		int n_boxes, j;
-		pixman_box16_t *boxes;
+		pixman_box32_t *boxes;
 
-		pixman_region_init_rect (&fill_region, rects[i].x, rects[i].y, rects[i].width, rects[i].height);
-		pixman_region_intersect (&fill_region, &fill_region, &dest->common.clip_region);
+		pixman_region32_init_rect (&fill_region, rects[i].x, rects[i].y, rects[i].width, rects[i].height);
+		pixman_region32_intersect (&fill_region, &fill_region, &dest->common.clip_region);
 
-		boxes = pixman_region_rectangles (&fill_region, &n_boxes);
+		boxes = pixman_region32_rectangles (&fill_region, &n_boxes);
 		for (j = 0; j < n_boxes; ++j)
 		{
-		    const pixman_box16_t *box = &(boxes[j]);
+		    const pixman_box32_t *box = &(boxes[j]);
 		    pixman_fill (dest->bits.bits, dest->bits.rowstride, PIXMAN_FORMAT_BPP (dest->bits.format),
 				 box->x1, box->y1, box->x2 - box->x1, box->y2 - box->y1,
 				 pixel);
 		}
 
-		pixman_region_fini (&fill_region);
+		pixman_region32_fini (&fill_region);
 	    }
 	    return TRUE;
 	}

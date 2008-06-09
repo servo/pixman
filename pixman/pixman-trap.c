@@ -116,11 +116,11 @@ dump_image (pixman_image_t *image,
 }
 
 PIXMAN_EXPORT void
-pixman_add_trapezoids       (pixman_image_t      *image,
-			     int16_t              x_off,
-			     int                      y_off,
-			     int                      ntraps,
-			     const pixman_trapezoid_t *traps)
+pixman_add_trapezoids (pixman_image_t           *image,
+		       int16_t                   x_off,
+		       int                       y_off,
+		       int                       ntraps,
+		       const pixman_trapezoid_t *traps)
 {
     int i;
 

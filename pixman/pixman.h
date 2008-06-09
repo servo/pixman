@@ -278,6 +278,9 @@ void                    pixman_region_init_rect           (pixman_region16_t    
 							   int                     y,
 							   unsigned int            width,
 							   unsigned int            height);
+pixman_bool_t           pixman_region_init_rects          (pixman_region16_t      *region,
+							   pixman_box16_t         *boxes,
+							   int                     count);
 void                    pixman_region_init_with_extents   (pixman_region16_t      *region,
 							   pixman_box16_t         *extents);
 void                    pixman_region_fini                (pixman_region16_t      *region);
@@ -323,9 +326,6 @@ pixman_bool_t           pixman_region_equal               (pixman_region16_t    
 pixman_bool_t           pixman_region_selfcheck           (pixman_region16_t      *region);
 void                    pixman_region_reset               (pixman_region16_t      *region,
 							   pixman_box16_t         *box);
-pixman_bool_t           pixman_region_init_rects          (pixman_region16_t      *region,
-							   pixman_box16_t         *boxes,
-							   int                     count);
 
 /*
  * 32 bit regions
@@ -365,6 +365,9 @@ void                    pixman_region32_init_rect          (pixman_region32_t *r
 							    int                y,
 							    unsigned int       width,
 							    unsigned int       height);
+pixman_bool_t           pixman_region32_init_rects         (pixman_region32_t *region,
+							    pixman_box32_t    *boxes,
+							    int                count);
 void                    pixman_region32_init_with_extents  (pixman_region32_t *region,
 							    pixman_box32_t    *extents);
 void                    pixman_region32_fini               (pixman_region32_t *region);
@@ -410,9 +413,6 @@ pixman_bool_t           pixman_region32_equal              (pixman_region32_t *r
 pixman_bool_t           pixman_region32_selfcheck          (pixman_region32_t *region);
 void                    pixman_region32_reset              (pixman_region32_t *region,
 							    pixman_box32_t    *box);
-pixman_bool_t           pixman_region32_init_rects         (pixman_region32_t *region,
-							    pixman_box32_t    *boxes,
-							    int                count);
 
 
 /* Copy / Fill / Misc */

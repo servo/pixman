@@ -305,7 +305,7 @@ PREFIX(_init) (region_type_t *region)
 
 PIXMAN_EXPORT void
 PREFIX(_init_rect) (region_type_t *region,
-			 int x, int y, unsigned int width, unsigned int height)
+		    int x, int y, unsigned int width, unsigned int height)
 {
     region->extents.x1 = x;
     region->extents.y1 = y;
@@ -332,12 +332,6 @@ PIXMAN_EXPORT int
 PREFIX(_n_rects) (region_type_t *region)
 {
     return PIXREGION_NUM_RECTS (region);
-}
-
-PIXMAN_EXPORT box_type_t *
-PREFIX(_rects) (region_type_t *region)
-{
-    return PIXREGION_RECTS (region);
 }
 
 PIXMAN_EXPORT box_type_t *
@@ -2205,7 +2199,7 @@ PREFIX(_selfcheck) (reg)
 
 PIXMAN_EXPORT pixman_bool_t
 PREFIX(_init_rects) (region_type_t *region,
-			  box_type_t *boxes, int count)
+		     box_type_t *boxes, int count)
 {
     int overlap;
 
