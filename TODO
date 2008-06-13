@@ -42,7 +42,7 @@
   - Make pixman_region_point_in() survive a NULL box, then fix up
     pixman-compose.c
 
-    - Possibly look into inlining the fetch functions
+      - Possibly look into inlining the fetch functions
 
   - Test suite
 
@@ -92,6 +92,37 @@
     trapezoid calls. The X server could then just call the API with
     (0, 0). Cairo would have to make sure that the delta *within* a
     batch of trapezoids does not exceed 16 bit.
+
+  - Consider adding actual backends. Brain dump:
+
+    A backend is something that knows how to
+
+      - Create images
+      - Composite three images
+      - Rasterize trapezoids
+      - Do solid fills and blits
+
+    These operations are provided by a vtable that the backend will
+    create when it is initialized. Initial backends:
+
+      - VMX
+      - SSE2
+      - MMX
+      - Plain Old C
+
+    When the SIMD backends are initialized, they will be passed a
+    pointer to the Plain Old C backend that they can use for fallback
+    purposes.
+
+    Images would gain a vtable as well that would contain things like
+
+      - Read scanline
+      - Write scanline
+
+    (Or even read_patch/write_patch as suggested by Keith a while
+    back).
+
+    This could simplify the compositing code considerably.
 
   - Review the pixman_format_code_t enum to make sure it will support
     future formats. Some formats we will probably need:
