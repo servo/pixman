@@ -1857,7 +1857,7 @@ fbStore64_generic (pixman_image_t *image,
     assert(image->common.type == BITS);
     assert(store32);
 
-    argb8Pixels = malloc(sizeof(uint32_t) * width);
+    argb8Pixels = pixman_malloc_ab (width, sizeof(uint32_t));
     if (!argb8Pixels) return;
 
     // Contract the scanline.  We could do this in place if values weren't
