@@ -47,6 +47,7 @@ pixman_region16_copy_from_region32 (pixman_region16_t *dst,
     int n_boxes, i;
     pixman_box32_t *boxes32;
     pixman_box16_t *boxes16;
+    pixman_bool_t retval;
     
     boxes32 = pixman_region32_rectangles (src, &n_boxes);
 
@@ -64,7 +65,9 @@ pixman_region16_copy_from_region32 (pixman_region16_t *dst,
     }
 
     pixman_region_fini (dst);
-    return pixman_region_init_rects (dst, boxes16, n_boxes);
+    retval = pixman_region_init_rects (dst, boxes16, n_boxes);
+    free (boxes16);
+    return retval;
 }
 
 #include "pixman-region.c"
