@@ -495,10 +495,6 @@ struct pixman_indexed
 				 PIXMAN_FORMAT_R(f) +	\
 				 PIXMAN_FORMAT_G(f) +	\
 				 PIXMAN_FORMAT_B(f))
-#define PIXMAN_FORMAT_16BPC(f)	(PIXMAN_FORMAT_A(f) > 8 || \
-				 PIXMAN_FORMAT_R(f) > 8 || \
-				 PIXMAN_FORMAT_G(f) > 8 || \
-				 PIXMAN_FORMAT_B(f) > 8)
 
 #define PIXMAN_TYPE_OTHER	0
 #define PIXMAN_TYPE_A		1

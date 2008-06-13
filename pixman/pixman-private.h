@@ -647,6 +647,10 @@ union pixman_image
     } while (0)
 
 
+#define PIXMAN_FORMAT_16BPC(f)	(PIXMAN_FORMAT_A(f) > 8 || \
+				 PIXMAN_FORMAT_R(f) > 8 || \
+				 PIXMAN_FORMAT_G(f) > 8 || \
+				 PIXMAN_FORMAT_B(f) > 8)
 /*
  * Edges
  */
