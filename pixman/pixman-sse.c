@@ -643,7 +643,7 @@ coreCombineInUsse2 (uint32_t* pd, const uint32_t* ps, int w)
     cachePrefetch ((__m128i*)ps);
     cachePrefetch ((__m128i*)pd);
 
-    while (w && ((uint32_t) pd & 15))
+    while (w && ((unsigned long) pd & 15))
     {
         s = *ps++;
         d = *pd;
@@ -700,7 +700,7 @@ coreCombineReverseInUsse2 (uint32_t* pd, const uint32_t* ps, int w)
     cachePrefetch ((__m128i*)ps);
     cachePrefetch ((__m128i*)pd);
 
-    while (w && ((uint32_t) pd & 15))
+    while (w && ((unsigned long) pd & 15))
     {
         s = *ps++;
         d = *pd;
@@ -752,7 +752,7 @@ coreCombineReverseOutUsse2 (uint32_t* pd, const uint32_t* ps, int w)
     cachePrefetch ((__m128i*)ps);
     cachePrefetch ((__m128i*)pd);
 
-    while (w && ((uint32_t) pd & 15))
+    while (w && ((unsigned long) pd & 15))
     {
         uint32_t s = *ps++;
         uint32_t d = *pd;
@@ -809,7 +809,7 @@ coreCombineOutUsse2 (uint32_t* pd, const uint32_t* ps, int w)
     cachePrefetch ((__m128i*)ps);
     cachePrefetch ((__m128i*)pd);
 
-    while (w && ((uint32_t) pd & 15))
+    while (w && ((unsigned long) pd & 15))
     {
         uint32_t s = *ps++;
         uint32_t d = *pd;
@@ -885,7 +885,7 @@ coreCombineAtopUsse2 (uint32_t* pd, const uint32_t* ps, int w)
     cachePrefetch ((__m128i*)ps);
     cachePrefetch ((__m128i*)pd);
 
-    while (w && ((uint32_t) pd & 15))
+    while (w && ((unsigned long) pd & 15))
     {
         s = *ps++;
         d = *pd;
@@ -962,7 +962,7 @@ coreCombineReverseAtopUsse2 (uint32_t* pd, const uint32_t* ps, int w)
     cachePrefetch ((__m128i*)ps);
     cachePrefetch ((__m128i*)pd);
 
-    while (w && ((uint32_t) pd & 15))
+    while (w && ((unsigned long) pd & 15))
     {
         s = *ps++;
         d = *pd;
@@ -1039,7 +1039,7 @@ coreCombineXorUsse2 (uint32_t* dst, const uint32_t* src, int width)
     cachePrefetch ((__m128i*)ps);
     cachePrefetch ((__m128i*)pd);
 
-    while (w && ((uint32_t) pd & 15))
+    while (w && ((unsigned long) pd & 15))
     {
         s = *ps++;
         d = *pd;
