@@ -1,3 +1,5 @@
+  - Rename "SSE" to "MMX_EXTENSIONS"
+
   - Behdad's MMX issue - see list
 
   - SSE 2 issues:
