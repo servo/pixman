@@ -149,13 +149,23 @@ int main () {
     return _mm_cvtsi64_si32 (v);
 }], have_mmx_intrinsics=yes)
 CFLAGS=$xserver_save_CFLAGS
-AC_MSG_RESULT($have_mmx_intrinsics)
+
+AC_ARG_ENABLE(mmx,
+   [AC_HELP_STRING([--disable-mmx],
+                   [disable MMX fast paths])],
+   [disable_mmx=yes], [disable_mmx=no])
+
+if test $disable_mmx = yes ; then
+   have_mmx_intrinsics=disabled
+fi
 
 if test $have_mmx_intrinsics = yes ; then
    AC_DEFINE(USE_MMX, 1, [use MMX compiler intrinsics])
 else
    MMX_CFLAGS=
 fi
+
+AC_MSG_RESULT($have_mmx_intrinsics)
 
 AM_CONDITIONAL(USE_MMX, test $have_mmx_intrinsics = yes)
 
@@ -225,11 +235,21 @@ int main () {
     return 0;
 }], have_sse2_intrinsics=yes)
 CFLAGS=$xserver_save_CFLAGS
-AC_MSG_RESULT($have_sse2_intrinsics)
+
+AC_ARG_ENABLE(sse2,
+   [AC_HELP_STRING([--disable-sse2],
+                   [disable SSE2 fast paths])],
+   [disable_sse2=yes], [disable_sse2=no])
+
+if test $disable_sse2 = yes ; then
+   have_sse2_intrinsics=disabled
+fi
 
 if test $have_sse2_intrinsics = yes ; then
-   AC_DEFINE(USE_SSE2, 1, [use SSE compiler intrinsics])
+   AC_DEFINE(USE_SSE2, 1, [use SSE2 compiler intrinsics])
 fi
+
+AC_MSG_RESULT($have_sse2_intrinsics)
 
 AM_CONDITIONAL(USE_SSE2, test $have_sse2_intrinsics = yes)
 
@@ -259,13 +279,24 @@ int main () {
     return 0;
 }], have_vmx_intrinsics=yes)
 CFLAGS=$xserver_save_CFLAGS
-AC_MSG_RESULT($have_vmx_intrinsics)
+
+AC_ARG_ENABLE(vmx,
+   [AC_HELP_STRING([--disable-vmx],
+                   [disable VMX fast paths])],
+   [disable_vmx=yes], [disable_vmx=no])
+
+if test $disable_vmx = yes ; then
+   have_vmx_intrinsics=disabled
+fi
 
 if test $have_vmx_intrinsics = yes ; then
    AC_DEFINE(USE_VMX, 1, [use VMX compiler intrinsics])
 else
    VMX_CFLAGS=
 fi
+
+AC_MSG_RESULT($have_vmx_intrinsics)
+
 AC_SUBST(VMX_CFLAGS)
 
 AM_CONDITIONAL(USE_VMX, test $have_vmx_intrinsics = yes)
