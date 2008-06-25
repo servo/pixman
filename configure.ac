@@ -24,22 +24,18 @@ AC_PREREQ([2.57])
 
 #   Pixman versioning scheme
 #
-#   - The git version must at all times have an odd MICRO version
-#     number.
+#   - The version in git has an odd MICRO version number
 #
-#   - If you add API, increment the MICRO version to the next largest
-#     odd number.
+#   - Released versions both development and stable have an even MICRO 
+#     version number
 #
-#   - If you release a version that contains new API, then increment
-#     MINOR and set MICRO to 0. 
+#   - Released development versions have an odd MINOR number
 #
-#   - If you release a new version that does not contain new API, then
-#     increment MICRO to the next even number.
+#   - Released stable versions have an event MINOR number
 #
-#   - After doing a release, increment MICRO again to make the version 
-#     number in git odd.
+#   - Versions that break ABI must have a new MAJOR number
 #
-#   - If you break the ABI, then
+#   - If you break the ABI, then at least this must be done:
 #
 #        - increment MAJOR
 #
@@ -54,6 +50,7 @@ AC_PREREQ([2.57])
 #      This ensures that binary incompatible versions can be installed
 #      in parallel.  See http://www106.pair.com/rhp/parallel.html for
 #      more information
+#
 
 m4_define([pixman_major], 0)
 m4_define([pixman_minor], 11)
