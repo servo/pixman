@@ -4,46 +4,57 @@ Here are the steps to follow to create a new pixman release:
    and that you are up to date with the latest commits in the central
    repository. Here are a couple of useful commands:
 
-	# This should report "nothing to commit (working directory clean")
-	git status
+	git diff			(no output)
+	
+	git status			(should report "nothing to commit")
 
-	# This should give no output, (note there are *3* dots)
-	git log master...origin
+	git log master...origin		(no output; note: *3* dots)
 
-2) Verify that the code passes "make distcheck".
+2) Increment pixman_(major|minor|micro) in configure.ac according to
+   the directions in that file.
 
-	NOTE: There is some test code in the test directory, but it's
-	not yet integrated into "make distcheck" yet. It might be
-	useful to run those programs, (but I don't know how to
-	interpret those results). Another very useful thing to do is
-	to run the cairo test suite against pixman. This can be done
-	by running the following commands with the latest cairo
-	release:
+3) Run 
 
-		tar xzf cairo-X.Y.Z.tar.gz
-		cd cairo
-		CAIRO_TEST_TARGET=image make test
+	make PREV=<last version> release-check
 
-4) Increment pixman_{major|minor|micro} in configure.ac according to
-   the directions in that file. Also note that if there is an ABI
-   change then there is further work to be done, (also described in
-   configure.in).
+   and fix things until it passes.
 
-5) Use "git commit" record any changes made in steps 3 and 4.
+   A very useful thing to do is to run the cairo test suite
+   against pixman. This can be done by running the following
+   commands in the "test" directory of the latest cairo release:
 
-6) Generate the final tar files with
+	tar xzf cairo-X.Y.Z.tar.gz
+	cd cairo
+	CAIRO_TEST_TARGET=image make test
+
+4) Use "git commit" to record any changes made in steps 2 and 3.
+
+5) Generate the final tar files with
 
 	make distcheck
 
-   And publish the tar files to everywhere appropriate.
+   and publish the tar files by running 
 
-   Note: There's a "make release-publish" target to help with this
-   step, (creating the tar file and publishing it), but it depends on
-   getting gpg setup first. It's probably the right way to go in the
-   future, though.
+	make GPGKEY=<your gpg key id> release-publish
 
 7) Increment pixman_micro to the next larger (odd) number in
    configure.ac. Commit this change, and push all commits created
-   during this process.
+   during this process using
 
-8) Send email announcements of the release to everywhere appropriate.
+	git push --tags
+
+   You must use "--tags" here; otherwise the new tag will not
+   be pushed out. This is because technobable.
+
+8) Run 
+
+	make release-publish-message
+
+   to generate a draft release announcement. Edit it as appropriate and
+   send it to 
+
+	cairo-announce@cairographics.org
+
+   and 
+
+	xorg-announce@lists.freedesktop.org
