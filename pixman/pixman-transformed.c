@@ -657,7 +657,7 @@ ACCESS(fbFetchTransformed64)(bits_image_t * pict, int x, int y, int width,
                                maskBits);
 
     // Expand from 32bpp to 64bpp in place.
-    pixman_expand(buffer, (uint32_t*)buffer, pict->format, width);
+    pixman_expand(buffer, (uint32_t*)buffer, PIXMAN_a8r8g8b8, width);
 
     free(mask8);
 }

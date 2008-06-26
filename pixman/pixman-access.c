@@ -1258,6 +1258,24 @@ fbFetchPixel_yv12 (bits_image_t *pict, int offset, int line)
 	(b >= 0 ? b < 0x1000000 ? (b >> 16) & 0x0000ff : 0x0000ff : 0);
 }
 
+/*
+ * XXX: The transformed fetch path only works at 32-bpp so far.  When all paths
+ * have wide versions, this can be removed.
+ *
+ * WARNING: This function loses precision!
+ */
+static FASTCALL uint32_t
+fbFetchPixel32_generic_lossy (bits_image_t *pict, int offset, int line)
+{
+    fetchPixelProc64 fetchPixel64 = ACCESS(pixman_fetchPixelProcForPicture64) (pict);
+    const uint64_t argb16Pixel = fetchPixel64(pict, offset, line);
+    uint32_t argb8Pixel;
+
+    pixman_contract(&argb8Pixel, &argb16Pixel, 1);
+
+    return argb8Pixel;
+}
+
 fetchPixelProc32 ACCESS(pixman_fetchPixelProcForPicture32) (bits_image_t * pict)
 {
     switch(pict->format) {
@@ -1266,8 +1284,8 @@ fetchPixelProc32 ACCESS(pixman_fetchPixelProcForPicture32) (bits_image_t * pict)
     case PIXMAN_a8b8g8r8: return fbFetchPixel_a8b8g8r8;
     case PIXMAN_x8b8g8r8: return fbFetchPixel_x8b8g8r8;
     /* These two require wide compositing */
-    case PIXMAN_a2b10g10r10: return NULL;
-    case PIXMAN_x2b10g10r10: return NULL;
+    case PIXMAN_a2b10g10r10: return fbFetchPixel32_generic_lossy;
+    case PIXMAN_x2b10g10r10: return fbFetchPixel32_generic_lossy;
 
         /* 24bpp formats */
     case PIXMAN_r8g8b8: return fbFetchPixel_r8g8b8;
