@@ -1219,109 +1219,6 @@ PREFIX(_union) (region_type_t *newReg,
  *	    Batch Rectangle Union
  *====================================================================*/
 
-/*-
- *-----------------------------------------------------------------------
- * pixman_region_append --
- *
- *      "Append" the rgn rectangles onto the end of dstrgn, maintaining
- *      knowledge of YX-banding when it's easy.  Otherwise, dstrgn just
- *      becomes a non-y-x-banded random collection of rectangles, and not
- *      yet a true region.  After a sequence of appends, the caller must
- *      call pixman_region_validate to ensure that a valid region is
- *      constructed.
- *
- * Results:
- *	TRUE if successful.
- *
- * Side Effects:
- *      dstrgn is modified if rgn has rectangles.
- *
- */
-PIXMAN_EXPORT pixman_bool_t
-PREFIX(_append) (region_type_t * dstrgn,
-		      region_type_t * rgn)
-{
-    int numRects, dnumRects, size;
-    box_type_t *new, *old;
-    int prepend;
-
-    if (PIXREGION_NAR(rgn))
-	return pixman_break (dstrgn);
-
-    if (!rgn->data && (dstrgn->data == pixman_region_emptyData))
-    {
-	dstrgn->extents = rgn->extents;
-	dstrgn->data = (region_data_type_t *)NULL;
-	return TRUE;
-    }
-
-    numRects = PIXREGION_NUM_RECTS(rgn);
-    if (!numRects)
-	return TRUE;
-    prepend = FALSE;
-    size = numRects;
-    dnumRects = PIXREGION_NUM_RECTS(dstrgn);
-    if (!dnumRects && (size < 200))
-	size = 200; /* XXX pick numbers out of a hat */
-    RECTALLOC(dstrgn, size);
-    old = PIXREGION_RECTS(rgn);
-    if (!dnumRects)
-	dstrgn->extents = rgn->extents;
-    else if (dstrgn->extents.x2 > dstrgn->extents.x1)
-    {
-	box_type_t *first, *last;
-
-	first = old;
-	last = PIXREGION_BOXPTR(dstrgn) + (dnumRects - 1);
-	if ((first->y1 > last->y2) ||
-	    ((first->y1 == last->y1) && (first->y2 == last->y2) &&
-	     (first->x1 > last->x2)))
-	{
-	    if (rgn->extents.x1 < dstrgn->extents.x1)
-		dstrgn->extents.x1 = rgn->extents.x1;
-	    if (rgn->extents.x2 > dstrgn->extents.x2)
-		dstrgn->extents.x2 = rgn->extents.x2;
-	    dstrgn->extents.y2 = rgn->extents.y2;
-	}
-	else
-	{
-	    first = PIXREGION_BOXPTR(dstrgn);
-	    last = old + (numRects - 1);
-	    if ((first->y1 > last->y2) ||
-		((first->y1 == last->y1) && (first->y2 == last->y2) &&
-		 (first->x1 > last->x2)))
-	    {
-		prepend = TRUE;
-		if (rgn->extents.x1 < dstrgn->extents.x1)
-		    dstrgn->extents.x1 = rgn->extents.x1;
-		if (rgn->extents.x2 > dstrgn->extents.x2)
-		    dstrgn->extents.x2 = rgn->extents.x2;
-		dstrgn->extents.y1 = rgn->extents.y1;
-	    }
-	    else
-		dstrgn->extents.x2 = dstrgn->extents.x1;
-	}
-    }
-    if (prepend)
-    {
-	new = PIXREGION_BOX(dstrgn, numRects);
-	if (dnumRects == 1)
-	    *new = *PIXREGION_BOXPTR(dstrgn);
-	else
-	    memmove((char *)new,(char *)PIXREGION_BOXPTR(dstrgn),
-		  dnumRects * sizeof(box_type_t));
-	new = PIXREGION_BOXPTR(dstrgn);
-    }
-    else
-	new = PIXREGION_BOXPTR(dstrgn) + dnumRects;
-    if (numRects == 1)
-	*new = *old;
-    else
-	memmove((char *)new, (char *)old, numRects * sizeof(box_type_t));
-    dstrgn->data->numRects += numRects;
-    return TRUE;
-}
-
 #define ExchangeRects(a, b) \
 {			    \
     box_type_t     t;	    \
@@ -1422,9 +1319,9 @@ QuickSortRects(
  *-----------------------------------------------------------------------
  */
 
-PIXMAN_EXPORT pixman_bool_t
-PREFIX(_validate) (region_type_t * badreg,
-		       int *pOverlap)
+static pixman_bool_t
+validate (region_type_t * badreg,
+	  int *pOverlap)
 {
     /* Descriptor for regions under construction  in Step 2. */
     typedef struct {
@@ -2127,16 +2024,6 @@ PREFIX(_not_empty) (region_type_t * region)
     return(!PIXREGION_NIL(region));
 }
 
-PIXMAN_EXPORT void
-PREFIX(_empty) (region_type_t * region)
-{
-    good(region);
-    freeData(region);
-    region->extents.x2 = region->extents.x1;
-    region->extents.y2 = region->extents.y1;
-    region->data = pixman_region_emptyData;
-}
-
 PIXMAN_EXPORT box_type_t *
 PREFIX(_extents) (region_type_t * region)
 {
@@ -2233,5 +2120,5 @@ PREFIX(_init_rects) (region_type_t *region,
 
     /* Validate */
     region->extents.x1 = region->extents.x2 = 0;
-    return PREFIX(_validate) (region, &overlap);
+    return validate (region, &overlap);
 }
