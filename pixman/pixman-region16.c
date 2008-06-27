@@ -42,6 +42,14 @@ typedef struct {
 
 #define PREFIX(x) pixman_region##x
 
+PIXMAN_EXPORT void
+pixman_region_set_static_pointers (pixman_box16_t *empty_box,
+				   pixman_region16_data_t *empty_data,
+				   pixman_region16_data_t *broken_data)
+{
+    pixman_region_internal_set_static_pointers (empty_box, empty_data, broken_data);
+}
+
 pixman_bool_t
 pixman_region16_copy_from_region32 (pixman_region16_t *dst,
 				    pixman_region32_t *src)

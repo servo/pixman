@@ -95,10 +95,10 @@ static region_data_type_t *pixman_brokendata = (region_data_type_t *)&PREFIX(_br
  * the addresses of those structs which makes the existing code continue to
  * work.
  */
-PIXMAN_EXPORT void
-PREFIX(_set_static_pointers) (box_type_t *empty_box,
-				   region_data_type_t *empty_data,
-				   region_data_type_t *broken_data)
+void
+PREFIX(_internal_set_static_pointers) (box_type_t *empty_box,
+				       region_data_type_t *empty_data,
+				       region_data_type_t *broken_data)
 {
     pixman_region_emptyBox = empty_box;
     pixman_region_emptyData = empty_data;
