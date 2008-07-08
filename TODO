@@ -1,3 +1,6 @@
+  - Altivec signal issue (Company has fix, there is also a patch by
+    dwmw2 in rawhide).
+
   - Rename "SSE" to "MMX_EXTENSIONS"
 
   - Behdad's MMX issue - see list
