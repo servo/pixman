@@ -407,6 +407,12 @@ expand8888 (__m64 in, int pos)
 }
 
 static inline __m64
+expandx888 (__m64 in, int pos)
+{
+    return _mm_or_si64 (expand8888 (in, pos), MC(full_alpha));
+}
+
+static inline __m64
 pack565 (__m64 pixel, __m64 target, int pos)
 {
     __m64 p = pixel;
@@ -1386,36 +1392,36 @@ fbCompositeSrc_x888xnx8888mmx (pixman_op_t op,
 	    __m64 vs7 = *(__m64 *)(src + 14);
 
 	    vd0 = pack8888 (
-		in_over (expand8888 (vs0, 0), srca, vmask, expand8888 (vd0, 0)),
-		in_over (expand8888 (vs0, 1), srca, vmask, expand8888 (vd0, 1)));
+		in_over (expandx888 (vs0, 0), srca, vmask, expand8888 (vd0, 0)),
+		in_over (expandx888 (vs0, 1), srca, vmask, expand8888 (vd0, 1)));
 
 	    vd1 = pack8888 (
-		in_over (expand8888 (vs1, 0), srca, vmask, expand8888 (vd1, 0)),
-		in_over (expand8888 (vs1, 1), srca, vmask, expand8888 (vd1, 1)));
+		in_over (expandx888 (vs1, 0), srca, vmask, expand8888 (vd1, 0)),
+		in_over (expandx888 (vs1, 1), srca, vmask, expand8888 (vd1, 1)));
 
 	    vd2 = pack8888 (
-		in_over (expand8888 (vs2, 0), srca, vmask, expand8888 (vd2, 0)),
-		in_over (expand8888 (vs2, 1), srca, vmask, expand8888 (vd2, 1)));
+		in_over (expandx888 (vs2, 0), srca, vmask, expand8888 (vd2, 0)),
+		in_over (expandx888 (vs2, 1), srca, vmask, expand8888 (vd2, 1)));
 
 	    vd3 = pack8888 (
-		in_over (expand8888 (vs3, 0), srca, vmask, expand8888 (vd3, 0)),
-		in_over (expand8888 (vs3, 1), srca, vmask, expand8888 (vd3, 1)));
+		in_over (expandx888 (vs3, 0), srca, vmask, expand8888 (vd3, 0)),
+		in_over (expandx888 (vs3, 1), srca, vmask, expand8888 (vd3, 1)));
 
 	    vd4 = pack8888 (
-		in_over (expand8888 (vs4, 0), srca, vmask, expand8888 (vd4, 0)),
-		in_over (expand8888 (vs4, 1), srca, vmask, expand8888 (vd4, 1)));
+		in_over (expandx888 (vs4, 0), srca, vmask, expand8888 (vd4, 0)),
+		in_over (expandx888 (vs4, 1), srca, vmask, expand8888 (vd4, 1)));
 
 	    vd5 = pack8888 (
-		in_over (expand8888 (vs5, 0), srca, vmask, expand8888 (vd5, 0)),
-		in_over (expand8888 (vs5, 1), srca, vmask, expand8888 (vd5, 1)));
+		in_over (expandx888 (vs5, 0), srca, vmask, expand8888 (vd5, 0)),
+		in_over (expandx888 (vs5, 1), srca, vmask, expand8888 (vd5, 1)));
 
             vd6 = pack8888 (
-		in_over (expand8888 (vs6, 0), srca, vmask, expand8888 (vd6, 0)),
-		in_over (expand8888 (vs6, 1), srca, vmask, expand8888 (vd6, 1)));
+		in_over (expandx888 (vs6, 0), srca, vmask, expand8888 (vd6, 0)),
+		in_over (expandx888 (vs6, 1), srca, vmask, expand8888 (vd6, 1)));
 
 	    vd7 = pack8888 (
-		in_over (expand8888 (vs7, 0), srca, vmask, expand8888 (vd7, 0)),
-		in_over (expand8888 (vs7, 1), srca, vmask, expand8888 (vd7, 1)));
+		in_over (expandx888 (vs7, 0), srca, vmask, expand8888 (vd7, 0)),
+		in_over (expandx888 (vs7, 1), srca, vmask, expand8888 (vd7, 1)));
 
 	    *(__m64 *)(dst + 0) = vd0;
 	    *(__m64 *)(dst + 2) = vd1;
