@@ -299,17 +299,19 @@ AC_SUBST(VMX_CFLAGS)
 AM_CONDITIONAL(USE_VMX, test $have_vmx_intrinsics = yes)
 
 AC_ARG_ENABLE(gtk,
-   [AC_HELP_STRING([--disable-gtk],
-                   [disable tests using GTK+])],
-   [disable_gtk=yes], [disable_gtk=no])
+   [AC_HELP_STRING([--enable-gtk],
+                   [enable tests using GTK+ [default=auto]])],
+   [enable_gtk=$enableval], [enable_gtk=auto])
 
-if test $disable_gtk = no ; then
-   PKG_CHECK_MODULES(GTK, [gtk+-2.0], [HAVE_GTK=yes], [HAVE_GTK=no])
-else
-   HAVE_GTK=no
+PKG_PROG_PKG_CONFIG
+if test $enable_gtk = auto ; then
+   PKG_CHECK_EXISTS([gtk+-2.0], [enable_gtk=yes], [enable_gtk=no])
+fi
+if test $enable_gtk = yes ; then
+   PKG_CHECK_MODULES(GTK, [gtk+-2.0])
 fi
 
-AM_CONDITIONAL(HAVE_GTK, [test "x$HAVE_GTK" = xyes])
+AM_CONDITIONAL(HAVE_GTK, [test "x$enable_gtk" = xyes])
 
 AC_SUBST(GTK_CFLAGS)
 AC_SUBST(GTK_LIBS)
