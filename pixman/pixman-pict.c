@@ -1922,20 +1922,28 @@ pixman_bool_t pixman_have_vmx (void) {
 
 #else
 #include <signal.h>
+#include <setjmp.h>
+
+static jmp_buf jump_env;
 
 static void vmx_test(int sig, siginfo_t *si, void *unused) {
-    have_vmx = FALSE;
+    longjmp (jump_env, 1);
 }
 
 pixman_bool_t pixman_have_vmx (void) {
     struct sigaction sa, osa;
+    int jmp_result;
     if (!initialized) {
         sa.sa_flags = SA_SIGINFO;
         sigemptyset(&sa.sa_mask);
         sa.sa_sigaction = vmx_test;
         sigaction(SIGILL, &sa, &osa);
-        asm volatile ( "vor 0, 0, 0" );
+	jmp_result = setjmp (jump_env);
+	if (jmp_result == 0) {
+	    asm volatile ( "vor 0, 0, 0" );
+	}
         sigaction(SIGILL, &osa, NULL);
+	have_vmx = (jmp_result == 0);
         initialized = TRUE;
     }
     return have_vmx;
