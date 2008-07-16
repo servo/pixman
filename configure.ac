@@ -150,9 +150,9 @@ CFLAGS=$xserver_save_CFLAGS
 AC_ARG_ENABLE(mmx,
    [AC_HELP_STRING([--disable-mmx],
                    [disable MMX fast paths])],
-   [disable_mmx=yes], [disable_mmx=no])
+   [enable_mmx=$enableval], [enable_mmx=auto])
 
-if test $disable_mmx = yes ; then
+if test $enable_mmx = no ; then
    have_mmx_intrinsics=disabled
 fi
 
@@ -163,6 +163,9 @@ else
 fi
 
 AC_MSG_RESULT($have_mmx_intrinsics)
+if test $enable_mmx = yes && test $have_mmx_intrinsics = no ; then
+   AC_MSG_ERROR([MMX intrinsics not detected])
+fi
 
 AM_CONDITIONAL(USE_MMX, test $have_mmx_intrinsics = yes)
 
@@ -236,9 +239,9 @@ CFLAGS=$xserver_save_CFLAGS
 AC_ARG_ENABLE(sse2,
    [AC_HELP_STRING([--disable-sse2],
                    [disable SSE2 fast paths])],
-   [disable_sse2=yes], [disable_sse2=no])
+   [enable_sse2=$enableval], [enable_sse2=auto])
 
-if test $disable_sse2 = yes ; then
+if test $enable_sse2 = no ; then
    have_sse2_intrinsics=disabled
 fi
 
@@ -247,6 +250,9 @@ if test $have_sse2_intrinsics = yes ; then
 fi
 
 AC_MSG_RESULT($have_sse2_intrinsics)
+if test $enable_sse2 = yes && test $have_sse_intrinsics = no ; then
+   AC_MSG_ERROR([SSE2 intrinsics not detected])
+fi
 
 AM_CONDITIONAL(USE_SSE2, test $have_sse2_intrinsics = yes)
 
@@ -280,9 +286,9 @@ CFLAGS=$xserver_save_CFLAGS
 AC_ARG_ENABLE(vmx,
    [AC_HELP_STRING([--disable-vmx],
                    [disable VMX fast paths])],
-   [disable_vmx=yes], [disable_vmx=no])
+   [enable_vmx=$enableval], [enable_vmx=auto])
 
-if test $disable_vmx = yes ; then
+if test $enable_vmx = no ; then
    have_vmx_intrinsics=disabled
 fi
 
@@ -293,6 +299,9 @@ else
 fi
 
 AC_MSG_RESULT($have_vmx_intrinsics)
+if test $enable_vmx = yes && test $have_vmx_intrinsics = no ; then
+   AC_MSG_ERROR([VMX intrinsics not detected])
+fi
 
 AC_SUBST(VMX_CFLAGS)
 
