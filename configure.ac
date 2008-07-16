@@ -319,6 +319,7 @@ AC_SUBST(DEP_CFLAGS)
 AC_SUBST(DEP_LIBS)
 		  
 AC_OUTPUT([pixman-1.pc
+           pixman-1-uninstalled.pc
            Makefile
 	   pixman/Makefile
 	   pixman/pixman-version.h
