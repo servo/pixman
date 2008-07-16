@@ -2816,7 +2816,7 @@ fbCompositeSrc_x888xnx8888sse2 (pixman_op_t op,
             cachePrefetchNext ((__m128i*)dst);
             cachePrefetchNext ((__m128i*)src);
 
-            xmmSrc = load128Unaligned ((__m128i*)src);
+            xmmSrc = _mm_or_si128 (load128Unaligned ((__m128i*)src), Maskff000000);
             xmmDst = load128Aligned ((__m128i*)dst);
 
             unpack_128_2x128 (xmmSrc, &xmmSrcLo, &xmmSrcHi);
