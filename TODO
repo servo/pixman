@@ -1,9 +1,4 @@
-  - Altivec signal issue (Company has fix, there is also a patch by
-    dwmw2 in rawhide).
-
   - Rename "SSE" to "MMX_EXTENSIONS"
-
-  - Behdad's MMX issue - see list
 
   - SSE 2 issues:
 
@@ -36,7 +31,7 @@
         (They only exist because they are theoretically available to
         drivers).
 
-      - Regions should become 32 bit
+      - 16 bit regions should be deleted
 
       - There should only be one trap rasterization API.
 
@@ -79,11 +74,6 @@
         doing things 64-bits at a time is a net loss.  To quickly fix
         this, I suggest just using 32-bit datatypes by setting
         IC_SHIFT to 5 for all machines.
-
-  - Consider whether calling regions region16 is really such a great
-    idea. Vlad wants 32 bit regions for Cairo. This will break X server
-    ABI, but should otherwise be mostly harmless, though a
-    pixman_region_get_boxes16() may be useful.
 
   - Consider optimizing the 8/16 bit solid fills in pixman-util.c by
     storing more than one value at a time.
@@ -180,7 +170,18 @@
 
     What about color spaces such a linear vs. srGB etc.?
 
+
 done:
+
+- Consider whether calling regions region16 is really such a great
+  idea. Vlad wants 32 bit regions for Cairo. This will break X server
+  ABI, but should otherwise be mostly harmless, though a
+  pixman_region_get_boxes16() may be useful.
+
+- Altivec signal issue (Company has fix, there is also a patch by
+  dwmw2 in rawhide).
+
+- Behdad's MMX issue - see list
 
 - SSE2 issues:
     - Crashes in Mozilla because of unaligned stack. Possible fixes
