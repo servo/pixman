@@ -114,7 +114,7 @@ release-publish-message: $(sha1_tgz) $(md5_tgz) $(sha1_tbz2) $(md5_tbz2) ensure-
 	@echo ""
 	@echo "GPG signature:"
 	@echo "	$(RELEASE_CAIRO_URL)/$(gpg_file)"
-	@echo "	(signed by `getent passwd "$$USER" | cut -d: -f 5 | cut -d, -f 1`)"
+	@echo "	(signed by `git config --get user.name` <`git config --get user.email`>)"
 	@echo ""
 	@echo "Git:"
 	@echo "	git://git.freedesktop.org/git/pixman"

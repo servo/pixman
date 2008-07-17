@@ -37,16 +37,7 @@ Here are the steps to follow to create a new pixman release:
 
 	make GPGKEY=<your gpg key id> release-publish
 
-7) Increment pixman_micro to the next larger (odd) number in
-   configure.ac. Commit this change, and push all commits created
-   during this process using
-
-	git push --tags
-
-   You must use "--tags" here; otherwise the new tag will not
-   be pushed out. This is because technobable.
-
-8) Run 
+6) Run 
 
 	make release-publish-message
 
@@ -58,3 +49,14 @@ Here are the steps to follow to create a new pixman release:
    and 
 
 	xorg-announce@lists.freedesktop.org
+
+
+7) Increment pixman_micro to the next larger (odd) number in
+   configure.ac. Commit this change, and push all commits created
+   during this process using
+
+	git push --tags
+
+   You must use "--tags" here; otherwise the new tag will not
+   be pushed out. This is because technobabble.
+
