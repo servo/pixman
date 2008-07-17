@@ -52,7 +52,7 @@ typedef void (* CompositeFunc) (pixman_op_t,
 				int16_t, int16_t, int16_t, int16_t, int16_t, int16_t,
 				uint16_t, uint16_t);
 
-inline uint32_t
+static inline uint32_t
 fbOver (uint32_t src, uint32_t dest)
 {
     // dest = (dest * (255 - alpha)) / 255 + src
@@ -62,7 +62,7 @@ fbOver (uint32_t src, uint32_t dest)
     return dest;
 }
 
-uint32_t
+static uint32_t
 fbOver24 (uint32_t x, uint32_t y)
 {
     uint16_t  a = ~x >> 24;
@@ -75,7 +75,7 @@ fbOver24 (uint32_t x, uint32_t y)
     return m|n|o;
 }
 
-uint32_t
+static uint32_t
 fbIn (uint32_t x, uint8_t y)
 {
     uint16_t  a = y;
@@ -1108,7 +1108,7 @@ pixman_image_composite_rect  (pixman_op_t                   op,
 			      int16_t                       dest_y,
 			      uint16_t                      width,
 			      uint16_t                      height);
-void
+static void
 fbCompositeSolidFill (pixman_op_t op,
 		      pixman_image_t * pSrc,
 		      pixman_image_t * pMask,
