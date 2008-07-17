@@ -22,13 +22,15 @@ CFLAGS += -O2
 endif
 
 SOURCES = \
-	pixman-region.c				\
 	pixman-image.c					\
 	pixman-access.c					\
 	pixman-access-accessors.c			\
-	pixman-combine.c				\
+	pixman-region16.c		\
+	pixman-region32.c		\
 	pixman-compose.c				\
 	pixman-compose-accessors.c	\
+	pixman-combine32.c				\
+	pixman-combine64.c				\
 	pixman-pict.c					\
 	pixman-source.c					\
 	pixman-transformed.c				\
@@ -88,5 +90,16 @@ $(CFG)/%.obj: %.c
 $(CFG)/$(LIBRARY).lib: $(OBJECTS)
 	lib -NOLOGO -OUT:$@ $(OBJECTS) || exit 0
 
+pixman-combine32.c: combine.inc pixman-combine32.h combine.pl
+	perl ./combine.pl 8 < $< > $@ || ($(RM) $@; exit 1)
+pixman-combine32.h: combine.h.inc combine.pl
+	perl ./combine.pl 8 < $< > $@ || ($(RM) $@; exit 1)
+
+pixman-combine64.c: combine.inc pixman-combine64.h combine.pl
+	perl ./combine.pl 16 < $< > $@ || ($(RM) $@; exit 1)
+pixman-combine64.h: combine.h.inc combine.pl
+	perl ./combine.pl 16 < $< > $@ || ($(RM) $@; exit 1)
+
 clean_r:
 	@rm -f $(CFG)/*.obj $(CFG)/*.lib $(CFG)/*.pdb $(CFG)/*.ilk || exit 0
+	@rm -f $(CFG)/*.obj $(CFG)/*.lib $(CFG)/*.pdb $(CFG)/*.ilk pixman-combine32.c pixman-combine64.c || exit 0
