@@ -34,6 +34,11 @@
 #include "pixman-mmx.h"
 #include "pixman-vmx.h"
 #include "pixman-sse.h"
+#include "pixman-combine32.h"
+
+#ifdef __GNUC__
+#   define inline __inline__ __attribute__ ((__always_inline__))
+#endif
 
 #define FbFullMask(n)   ((n) == 32 ? (uint32_t)-1 : ((((uint32_t) 1) << n) - 1))
 
@@ -47,18 +52,14 @@ typedef void (* CompositeFunc) (pixman_op_t,
 				int16_t, int16_t, int16_t, int16_t, int16_t, int16_t,
 				uint16_t, uint16_t);
 
-uint32_t
-fbOver (uint32_t x, uint32_t y)
+inline uint32_t
+fbOver (uint32_t src, uint32_t dest)
 {
-    uint16_t  a = ~x >> 24;
-    uint16_t  t;
-    uint32_t  m,n,o,p;
+    // dest = (dest * (255 - alpha)) / 255 + src
+    uint32_t a = ~src >> 24; // 255 - alpha == 255 + (~alpha + 1) == ~alpha
+    FbByteMulAdd(dest, a, src);
 
-    m = FbOverU(x,y,0,a,t);
-    n = FbOverU(x,y,8,a,t);
-    o = FbOverU(x,y,16,a,t);
-    p = FbOverU(x,y,24,a,t);
-    return m|n|o|p;
+    return dest;
 }
 
 uint32_t
