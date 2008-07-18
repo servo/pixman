@@ -250,7 +250,7 @@ if test $have_sse2_intrinsics = yes ; then
 fi
 
 AC_MSG_RESULT($have_sse2_intrinsics)
-if test $enable_sse2 = yes && test $have_sse_intrinsics = no ; then
+if test $enable_sse2 = yes && test $have_sse2_intrinsics = no ; then
    AC_MSG_ERROR([SSE2 intrinsics not detected])
 fi
 
