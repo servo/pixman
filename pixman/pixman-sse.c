@@ -4425,11 +4425,11 @@ pixmanBltsse2 (uint32_t *src_bits,
 
         while (w >= 64)
         {
+            __m128i xmm0, xmm1, xmm2, xmm3;
+
             /* 128 bytes ahead */
             cachePrefetch (((__m128i*)s) + 8);
             cachePrefetch (((__m128i*)d) + 8);
-
-            __m128i xmm0, xmm1, xmm2, xmm3;
 
             xmm0 = load128Unaligned ((__m128i*)(s));
             xmm1 = load128Unaligned ((__m128i*)(s+16));
