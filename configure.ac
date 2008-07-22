@@ -224,7 +224,9 @@ CFLAGS="$CFLAGS -msse2 $SSE_CFLAGS"
 
 AC_COMPILE_IFELSE([
 #if defined(__GNUC__) && (__GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 2))
-#error "Need GCC >= 4.2 for SSE2 intrinsics"
+#   if !defined(__amd64__) && !defined(__x86_64__)
+#      error "Need GCC >= 4.2 for SSE2 intrinsics on x86"
+#   endif
 #endif
 #include <mmintrin.h>
 #include <xmmintrin.h>
