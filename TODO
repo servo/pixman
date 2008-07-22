@@ -2,8 +2,6 @@
 
   - SSE 2 issues:
 
-      - Commented-out uses of fbCompositeCopyAreasse2()
-
       - Use MM_HINT_NTA instead of MM_HINT_T0
 
       - Use of fbCompositeOver_x888x8x8888sse2()
@@ -172,6 +170,8 @@
 
 
 done:
+
+- Commented-out uses of fbCompositeCopyAreasse2()
 
 - Consider whether calling regions region16 is really such a great
   idea. Vlad wants 32 bit regions for Cairo. This will break X server
