@@ -128,10 +128,6 @@ dnl Check for MMX
 
 MMX_CFLAGS="-mmmx -Winline"
 
-if test "x$GCC" = "xyes"; then
-    MMX_CFLAGS="$MMX_CFLAGS --param inline-unit-growth=10000 --param large-function-growth=10000"
-fi
-
 have_mmx_intrinsics=no
 AC_MSG_CHECKING(whether to use MMX intrinsics)
 xserver_save_CFLAGS=$CFLAGS
@@ -212,10 +208,6 @@ dnl ===========================================================================
 dnl Check for SSE2
 
 SSE_CFLAGS="-mmmx -msse2 -Winline"
-
-if test "x$GCC" = "xyes"; then
-    SSE_CFLAGS="$SSE_CFLAGS --param inline-unit-growth=10000 --param large-function-growth=10000 --param  max-inline-insns-single=6000"
-fi
 
 have_sse2_intrinsics=no
 AC_MSG_CHECKING(whether to use SSE2 intrinsics)

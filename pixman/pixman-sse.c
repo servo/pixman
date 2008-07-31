@@ -43,6 +43,10 @@
 #define inline __forceinline
 #endif
 
+#ifdef __GNUC__
+#    define inline __inline__ __attribute__ ((__always_inline__))
+#endif
+
 /* -------------------------------------------------------------------------------------------------
  * Locals
  */
