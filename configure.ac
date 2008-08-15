@@ -67,7 +67,7 @@ AC_PROG_CC
 AC_PROG_LIBTOOL
 AC_CHECK_FUNCS([getisax])
 AC_C_BIGENDIAN
-
+AC_C_INLINE
 # 
 # We ignore pixman_major in the version here because the major version should
 # always be encoded in the actual library name. Ie., the soname is:
@@ -113,7 +113,7 @@ AC_MSG_CHECKING(for -fvisibility)
 AC_COMPILE_IFELSE([
 #if defined(__GNUC__) && (__GNUC__ >= 4)
 #else
-#error Need GCC 4.0 for visibility
+error Need GCC 4.0 for visibility
 #endif
 int main () { return 0; } 
 ], have_gcc4=yes)
