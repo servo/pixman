@@ -123,6 +123,21 @@ if test "x$have_gcc4" = "xyes"; then
 fi
 AC_MSG_RESULT($have_gcc4)
 
+have_sunstudio8=no
+AC_MSG_CHECKING([for -xldscope (Sun compilers)])
+AC_COMPILE_IFELSE([
+#if defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
+#else
+#error Need Sun Studio 8 for visibility
+#endif
+int main () { return 0; } 
+], have_sunstudio8=yes)
+
+if test "x$have_sunstudio8" = "xyes"; then
+   CFLAGS="$CFLAGS -xldscope=hidden"
+fi
+AC_MSG_RESULT($have_sunstudio8)
+
 dnl ===========================================================================
 dnl Check for MMX
 
