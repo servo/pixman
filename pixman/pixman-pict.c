@@ -33,7 +33,7 @@
 #include "pixman-private.h"
 #include "pixman-mmx.h"
 #include "pixman-vmx.h"
-#include "pixman-sse.h"
+#include "pixman-sse2.h"
 #include "pixman-combine32.h"
 
 #ifdef __GNUC__
