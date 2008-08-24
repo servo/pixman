@@ -1,6 +1,3 @@
-  - Rename "SSE" to "MMX_EXTENSIONS"
-  - Be consistent about calling sse2 sse2
-
   - SSE 2 issues:
 
       - Use MM_HINT_NTA instead of MM_HINT_T0
@@ -171,6 +168,10 @@
 
 
 done:
+
+- Be consistent about calling sse2 sse2
+
+- Rename "SSE" to "MMX_EXTENSIONS". (Deleted mmx extensions).
 
 - Commented-out uses of fbCompositeCopyAreasse2()
 

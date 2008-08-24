@@ -183,12 +183,12 @@ AM_CONDITIONAL(USE_MMX, test $have_mmx_intrinsics = yes)
 dnl ===========================================================================
 dnl Check for SSE2
 
-SSE_CFLAGS="-mmmx -msse2 -Winline"
+SSE2_CFLAGS="-mmmx -msse2 -Winline"
 
 have_sse2_intrinsics=no
 AC_MSG_CHECKING(whether to use SSE2 intrinsics)
 xserver_save_CFLAGS=$CFLAGS
-CFLAGS="$CFLAGS -msse2 $SSE_CFLAGS"
+CFLAGS="$CFLAGS -msse2 $SSE2_CFLAGS"
 
 AC_COMPILE_IFELSE([
 #if defined(__GNUC__) && (__GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 2))
@@ -228,7 +228,7 @@ AM_CONDITIONAL(USE_SSE2, test $have_sse2_intrinsics = yes)
 
 dnl ========================================================
 AC_SUBST(MMX_CFLAGS)
-AC_SUBST(SSE_CFLAGS)
+AC_SUBST(SSE2_CFLAGS)
 
 dnl Check for VMX/Altivec
 if test -n "`$CC -v 2>&1 | grep version | grep Apple`"; then
