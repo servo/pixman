@@ -180,45 +180,6 @@ fi
 
 AM_CONDITIONAL(USE_MMX, test $have_mmx_intrinsics = yes)
 
-dnl =======================================================
-
-dnl GCC 4.2 when compiling with -msse will generate SSE instructions
-dnl on its own.  This means anything compiled with -mss can only be
-dnl run after a runtime check for SSE.  Unfortunately, since we still
-dnl need to support MMX-but-not-SSE (such as the OLPC), this means we
-dnl can only use SSE when compiling for x86-64 (where SSE is always
-dnl supported).
-
-have_sse_intrinsics=no
-AC_MSG_CHECKING(whether to use SSE intrinsics)
-xserver_save_CFLAGS=$CFLAGS
-CFLAGS="$CFLAGS -msse $MMX_CFLAGS"
-
-AC_COMPILE_IFELSE([
-#if defined(__GNUC__) && (__GNUC__ < 3 || (__GNUC__ == 3 && __GNUC_MINOR__ < 4))
-#error "Need GCC >= 3.4 for SSE intrinsics"
-#endif
-#if !defined(__amd64__) && !defined(__x86_64__)
-#error "Need x86-64 for SSE"
-#endif
-#include <mmintrin.h>
-#include <xmmintrin.h>
-int main () {
-    __m64 v = _mm_cvtsi32_si64 (1);
-    v = _mm_shuffle_pi16 (v, _MM_SHUFFLE(3, 3, 3, 3));
-    return _mm_cvtsi64_si32 (v);
-}], have_sse_intrinsics=yes)
-CFLAGS=$xserver_save_CFLAGS
-AC_MSG_RESULT($have_sse_intrinsics)
-
-if test $have_sse_intrinsics = yes ; then
-   AC_DEFINE(USE_SSE, 1, [use SSE compiler intrinsics])
-   MMX_CFLAGS="-msse $MMX_CFLAGS"
-fi
-
-AM_CONDITIONAL(USE_SSE, test $have_sse_intrinsics = yes)
-
-
 dnl ===========================================================================
 dnl Check for SSE2
 

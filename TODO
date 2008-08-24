@@ -1,4 +1,5 @@
   - Rename "SSE" to "MMX_EXTENSIONS"
+  - Be consistent about calling sse2 sse2
 
   - SSE 2 issues:
 
