@@ -2087,7 +2087,7 @@ coreCombineAddCsse2 (uint32_t *pd, uint32_t *ps, uint32_t *pm, int w)
 }
 
 /* -------------------------------------------------------------------------------------------------
- * fbComposeSetupSSE
+ * fbComposeSetupSSE2
  */
 static inline __m64
 createMask_16_64 (uint16_t mask)
@@ -2277,7 +2277,7 @@ sse2CombineAddC (uint32_t *dst, uint32_t *src, uint32_t *mask, int width)
 }
 
 void
-fbComposeSetupSSE(void)
+fbComposeSetupSSE2(void)
 {
     static pixman_bool_t initialized = FALSE;
 
@@ -2285,7 +2285,7 @@ fbComposeSetupSSE(void)
 	return;
     
     /* check if we have SSE2 support and initialize accordingly */
-    if (pixman_have_sse())
+    if (pixman_have_sse2())
     {
         /* SSE2 constants */
         Mask565r  = createMask_2x32_128 (0x00f80000, 0x00f80000);
