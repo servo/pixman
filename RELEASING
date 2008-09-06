@@ -37,7 +37,7 @@ Here are the steps to follow to create a new pixman release:
 
    and publish the tar files by running 
 
-	make GPGKEY=<your gpg key id> release-publish
+	make PREV=<last version> GPGKEY=<your gpg key id> release-publish
 
 6) Run 
 
