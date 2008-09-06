@@ -35,6 +35,10 @@
         to indicate the actual depth. That way PIXMAN_x4c4 and PIXMAN_c8
 	won't collide.
 
+  - Maybe bite the bullet and make configure.ac generate a pixman-types.h
+    file that can be included from pixman.h to avoid the #ifdef magic
+    in pixman.h
+
   - Make pixman_region_point_in() survive a NULL box, then fix up
     pixman-compose.c
 
