@@ -128,7 +128,7 @@ AC_MSG_CHECKING([for -xldscope (Sun compilers)])
 AC_COMPILE_IFELSE([
 #if defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
 #else
-#error Need Sun Studio 8 for visibility
+error Need Sun Studio 8 for visibility
 #endif
 int main () { return 0; } 
 ], have_sunstudio8=yes)
@@ -149,7 +149,7 @@ xserver_save_CFLAGS=$CFLAGS
 CFLAGS="$CFLAGS $MMX_CFLAGS"
 AC_COMPILE_IFELSE([
 #if defined(__GNUC__) && (__GNUC__ < 3 || (__GNUC__ == 3 && __GNUC_MINOR__ < 4))
-#error "Need GCC >= 3.4 for MMX intrinsics"
+error "Need GCC >= 3.4 for MMX intrinsics"
 #endif
 #include <mmintrin.h>
 int main () {
@@ -243,7 +243,7 @@ xserver_save_CFLAGS=$CFLAGS
 CFLAGS="$CFLAGS $VMX_CFLAGS"
 AC_COMPILE_IFELSE([
 #if defined(__GNUC__) && (__GNUC__ < 3 || (__GNUC__ == 3 && __GNUC_MINOR__ < 4))
-#error "Need GCC >= 3.4 for sane altivec support"
+error "Need GCC >= 3.4 for sane altivec support"
 #endif
 #include <altivec.h>
 int main () {
