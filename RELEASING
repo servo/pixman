@@ -17,7 +17,9 @@ Here are the steps to follow to create a new pixman release:
 
 	make PREV=<last version> release-check
 
-   and fix things until it passes.
+   and fix things until it passes. If your freedesktop username is
+   different from your local username, then also set the variable
+   USERNAME on the commandline.
 
    A very useful thing to do is to run the cairo test suite
    against pixman. This can be done by running the following
