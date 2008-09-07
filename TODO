@@ -44,6 +44,11 @@
 
       - Possibly look into inlining the fetch functions
 
+  - There is a bug with source clipping demonstrated by clip-test in the
+    test directory. If we interprete source clipping as given in
+    destination coordinates, which is probably the only sane choice,
+    then the result should have two red bars down the sides.
+    
   - Test suite
 
   - Add a general way of dealing with architecture specific
