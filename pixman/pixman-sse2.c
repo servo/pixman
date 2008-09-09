@@ -244,9 +244,11 @@ invertColors_2x128 (__m128i dataLo, __m128i dataHi, __m128i* invLo, __m128i* inv
 static inline void
 over_2x128 (__m128i* srcLo, __m128i* srcHi, __m128i* alphaLo, __m128i* alphaHi, __m128i* dstLo, __m128i* dstHi)
 {
-    negate_2x128 (*alphaLo, *alphaHi, alphaLo, alphaHi);
+    __m128i t1, t2;
 
-    pixMultiply_2x128 (dstLo, dstHi, alphaLo, alphaHi, dstLo, dstHi);
+    negate_2x128 (*alphaLo, *alphaHi, &t1, &t2);
+
+    pixMultiply_2x128 (dstLo, dstHi, &t1, &t2, dstLo, dstHi);
 
     *dstLo = _mm_adds_epu8 (*srcLo, *dstLo);
     *dstHi = _mm_adds_epu8 (*srcHi, *dstHi);
