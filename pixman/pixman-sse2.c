@@ -1,4 +1,3 @@
-#include <stdio.h>
 /*
  * Copyright © 2008 Rodrigo Kumpera
  * Copyright © 2008 André Tupinambá
