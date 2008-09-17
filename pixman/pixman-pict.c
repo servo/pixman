@@ -34,6 +34,7 @@
 #include "pixman-mmx.h"
 #include "pixman-vmx.h"
 #include "pixman-sse2.h"
+#include "pixman-arm.h"
 #include "pixman-combine32.h"
 
 #ifdef __GNUC__
@@ -1479,6 +1480,26 @@ static const FastPathInfo vmx_fast_paths[] =
 };
 #endif
 
+#ifdef USE_ARM
+static const FastPathInfo arm_fast_paths[] =
+{
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,     PIXMAN_a8r8g8b8, fbCompositeSrc_8888x8888arm,      0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,	PIXMAN_x8r8g8b8, fbCompositeSrc_8888x8888arm,	   0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,	PIXMAN_a8b8g8r8, fbCompositeSrc_8888x8888arm,	   0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,	PIXMAN_x8b8g8r8, fbCompositeSrc_8888x8888arm,	   0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8,       PIXMAN_a8r8g8b8, fbCompositeSrc_8888x8x8888arm,    NEED_SOLID_MASK },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8,       PIXMAN_x8r8g8b8, fbCompositeSrc_8888x8x8888arm,	   NEED_SOLID_MASK },
+
+    { PIXMAN_OP_ADD, PIXMAN_a8,        PIXMAN_null,     PIXMAN_a8,       fbCompositeSrcAdd_8000x8000arm,   0 },
+
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_a8r8g8b8, fbCompositeSolidMask_nx8x8888arm,     0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_x8r8g8b8, fbCompositeSolidMask_nx8x8888arm,     0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_a8b8g8r8, fbCompositeSolidMask_nx8x8888arm,     0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_x8b8g8r8, fbCompositeSolidMask_nx8x8888arm,     0 },
+
+    { PIXMAN_OP_NONE },
+};
+#endif
 
 static const FastPathInfo c_fast_paths[] =
 {
@@ -1829,6 +1850,12 @@ pixman_image_composite (pixman_op_t      op,
 	if (!info && pixman_have_vmx())
 	    info = get_fast_path (vmx_fast_paths, op, pSrc, pMask, pDst, pixbuf);
 #endif
+
+#ifdef USE_ARM
+	if (!info && pixman_have_arm())
+	    info = get_fast_path (arm_fast_paths, op, pSrc, pMask, pDst, pixbuf);
+#endif
+
         if (!info)
 	    info = get_fast_path (c_fast_paths, op, pSrc, pMask, pDst, pixbuf);
 

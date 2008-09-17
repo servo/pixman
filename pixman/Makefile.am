@@ -79,3 +79,15 @@ libpixman_sse2_la_LIBADD = $(DEP_LIBS)
 libpixman_1_la_LIBADD += libpixman-sse2.la
 endif
 
+# arm code
+if USE_ARM
+noinst_LTLIBRARIES += libpixman-arm.la
+libpixman_arm_la_SOURCES = \
+	pixman-arm.c \
+	pixman-arm.h
+libpixman_arm_la_CFLAGS = $(DEP_CFLAGS) $(ARM_CFLAGS)
+libpixman_arm_la_LIBADD = $(DEP_LIBS)
+libpixman_1_la_LIBADD += libpixman-arm.la
+endif
+
+

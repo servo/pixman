@@ -277,6 +277,44 @@ AC_SUBST(VMX_CFLAGS)
 
 AM_CONDITIONAL(USE_VMX, test $have_vmx_intrinsics = yes)
 
+dnl Check for ARM
+
+have_armv6_simd=no
+AC_MSG_CHECKING(whether to use ARM assembler)
+xserver_save_CFLAGS=$CFLAGS
+CFLAGS="$CFLAGS $ARM_CFLAGS"
+AC_COMPILE_IFELSE([
+int main () {
+    asm("uqadd8 r1, r1, r2");
+    return 0;
+}], have_armv6_simd=yes)
+CFLAGS=$xserver_save_CFLAGS
+
+AC_ARG_ENABLE(arm,
+   [AC_HELP_STRING([--disable-arm],
+                   [disable ARM fast paths])],
+   [enable_arm=$enableval], [enable_arm=auto])
+
+if test $enable_arm = no ; then
+   have_armv6_simd=disabled
+fi
+
+if test $have_armv6_simd = yes ; then
+   AC_DEFINE(USE_ARM, 1, [use ARM compiler intrinsics])
+else
+   ARM_CFLAGS=
+fi
+
+AC_MSG_RESULT($have_armv6_simd)
+if test $enable_arm = yes && test $have_armv6_simd = no ; then
+   AC_MSG_ERROR([ARM intrinsics not detected])
+fi
+
+AC_SUBST(ARM_CFLAGS)
+
+AM_CONDITIONAL(USE_ARM, test $have_armv6_simd = yes)
+
+
 AC_ARG_ENABLE(gtk,
    [AC_HELP_STRING([--enable-gtk],
                    [enable tests using GTK+ [default=auto]])],
