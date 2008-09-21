@@ -1428,7 +1428,7 @@ static const FastPathInfo mmx_fast_paths[] =
     { PIXMAN_OP_SRC, PIXMAN_x8r8g8b8,  PIXMAN_null,	PIXMAN_x8r8g8b8, fbCompositeCopyAreammx, 0 },
     { PIXMAN_OP_SRC, PIXMAN_x8b8g8r8,  PIXMAN_null,	PIXMAN_x8b8g8r8, fbCompositeCopyAreammx, 0 },
     { PIXMAN_OP_SRC, PIXMAN_r5g6b5,    PIXMAN_null,     PIXMAN_r5g6b5,   fbCompositeCopyAreammx, 0 },
-    { PIXMAN_OP_SRC, PIXMAN_b5g6r5,    PIXMAN_null,     PIXMAN_b5g6r5,   fbCompositeCopyAreammx, 0 },
+    { PIXMAN_OP_SRC, PIXMAN_b5g6r5,    PIXMAN_null,     PIXMAN_b5g6r5,   fbCompositeCopyAreammx, 0 },    
     { PIXMAN_OP_IN,  PIXMAN_a8,        PIXMAN_null,     PIXMAN_a8,       fbCompositeIn_8x8mmx,   0 },
     { PIXMAN_OP_IN,  PIXMAN_solid,     PIXMAN_a8,	PIXMAN_a8,	 fbCompositeIn_nx8x8mmx, 0 },
     { PIXMAN_OP_NONE },
@@ -1501,6 +1501,8 @@ static const FastPathInfo sse2_fast_paths[] =
 
     { PIXMAN_OP_SRC, PIXMAN_a8r8g8b8,  PIXMAN_null,     PIXMAN_a8r8g8b8, fbCompositeCopyAreasse2,               0 },
     { PIXMAN_OP_SRC, PIXMAN_a8b8g8r8,  PIXMAN_null,     PIXMAN_a8b8g8r8, fbCompositeCopyAreasse2,               0 },
+    { PIXMAN_OP_SRC, PIXMAN_a8r8g8b8,  PIXMAN_null,     PIXMAN_x8r8g8b8, fbCompositeCopyAreasse2,		0 },
+    { PIXMAN_OP_SRC, PIXMAN_a8b8g8r8,  PIXMAN_null,	PIXMAN_x8b8g8r8, fbCompositeCopyAreasse2,		0 },
     { PIXMAN_OP_SRC, PIXMAN_x8r8g8b8,  PIXMAN_null,     PIXMAN_x8r8g8b8, fbCompositeCopyAreasse2,               0 },
     { PIXMAN_OP_SRC, PIXMAN_x8b8g8r8,  PIXMAN_null,     PIXMAN_x8b8g8r8, fbCompositeCopyAreasse2,               0 },
     { PIXMAN_OP_SRC, PIXMAN_r5g6b5,    PIXMAN_null,     PIXMAN_r5g6b5,   fbCompositeCopyAreasse2,               0 },
