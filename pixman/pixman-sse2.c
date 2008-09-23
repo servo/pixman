@@ -2357,11 +2357,11 @@ fbComposeSetupSSE2(void)
         pixman_composeFunctions.combineC[PIXMAN_OP_ADD] = sse2CombineAddC;
 
         pixman_composeFunctions.combineMaskU = sse2CombineMaskU;
+
+	_mm_empty();
     }
 
     initialized = TRUE;
-
-    _mm_empty();
 }
 
 
