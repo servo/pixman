@@ -368,6 +368,18 @@ typedef enum
     PIXMAN_OP_CONJOINT_ATOP_REVERSE	= 0x2a,
     PIXMAN_OP_CONJOINT_XOR		= 0x2b,
 
+    PIXMAN_OP_MULTIPLY                  = 0x30,
+    PIXMAN_OP_SCREEN                    = 0x31,
+    PIXMAN_OP_OVERLAY                   = 0x32,
+    PIXMAN_OP_DARKEN                    = 0x33,
+    PIXMAN_OP_LIGHTEN                   = 0x34,
+    PIXMAN_OP_COLOR_DODGE               = 0x35,
+    PIXMAN_OP_COLOR_BURN                = 0x36,
+    PIXMAN_OP_HARD_LIGHT                = 0x37,
+    PIXMAN_OP_SOFT_LIGHT                = 0x38,
+    PIXMAN_OP_DIFFERENCE                = 0x39,
+    PIXMAN_OP_EXCLUSION                 = 0x3a,
+
     PIXMAN_OP_NONE,
     PIXMAN_OP_LAST = PIXMAN_OP_NONE
 } pixman_op_t;

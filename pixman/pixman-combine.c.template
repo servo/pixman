@@ -2,11 +2,16 @@
 #include <config.h>
 #endif
 
+#include <math.h>
 #include <string.h>
 
 #include "pixman-private.h"
 
 #include "pixman-combine.h"
+
+#define Red(x) (((x) >> R_SHIFT) & MASK)
+#define Green(x) (((x) >> G_SHIFT) & MASK)
+#define Blue(x) ((x) & MASK)
 
 /*
  * There are two ways of handling alpha -- either as a single unified value or
@@ -251,6 +256,377 @@ fbCombineSaturateU (pixman_implementation_t *imp, pixman_op_t op,
     }
 }
 
+
+/* Multiply
+ *
+ * Dca' = Sca.Dca + Sca.(1 - Da) + Dca.(1 - Sa)
+ * Da'  = Sa.Da + Sa.(1 - Da) + Da.(1 - Sa)
+ *      = Sa + Da - Sa.Da 
+ */
+
+static void
+fbCombineMultiplyU (pixman_implementation_t *imp, pixman_op_t op,
+		    comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+{
+    int i;
+    for (i = 0; i < width; ++i) {
+        comp4_t s = combineMask (src, mask, i);
+        comp4_t d = *(dest + i);
+	comp4_t ss = s;
+        comp4_t src_ia = Alpha (~s);
+	comp4_t dest_ia = Alpha (~d);
+
+	FbByteAddMul (ss, dest_ia, d, src_ia);
+	FbByteMulC (d, s);
+	FbByteAdd (d, ss); 	
+	*(dest + i) = d;
+    }
+}
+
+/* Screen
+ *
+ * Dca' = (Sca.Da + Dca.Sa - Sca.Dca) + Sca.(1 - Da) + Dca.(1 - Sa)
+ *      = Sca + Dca - Sca.Dca
+ * Da'  = Sa + Da - Sa.Da 
+ */
+
+static void
+fbCombineScreenU (pixman_implementation_t *imp, pixman_op_t op,
+		  comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+{
+    int i;
+    for (i = 0; i < width; ++i) {
+        comp4_t s = combineMask (src, mask, i);
+        comp4_t d = *(dest + i);
+	comp4_t p = s;
+	comp4_t a, r, g, b;
+
+	FbByteMulC (p, d);
+
+	a = Alpha (s)	+ Alpha (d) - Alpha (p);
+	r = Red(s)	+ Red (d)   - Red (p);
+	g = Green (s)	+ Green (d) - Green (p);
+	b = Blue (s)	+ Blue (d)  - Blue (p);
+
+	/* no clamping required, values don't overflow */
+	*(dest + i) = (a << A_SHIFT) | (r << R_SHIFT) | (g << G_SHIFT) | b;
+    }
+}
+
+#define FbBlendLoop				    \
+    int i;					    \
+    for (i = 0; i < width; i++)	{		    \
+        comp4_t s = combineMask (src, mask, i);     \
+	comp4_t d = *(dest + i);		    \
+	comp4_t a, r, g, b;			    \
+	comp4_t sada, sca, dca, sa, da, isa, ida;   \
+						    \
+	da = Alpha (d);				    \
+	sa = Alpha (s);				    \
+	ida = Alpha (~d);			    \
+	isa = Alpha (~s);			    \
+	sada = sa * da;				    \
+						    \
+	a = sa + da - DivOne (sada);		    \
+						    \
+	sca = Red (s);				    \
+	dca = Red (d);				    \
+	FbBlendOp (r);				    \
+						    \
+	sca = Green (s);			    \
+	dca = Green (d);			    \
+	FbBlendOp (g);				    \
+						    \
+	sca = Blue (s);				    \
+	dca = Blue (d);				    \
+	FbBlendOp (b);				    \
+						    \
+	*(dest + i) = (a << 24)			    \
+	    | ((r & MASK) << R_SHIFT)               \
+	    | ((g & MASK) << G_SHIFT)		    \
+	    |  (b & MASK);			    \
+    } while (0);
+
+/* Overlay
+ *
+ * if 2.Dca < Da
+ *     Dca' = 2.Sca.Dca + Sca.(1 - Da) + Dca.(1 - Sa)
+ *   otherwise
+ *     Dca' = Sa.Da - 2.(Da - Dca).(Sa - Sca) + Sca.(1 - Da) + Dca.(1 - Sa)
+ * Da' = Sa + Da - Sa.Da
+ */
+
+#define FbBlendOp(rca)							\
+    do {								\
+	if (2 * dca  < da)						\
+	    rca = 2 * sca * dca;					\
+	else								\
+	    rca = sada - 2 * (da - dca) * (sa - sca);			\
+	rca += sca * ida + dca * isa;					\
+	rca = DivOne (rca);						\
+    } while (0);
+
+static void
+fbCombineOverlayU (pixman_implementation_t *imp, pixman_op_t op,
+		   comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+{
+    FbBlendLoop
+}
+
+#undef FbBlendOp
+
+/* Darken
+ *
+ * Dca' = min(Sca.Da, Dca.Sa) + Sca.(1 - Da) + Dca.(1 - Sa)
+ * Da'  = Sa + Da - Sa.Da 
+ */
+
+#define FbBlendOp(rca)							\
+    do {								\
+	rca = sca * da;							\
+	if (rca > dca * sa)						\
+	    rca = dca * sa;						\
+	rca += sca * ida + dca * isa;					\
+	rca = DivOne (rca);						\
+    } while (0);
+
+static void
+fbCombineDarkenU (pixman_implementation_t *imp, pixman_op_t op,
+		  comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+{
+    FbBlendLoop
+}
+
+#undef FbBlendOp
+
+/* Lighten
+ *
+ * Dca' = max(Sca.Da, Dca.Sa) + Sca.(1 - Da) + Dca.(1 - Sa)
+ * Da'  = Sa + Da - Sa.Da
+ */
+
+#define FbBlendOp(rca)							\
+    do {								\
+	rca = sca * da;							\
+	if (rca < dca * sa)						\
+	    rca = dca * sa;						\
+	rca += sca * ida + dca * isa;					\
+	rca = DivOne (rca);						\
+    } while (0);
+
+static void
+fbCombineLightenU (pixman_implementation_t *imp, pixman_op_t op,
+		   comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+{
+    FbBlendLoop
+}
+
+#undef FbBlendOp
+
+/* Color dodge
+ *
+ * if Sca.Da + Dca.Sa >= Sa.Da
+ *   Dca' = Sa.Da + Sca.(1 - Da) + Dca.(1 - Sa)
+ * otherwise
+ *   Dca' = Dca.Sa/(1-Sca/Sa) + Sca.(1 - Da) + Dca.(1 - Sa)
+ *
+ * Da'  = Sa + Da - Sa.Da
+ */ 
+
+#define FbBlendOp(rca)							\
+    do {								\
+	if ((sca * da + dca * sa >= sada) || (sa == sca))		\
+	    rca = sada; 						\
+	else 								\
+	    rca = sa * sa * dca / (sa - sca);				\
+	rca += sca * ida + dca * isa;					\
+	rca = DivOne (rca);						\
+    } while (0);
+
+static void
+fbCombineColorDodgeU (pixman_implementation_t *imp, pixman_op_t op,
+		      comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+{
+    FbBlendLoop
+}
+
+#undef FbBlendOp
+
+/* Color burn
+ *
+ * if Sca.Da + Dca.Sa <= Sa.Da
+ *   Dca' = Sca.(1 - Da) + Dca.(1 - Sa)
+ * otherwise
+ *   Dca' = Sa.(Sca.Da + Dca.Sa - Sa.Da)/Sca + Sca.(1 - Da) + Dca.(1 - Sa)
+ *
+ * Da'  = Sa + Da - Sa.Da
+ */
+
+#define FbBlendOp(rca)							\
+    do {								\
+	if ((sca * da + dca * sa <= sada) || (sca == 0))		\
+	    rca = sca * ida + dca * isa;				\
+	else 								\
+	    rca = sa * (sca * da + sa * dca - sada) / sca		\
+		   + sca * ida						\
+		   + dca * isa ;					\
+	rca = DivOne (rca);						\
+    } while (0);
+
+static void
+fbCombineColorBurnU (pixman_implementation_t *imp, pixman_op_t op,
+		     comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+{
+    FbBlendLoop
+}
+
+#undef FbBlendOp
+
+/* Hard light
+ *
+ * if 2.Sca < Sa
+ *   Dca' = 2.Sca.Dca + Sca.(1 - Da) + Dca.(1 - Sa)
+ * otherwise
+ *   Dca' = Sa.Da - 2.(Da - Dca).(Sa - Sca) + Sca.(1 - Da) + Dca.(1 - Sa)
+ *
+ * Da'  = Sa + Da - Sa.Da
+ */
+
+#define FbBlendOp(rca)							\
+    do {								\
+	if (2 * sca < sa)						\
+	    rca = 2 * sca * dca;					\
+	else 								\
+	    rca = sada - 2 * (da - dca) * (sa - sca);			\
+	rca += sca * ida + dca * isa;					\
+	rca = DivOne (rca);						\
+    } while (0);
+
+static void
+fbCombineHardLightU (pixman_implementation_t *imp, pixman_op_t op,
+		     comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+{
+    FbBlendLoop
+}
+
+#undef FbBlendOp
+
+/* Soft light
+ *
+ * original definition (taken from PDF spec):
+ * 
+ * if (Sc <= 0.5)
+ *   Dc' = Dc - ( 1 - 2 . Sc ) . Dc . ( 1 - Dc )
+ * else
+ *   Dc' = Dc + ( 2 . Sc - 1 ) . ( F(Dc) – Dc )
+ *
+ * with
+ * if (x < 0.25)
+ *   F(x) = ( ( 16 . x - 12 ) . x + 4 ) . x
+ * else
+ *   F(x) = SQRT (x)
+ *
+ * ==> (taken from SVG spec)
+ *
+ * if (2.Sca <= Sa)
+ *   Dca' = Dca.(Sa - (1 - Dca/Da).(2.Sca - Sa)) + Sca.(1 - Da) + Dca.(1 - Sa) 
+ * otherwise if Dca.8 <= Da
+ *   Dca' = Dca.(Sa - (1 - Dca/Da).(2.Sca - Sa).(3 - 8.Dca/Da)) + Sc.(1 - Da) + Dca.(1 - Sa)
+ * otherwise
+ *   Dca' = (Dca.Sa + (SQRT (Dca/Da).Da - Dca).(2.Sca - Sa)) + Sca.(1 - Da) + Dca.(1 - Sa)
+ *   
+ * ==> (used here)
+ * if (2.Sca <= Sa)
+ *   Dca' = Dca.(Sa - (1 - Dca/Da).(2.Sca - Sa))
+ * otherwise if Dca.8 <= Da
+ *   Dca' = Dca.(Sa - (1 - Dca/Da).(2.Sca - Sa).(3 - 8.Dca/Da))
+ * otherwise
+ *   Dca' = (Dca.Sa + (SQRT (Dca/Da).Da - Dca).(2.Sca - Sa))
+ * Dca' += Sca.(1 - Da) + Dca.(1 - Sa);
+ *
+ * Da'  = Sa + Da - Sa.Da
+ */
+
+#define FbBlendOp(rca)									\
+    do {										\
+	if (2 * sca < sa) { 								\
+	    if (dca == da || da == 0)							\
+	    	rca = dca * sa;								\
+	    else 									\
+		rca = dca * (sa - (da - dca) * (2 * sca + sa) / da);			\
+	} else if (da == 0) {								\
+	    rca = 0;									\
+	} else if (8 * dca <= da) { 			      				\
+	    int tmp = dca * (sa - (da - dca) * (2 * sca - sa) / da * (3 * da - 8 * dca) / da);	\
+	    rca = tmp < 0 ? -tmp : tmp;	  						\
+        } else {									\
+	    rca = dca * sa + ((comp4_t) (sqrt (dca * da) - dca)) * (2 * sca - sa);    	\
+	}										\
+	rca += sca * ida + dca * isa;							\
+	rca = DivOne (rca);		   						\
+    } while (0);
+
+static void
+fbCombineSoftLightU (pixman_implementation_t *imp, pixman_op_t op,
+		     comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+{
+    FbBlendLoop
+}
+
+#undef FbBlendOp
+
+/* Difference
+ *
+ * Dca' = abs(Dca.Sa - Sca.Da) + Sca.(1 - Da) + Dca.(1 - Sa)
+ *	= Sca + Dca - 2.min(Sca.Da, Dca.Sa)
+ *
+ * Da'  = Sa + Da - Sa.Da
+ */
+
+#define FbBlendOp(rca)							\
+    do {								\
+	comp4_t dcasa = dca * sa;					\
+	rca = sca * da;							\
+	if (rca < dcasa)						\
+	    rca = dcasa - rca;						\
+	else 								\
+	    rca -= dcasa;						\
+	rca += sca * ida + dca * isa;					\
+	rca = DivOne (rca);						\
+    } while (0);
+
+static void
+fbCombineDifferenceU (pixman_implementation_t *imp, pixman_op_t op,
+		      comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+{
+    FbBlendLoop
+}
+
+#undef FbBlendOp
+
+/* Exclusion
+ *
+ * Dca' = (Sca.Da + Dca.Sa - 2.Sca.Dca) + Sca.(1 - Da) + Dca.(1 - Sa)
+ *
+ * Da'  = Sa + Da - Sa.Da
+ */
+
+#define FbBlendOp(rca)							\
+    do {								\
+	rca = dca * MASK + sca * (MASK - 2 * dca); 		   	\
+	rca = DivOne (rca);						\
+    } while (0);
+
+static void
+fbCombineExclusionU (pixman_implementation_t *imp, pixman_op_t op,
+		     comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+{
+    FbBlendLoop
+}
+
+#undef FbBlendOp
+
+#undef FbBlendLoop
 
 /*
  * All of the disjoint composing functions
@@ -1297,6 +1673,18 @@ _pixman_setup_combiner_functions_width (pixman_implementation_t *imp)
     imp->combine_width[PIXMAN_OP_CONJOINT_ATOP_REVERSE] = fbCombineConjointAtopReverseU;
     imp->combine_width[PIXMAN_OP_CONJOINT_XOR] = fbCombineConjointXorU;
 
+    imp->combine_width[PIXMAN_OP_MULTIPLY] = fbCombineMultiplyU;
+    imp->combine_width[PIXMAN_OP_SCREEN] = fbCombineScreenU;
+    imp->combine_width[PIXMAN_OP_OVERLAY] = fbCombineOverlayU;
+    imp->combine_width[PIXMAN_OP_DARKEN] = fbCombineDarkenU;
+    imp->combine_width[PIXMAN_OP_LIGHTEN] = fbCombineLightenU;
+    imp->combine_width[PIXMAN_OP_COLOR_DODGE] = fbCombineColorDodgeU;
+    imp->combine_width[PIXMAN_OP_COLOR_BURN] = fbCombineColorBurnU;
+    imp->combine_width[PIXMAN_OP_HARD_LIGHT] = fbCombineHardLightU;
+    imp->combine_width[PIXMAN_OP_SOFT_LIGHT] = fbCombineSoftLightU;
+    imp->combine_width[PIXMAN_OP_DIFFERENCE] = fbCombineDifferenceU;
+    imp->combine_width[PIXMAN_OP_EXCLUSION] = fbCombineExclusionU;
+
     /* Component alpha combiners */
     imp->combine_width_ca[PIXMAN_OP_CLEAR] = fbCombineClearC;
     imp->combine_width_ca[PIXMAN_OP_SRC] = fbCombineSrcC;
@@ -1341,3 +1729,4 @@ _pixman_setup_combiner_functions_width (pixman_implementation_t *imp)
     imp->combine_width_ca[PIXMAN_OP_CONJOINT_ATOP_REVERSE] = fbCombineConjointAtopReverseC;
     imp->combine_width_ca[PIXMAN_OP_CONJOINT_XOR] = fbCombineConjointXorC;
 }
+

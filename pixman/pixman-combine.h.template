@@ -29,6 +29,8 @@
 #define Add(x,y,i,t)   ((t) = GetComp(x,i) + GetComp(y,i),              \
                         (comp4_t) ((comp1_t) ((t) | (0 - ((t) >> G_SHIFT)))) << (i))
 
+#define DivOne(x)      (((x) + ONE_HALF + (((x) + ONE_HALF) >> G_SHIFT)) >> G_SHIFT)
+
 /*
   The methods below use some tricks to be able to do two color
   components at the same time.
