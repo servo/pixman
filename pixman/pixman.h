@@ -379,6 +379,8 @@ typedef enum
     PIXMAN_OP_SOFT_LIGHT                = 0x38,
     PIXMAN_OP_DIFFERENCE                = 0x39,
     PIXMAN_OP_EXCLUSION                 = 0x3a,
+    PIXMAN_OP_SUBTRACT			= 0x3b,
+    PIXMAN_OP_INVERT			= 0x3c,
 
     PIXMAN_OP_NONE,
     PIXMAN_OP_LAST = PIXMAN_OP_NONE

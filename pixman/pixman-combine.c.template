@@ -628,6 +628,64 @@ fbCombineExclusionU (pixman_implementation_t *imp, pixman_op_t op,
 
 #undef FbBlendLoop
 
+static FASTCALL void
+fbCombineSubtractU (pixman_implementation_t *imp, pixman_op_t op,
+		    comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+{
+    int i;
+
+#define Subtract(res, Color)						\
+    do {								\
+      comp1_t dc, sc;							\
+      dc = Color (d);							\
+      sc = Color (s);							\
+      if (sc >= dc)							\
+	res = 0;							\
+      else								\
+	res = dc - sc;							\
+    } while (0);
+
+    for (i = 0; i < width; ++i) {
+	comp4_t d, s;
+	comp4_t r, g, b;
+
+	d = *(dest + i);
+	s = combineMask (src, mask, i);
+
+	Subtract (r, Red);
+	Subtract (g, Green);
+	Subtract (b, Blue);
+
+	*(dest + i) = (Alpha (d) << A_SHIFT)
+	    | (r << R_SHIFT)
+	    | (g << G_SHIFT)
+	    | b;
+    }
+
+#undef Subtract
+}
+
+static FASTCALL void
+fbCombineInvertU (pixman_implementation_t *imp, pixman_op_t op,
+		  comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+{
+    int i;
+
+    for (i = 0; i < width; ++i) {
+      comp4_t inv, d, s;
+      comp1_t a, ia;
+
+      d = *(dest + i);
+      s = combineMask (src, mask, i);
+      a = Alpha (s);
+      inv = ~d | A_MASK;
+      ia = ~a;
+
+      FbByteAddMul (inv, a, d, ia);
+      *(dest + i) = inv;
+    }
+}
+
 /*
  * All of the disjoint composing functions
 
@@ -1684,6 +1742,8 @@ _pixman_setup_combiner_functions_width (pixman_implementation_t *imp)
     imp->combine_width[PIXMAN_OP_SOFT_LIGHT] = fbCombineSoftLightU;
     imp->combine_width[PIXMAN_OP_DIFFERENCE] = fbCombineDifferenceU;
     imp->combine_width[PIXMAN_OP_EXCLUSION] = fbCombineExclusionU;
+    imp->combine_width[PIXMAN_OP_SUBTRACT] = fbCombineSubtractU;
+    imp->combine_width[PIXMAN_OP_INVERT] = fbCombineInvertU;
 
     /* Component alpha combiners */
     imp->combine_width_ca[PIXMAN_OP_CLEAR] = fbCombineClearC;
@@ -1729,4 +1789,3 @@ _pixman_setup_combiner_functions_width (pixman_implementation_t *imp)
     imp->combine_width_ca[PIXMAN_OP_CONJOINT_ATOP_REVERSE] = fbCombineConjointAtopReverseC;
     imp->combine_width_ca[PIXMAN_OP_CONJOINT_XOR] = fbCombineConjointXorC;
 }
-
