@@ -63,6 +63,9 @@ pixman_transform_point_3d (pixman_transform_t *transform,
     return TRUE;
 }
 
+#if defined(USE_SSE2) && defined(__GNUC__) && !defined(__x86_64__) && !defined(__amd64__)
+__attribute__((__force_align_arg_pointer__))
+#endif
 PIXMAN_EXPORT pixman_bool_t
 pixman_blt (uint32_t *src_bits,
 	    uint32_t *dst_bits,
@@ -165,6 +168,9 @@ pixman_fill32 (uint32_t *bits,
     }
 }
 
+#if defined(USE_SSE2) && defined(__GNUC__) && !defined(__x86_64__) && !defined(__amd64__)
+__attribute__((__force_align_arg_pointer__))
+#endif
 PIXMAN_EXPORT pixman_bool_t
 pixman_fill (uint32_t *bits,
 	     int stride,
