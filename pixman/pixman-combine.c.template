@@ -518,7 +518,7 @@ fbCombineHardLightU (pixman_implementation_t *imp, pixman_op_t op,
  * if (Sc <= 0.5)
  *   Dc' = Dc - ( 1 - 2 . Sc ) . Dc . ( 1 - Dc )
  * else
- *   Dc' = Dc + ( 2 . Sc - 1 ) . ( F(Dc) – Dc )
+ *   Dc' = Dc + ( 2 . Sc - 1 ) . ( F(Dc) - Dc )
  *
  * with
  * if (x < 0.25)
@@ -526,39 +526,37 @@ fbCombineHardLightU (pixman_implementation_t *imp, pixman_op_t op,
  * else
  *   F(x) = SQRT (x)
  *
- * ==> (taken from SVG spec)
+ * ==>
+ *
+ * if (Sc <= 0.5)
+ *   Dc' = Dc - ( 1 - 2 . Sc ) . Dc . ( 1 - Dc )
+ * otherwise if (Dc < 0.25)
+ *   Dc' = Dc + ( 2 . Sc - 1 ) . ( ((16 . Dc - 12) . Dc + 4) - Dc )
+ * otherwise
+ *   Dc' = Dc + ( 2 . Sc - 1 ) . ( SQRT(Dc) - Dc )
+ *
+ * ==> 
  *
  * if (2.Sca <= Sa)
  *   Dca' = Dca.(Sa - (1 - Dca/Da).(2.Sca - Sa)) + Sca.(1 - Da) + Dca.(1 - Sa) 
- * otherwise if Dca.8 <= Da
- *   Dca' = Dca.(Sa - (1 - Dca/Da).(2.Sca - Sa).(3 - 8.Dca/Da)) + Sc.(1 - Da) + Dca.(1 - Sa)
+ * otherwise if Dca.4 <= Da
+ *   Dca' = Dca.(Sa + (2.Sca - Sa).((16.Dca/Da - 12).Dca/Da + 3) + Sc.(1 - Da) + Dca.(1 - Sa)
  * otherwise
  *   Dca' = (Dca.Sa + (SQRT (Dca/Da).Da - Dca).(2.Sca - Sa)) + Sca.(1 - Da) + Dca.(1 - Sa)
- *   
- * ==> (used here)
- * if (2.Sca <= Sa)
- *   Dca' = Dca.(Sa - (1 - Dca/Da).(2.Sca - Sa))
- * otherwise if Dca.8 <= Da
- *   Dca' = Dca.(Sa - (1 - Dca/Da).(2.Sca - Sa).(3 - 8.Dca/Da))
- * otherwise
- *   Dca' = (Dca.Sa + (SQRT (Dca/Da).Da - Dca).(2.Sca - Sa))
- * Dca' += Sca.(1 - Da) + Dca.(1 - Sa);
- *
- * Da'  = Sa + Da - Sa.Da
  */
 
 #define FbBlendOp(rca)									\
     do {										\
 	if (2 * sca < sa) { 								\
-	    if (dca == da || da == 0)							\
+	    if (da == 0)	  							\
 	    	rca = dca * sa;								\
 	    else 									\
-		rca = dca * (sa - (da - dca) * (2 * sca + sa) / da);			\
+		rca = dca * sa - dca * (da - dca) * (sa - 2 * sca) / da;		\
 	} else if (da == 0) {								\
 	    rca = 0;									\
-	} else if (8 * dca <= da) { 			      				\
-	    int tmp = dca * (sa - (da - dca) * (2 * sca - sa) / da * (3 * da - 8 * dca) / da);	\
-	    rca = tmp < 0 ? -tmp : tmp;	  						\
+	} else if (4 * dca <= da) { 			      				\
+	    int dc = dca * MASK / da;							\
+	    rca = dca * sa + (int) (2 * sca - sa) * (int) dca * ((16 * dc - 12 * MASK) * dc + 3 * MASK * MASK) / (MASK * MASK); \
         } else {									\
 	    rca = dca * sa + ((comp4_t) (sqrt (dca * da) - dca)) * (2 * sca - sa);    	\
 	}										\
