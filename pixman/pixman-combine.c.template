@@ -425,20 +425,22 @@ fbCombineLightenU (pixman_implementation_t *imp, pixman_op_t op,
 
 /* Color dodge
  *
- * if Sca.Da + Dca.Sa >= Sa.Da
- *   Dca' = Sa.Da + Sca.(1 - Da) + Dca.(1 - Sa)
+ * if Sca == Sa
+ *   Dca' = (Dca != 0).Sa.Da + Sca.(1 - Da) + Dca.(1 - Sa)
  * otherwise
- *   Dca' = Dca.Sa/(1-Sca/Sa) + Sca.(1 - Da) + Dca.(1 - Sa)
+ *   Dca' = Da.Sa. min (Dca / Da / (1 - Sca/Sa))
  *
  * Da'  = Sa + Da - Sa.Da
  */ 
 
 #define FbBlendOp(rca)							\
     do {								\
-	if ((sca * da + dca * sa >= sada) || (sa == sca))		\
-	    rca = sada; 						\
-	else 								\
-	    rca = sa * sa * dca / (sa - sca);				\
+	if (sca >= sa) {						\
+	    rca = dca == 0 ? 0 : sada;				    	\
+	} else {                                                        \
+	    rca = dca * sa * sa / (sa - sca);				\
+	    rca = rca > sada ? sada : rca;				\
+	}								\
 	rca += sca * ida + dca * isa;					\
 	rca = DivOne (rca);						\
     } while (0);
@@ -454,22 +456,23 @@ fbCombineColorDodgeU (pixman_implementation_t *imp, pixman_op_t op,
 
 /* Color burn
  *
- * if Sca.Da + Dca.Sa <= Sa.Da
- *   Dca' = Sca.(1 - Da) + Dca.(1 - Sa)
+ * if Sca. == 0
+ *   Dca' = (Da == Dca).SaDa + Sca.(1 - Da) + Dca.(1 - Sa)
  * otherwise
- *   Dca' = Sa.(Sca.Da + Dca.Sa - Sa.Da)/Sca + Sca.(1 - Da) + Dca.(1 - Sa)
+ *   Dca' = Sa.Da.(1 - min (1, (1 - Dca/Da).Sa / Sca)) + Sca.(1 - Da) + Dca.(1 - Sa)
  *
- * Da'  = Sa + Da - Sa.Da
+ * Da' = Sa + Da - Sa.Da
  */
 
 #define FbBlendOp(rca)							\
     do {								\
-	if ((sca * da + dca * sa <= sada) || (sca == 0))		\
-	    rca = sca * ida + dca * isa;				\
-	else 								\
-	    rca = sa * (sca * da + sa * dca - sada) / sca		\
-		   + sca * ida						\
-		   + dca * isa ;					\
+	if (sca == 0) {		  					\
+	  rca = (da == dca) ? sada : 0;					\
+	} else {							\
+	  rca = (da - dca) * sa * sa / sca;				\
+	  rca = sada - (rca > sada ? sada : rca);			\
+	}								\
+	rca += sca * ida + dca * isa;					\
 	rca = DivOne (rca);						\
     } while (0);
 
