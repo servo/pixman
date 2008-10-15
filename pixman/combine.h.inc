@@ -119,20 +119,6 @@
     } while (0)
 
 /*
-  x_c = (x_c * a + y_c *b) / 256
-*/
-#define FbByteAddMul_256(x, a, y, b) do {                               \
-        comp4_t t = (x & RB_MASK) * a + (y & RB_MASK) * b;              \
-        t >>= G_SHIFT;                                                  \
-        t &= RB_MASK;                                                   \
-                                                                        \
-        x = ((x >> G_SHIFT) & RB_MASK) * a +                            \
-            ((y >> G_SHIFT) & RB_MASK) * b;                             \
-        x &= AG_MASK;                                                   \
-        x += t;                                                         \
-    } while (0)
-
-/*
   x_c = (x_c * a_c) / 255
 */
 #define FbByteMulC(x, a) do {                                           \
