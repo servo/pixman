@@ -342,7 +342,7 @@ fbCombineScreenU (pixman_implementation_t *imp, pixman_op_t op,
 	FbBlendOp (b);				    \
 						    \
 	*(dest + i) = (a << A_SHIFT)		    \
-	    | ((r & MASK) << R_SHIFT)               \
+	    | ((r & MASK) << R_SHIFT)		    \
 	    | ((g & MASK) << G_SHIFT)		    \
 	    |  (b & MASK);			    \
     } while (0);
@@ -687,7 +687,211 @@ fbCombineInvertU (pixman_implementation_t *imp, pixman_op_t op,
     }
 }
 
-/*
+#define Min(c) (c[0] < c[1] ? (c[0] < c[2] ? c[0] : c[2]) : (c[1] < c[2] ? c[1] : c[2]))
+#define Max(c) (c[0] > c[1] ? (c[0] > c[2] ? c[0] : c[2]) : (c[1] > c[2] ? c[1] : c[2]))
+#define Lum(c) ((c[0] * 30 + c[1] * 59 + c[2] * 11) / 100)
+#define Sat(c) (Max (c) - Min (c))
+
+#define FbBlendLoop				    \
+    int i;					    \
+    for (i = 0; i < width; i++)	{		    \
+        comp4_t s = combineMask (src, mask, i);	    \
+	comp4_t d = *(dest + i);		    \
+	comp4_t sa, da, a, isa, ida;	 	    \
+	comp4_t sc[3], dc[3], c[3];		    \
+						    \
+	da = Alpha (d);				    \
+	sa = Alpha (s);				    \
+	ida = Alpha (~d);			    \
+	isa = Alpha (~s);			    \
+	dc[0] = Red (d);			    \
+	sc[0] = Red (s);			    \
+	dc[1] = Green (d);			    \
+	sc[1] = Green (s);			    \
+	dc[2] = Blue (d);			    \
+	sc[2] = Blue (s);			    \
+						    \
+	a = sa + da - DivOne (sa * da);		    \
+	FbBlendOp (c, dc, sc);			    \
+						    \
+	c[0] += isa * dc[0] + ida * sc[0];	    \
+	c[1] += isa * dc[1] + ida * sc[1];	    \
+	c[2] += isa * dc[2] + ida * sc[2];	    \
+	c[0] = DivOne (c[0]);			    \
+	c[1] = DivOne (c[1]);			    \
+	c[2] = DivOne (c[2]);			    \
+						    \
+	if (Max (c) > a) while (1);		    \
+	*(dest + i) = (a << A_SHIFT)		    \
+	    | ((c[0] & MASK) << R_SHIFT)	    \
+	    | ((c[1] & MASK) << G_SHIFT)	    \
+	    |  (c[2] & MASK);			    \
+    } while (0);
+
+static void
+SetLum (comp4_t dest[3], comp4_t src[3], comp4_t sa, comp4_t lum)
+{
+  int a, l, min, max;
+  int tmp[3];
+  
+  a = sa;
+  l = lum;
+  tmp[0] = src[0];
+  tmp[1] = src[1];
+  tmp[2] = src[2];
+  l = l - Lum (tmp);
+  tmp[0] += l;
+  tmp[1] += l;
+  tmp[2] += l;
+
+  /* ClipColor */
+  l = Lum (tmp);
+  min = Min (tmp);
+  max = Max (tmp);
+
+  if (min < 0) {
+    tmp[0] = l + (tmp[0] - l) / 4 * l / (l - min) * 4;
+    tmp[1] = l + (tmp[1] - l) / 4 * l / (l - min) * 4;
+    tmp[2] = l + (tmp[2] - l) / 4 * l / (l - min) * 4;
+  }
+  if (max > a) {
+    tmp[0] = l + (tmp[0] - l) / 4 * (a - l) / (max - l) * 4;
+    tmp[1] = l + (tmp[1] - l) / 4 * (a - l) / (max - l) * 4;
+    tmp[2] = l + (tmp[2] - l) / 4 * (a - l) / (max - l) * 4;
+  }
+  if (Max (tmp) > sa) while (1);
+  dest[0] = tmp[0];
+  dest[1] = tmp[1];
+  dest[2] = tmp[2];
+}
+
+static void
+SetSat (comp4_t dest[3], comp4_t src[3], comp4_t sat)
+{
+  int id[3];
+  comp4_t min, max;
+
+  if (src[0] > src[1]) {
+    if (src[0] > src[2]) {
+      id[0] = 0;
+      if (src[1] > src[2]) {
+	id[1] = 1;
+	id[2] = 2;
+      } else {
+	id[1] = 2;
+	id[2] = 1;
+      }
+    } else {
+      id[0] = 2;
+      id[1] = 0;
+      id[2] = 1;
+    }
+  } else {
+    if (src[0] > src[2]) {
+      id[0] = 1;
+      id[1] = 0;
+      id[2] = 2;
+    } else {
+      id[2] = 0;
+      if (src[1] > src[2]) {
+	id[0] = 1;
+	id[1] = 2;
+      } else {
+	id[0] = 2;
+	id[1] = 1;
+      }
+    }
+  }
+  max = dest[id[0]];
+  min = dest[id[2]];
+  if (max > min) {
+    dest[id[1]] = (dest[id[1]] - min) * sat / (max - min);
+    dest[id[0]] = sat;
+    dest[id[2]] = 0;
+  } else {
+    dest[0] = dest[1] = dest[2] = 0;
+  }
+  if (Max (dest) > 255 * 255) while (1);		    \
+}
+
+#define FbBlendOp(c, dc, sc)						\
+    do {								\
+      c[0] = sc[0] * da;						\
+      c[1] = sc[1] * da;						\
+      c[2] = sc[2] * da;						\
+      SetSat (c, c, Sat (dc) * sa);			  		\
+      SetLum (c, c, sa * da, Lum (dc) * sa);				\
+    } while (0);
+
+static FASTCALL void
+fbCombineHSLHueU (pixman_implementation_t *imp, pixman_op_t op,
+		  comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+{
+    FbBlendLoop
+}
+
+#undef FbBlendOp
+
+#define FbBlendOp(c, dc, sc)						\
+    do {								\
+      c[0] = dc[0] * sa;						\
+      c[1] = dc[1] * sa;						\
+      c[2] = dc[2] * sa;						\
+      SetSat (c, c, Sat (sc) * da);					\
+      SetLum (c, c, da * sa, Lum (dc) * sa);					\
+    } while (0);
+
+static FASTCALL void
+fbCombineHSLSaturationU (pixman_implementation_t *imp, pixman_op_t op,
+			 comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+{
+    FbBlendLoop
+}
+
+#undef FbBlendOp
+
+#define FbBlendOp(c, dc, sc)						\
+    do {								\
+      c[0] = sc[0] * da;						\
+      c[1] = sc[1] * da;						\
+      c[2] = sc[2] * da;						\
+      SetLum (c, c, sa * da, Lum (dc) * sa);				\
+    } while (0);
+
+static FASTCALL void
+fbCombineHSLColorU (pixman_implementation_t *imp, pixman_op_t op,
+		    comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+{
+    FbBlendLoop
+}
+
+#undef FbBlendOp
+
+#define FbBlendOp(c, dc, sc)						\
+    do {								\
+      c[0] = dc[0] * sa;						\
+      c[1] = dc[1] * sa;						\
+      c[2] = dc[2] * sa;						\
+      SetLum (c, c, da * sa, Lum (sc) * da);			  	\
+    } while (0);
+
+static FASTCALL void
+fbCombineHSLLuminosityU (pixman_implementation_t *imp, pixman_op_t op,
+			 comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+{
+    FbBlendLoop
+}
+
+#undef FbBlendOp
+
+#undef Set
+#undef Lum
+#undef Max
+#undef Min
+#undef FbBlendLoop
+
+/* Overlay
+ *
  * All of the disjoint composing functions
 
  The four entries in the first column indicate what source contributions
@@ -1745,6 +1949,10 @@ _pixman_setup_combiner_functions_width (pixman_implementation_t *imp)
     imp->combine_width[PIXMAN_OP_EXCLUSION] = fbCombineExclusionU;
     imp->combine_width[PIXMAN_OP_SUBTRACT] = fbCombineSubtractU;
     imp->combine_width[PIXMAN_OP_INVERT] = fbCombineInvertU;
+    imp->combine_width[PIXMAN_OP_HUE] = fbCombineHSLHueU;
+    imp->combine_width[PIXMAN_OP_SATURATION] = fbCombineHSLSaturationU;
+    imp->combine_width[PIXMAN_OP_COLOR] = fbCombineHSLColorU;
+    imp->combine_width[PIXMAN_OP_LUMINOSITY] = fbCombineHSLLuminosityU;
 
     /* Component alpha combiners */
     imp->combine_width_ca[PIXMAN_OP_CLEAR] = fbCombineClearC;
@@ -1790,3 +1998,4 @@ _pixman_setup_combiner_functions_width (pixman_implementation_t *imp)
     imp->combine_width_ca[PIXMAN_OP_CONJOINT_ATOP_REVERSE] = fbCombineConjointAtopReverseC;
     imp->combine_width_ca[PIXMAN_OP_CONJOINT_XOR] = fbCombineConjointXorC;
 }
+
