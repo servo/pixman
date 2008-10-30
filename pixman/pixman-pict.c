@@ -37,10 +37,6 @@
 #include "pixman-arm.h"
 #include "pixman-combine32.h"
 
-#ifdef __GNUC__
-#   define inline __inline__ __attribute__ ((__always_inline__))
-#endif
-
 #define FbFullMask(n)   ((n) == 32 ? (uint32_t)-1 : ((((uint32_t) 1) << n) - 1))
 
 #undef READ
@@ -53,7 +49,7 @@ typedef void (* CompositeFunc) (pixman_op_t,
 				int16_t, int16_t, int16_t, int16_t, int16_t, int16_t,
 				uint16_t, uint16_t);
 
-static inline uint32_t
+static force_inline uint32_t
 fbOver (uint32_t src, uint32_t dest)
 {
     // dest = (dest * (255 - alpha)) / 255 + src
