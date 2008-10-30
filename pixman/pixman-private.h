@@ -73,6 +73,10 @@
 #elif defined __GNUC__
 #   define inline __inline__
 #   define force_inline __inline__ __attribute__ ((__always_inline__))
+#else
+# ifndef force_inline
+#  define force_inline inline
+# endif
 #endif
 
 #define FB_SHIFT    5
