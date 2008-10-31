@@ -34,7 +34,7 @@
 #include "pixman-mmx.h"
 #include "pixman-vmx.h"
 #include "pixman-sse2.h"
-#include "pixman-arm.h"
+#include "pixman-arm-simd.h"
 #include "pixman-combine32.h"
 
 #define FbFullMask(n)   ((n) == 32 ? (uint32_t)-1 : ((((uint32_t) 1) << n) - 1))
@@ -1518,8 +1518,8 @@ static const FastPathInfo vmx_fast_paths[] =
 };
 #endif
 
-#ifdef USE_ARM
-static const FastPathInfo arm_fast_paths[] =
+#ifdef USE_ARM_SIMD
+static const FastPathInfo arm_simd_fast_paths[] =
 {
     { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,     PIXMAN_a8r8g8b8, fbCompositeSrc_8888x8888arm,      0 },
     { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,	PIXMAN_x8r8g8b8, fbCompositeSrc_8888x8888arm,	   0 },
@@ -1893,9 +1893,9 @@ pixman_image_composite (pixman_op_t      op,
 	    info = get_fast_path (vmx_fast_paths, op, pSrc, pMask, pDst, pixbuf);
 #endif
 
-#ifdef USE_ARM
-	if (!info && pixman_have_arm())
-	    info = get_fast_path (arm_fast_paths, op, pSrc, pMask, pDst, pixbuf);
+#ifdef USE_ARM_SIMD
+	if (!info && pixman_have_arm_simd())
+	    info = get_fast_path (arm_simd_fast_paths, op, pSrc, pMask, pDst, pixbuf);
 #endif
 
         if (!info)
