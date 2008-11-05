@@ -207,6 +207,94 @@ fbFetchTransformed_Nearest_General(bits_image_t * pict, int width, uint32_t *buf
     }
 }
 
+static uint32_t
+fetch_bilinear (bits_image_t		*pict,
+		fetchPixelProc32	 fetch,
+		pixman_bool_t		 affine,
+		pixman_repeat_t		 repeat,
+		pixman_bool_t		 has_src_clip,
+		const pixman_vector_t   *v)
+{
+    if (!v->vector[2])
+    {
+	return 0;
+    }
+    else
+    {
+	int x1, x2, y1, y2, distx, idistx, disty, idisty;
+	uint32_t tl, tr, bl, br, r;
+	uint32_t ft, fb;
+	pixman_bool_t inside_bounds;
+	
+	if (!affine)
+	{
+	    pixman_fixed_48_16_t div;
+	    div = ((pixman_fixed_48_16_t)v->vector[0] << 16)/v->vector[2];
+	    x1 = div >> 16;
+	    distx = ((pixman_fixed_t)div >> 8) & 0xff;
+	    div = ((pixman_fixed_48_16_t)v->vector[1] << 16)/v->vector[2];
+	    y1 = div >> 16;
+	    disty = ((pixman_fixed_t)div >> 8) & 0xff;
+	}
+	else
+	{
+	    x1 = v->vector[0] >> 16;
+	    distx = (v->vector[0] >> 8) & 0xff;
+	    y1 = v->vector[1] >> 16;
+	    disty = (v->vector[1] >> 8) & 0xff;
+	}
+	x2 = x1 + 1;
+	y2 = y1 + 1;
+	
+	idistx = 256 - distx;
+	idisty = 256 - disty;
+
+	switch (repeat)
+	{
+	case PIXMAN_REPEAT_NORMAL:
+	    x1 = MOD (x1, pict->width);
+	    x2 = MOD (x2, pict->width);
+	    y1 = MOD (y1, pict->height);
+	    y2 = MOD (y2, pict->height);
+	    inside_bounds = TRUE;
+	    break;
+	    
+	case PIXMAN_REPEAT_PAD:
+	    x1 = CLIP (x1, 0, pict->width-1);
+	    x2 = CLIP (x2, 0, pict->width-1);
+	    y1 = CLIP (y1, 0, pict->height-1);
+	    y2 = CLIP (y2, 0, pict->height-1);
+	    inside_bounds = TRUE;
+	    break;
+	    
+	case PIXMAN_REPEAT_REFLECT: /* Thanks Trolltech for not implementing reflect for images */
+	case PIXMAN_REPEAT_NONE:
+	    inside_bounds = FALSE;
+	    break;
+	}
+	
+	tl = do_fetch(pict, x1, y1, fetch, has_src_clip, inside_bounds);
+	tr = do_fetch(pict, x2, y1, fetch, has_src_clip, inside_bounds);
+	bl = do_fetch(pict, x1, y2, fetch, has_src_clip, inside_bounds);
+	br = do_fetch(pict, x2, y2, fetch, has_src_clip, inside_bounds);
+	
+	ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
+	fb = FbGet8(bl,0) * idistx + FbGet8(br,0) * distx;
+	r = (((ft * idisty + fb * disty) >> 16) & 0xff);
+	ft = FbGet8(tl,8) * idistx + FbGet8(tr,8) * distx;
+	fb = FbGet8(bl,8) * idistx + FbGet8(br,8) * distx;
+	r |= (((ft * idisty + fb * disty) >> 8) & 0xff00);
+	ft = FbGet8(tl,16) * idistx + FbGet8(tr,16) * distx;
+	fb = FbGet8(bl,16) * idistx + FbGet8(br,16) * distx;
+	r |= (((ft * idisty + fb * disty)) & 0xff0000);
+	ft = FbGet8(tl,24) * idistx + FbGet8(tr,24) * distx;
+	fb = FbGet8(bl,24) * idistx + FbGet8(br,24) * distx;
+	r |= (((ft * idisty + fb * disty) << 8) & 0xff000000);
+
+	return r;
+    }
+}
+
 static void
 fbFetchTransformed_Bilinear_Normal(bits_image_t * pict, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits, pixman_bool_t affine, pixman_vector_t v, pixman_vector_t unit)
 {
