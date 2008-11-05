@@ -299,73 +299,6 @@ fetch_bilinear (bits_image_t		*pict,
 }
 
 static void
-fbFetchTransformed_Bilinear_Normal(bits_image_t * pict, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits, pixman_bool_t affine, pixman_vector_t v, pixman_vector_t unit)
-{
-    pixman_bool_t src_clip;
-    fetchPixelProc32   fetch;
-    int i;
-
-    fetch = ACCESS(pixman_fetchPixelProcForPicture32)(pict);
-
-    src_clip = pict->common.src_clip != &(pict->common.full_region);
-
-    for (i = 0; i < width; ++i)
-    {
-        if (!mask || mask[i] & maskBits)
-	    *(buffer + i) = fetch_bilinear (pict, fetch, affine, PIXMAN_REPEAT_NORMAL, src_clip, &v);
-	
-        v.vector[0] += unit.vector[0];
-        v.vector[1] += unit.vector[1];
-        v.vector[2] += unit.vector[2];
-    }
-}
-
-static void
-fbFetchTransformed_Bilinear_Pad(bits_image_t * pict, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits, pixman_bool_t affine, pixman_vector_t v, pixman_vector_t unit)
-{
-    pixman_bool_t src_clip;
-    fetchPixelProc32   fetch;
-    int i;
-
-    /* initialize the two function pointers */
-    fetch = ACCESS(pixman_fetchPixelProcForPicture32)(pict);
-
-    src_clip = pict->common.src_clip != &(pict->common.full_region);
-
-    for (i = 0; i < width; ++i) {
-        if (!mask || mask[i] & maskBits)
-	    *(buffer + i) = fetch_bilinear (pict, fetch, affine, PIXMAN_REPEAT_PAD, src_clip, &v);
-	
-        v.vector[0] += unit.vector[0];
-        v.vector[1] += unit.vector[1];
-        v.vector[2] += unit.vector[2];
-    }
-}
-
-static void
-fbFetchTransformed_Bilinear_General(bits_image_t * pict, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits, pixman_bool_t affine, pixman_vector_t v, pixman_vector_t unit)
-{
-    pixman_bool_t src_clip;
-    fetchPixelProc32   fetch;
-    int i;
-
-    /* initialize the two function pointers */
-    fetch = ACCESS(pixman_fetchPixelProcForPicture32)(pict);
-
-    src_clip = pict->common.src_clip != &(pict->common.full_region);
-
-    for (i = 0; i < width; ++i)
-    {
-        if (!mask || mask[i] & maskBits)
-	    *(buffer + i) = fetch_bilinear (pict, fetch, affine, pict->common.repeat, src_clip, &v);
-
-        v.vector[0] += unit.vector[0];
-        v.vector[1] += unit.vector[1];
-        v.vector[2] += unit.vector[2];
-    }
-}
-
-static void
 fbFetchTransformed_Convolution(bits_image_t * pict, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits, pixman_bool_t affine, pixman_vector_t v, pixman_vector_t unit)
 {
     fetchPixelProc32 fetch;
@@ -536,18 +469,22 @@ ACCESS(fbFetchTransformed)(bits_image_t * pict, int x, int y, int width,
 	       pict->common.filter == PIXMAN_FILTER_GOOD	||
 	       pict->common.filter == PIXMAN_FILTER_BEST)
     {
-        if (pict->common.repeat == PIXMAN_REPEAT_NORMAL)
-        {
-            fbFetchTransformed_Bilinear_Normal(pict, width, buffer, mask, maskBits, affine, v, unit);
-        }
-        else if (pict->common.repeat == PIXMAN_REPEAT_PAD)
-        {
-            fbFetchTransformed_Bilinear_Pad(pict, width, buffer, mask, maskBits, affine, v, unit);
-        }
-        else
-        {
-            fbFetchTransformed_Bilinear_General(pict, width, buffer, mask, maskBits, affine, v, unit);
-        }
+	pixman_bool_t src_clip;
+	fetchPixelProc32   fetch;
+	int i;
+	
+	fetch = ACCESS(pixman_fetchPixelProcForPicture32)(pict);
+	src_clip = pict->common.src_clip != &(pict->common.full_region);
+	
+	for (i = 0; i < width; ++i)
+	{
+	    if (!mask || mask[i] & maskBits)
+		*(buffer + i) = fetch_bilinear (pict, fetch, affine, pict->common.repeat, src_clip, &v);
+	    
+	    v.vector[0] += unit.vector[0];
+	    v.vector[1] += unit.vector[1];
+	    v.vector[2] += unit.vector[2];
+	}
     }
     else if (pict->common.filter == PIXMAN_FILTER_CONVOLUTION)
     {
