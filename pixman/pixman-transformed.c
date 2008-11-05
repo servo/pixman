@@ -271,6 +271,9 @@ fetch_bilinear (bits_image_t		*pict,
 	case PIXMAN_REPEAT_NONE:
 	    inside_bounds = FALSE;
 	    break;
+
+	default:
+	    return 0;
 	}
 	
 	tl = do_fetch(pict, x1, y1, fetch, has_src_clip, inside_bounds);
@@ -306,61 +309,11 @@ fbFetchTransformed_Bilinear_Normal(bits_image_t * pict, int width, uint32_t *buf
 
     src_clip = pict->common.src_clip != &(pict->common.full_region);
 
-    for (i = 0; i < width; ++i) {
+    for (i = 0; i < width; ++i)
+    {
         if (!mask || mask[i] & maskBits)
-        {
-            if (!v.vector[2]) {
-                *(buffer + i) = 0;
-            } else {
-                int x1, x2, y1, y2, distx, idistx, disty, idisty;
-                uint32_t tl, tr, bl, br, r;
-                uint32_t ft, fb;
-
-                if (!affine) {
-                    pixman_fixed_48_16_t div;
-                    div = ((pixman_fixed_48_16_t)v.vector[0] << 16)/v.vector[2];
-                    x1 = div >> 16;
-                    distx = ((pixman_fixed_t)div >> 8) & 0xff;
-                    div = ((pixman_fixed_48_16_t)v.vector[1] << 16)/v.vector[2];
-                    y1 = div >> 16;
-                    disty = ((pixman_fixed_t)div >> 8) & 0xff;
-                } else {
-                    x1 = v.vector[0] >> 16;
-                    distx = (v.vector[0] >> 8) & 0xff;
-                    y1 = v.vector[1] >> 16;
-                    disty = (v.vector[1] >> 8) & 0xff;
-                }
-                x2 = x1 + 1;
-                y2 = y1 + 1;
-
-                idistx = 256 - distx;
-                idisty = 256 - disty;
-
-                x1 = MOD (x1, pict->width);
-                x2 = MOD (x2, pict->width);
-                y1 = MOD (y1, pict->height);
-                y2 = MOD (y2, pict->height);
-
-                tl = do_fetch (pict, x1, y1, fetch, src_clip, TRUE);
-                tr = do_fetch (pict, x2, y1, fetch, src_clip, TRUE);
-                bl = do_fetch (pict, x1, y2, fetch, src_clip, TRUE);
-                br = do_fetch (pict, x2, y2, fetch, src_clip, TRUE);
-
-                ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
-                fb = FbGet8(bl,0) * idistx + FbGet8(br,0) * distx;
-                r = (((ft * idisty + fb * disty) >> 16) & 0xff);
-                ft = FbGet8(tl,8) * idistx + FbGet8(tr,8) * distx;
-                fb = FbGet8(bl,8) * idistx + FbGet8(br,8) * distx;
-                r |= (((ft * idisty + fb * disty) >> 8) & 0xff00);
-                ft = FbGet8(tl,16) * idistx + FbGet8(tr,16) * distx;
-                fb = FbGet8(bl,16) * idistx + FbGet8(br,16) * distx;
-                r |= (((ft * idisty + fb * disty)) & 0xff0000);
-                ft = FbGet8(tl,24) * idistx + FbGet8(tr,24) * distx;
-                fb = FbGet8(bl,24) * idistx + FbGet8(br,24) * distx;
-                r |= (((ft * idisty + fb * disty) << 8) & 0xff000000);
-                *(buffer + i) = r;
-            }
-        }
+	    *(buffer + i) = fetch_bilinear (pict, fetch, affine, PIXMAN_REPEAT_NORMAL, src_clip, &v);
+	
         v.vector[0] += unit.vector[0];
         v.vector[1] += unit.vector[1];
         v.vector[2] += unit.vector[2];
@@ -381,59 +334,8 @@ fbFetchTransformed_Bilinear_Pad(bits_image_t * pict, int width, uint32_t *buffer
 
     for (i = 0; i < width; ++i) {
         if (!mask || mask[i] & maskBits)
-        {
-            if (!v.vector[2]) {
-                *(buffer + i) = 0;
-            } else {
-                int x1, x2, y1, y2, distx, idistx, disty, idisty;
-                uint32_t tl, tr, bl, br, r;
-                uint32_t ft, fb;
-
-                if (!affine) {
-                    pixman_fixed_48_16_t div;
-                    div = ((pixman_fixed_48_16_t)v.vector[0] << 16)/v.vector[2];
-                    x1 = div >> 16;
-                    distx = ((pixman_fixed_t)div >> 8) & 0xff;
-                    div = ((pixman_fixed_48_16_t)v.vector[1] << 16)/v.vector[2];
-                    y1 = div >> 16;
-                    disty = ((pixman_fixed_t)div >> 8) & 0xff;
-                } else {
-                    x1 = v.vector[0] >> 16;
-                    distx = (v.vector[0] >> 8) & 0xff;
-                    y1 = v.vector[1] >> 16;
-                    disty = (v.vector[1] >> 8) & 0xff;
-                }
-                x2 = x1 + 1;
-                y2 = y1 + 1;
-
-                idistx = 256 - distx;
-                idisty = 256 - disty;
-
-                x1 = CLIP (x1, 0, pict->width-1);
-                x2 = CLIP (x2, 0, pict->width-1);
-                y1 = CLIP (y1, 0, pict->height-1);
-                y2 = CLIP (y2, 0, pict->height-1);
-
-                tl = do_fetch(pict, x1, y1, fetch, src_clip, TRUE);
-                tr = do_fetch(pict, x2, y1, fetch, src_clip, TRUE);
-                bl = do_fetch(pict, x1, y2, fetch, src_clip, TRUE);
-                br = do_fetch(pict, x2, y2, fetch, src_clip, TRUE);
-
-                ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
-                fb = FbGet8(bl,0) * idistx + FbGet8(br,0) * distx;
-                r = (((ft * idisty + fb * disty) >> 16) & 0xff);
-                ft = FbGet8(tl,8) * idistx + FbGet8(tr,8) * distx;
-                fb = FbGet8(bl,8) * idistx + FbGet8(br,8) * distx;
-                r |= (((ft * idisty + fb * disty) >> 8) & 0xff00);
-                ft = FbGet8(tl,16) * idistx + FbGet8(tr,16) * distx;
-                fb = FbGet8(bl,16) * idistx + FbGet8(br,16) * distx;
-                r |= (((ft * idisty + fb * disty)) & 0xff0000);
-                ft = FbGet8(tl,24) * idistx + FbGet8(tr,24) * distx;
-                fb = FbGet8(bl,24) * idistx + FbGet8(br,24) * distx;
-                r |= (((ft * idisty + fb * disty) << 8) & 0xff000000);
-                *(buffer + i) = r;
-            }
-        }
+	    *(buffer + i) = fetch_bilinear (pict, fetch, affine, PIXMAN_REPEAT_PAD, src_clip, &v);
+	
         v.vector[0] += unit.vector[0];
         v.vector[1] += unit.vector[1];
         v.vector[2] += unit.vector[2];
@@ -455,54 +357,7 @@ fbFetchTransformed_Bilinear_General(bits_image_t * pict, int width, uint32_t *bu
     for (i = 0; i < width; ++i)
     {
         if (!mask || mask[i] & maskBits)
-        {
-            if (!v.vector[2]) {
-                *(buffer + i) = 0;
-            } else {
-                int x1, x2, y1, y2, distx, idistx, disty, idisty;
-                uint32_t tl, tr, bl, br, r;
-                uint32_t ft, fb;
-
-                if (!affine) {
-                    pixman_fixed_48_16_t div;
-                    div = ((pixman_fixed_48_16_t)v.vector[0] << 16)/v.vector[2];
-                    x1 = div >> 16;
-                    distx = ((pixman_fixed_t)div >> 8) & 0xff;
-                    div = ((pixman_fixed_48_16_t)v.vector[1] << 16)/v.vector[2];
-                    y1 = div >> 16;
-                    disty = ((pixman_fixed_t)div >> 8) & 0xff;
-                } else {
-                    x1 = v.vector[0] >> 16;
-                    distx = (v.vector[0] >> 8) & 0xff;
-                    y1 = v.vector[1] >> 16;
-                    disty = (v.vector[1] >> 8) & 0xff;
-                }
-                x2 = x1 + 1;
-                y2 = y1 + 1;
-
-                idistx = 256 - distx;
-                idisty = 256 - disty;
-
-                tl = do_fetch(pict, x1, y1, fetch, src_clip, FALSE);
-                tr = do_fetch(pict, x2, y1, fetch, src_clip, FALSE);
-                bl = do_fetch(pict, x1, y2, fetch, src_clip, FALSE);
-                br = do_fetch(pict, x2, y2, fetch, src_clip, FALSE);
-
-                ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
-                fb = FbGet8(bl,0) * idistx + FbGet8(br,0) * distx;
-                r = (((ft * idisty + fb * disty) >> 16) & 0xff);
-                ft = FbGet8(tl,8) * idistx + FbGet8(tr,8) * distx;
-                fb = FbGet8(bl,8) * idistx + FbGet8(br,8) * distx;
-                r |= (((ft * idisty + fb * disty) >> 8) & 0xff00);
-                ft = FbGet8(tl,16) * idistx + FbGet8(tr,16) * distx;
-                fb = FbGet8(bl,16) * idistx + FbGet8(br,16) * distx;
-                r |= (((ft * idisty + fb * disty)) & 0xff0000);
-                ft = FbGet8(tl,24) * idistx + FbGet8(tr,24) * distx;
-                fb = FbGet8(bl,24) * idistx + FbGet8(br,24) * distx;
-                r |= (((ft * idisty + fb * disty) << 8) & 0xff000000);
-                *(buffer + i) = r;
-            }
-        }
+	    *(buffer + i) = fetch_bilinear (pict, fetch, affine, pict->common.repeat, src_clip, &v);
 
         v.vector[0] += unit.vector[0];
         v.vector[1] += unit.vector[1];
