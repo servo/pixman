@@ -87,7 +87,7 @@ do_fetch (bits_image_t *pict, int x, int y, fetchPixelProc32 fetch,
 /*
  * Fetching Algorithms
  */
-static uint32_t
+static inline uint32_t
 fetch_nearest (bits_image_t		*pict,
 	       fetchPixelProc32		 fetch,
 	       pixman_bool_t		 affine,
@@ -142,7 +142,7 @@ fetch_nearest (bits_image_t		*pict,
     }
 }
 
-static uint32_t
+static inline uint32_t
 fetch_bilinear (bits_image_t		*pict,
 		fetchPixelProc32	 fetch,
 		pixman_bool_t		 affine,
