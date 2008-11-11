@@ -129,7 +129,7 @@ fetch_nearest (bits_image_t		*pict,
 	    inside_bounds = TRUE;
 	    break;
 	    
-	case PIXMAN_REPEAT_REFLECT: /* Thanks Trolltech for not implementing reflect for images */
+	case PIXMAN_REPEAT_REFLECT: /* FIXME: this should be implemented for images */
 	case PIXMAN_REPEAT_NONE:
 	    inside_bounds = FALSE;
 	    break;
@@ -202,7 +202,7 @@ fetch_bilinear (bits_image_t		*pict,
 	    inside_bounds = TRUE;
 	    break;
 	    
-	case PIXMAN_REPEAT_REFLECT: /* Thanks Trolltech for not implementing reflect for images */
+	case PIXMAN_REPEAT_REFLECT: /* FIXME: this should be implemented for images */
 	case PIXMAN_REPEAT_NONE:
 	    inside_bounds = FALSE;
 	    break;
