@@ -380,11 +380,10 @@ typedef enum
     PIXMAN_OP_DIFFERENCE                = 0x39,
     PIXMAN_OP_EXCLUSION                 = 0x3a,
     PIXMAN_OP_SUBTRACT			= 0x3b,
-    PIXMAN_OP_INVERT			= 0x3c,
-    PIXMAN_OP_HUE			= 0x3d,
-    PIXMAN_OP_SATURATION		= 0x3e,
-    PIXMAN_OP_COLOR			= 0x3f,
-    PIXMAN_OP_LUMINOSITY		= 0x40,
+    PIXMAN_OP_HUE			= 0x3c,
+    PIXMAN_OP_SATURATION		= 0x3d,
+    PIXMAN_OP_COLOR			= 0x3e,
+    PIXMAN_OP_LUMINOSITY		= 0x4f,
 
     PIXMAN_OP_NONE,
     PIXMAN_OP_LAST = PIXMAN_OP_NONE

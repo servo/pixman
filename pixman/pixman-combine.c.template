@@ -666,27 +666,6 @@ fbCombineSubtractU (pixman_implementation_t *imp, pixman_op_t op,
 #undef Subtract
 }
 
-static FASTCALL void
-fbCombineInvertU (pixman_implementation_t *imp, pixman_op_t op,
-		  comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
-{
-    int i;
-
-    for (i = 0; i < width; ++i) {
-      comp4_t inv, d, s;
-      comp1_t a, ia;
-
-      d = *(dest + i);
-      s = combineMask (src, mask, i);
-      a = Alpha (s);
-      inv = ~d | A_MASK;
-      ia = ~a;
-
-      FbByteAddMul (inv, a, d, ia);
-      *(dest + i) = inv;
-    }
-}
-
 #define Min(c) (c[0] < c[1] ? (c[0] < c[2] ? c[0] : c[2]) : (c[1] < c[2] ? c[1] : c[2]))
 #define Max(c) (c[0] > c[1] ? (c[0] > c[2] ? c[0] : c[2]) : (c[1] > c[2] ? c[1] : c[2]))
 #define Lum(c) ((c[0] * 30 + c[1] * 59 + c[2] * 11) / 100)
@@ -1948,7 +1927,6 @@ _pixman_setup_combiner_functions_width (pixman_implementation_t *imp)
     imp->combine_width[PIXMAN_OP_DIFFERENCE] = fbCombineDifferenceU;
     imp->combine_width[PIXMAN_OP_EXCLUSION] = fbCombineExclusionU;
     imp->combine_width[PIXMAN_OP_SUBTRACT] = fbCombineSubtractU;
-    imp->combine_width[PIXMAN_OP_INVERT] = fbCombineInvertU;
     imp->combine_width[PIXMAN_OP_HUE] = fbCombineHSLHueU;
     imp->combine_width[PIXMAN_OP_SATURATION] = fbCombineHSLSaturationU;
     imp->combine_width[PIXMAN_OP_COLOR] = fbCombineHSLColorU;
