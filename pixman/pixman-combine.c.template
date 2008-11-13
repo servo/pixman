@@ -313,39 +313,31 @@ fbCombineScreenU (pixman_implementation_t *imp, pixman_op_t op,
     }
 }
 
-#define FbBlendLoop				    \
+#define PdfSeperableBlendMode(name)				      \
+static void							      \
+fbCombine ## name ## U (pixman_implementation_t *imp, pixman_op_t op, \
+                        comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width) \
+{						    \
     int i;					    \
-    for (i = 0; i < width; i++)	{		    \
+    for (i = 0; i < width; ++i) {		    \
         comp4_t s = combineMask (src, mask, i);     \
-	comp4_t d = *(dest + i);		    \
-	comp4_t a, r, g, b;			    \
-	comp4_t sada, sca, dca, sa, da, isa, ida;   \
+        comp4_t d = *(dest + i);		    \
+        comp1_t sa = Alpha(s);			    \
+        comp1_t isa = ~sa;			    \
+        comp1_t da = Alpha(d);	  		    \
+        comp1_t ida = ~da;			    \
+	comp4_t	result;				    \
 						    \
-	da = Alpha (d);				    \
-	sa = Alpha (s);				    \
-	ida = Alpha (~d);			    \
-	isa = Alpha (~s);			    \
-	sada = sa * da;				    \
+	result = d;				    \
+        FbByteAddMul(result, isa, s, ida);	    \
 						    \
-	a = sa + da - DivOne (sada);		    \
-						    \
-	sca = Red (s);				    \
-	dca = Red (d);				    \
-	FbBlendOp (r);				    \
-						    \
-	sca = Green (s);			    \
-	dca = Green (d);			    \
-	FbBlendOp (g);				    \
-						    \
-	sca = Blue (s);				    \
-	dca = Blue (d);				    \
-	FbBlendOp (b);				    \
-						    \
-	*(dest + i) = (a << A_SHIFT)		    \
-	    | ((r & MASK) << R_SHIFT)		    \
-	    | ((g & MASK) << G_SHIFT)		    \
-	    |  (b & MASK);			    \
-    } while (0);
+	*(dest + i) = result +			    \
+	    (DivOne (sa * da) << A_SHIFT) +	    \
+	    (Blend ## name (Red (d), da, Red (s), sa) << R_SHIFT) + \
+	    (Blend ## name (Green (d), da, Green (s), sa) << G_SHIFT) + \
+	    (Blend ## name (Blue (d), da, Blue (s), sa)); \
+    }						    \
+}
 
 /* Overlay
  *
@@ -356,24 +348,20 @@ fbCombineScreenU (pixman_implementation_t *imp, pixman_op_t op,
  * Da' = Sa + Da - Sa.Da
  */
 
-#define FbBlendOp(rca)							\
-    do {								\
-	if (2 * dca  < da)						\
-	    rca = 2 * sca * dca;					\
-	else								\
-	    rca = sada - 2 * (da - dca) * (sa - sca);			\
-	rca += sca * ida + dca * isa;					\
-	rca = DivOne (rca);						\
-    } while (0);
-
-static void
-fbCombineOverlayU (pixman_implementation_t *imp, pixman_op_t op,
-		   comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+static inline comp4_t
+BlendOverlay (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
 {
-    FbBlendLoop
+    comp4_t rca;
+
+    if (2 * dca < da)
+	rca = 2 * sca * dca;
+    else
+	rca = sa * da - 2 * (da - dca) * (sa - sca);
+    while (rca > (sa * da));
+    return DivOne (rca);
 }
 
-#undef FbBlendOp
+PdfSeperableBlendMode (Overlay)
 
 /* Darken
  *
@@ -381,23 +369,17 @@ fbCombineOverlayU (pixman_implementation_t *imp, pixman_op_t op,
  * Da'  = Sa + Da - Sa.Da 
  */
 
-#define FbBlendOp(rca)							\
-    do {								\
-	rca = sca * da;							\
-	if (rca > dca * sa)						\
-	    rca = dca * sa;						\
-	rca += sca * ida + dca * isa;					\
-	rca = DivOne (rca);						\
-    } while (0);
-
-static void
-fbCombineDarkenU (pixman_implementation_t *imp, pixman_op_t op,
-		  comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+static inline comp4_t
+BlendDarken (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
 {
-    FbBlendLoop
+    comp4_t s, d;
+    
+    s = sca * da;
+    d = dca * sa;
+    return DivOne (s > d ? d : s);
 }
 
-#undef FbBlendOp
+PdfSeperableBlendMode (Darken)
 
 /* Lighten
  *
@@ -405,23 +387,17 @@ fbCombineDarkenU (pixman_implementation_t *imp, pixman_op_t op,
  * Da'  = Sa + Da - Sa.Da
  */
 
-#define FbBlendOp(rca)							\
-    do {								\
-	rca = sca * da;							\
-	if (rca < dca * sa)						\
-	    rca = dca * sa;						\
-	rca += sca * ida + dca * isa;					\
-	rca = DivOne (rca);						\
-    } while (0);
-
-static void
-fbCombineLightenU (pixman_implementation_t *imp, pixman_op_t op,
-		   comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+static inline comp4_t
+BlendLighten (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
 {
-    FbBlendLoop
+    comp4_t s, d;
+    
+    s = sca * da;
+    d = dca * sa;
+    return DivOne (s > d ? s : d);
 }
 
-#undef FbBlendOp
+PdfSeperableBlendMode (Lighten)
 
 /* Color dodge
  *
@@ -433,26 +409,18 @@ fbCombineLightenU (pixman_implementation_t *imp, pixman_op_t op,
  * Da'  = Sa + Da - Sa.Da
  */ 
 
-#define FbBlendOp(rca)							\
-    do {								\
-	if (sca >= sa) {						\
-	    rca = dca == 0 ? 0 : sada;				    	\
-	} else {                                                        \
-	    rca = dca * sa * sa / (sa - sca);				\
-	    rca = rca > sada ? sada : rca;				\
-	}								\
-	rca += sca * ida + dca * isa;					\
-	rca = DivOne (rca);						\
-    } while (0);
-
-static void
-fbCombineColorDodgeU (pixman_implementation_t *imp, pixman_op_t op,
-		      comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+static inline comp4_t
+BlendColorDodge (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
 {
-    FbBlendLoop
+    if (sca >= sa) {
+	return dca == 0 ? 0 : DivOne (sa * da);
+    } else {
+	comp4_t rca = dca * sa * sa / (sa - sca);
+	return DivOne (rca > sa * da ? sa * da : rca);
+    }
 }
 
-#undef FbBlendOp
+PdfSeperableBlendMode (ColorDodge)
 
 /* Color burn
  *
@@ -464,26 +432,19 @@ fbCombineColorDodgeU (pixman_implementation_t *imp, pixman_op_t op,
  * Da' = Sa + Da - Sa.Da
  */
 
-#define FbBlendOp(rca)							\
-    do {								\
-	if (sca == 0) {		  					\
-	  rca = (da == dca) ? sada : 0;					\
-	} else {							\
-	  rca = (da - dca) * sa * sa / sca;				\
-	  rca = sada - (rca > sada ? sada : rca);			\
-	}								\
-	rca += sca * ida + dca * isa;					\
-	rca = DivOne (rca);						\
-    } while (0);
-
-static void
-fbCombineColorBurnU (pixman_implementation_t *imp, pixman_op_t op,
-		     comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+static inline comp4_t
+BlendColorBurn (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
 {
-    FbBlendLoop
+    if (sca == 0) {
+      return (da == dca) ? DivOne (sa * da) : 0;
+    } else {
+      comp4_t sada = sa * da;
+      comp4_t rca = (da - dca) * sa * sa / sca;
+      return DivOne (rca > sada ? 0 : sada - rca);
+    }
 }
 
-#undef FbBlendOp
+PdfSeperableBlendMode (ColorBurn)
 
 /* Hard light
  *
@@ -494,25 +455,16 @@ fbCombineColorBurnU (pixman_implementation_t *imp, pixman_op_t op,
  *
  * Da'  = Sa + Da - Sa.Da
  */
-
-#define FbBlendOp(rca)							\
-    do {								\
-	if (2 * sca < sa)						\
-	    rca = 2 * sca * dca;					\
-	else 								\
-	    rca = sada - 2 * (da - dca) * (sa - sca);			\
-	rca += sca * ida + dca * isa;					\
-	rca = DivOne (rca);						\
-    } while (0);
-
-static void
-fbCombineHardLightU (pixman_implementation_t *imp, pixman_op_t op,
-		     comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+static inline comp4_t
+BlendHardLight (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
 {
-    FbBlendLoop
+    if (2 * sca < sa)
+	return DivOne (2 * sca * dca);
+    else
+	return DivOne (sa * da - 2 * (da - dca) * (sa - sca));
 }
 
-#undef FbBlendOp
+PdfSeperableBlendMode (HardLight)
 
 /* Soft light
  *
@@ -548,33 +500,31 @@ fbCombineHardLightU (pixman_implementation_t *imp, pixman_op_t op,
  *   Dca' = (Dca.Sa + (SQRT (Dca/Da).Da - Dca).(2.Sca - Sa)) + Sca.(1 - Da) + Dca.(1 - Sa)
  */
 
-#define FbBlendOp(rca)									\
-    do {										\
-	if (2 * sca < sa) { 								\
-	    if (da == 0)	  							\
-	    	rca = dca * sa;								\
-	    else 									\
-		rca = dca * sa - dca * (da - dca) * (sa - 2 * sca) / da;		\
-	} else if (da == 0) {								\
-	    rca = 0;									\
-	} else if (4 * dca <= da) { 			      				\
-	    int dc = dca * MASK / da;							\
-	    rca = dca * sa + (int) (2 * sca - sa) * (int) dca * ((16 * dc - 12 * MASK) * dc + 3 * MASK * MASK) / (MASK * MASK); \
-        } else {									\
-	    rca = dca * sa + ((comp4_t) (sqrt (dca * da) - dca)) * (2 * sca - sa);    	\
-	}										\
-	rca += sca * ida + dca * isa;							\
-	rca = DivOne (rca);		   						\
-    } while (0);
-
-static void
-fbCombineSoftLightU (pixman_implementation_t *imp, pixman_op_t op,
-		     comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+static inline comp4_t
+BlendSoftLight (comp4_t dca_org, comp4_t da_org, comp4_t sca_org, comp4_t sa_org)
 {
-    FbBlendLoop
+    double dca = dca_org * (1.0 / MASK);
+    double da = da_org * (1.0 / MASK);
+    double sca = sca_org * (1.0 / MASK);
+    double sa = sa_org * (1.0 / MASK);
+    double rca;
+
+    if (2 * sca < sa) {
+	if (da == 0)
+	    rca = dca * sa;
+	else
+	    rca = dca * sa - dca * (da - dca) * (sa - 2 * sca) / da;
+    } else if (da == 0) {
+	rca = 0;
+    } else if (4 * dca <= da) {
+	rca = dca * sa + (2 * sca - sa) * dca * ((16 * dca / da - 12) * dca / da + 3);
+    } else {
+	rca = dca * sa + (sqrt (dca * da) - dca) * (2 * sca - sa);
+    }
+    return rca * MASK + 0.5;
 }
 
-#undef FbBlendOp
+PdfSeperableBlendMode (SoftLight)
 
 /* Difference
  *
@@ -584,26 +534,19 @@ fbCombineSoftLightU (pixman_implementation_t *imp, pixman_op_t op,
  * Da'  = Sa + Da - Sa.Da
  */
 
-#define FbBlendOp(rca)							\
-    do {								\
-	comp4_t dcasa = dca * sa;					\
-	rca = sca * da;							\
-	if (rca < dcasa)						\
-	    rca = dcasa - rca;						\
-	else 								\
-	    rca -= dcasa;						\
-	rca += sca * ida + dca * isa;					\
-	rca = DivOne (rca);						\
-    } while (0);
-
-static void
-fbCombineDifferenceU (pixman_implementation_t *imp, pixman_op_t op,
-		      comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+static inline comp4_t
+BlendDifference (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
 {
-    FbBlendLoop
+    comp4_t dcasa = dca * sa;
+    comp4_t scada = sca * da;
+
+    if (scada < dcasa)
+	return DivOne (dcasa - scada);
+    else
+	return DivOne (scada - dcasa);
 }
 
-#undef FbBlendOp
+PdfSeperableBlendMode (Difference)
 
 /* Exclusion
  *
@@ -612,24 +555,18 @@ fbCombineDifferenceU (pixman_implementation_t *imp, pixman_op_t op,
  * Da'  = Sa + Da - Sa.Da
  */
 
-#define FbBlendOp(rca)							\
-    do {								\
-	rca = dca * MASK + sca * (MASK - 2 * dca); 		   	\
-	rca = DivOne (rca);						\
-    } while (0);
+/* This can be made faster by writing it directly and not using
+ * PdfSeperableBlendMode, but that's a performance optimization */
 
-static void
-fbCombineExclusionU (pixman_implementation_t *imp, pixman_op_t op,
-		     comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+static inline comp4_t
+BlendExclusion (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
 {
-    FbBlendLoop
+    return DivOne (sca * da + dca * sa - 2 * dca * sca);
 }
 
-#undef FbBlendOp
+PdfSeperableBlendMode (Exclusion)
 
-#undef FbBlendLoop
-
-static FASTCALL void
+static void
 fbCombineSubtractU (pixman_implementation_t *imp, pixman_op_t op,
 		    comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
@@ -802,7 +739,7 @@ SetSat (comp4_t dest[3], comp4_t src[3], comp4_t sat)
       SetLum (c, c, sa * da, Lum (dc) * sa);				\
     } while (0);
 
-static FASTCALL void
+static void
 fbCombineHSLHueU (pixman_implementation_t *imp, pixman_op_t op,
 		  comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
@@ -820,7 +757,7 @@ fbCombineHSLHueU (pixman_implementation_t *imp, pixman_op_t op,
       SetLum (c, c, da * sa, Lum (dc) * sa);					\
     } while (0);
 
-static FASTCALL void
+static void
 fbCombineHSLSaturationU (pixman_implementation_t *imp, pixman_op_t op,
 			 comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
@@ -837,7 +774,7 @@ fbCombineHSLSaturationU (pixman_implementation_t *imp, pixman_op_t op,
       SetLum (c, c, sa * da, Lum (dc) * sa);				\
     } while (0);
 
-static FASTCALL void
+static void
 fbCombineHSLColorU (pixman_implementation_t *imp, pixman_op_t op,
 		    comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
@@ -854,7 +791,7 @@ fbCombineHSLColorU (pixman_implementation_t *imp, pixman_op_t op,
       SetLum (c, c, da * sa, Lum (sc) * da);			  	\
     } while (0);
 
-static FASTCALL void
+static void
 fbCombineHSLLuminosityU (pixman_implementation_t *imp, pixman_op_t op,
 			 comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
@@ -1927,10 +1864,10 @@ _pixman_setup_combiner_functions_width (pixman_implementation_t *imp)
     imp->combine_width[PIXMAN_OP_DIFFERENCE] = fbCombineDifferenceU;
     imp->combine_width[PIXMAN_OP_EXCLUSION] = fbCombineExclusionU;
     imp->combine_width[PIXMAN_OP_SUBTRACT] = fbCombineSubtractU;
-    imp->combine_width[PIXMAN_OP_HUE] = fbCombineHSLHueU;
-    imp->combine_width[PIXMAN_OP_SATURATION] = fbCombineHSLSaturationU;
-    imp->combine_width[PIXMAN_OP_COLOR] = fbCombineHSLColorU;
-    imp->combine_width[PIXMAN_OP_LUMINOSITY] = fbCombineHSLLuminosityU;
+    imp->combine_width[PIXMAN_OP_HSL_HUE] = fbCombineHSLHueU;
+    imp->combine_width[PIXMAN_OP_HSL_SATURATION] = fbCombineHSLSaturationU;
+    imp->combine_width[PIXMAN_OP_HSL_COLOR] = fbCombineHSLColorU;
+    imp->combine_width[PIXMAN_OP_HSL_LUMINOSITY] = fbCombineHSLLuminosityU;
 
     /* Component alpha combiners */
     imp->combine_width_ca[PIXMAN_OP_CLEAR] = fbCombineClearC;
