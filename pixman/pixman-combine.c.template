@@ -781,7 +781,57 @@ fbCombine ## name ## U (pixman_implementation_t *imp, pixman_op_t op, \
 	    (DivOne (c[1]) << G_SHIFT) +	    \
 	    (DivOne (c[2]));			    \
     }						    \
+}						    \
+						    \
+static FASTCALL void				    \
+fbCombine ## name ## C (pixman_implementation_t *imp, pixman_op_t op, \
+			comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width) \
+{						    \
+    int i;					    \
+    for (i = 0; i < width; ++i) {		    \
+	comp4_t m = *(mask + i);		    \
+	comp4_t s = combineMask (src, mask, i);	    \
+	comp4_t d = *(dest + i);		    \
+	comp1_t sa = Alpha(s);			    \
+	comp1_t da = Alpha(d);  		    \
+	comp1_t ida = ~da;			    \
+	comp4_t result;				    \
+						    \
+        if (m == 0)				    \
+	    continue;				    \
+						    \
+	if (m == ~0)	    			    \
+	{					    \
+	    comp4_t sc[3], dc[3], c[3];		    \
+						    \
+	    result = d;				    \
+	    dc[0] = Red (d);			    \
+	    sc[0] = Red (s);			    \
+	    dc[1] = Green (d);			    \
+	    sc[1] = Green (s);			    \
+	    dc[2] = Blue (d);			    \
+	    sc[2] = Blue (s);			    \
+	    Blend ## name (c, dc, da, sc, sa);	    \
+	    result =				    \
+		(DivOne (sa * da) << A_SHIFT) +	    \
+		(DivOne (c[0]) << R_SHIFT) +	    \
+		(DivOne (c[1]) << G_SHIFT) +	    \
+		(DivOne (c[2]));		    \
+	    fbCombineMaskValueC (&result, &m);	    \
+	    fbCombineMaskC (&s, &m);		    \
+	    FbByteMul (s, ida);			    \
+	    m = ~m;				    \
+	    FbByteMulAddC(d, m, s);		    \
+	    result += d;			    \
+	} else {				    \
+	    result = s;				    \
+	    fbCombineMaskValueC (&result, &m);	    \
+	}					    \
+						    \
+	*(dest + i) = result;			    \
+    }						    \
 }
+
 
 static void
 SetLum (comp4_t dest[3], comp4_t src[3], comp4_t sa, comp4_t lum)
@@ -1963,6 +2013,10 @@ _pixman_setup_combiner_functions_width (pixman_implementation_t *imp)
     imp->combine_width_ca[PIXMAN_OP_SOFT_LIGHT] = fbCombineSoftLightC;
     imp->combine_width_ca[PIXMAN_OP_DIFFERENCE] = fbCombineDifferenceC;
     imp->combine_width_ca[PIXMAN_OP_EXCLUSION] = fbCombineExclusionC;
+    imp->combine_width_ca[PIXMAN_OP_HSL_HUE] = fbCombineHSLHueC;
+    imp->combine_width_ca[PIXMAN_OP_HSL_SATURATION] = fbCombineHSLSaturationC;
+    imp->combine_width_ca[PIXMAN_OP_HSL_COLOR] = fbCombineHSLColorC;
+    imp->combine_width_ca[PIXMAN_OP_HSL_LUMINOSITY] = fbCombineHSLLuminosityC;
 }
 
 
