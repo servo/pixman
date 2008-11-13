@@ -707,12 +707,6 @@ PdfSeperableBlendMode (Exclusion)
 
 #undef PdfSeperableBlendMode
 
-static void
-fbCombineSubtractU (pixman_implementation_t *imp, pixman_op_t op,
-		    comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
-{
-    int i;
-
 #define Subtract(res, Color)						\
     do {								\
       comp1_t dc, sc;							\
@@ -723,6 +717,12 @@ fbCombineSubtractU (pixman_implementation_t *imp, pixman_op_t op,
       else								\
 	res = dc - sc;							\
     } while (0);
+
+static void
+fbCombineSubtractU (pixman_implementation_t *imp, pixman_op_t op,
+		    comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+{
+    int i;
 
     for (i = 0; i < width; ++i) {
 	comp4_t d, s;
@@ -740,9 +740,38 @@ fbCombineSubtractU (pixman_implementation_t *imp, pixman_op_t op,
 	    | (g << G_SHIFT)
 	    | b;
     }
+}
+
+static void
+fbCombineSubtractC (pixman_implementation_t *imp, pixman_op_t op,
+		    comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+{
+    int i;
+
+    for (i = 0; i < width; ++i) {
+	comp4_t d, s, m;
+	comp4_t r, g, b;
+
+	d = *(dest + i);
+	s = combineMask (src, mask, i);
+	m = *(mask + i);
+
+	fbCombineMaskC (&s, &m);
+	m = ~m;
+	fbCombineMaskC (&d, &m);
+
+	Subtract (r, Red);
+	Subtract (g, Green);
+	Subtract (b, Blue);
+
+	*(dest + i) = (Alpha (d) << A_SHIFT)
+	    | (r << R_SHIFT)
+	    | (g << G_SHIFT)
+	    | b;
+    }
+}
 
 #undef Subtract
-}
 
 #define Min(c) (c[0] < c[1] ? (c[0] < c[2] ? c[0] : c[2]) : (c[1] < c[2] ? c[1] : c[2]))
 #define Max(c) (c[0] > c[1] ? (c[0] > c[2] ? c[0] : c[2]) : (c[1] > c[2] ? c[1] : c[2]))
@@ -783,7 +812,7 @@ fbCombine ## name ## U (pixman_implementation_t *imp, pixman_op_t op, \
     }						    \
 }						    \
 						    \
-static FASTCALL void				    \
+static void				    \
 fbCombine ## name ## C (pixman_implementation_t *imp, pixman_op_t op, \
 			comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width) \
 {						    \
@@ -2013,6 +2042,7 @@ _pixman_setup_combiner_functions_width (pixman_implementation_t *imp)
     imp->combine_width_ca[PIXMAN_OP_SOFT_LIGHT] = fbCombineSoftLightC;
     imp->combine_width_ca[PIXMAN_OP_DIFFERENCE] = fbCombineDifferenceC;
     imp->combine_width_ca[PIXMAN_OP_EXCLUSION] = fbCombineExclusionC;
+    imp->combine_width_ca[PIXMAN_OP_SUBTRACT] = fbCombineSubtractC;
     imp->combine_width_ca[PIXMAN_OP_HSL_HUE] = fbCombineHSLHueC;
     imp->combine_width_ca[PIXMAN_OP_HSL_SATURATION] = fbCombineHSLSaturationC;
     imp->combine_width_ca[PIXMAN_OP_HSL_COLOR] = fbCombineHSLColorC;
