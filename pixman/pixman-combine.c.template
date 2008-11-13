@@ -13,6 +13,86 @@
 #define Green(x) (((x) >> G_SHIFT) & MASK)
 #define Blue(x) ((x) & MASK)
 
+/*** per channel helper functions ***/
+
+static void
+fbCombineMaskC (comp4_t *src, comp4_t *mask)
+{
+    comp4_t a = *mask;
+
+    comp4_t	x;
+    comp2_t	xa;
+
+    if (!a)
+    {
+	*(src) = 0;
+	return;
+    }
+
+    x = *(src);
+    if (a == ~0)
+    {
+	x = x >> A_SHIFT;
+	x |= x << G_SHIFT;
+	x |= x << R_SHIFT;
+	*(mask) = x;
+	return;
+    }
+
+    xa = x >> A_SHIFT;
+    FbByteMulC(x, a);
+    *(src) = x;
+    FbByteMul(a, xa);
+    *(mask) = a;
+}
+
+static void
+fbCombineMaskValueC (comp4_t *src, const comp4_t *mask)
+{
+    comp4_t a = *mask;
+    comp4_t	x;
+
+    if (!a)
+    {
+	*(src) = 0;
+	return;
+    }
+
+    if (a == ~0)
+	return;
+
+    x = *(src);
+    FbByteMulC(x, a);
+    *(src) =x;
+}
+
+static void
+fbCombineMaskAlphaC (const comp4_t *src, comp4_t *mask)
+{
+    comp4_t a = *(mask);
+    comp4_t	x;
+
+    if (!a)
+	return;
+
+    x = *(src) >> A_SHIFT;
+    if (x == MASK)
+	return;
+    if (a == ~0)
+    {
+	x = x >> A_SHIFT;
+	x |= x << G_SHIFT;
+	x |= x << R_SHIFT;
+	*(mask) = x;
+	return;
+    }
+
+    FbByteMul(a, x);
+    *(mask) = a;
+}
+
+
+
 /*
  * There are two ways of handling alpha -- either as a single unified value or
  * a separate value for each component, hence each macro must have two
@@ -283,38 +363,43 @@ fbCombineMultiplyU (pixman_implementation_t *imp, pixman_op_t op,
     }
 }
 
-/* Screen
- *
- * Dca' = (Sca.Da + Dca.Sa - Sca.Dca) + Sca.(1 - Da) + Dca.(1 - Sa)
- *      = Sca + Dca - Sca.Dca
- * Da'  = Sa + Da - Sa.Da 
- */
-
 static void
-fbCombineScreenU (pixman_implementation_t *imp, pixman_op_t op,
-		  comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineMultiplyC (pixman_implementation_t *imp, pixman_op_t op,
+                    comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
+        comp4_t m = *(mask + i);
         comp4_t s = combineMask (src, mask, i);
         comp4_t d = *(dest + i);
-	comp4_t p = s;
-	comp4_t a, r, g, b;
+	comp4_t r = s;
+        comp4_t src_ia = Alpha (~s);
+	comp4_t dest_ia = Alpha (~d);
 
-	FbByteMulC (p, d);
+        if (m == 0)
+	    continue;
 
-	a = Alpha (s)	+ Alpha (d) - Alpha (p);
-	r = Red(s)	+ Red (d)   - Red (p);
-	g = Green (s)	+ Green (d) - Green (p);
-	b = Blue (s)	+ Blue (d)  - Blue (p);
+	if (m == ~0)
+	{
+	    FbByteAddMul (r, dest_ia, d, src_ia);
+	    fbCombineMaskC (&s, &m);
+	    FbByteMul (s, dest_ia);
+	    fbCombineMaskValueC (&r, &m);
+	    r += s;
+	    m = ~m;
+	    FbByteMulAddC(d, m, r);
+	    d = r;
+	} else {
+	    r = s;
+	    fbCombineMaskValueC (&r, &m);
+	}
 
-	/* no clamping required, values don't overflow */
-	*(dest + i) = (a << A_SHIFT) | (r << R_SHIFT) | (g << G_SHIFT) | b;
+	*(dest + i) = r;
     }
 }
 
-#define PdfSeperableBlendMode(name)				      \
-static void							      \
+#define PdfSeperableBlendMode(name)		    \
+static void				    \
 fbCombine ## name ## U (pixman_implementation_t *imp, pixman_op_t op, \
                         comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width) \
 {						    \
@@ -337,7 +422,61 @@ fbCombine ## name ## U (pixman_implementation_t *imp, pixman_op_t op, \
 	    (Blend ## name (Green (d), da, Green (s), sa) << G_SHIFT) + \
 	    (Blend ## name (Blue (d), da, Blue (s), sa)); \
     }						    \
+}						    \
+						    \
+static void				    \
+fbCombine ## name ## C (pixman_implementation_t *imp, pixman_op_t op, \
+			comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width) \
+{						    \
+    int i;					    \
+    for (i = 0; i < width; ++i) {		    \
+	comp4_t m = *(mask + i);		    \
+	comp4_t s = combineMask (src, mask, i);	    \
+	comp4_t d = *(dest + i);		    \
+	comp1_t sa = Alpha(s);			    \
+	comp1_t da = Alpha(d);  		    \
+	comp1_t ida = ~da;			    \
+	comp4_t result;				    \
+						    \
+        if (m == 0)				    \
+	    continue;				    \
+						    \
+	if (m == ~0)	    			    \
+	{					    \
+	    result =				    \
+		(DivOne (sa * da) << A_SHIFT) +					\
+		(Blend ## name (Red (d), da, Red (s), sa) << R_SHIFT) +		\
+		(Blend ## name (Green (d), da, Green (s), sa) << G_SHIFT) +	\
+		(Blend ## name (Blue (d), da, Blue (s), sa));			\
+	    fbCombineMaskValueC (&result, &m);	    \
+	    fbCombineMaskC (&s, &m);		    \
+	    FbByteMul (s, ida);			    \
+	    m = ~m;				    \
+	    FbByteMulAddC(d, m, s);		    \
+	    result += d;			    \
+	} else {				    \
+	    result = s;				    \
+	    fbCombineMaskValueC (&result, &m);	    \
+	}					    \
+						    \
+	*(dest + i) = result;			    \
+    }						    \
 }
+
+/* Screen
+ *
+ * Dca' = (Sca.Da + Dca.Sa - Sca.Dca) + Sca.(1 - Da) + Dca.(1 - Sa)
+ *      = Sca + Dca - Sca.Dca
+ * Da'  = Sa + Da - Sa.Da 
+ */
+
+static inline comp4_t
+BlendScreen (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
+{
+  return DivOne (sca * da + dca * sa - sca * dca);
+}
+
+PdfSeperableBlendMode (Screen)
 
 /* Overlay
  *
@@ -611,7 +750,7 @@ fbCombineSubtractU (pixman_implementation_t *imp, pixman_op_t op,
 #define Sat(c) (Max (c) - Min (c))
 
 #define PdfNonSeperableBlendMode(name)		    \
-static FASTCALL void				    \
+static void				    \
 fbCombine ## name ## U (pixman_implementation_t *imp, pixman_op_t op, \
 			comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width) \
 {						    \
@@ -1119,82 +1258,6 @@ fbCombineConjointXorU (pixman_implementation_t *imp, pixman_op_t op,
 /********************************************************************************/
 /*************************** Per Channel functions ******************************/
 /********************************************************************************/
-
-static void
-fbCombineMaskC (comp4_t *src, comp4_t *mask)
-{
-    comp4_t a = *mask;
-
-    comp4_t	x;
-    comp2_t	xa;
-
-    if (!a)
-    {
-	*(src) = 0;
-	return;
-    }
-
-    x = *(src);
-    if (a == ~0)
-    {
-	x = x >> A_SHIFT;
-	x |= x << G_SHIFT;
-	x |= x << R_SHIFT;
-	*(mask) = x;
-	return;
-    }
-
-    xa = x >> A_SHIFT;
-    FbByteMulC(x, a);
-    *(src) = x;
-    FbByteMul(a, xa);
-    *(mask) = a;
-}
-
-static void
-fbCombineMaskValueC (comp4_t *src, const comp4_t *mask)
-{
-    comp4_t a = *mask;
-    comp4_t	x;
-
-    if (!a)
-    {
-	*(src) = 0;
-	return;
-    }
-
-    if (a == ~0)
-	return;
-
-    x = *(src);
-    FbByteMulC(x, a);
-    *(src) =x;
-}
-
-static void
-fbCombineMaskAlphaC (const comp4_t *src, comp4_t *mask)
-{
-    comp4_t a = *(mask);
-    comp4_t	x;
-
-    if (!a)
-	return;
-
-    x = *(src) >> A_SHIFT;
-    if (x == MASK)
-	return;
-    if (a == ~0)
-    {
-	x = x >> A_SHIFT;
-	x |= x << G_SHIFT;
-	x |= x << R_SHIFT;
-	*(mask) = x;
-	return;
-    }
-
-    FbByteMul(a, x);
-    *(mask) = a;
-}
 
 static void
 fbCombineClearC (pixman_implementation_t *imp, pixman_op_t op,
@@ -1888,5 +1951,18 @@ _pixman_setup_combiner_functions_width (pixman_implementation_t *imp)
     imp->combine_width_ca[PIXMAN_OP_CONJOINT_ATOP] = fbCombineConjointAtopC;
     imp->combine_width_ca[PIXMAN_OP_CONJOINT_ATOP_REVERSE] = fbCombineConjointAtopReverseC;
     imp->combine_width_ca[PIXMAN_OP_CONJOINT_XOR] = fbCombineConjointXorC;
+
+    imp->combine_width_ca[PIXMAN_OP_MULTIPLY] = fbCombineMultiplyC;
+    imp->combine_width_ca[PIXMAN_OP_SCREEN] = fbCombineScreenC;
+    imp->combine_width_ca[PIXMAN_OP_OVERLAY] = fbCombineOverlayC;
+    imp->combine_width_ca[PIXMAN_OP_DARKEN] = fbCombineDarkenC;
+    imp->combine_width_ca[PIXMAN_OP_LIGHTEN] = fbCombineLightenC;
+    imp->combine_width_ca[PIXMAN_OP_COLOR_DODGE] = fbCombineColorDodgeC;
+    imp->combine_width_ca[PIXMAN_OP_COLOR_BURN] = fbCombineColorBurnC;
+    imp->combine_width_ca[PIXMAN_OP_HARD_LIGHT] = fbCombineHardLightC;
+    imp->combine_width_ca[PIXMAN_OP_SOFT_LIGHT] = fbCombineSoftLightC;
+    imp->combine_width_ca[PIXMAN_OP_DIFFERENCE] = fbCombineDifferenceC;
+    imp->combine_width_ca[PIXMAN_OP_EXCLUSION] = fbCombineExclusionC;
 }
+
 
