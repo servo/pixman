@@ -1987,7 +1987,59 @@ pixman_bool_t pixman_have_vmx (void) {
     return have_vmx;
 }
 
-#else
+#elif defined (__linux__)
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <linux/auxvec.h>
+#include <asm/cputable.h>
+
+pixman_bool_t pixman_have_vmx (void)
+{
+    if (!initialized) {
+	char fname[64];
+	unsigned long buf[64];
+	ssize_t count = 0;
+	pid_t pid;
+	int fd, i;
+
+	pid = getpid();
+	snprintf(fname, sizeof(fname)-1, "/proc/%d/auxv", pid);
+
+	fd = open(fname, O_RDONLY);
+	if (fd >= 0) {
+	    for (i = 0; i <= (count / sizeof(unsigned long)); i += 2) {
+		/* Read more if buf is empty... */
+		if (i == (count / sizeof(unsigned long))) {
+		    count = read(fd, buf, sizeof(buf));
+		    if (count <= 0)
+			break;
+		    i = 0;
+		}
+
+		if (buf[i] == AT_HWCAP) {
+		    have_vmx = !!(buf[i+1] & PPC_FEATURE_HAS_ALTIVEC);
+		    initialized = TRUE;
+		    break;
+		} else if (buf[i] == AT_NULL) {
+		    break;
+		}
+	    }
+	    close(fd);
+	}
+    }
+    if (!initialized) {
+	/* Something went wrong. Assume 'no' rather than playing
+	   fragile tricks with catching SIGILL. */
+	have_vmx = FALSE;
+	initialized = TRUE;
+    }
+
+    return have_vmx;
+}
+#else /* !__APPLE__ && !__linux__ */
 #include <signal.h>
 #include <setjmp.h>
 
