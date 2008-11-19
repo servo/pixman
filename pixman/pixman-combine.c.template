@@ -496,7 +496,6 @@ BlendOverlay (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
 	rca = 2 * sca * dca;
     else
 	rca = sa * da - 2 * (da - dca) * (sa - sca);
-    while (rca > (sa * da));
     return DivOne (rca);
 }
 
