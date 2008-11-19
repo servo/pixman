@@ -715,7 +715,7 @@ PdfSeperableBlendMode (Exclusion)
 	res = 0;							\
       else								\
 	res = dc - sc;							\
-    } while (0);
+    } while (0)
 
 static void
 fbCombineSubtractU (pixman_implementation_t *imp, pixman_op_t op,
