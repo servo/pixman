@@ -398,8 +398,8 @@ fbCombineMultiplyC (pixman_implementation_t *imp, pixman_op_t op,
     }
 }
 
-#define PdfSeperableBlendMode(name)		    \
-static void				    \
+#define PdfSeparableBlendMode(name)		    \
+static void					    \
 fbCombine ## name ## U (pixman_implementation_t *imp, pixman_op_t op, \
                         comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width) \
 {						    \
@@ -476,7 +476,7 @@ BlendScreen (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
   return DivOne (sca * da + dca * sa - sca * dca);
 }
 
-PdfSeperableBlendMode (Screen)
+PdfSeparableBlendMode (Screen)
 
 /* Overlay
  *
@@ -499,7 +499,7 @@ BlendOverlay (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
     return DivOne (rca);
 }
 
-PdfSeperableBlendMode (Overlay)
+PdfSeparableBlendMode (Overlay)
 
 /* Darken
  *
@@ -517,7 +517,7 @@ BlendDarken (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
     return DivOne (s > d ? d : s);
 }
 
-PdfSeperableBlendMode (Darken)
+PdfSeparableBlendMode (Darken)
 
 /* Lighten
  *
@@ -535,7 +535,7 @@ BlendLighten (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
     return DivOne (s > d ? s : d);
 }
 
-PdfSeperableBlendMode (Lighten)
+PdfSeparableBlendMode (Lighten)
 
 /* Color dodge
  *
@@ -558,7 +558,7 @@ BlendColorDodge (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
     }
 }
 
-PdfSeperableBlendMode (ColorDodge)
+PdfSeparableBlendMode (ColorDodge)
 
 /* Color burn
  *
@@ -582,7 +582,7 @@ BlendColorBurn (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
     }
 }
 
-PdfSeperableBlendMode (ColorBurn)
+PdfSeparableBlendMode (ColorBurn)
 
 /* Hard light
  *
@@ -602,7 +602,7 @@ BlendHardLight (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
 	return DivOne (sa * da - 2 * (da - dca) * (sa - sca));
 }
 
-PdfSeperableBlendMode (HardLight)
+PdfSeparableBlendMode (HardLight)
 
 /* Soft light
  *
@@ -662,7 +662,7 @@ BlendSoftLight (comp4_t dca_org, comp4_t da_org, comp4_t sca_org, comp4_t sa_org
     return rca * MASK + 0.5;
 }
 
-PdfSeperableBlendMode (SoftLight)
+PdfSeparableBlendMode (SoftLight)
 
 /* Difference
  *
@@ -684,7 +684,7 @@ BlendDifference (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
 	return DivOne (scada - dcasa);
 }
 
-PdfSeperableBlendMode (Difference)
+PdfSeparableBlendMode (Difference)
 
 /* Exclusion
  *
@@ -694,7 +694,7 @@ PdfSeperableBlendMode (Difference)
  */
 
 /* This can be made faster by writing it directly and not using
- * PdfSeperableBlendMode, but that's a performance optimization */
+ * PdfSeparableBlendMode, but that's a performance optimization */
 
 static inline comp4_t
 BlendExclusion (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
@@ -702,9 +702,9 @@ BlendExclusion (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
     return DivOne (sca * da + dca * sa - 2 * dca * sca);
 }
 
-PdfSeperableBlendMode (Exclusion)
+PdfSeparableBlendMode (Exclusion)
 
-#undef PdfSeperableBlendMode
+#undef PdfSeparableBlendMode
 
 #define Subtract(res, Color)						\
     do {								\
@@ -777,8 +777,8 @@ fbCombineSubtractC (pixman_implementation_t *imp, pixman_op_t op,
 #define Lum(c) ((c[0] * 30 + c[1] * 59 + c[2] * 11) / 100)
 #define Sat(c) (Max (c) - Min (c))
 
-#define PdfNonSeperableBlendMode(name)		    \
-static void				    \
+#define PdfNonSeparableBlendMode(name)		    \
+static FASTCALL void				    \
 fbCombine ## name ## U (pixman_implementation_t *imp, pixman_op_t op, \
 			comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width) \
 {						    \
@@ -957,7 +957,7 @@ BlendHSLHue (comp4_t c[3], comp4_t dc[3], comp4_t da, comp4_t sc[3], comp4_t sa)
     SetLum (c, c, sa * da, Lum (dc) * sa);
 }
 
-PdfNonSeperableBlendMode (HSLHue)
+PdfNonSeparableBlendMode (HSLHue)
 
 static inline void
 BlendHSLSaturation (comp4_t c[3], comp4_t dc[3], comp4_t da, comp4_t sc[3], comp4_t sa)
@@ -969,7 +969,7 @@ BlendHSLSaturation (comp4_t c[3], comp4_t dc[3], comp4_t da, comp4_t sc[3], comp
     SetLum (c, c, sa * da, Lum (dc) * sa);
 }
 
-PdfNonSeperableBlendMode (HSLSaturation)
+PdfNonSeparableBlendMode (HSLSaturation)
 
 static inline void
 BlendHSLColor (comp4_t c[3], comp4_t dc[3], comp4_t da, comp4_t sc[3], comp4_t sa)
@@ -980,7 +980,7 @@ BlendHSLColor (comp4_t c[3], comp4_t dc[3], comp4_t da, comp4_t sc[3], comp4_t s
     SetLum (c, c, sa * da, Lum (dc) * sa);
 }
 
-PdfNonSeperableBlendMode (HSLColor)
+PdfNonSeparableBlendMode (HSLColor)
 
 static inline void
 BlendHSLLuminosity (comp4_t c[3], comp4_t dc[3], comp4_t da, comp4_t sc[3], comp4_t sa)
@@ -991,13 +991,13 @@ BlendHSLLuminosity (comp4_t c[3], comp4_t dc[3], comp4_t da, comp4_t sc[3], comp
     SetLum (c, c, sa * da, Lum (sc) * da);
 }
 
-PdfNonSeperableBlendMode (HSLLuminosity)
+PdfNonSeparableBlendMode (HSLLuminosity)
 
 #undef Set
 #undef Lum
 #undef Max
 #undef Min
-#undef PdfNonSeperableBlendMode
+#undef PdfNonSeparableBlendMode
 
 /* Overlay
  *
