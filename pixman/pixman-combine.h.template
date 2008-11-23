@@ -135,7 +135,7 @@
     } while (0)
 
 /*
-  x_c = (x_c * a) / 255 + y
+  x_c = (x_c * a_c) / 255 + y
 */
 #define FbByteMulAddC(x, a, y) do {                                     \
         comp4_t t;                                                      \
