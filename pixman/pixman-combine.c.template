@@ -392,26 +392,19 @@ fbCombineMultiplyC (pixman_implementation_t *imp, pixman_op_t op,
         comp4_t m = *(mask + i);
         comp4_t s = combineMask (src, mask, i);
         comp4_t d = *(dest + i);
-	comp4_t r = s;
-        comp4_t src_ia = Alpha (~s);
+	comp4_t r = d;
 	comp4_t dest_ia = Alpha (~d);
 
         if (m == 0)
 	    continue;
 
-	if (m == ~0)
+	fbCombineMaskValueC (&s, &m);
+
+	m = ~m;
+	if (m != 0)
 	{
-	    FbByteAddMul (r, dest_ia, d, src_ia);
-	    fbCombineMaskC (&s, &m);
-	    FbByteMul (s, dest_ia);
-	    fbCombineMaskValueC (&r, &m);
-	    r += s;
-	    m = ~m;
-	    FbByteMulAddC(d, m, r);
-	    d = r;
-	} else {
-	    r = s;
-	    fbCombineMaskValueC (&r, &m);
+	    FbByteAddMulC (r, m, s, dest_ia);
+	    FbByteMulAddC (s, d, r);
 	}
 
 	*(dest + i) = r;
@@ -1014,7 +1007,6 @@ fbCombineFlashSubtractC (pixman_implementation_t *imp, pixman_op_t op,
 
 	fbCombineMaskC (&s, &m);
 	m = ~m;
-	fbCombineMaskC (&d, &m);
 
 	Subtract (r, Red);
 	Subtract (g, Green);
