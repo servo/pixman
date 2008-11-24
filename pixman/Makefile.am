@@ -26,7 +26,8 @@ libpixman_1_la_SOURCES =		\
 	pixman-edge-imp.h		\
 	pixman-trap.c			\
 	pixman-compute-region.c		\
-	pixman-timer.c
+	pixman-timer.c			\
+	pixman-matrix.c
 
 libpixmanincludedir = $(includedir)/pixman-1/
 libpixmaninclude_HEADERS = pixman.h pixman-version.h
