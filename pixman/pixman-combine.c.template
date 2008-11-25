@@ -450,10 +450,11 @@ fbCombine ## name ## C (pixman_implementation_t *imp, pixman_op_t op, \
 	comp1_t ida = ~da;			    \
 	comp4_t result;				    \
 						    \
+	fbCombineMaskValueC (&s, &m);		    \
+						    \
         if (m == 0)				    \
 	    continue;				    \
 						    \
-	fbCombineMaskValueC (&s, &m);		    \
 	result = d;				    \
 	FbByteAddMulC (result, ~m, s, ida);	    \
 						    \
