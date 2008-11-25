@@ -826,7 +826,6 @@ SetLum (comp4_t dest[3], comp4_t src[3], comp4_t sa, comp4_t lum)
     tmp[1] = l + (tmp[1] - l) / 4 * (a - l) / (max - l) * 4;
     tmp[2] = l + (tmp[2] - l) / 4 * (a - l) / (max - l) * 4;
   }
-  if (Max (tmp) > sa) while (1);
   dest[0] = tmp[0];
   dest[1] = tmp[1];
   dest[2] = tmp[2];
@@ -878,7 +877,6 @@ SetSat (comp4_t dest[3], comp4_t src[3], comp4_t sat)
   } else {
     dest[0] = dest[1] = dest[2] = 0;
   }
-  if (Max (dest) > 255 * 255) while (1);		    \
 }
 
 /*
