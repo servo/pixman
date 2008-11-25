@@ -1005,8 +1005,7 @@ fbCombineFlashSubtractC (pixman_implementation_t *imp, pixman_op_t op,
 	s = combineMask (src, mask, i);
 	m = *(mask + i);
 
-	fbCombineMaskC (&s, &m);
-	m = ~m;
+	fbCombineMaskValueC (&s, &m);
 
 	Subtract (r, Red);
 	Subtract (g, Green);
