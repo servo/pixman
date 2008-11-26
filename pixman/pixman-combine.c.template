@@ -683,9 +683,7 @@ PdfSeparableBlendMode (Exclusion)
  * 
  * Lum (C) = 0.3 × Cred + 0.59 × Cgreen + 0.11 × Cblue
  *
- * SetLum (C, l):
- *   d = l – Lum (C)
- *   C += d
+ * ClipColor (C):
  *   l = Lum (C)
  *   min = Cmin
  *   max = Cmax
@@ -694,6 +692,11 @@ PdfSeparableBlendMode (Exclusion)
  *   if x > 1.0
  *     C = l + ( ( ( C – l ) × ( 1 – l ) ) ⁄ ( max – l ) )
  *   return C
+ *
+ * SetLum (C, l):
+ *   d = l – Lum (C)
+ *   C += d
+ *   return ClipColor (C)
  *
  * Sat (C) = Max (C) - Min (C)
  *
@@ -707,6 +710,79 @@ PdfSeparableBlendMode (Exclusion)
  *  return C
  */
 
+/* For premultiplied colors, we need to know what happens when C is
+ * multiplied by a real number. Lum and Sat are linear:
+ *
+ *    Lum (r × C) = r × Lum (C)		Sat (r * C) = r * Sat (C)
+ *
+ * If we extend ClipColor with an extra argument a and change
+ *
+ *        if x >= 1.0
+ *
+ * into
+ *
+ *        if x >= a
+ *
+ * then ClipColor is also linear:
+ *
+ *    r * ClipColor (C, a) = ClipColor (rC, ra);
+ *
+ * for positive r.
+ *
+ * Similarly, we can extend SetLum with an extra argument that is just passed
+ * on to ClipColor:
+ *
+ *   r * SetLum ( C, l, a)
+ *
+ *   = r × ClipColor ( C + l - Lum (C), a)
+ *
+ *   = ClipColor ( r * C + r × l - r * Lum (C), r * a)
+ *
+ *   = SetLum ( r * C, r * l, r * a)
+ *
+ * Finally, SetSat:
+ *
+ *    r * SetSat (C, s) = SetSat (x * C, r * s)
+ *
+ * The above holds for all non-zero x, because they x'es in the fraction for
+ * C_mid cancel out. Specifically, it holds for x = r:
+ *
+ *    r * SetSat (C, s) = SetSat (rC, rs)
+ *  
+ */
+
+/* So, for the non-separable PDF blend modes, we have (using s, d for non-premultiplied
+ * colors, and S, D for premultiplied:
+ *
+ *   Color:
+ *
+ *     a_s * a_d * B(s, d)
+ *   = a_s * a_d * SetLum (S/a_s, Lum (D/a_d), 1)
+ *   = SetLum (S * a_d, a_s * Lum (D), a_s * a_d)
+ *
+ *
+ *   Luminosity:
+ *
+ *     a_s * a_d * B(s, d)
+ *   = a_s * a_d * SetLum (D/a_d, Lum(S/a_s), 1)
+ *   = SetLum (a_s * D, a_d * Lum(S), a_s * a_d)
+ *
+ *
+ *   Saturation:
+ *
+ *     a_s * a_d * B(s, d)
+ *   = a_s * a_d * SetLum (SetSat (D/a_d, Sat (S/a_s)), Lum (D/a_d), 1)
+ *   = SetLum (a_s * a_d * SetSat (D/a_d, Sat (S/a_s)), a_s * Lum (D), a_s * a_d)
+ *   = SetLum (SetSat (a_s * D, a_d * Sat (S), a_s * Lum (D), a_s * a_d))
+ *
+ *   Hue:
+ *
+ *     a_s * a_d * B(s, d)
+ *   = a_s * a_d * SetLum (SetSat (S/a_s, Sat (D/a_d)), Lum (D/a_d), 1)
+ *   = a_s * a_d * SetLum (SetSat (a_d * S, a_s * Sat (D)), a_s * Lum (D), a_s * a_d)
+ *
+ */
+    
 #define Min(c) (c[0] < c[1] ? (c[0] < c[2] ? c[0] : c[2]) : (c[1] < c[2] ? c[1] : c[2]))
 #define Max(c) (c[0] > c[1] ? (c[0] > c[2] ? c[0] : c[2]) : (c[1] > c[2] ? c[1] : c[2]))
 #define Lum(c) ((c[0] * 30 + c[1] * 59 + c[2] * 11) / 100)
