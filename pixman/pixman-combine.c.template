@@ -405,7 +405,8 @@ fbCombineMultiplyC (pixman_implementation_t *imp, pixman_op_t op,
 	    comp4_t dest_ia = Alpha (~d);
 	    
 	    FbByteAddMulC (r, m, s, dest_ia);
-	    FbByteMulAddC (r, s, d);
+	    FbByteMulC (d, s);
+	    FbByteAdd (r, d);
 	}
 
 	*(dest + i) = r;
