@@ -391,20 +391,21 @@ fbCombineMultiplyC (pixman_implementation_t *imp, pixman_op_t op,
     for (i = 0; i < width; ++i) {
         comp4_t m = *(mask + i);
         comp4_t s = combineMask (src, mask, i);
-        comp4_t d = *(dest + i);
-	comp4_t r = d;
-	comp4_t dest_ia = Alpha (~d);
+
+	fbCombineMaskValueC (&s, &m);
 
         if (m == 0)
 	    continue;
 
-	fbCombineMaskValueC (&s, &m);
-
 	m = ~m;
 	if (m != 0)
 	{
+	    comp4_t d = *(dest + i);
+	    comp4_t r = d;
+	    comp4_t dest_ia = Alpha (~d);
+	    
 	    FbByteAddMulC (r, m, s, dest_ia);
-	    FbByteMulAddC (s, d, r);
+	    FbByteMulAddC (r, s, d);
 	}
 
 	*(dest + i) = r;
