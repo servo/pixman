@@ -60,7 +60,7 @@ fbCompositeSrcAdd_8000x8000arm (pixman_op_t op,
 	srcLine += srcStride;
 	w = width;
 
-	while (w && (unsigned long)dst & 3)
+	while (w && (((unsigned long)dst & 3) || ((unsigned long)src & 3)))
 	{
 	    s = *src;
 	    d = *dst;
