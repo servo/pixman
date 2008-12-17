@@ -648,7 +648,9 @@ struct pixman_indexed
 #define PIXMAN_TYPE_YUY2	6
 #define PIXMAN_TYPE_YV12	7
 
-#define PIXMAN_FORMAT_COLOR(f)	(PIXMAN_FORMAT_TYPE(f) & 2)
+#define PIXMAN_FORMAT_COLOR(f)				\
+	(PIXMAN_FORMAT_TYPE(f) == PIXMAN_TYPE_ARGB ||	\
+	 PIXMAN_FORMAT_TYPE(f) == PIXMAN_TYPE_ABGR)
 
 /* 32bpp formats */
 typedef enum {
