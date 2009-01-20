@@ -1269,6 +1269,15 @@ fbCompositeSrcScaleNearest (pixman_op_t     op,
                     break;
 
                 case PIXMAN_REPEAT_REFLECT:
+		    x = MOD (x, pSrc->bits.width * 2);
+		    if (x >= pSrc->bits.width)
+			    x = pSrc->bits.width * 2 - x - 1;
+		    y = MOD (y, pSrc->bits.height * 2);
+		    if (y >= pSrc->bits.height)
+			    y = pSrc->bits.height * 2 - y - 1;
+		    inside_bounds = TRUE;
+		    break;
+
                 case PIXMAN_REPEAT_NONE:
                 default:
                     inside_bounds = (x >= 0 && x < pSrc->bits.width && y >= 0 && y < pSrc->bits.height);
@@ -1966,7 +1975,9 @@ pixman_image_composite (pixman_op_t      op,
         && !maskAlphaMap && !srcAlphaMap && !dstAlphaMap
         && (pSrc->common.filter != PIXMAN_FILTER_CONVOLUTION)
         && (pSrc->common.repeat != PIXMAN_REPEAT_PAD)
-        && (!pMask || (pMask->common.filter != PIXMAN_FILTER_CONVOLUTION && pMask->common.repeat != PIXMAN_REPEAT_PAD))
+        && (pSrc->common.repeat != PIXMAN_REPEAT_REFLECT)
+        && (!pMask || (pMask->common.filter != PIXMAN_FILTER_CONVOLUTION &&
+		pMask->common.repeat != PIXMAN_REPEAT_PAD && pMask->common.repeat != PIXMAN_REPEAT_REFLECT))
 	&& !pSrc->common.read_func && !pSrc->common.write_func
 	&& !(pMask && pMask->common.read_func) && !(pMask && pMask->common.write_func)
 	&& !pDst->common.read_func && !pDst->common.write_func)

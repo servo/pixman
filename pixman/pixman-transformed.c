@@ -129,7 +129,16 @@ fetch_nearest (bits_image_t		*pict,
 	    inside_bounds = TRUE;
 	    break;
 	    
-	case PIXMAN_REPEAT_REFLECT: /* FIXME: this should be implemented for images */
+	case PIXMAN_REPEAT_REFLECT:
+	    x = MOD (x, pict->width * 2);
+	    if (x >= pict->width)
+		x = pict->width * 2 - x - 1;
+	    y = MOD (y, pict->height * 2);
+	    if (y >= pict->height)
+		y = pict->height * 2 - y - 1;
+	    inside_bounds = TRUE;
+	    break;
+
 	case PIXMAN_REPEAT_NONE:
 	    inside_bounds = FALSE;
 	    break;
@@ -202,7 +211,22 @@ fetch_bilinear (bits_image_t		*pict,
 	    inside_bounds = TRUE;
 	    break;
 	    
-	case PIXMAN_REPEAT_REFLECT: /* FIXME: this should be implemented for images */
+	case PIXMAN_REPEAT_REFLECT:
+	    x1 = MOD (x1, pict->width * 2);
+	    if (x1 >= pict->width)
+		x1 = pict->width * 2 - x1 - 1;
+	    x2 = MOD (x2, pict->width * 2);
+	    if (x2 >= pict->width)
+		x2 = pict->width * 2 - x2 - 1;
+	    y1 = MOD (y1, pict->height * 2);
+	    if (y1 >= pict->height)
+		y1 = pict->height * 2 - y1 - 1;
+	    y2 = MOD (y2, pict->height * 2);
+	    if (y2 >= pict->height)
+		y2 = pict->height * 2 - y2 - 1;
+	    inside_bounds = TRUE;
+	    break;
+
 	case PIXMAN_REPEAT_NONE:
 	    inside_bounds = FALSE;
 	    break;
@@ -282,6 +306,11 @@ fbFetchTransformed_Convolution(bits_image_t * pict, int width, uint32_t *buffer,
                         case PIXMAN_REPEAT_PAD:
                             ty = CLIP (y, 0, pict->height-1);
                             break;
+			case PIXMAN_REPEAT_REFLECT:
+			    ty = MOD (y, pict->height * 2);
+			    if (ty >= pict->height)
+				ty = pict->height * 2 - ty - 1;
+			    break;
                         default:
                             ty = y;
                     }
@@ -295,6 +324,11 @@ fbFetchTransformed_Convolution(bits_image_t * pict, int width, uint32_t *buffer,
                                 case PIXMAN_REPEAT_PAD:
                                     tx = CLIP (x, 0, pict->width-1);
                                     break;
+				case PIXMAN_REPEAT_REFLECT:
+				    tx = MOD (x, pict->width * 2);
+				    if (tx >= pict->width)
+					tx = pict->width * 2 - tx - 1;
+				    break;
                                 default:
                                     tx = x;
                             }

@@ -264,7 +264,7 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 	{
 	    fetchSrc = get_fetch_external_alpha(wide);
 	}
-	else if ((bits->common.repeat == PIXMAN_REPEAT_NORMAL || bits->common.repeat == PIXMAN_REPEAT_PAD) &&
+	else if ((bits->common.repeat != PIXMAN_REPEAT_NONE) &&
 		 bits->width == 1 &&
 		 bits->height == 1)
 	{
@@ -272,7 +272,7 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 	    srcClass = SOURCE_IMAGE_CLASS_HORIZONTAL;
 	}
 	else if (!bits->common.transform && bits->common.filter != PIXMAN_FILTER_CONVOLUTION
-                && bits->common.repeat != PIXMAN_REPEAT_PAD)
+                && bits->common.repeat != PIXMAN_REPEAT_PAD && bits->common.repeat != PIXMAN_REPEAT_REFLECT)
 	{
 	    fetchSrc = get_fetch(wide);
 	}
@@ -303,14 +303,14 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 	    {
 		fetchMask = get_fetch_external_alpha(wide);
 	    }
-	    else if ((bits->common.repeat == PIXMAN_REPEAT_NORMAL || bits->common.repeat == PIXMAN_REPEAT_PAD) &&
+	    else if ((bits->common.repeat != PIXMAN_REPEAT_NONE) &&
 		     bits->width == 1 && bits->height == 1)
 	    {
 		fetchMask = get_fetch_solid(wide);
 		maskClass = SOURCE_IMAGE_CLASS_HORIZONTAL;
 	    }
 	    else if (!bits->common.transform && bits->common.filter != PIXMAN_FILTER_CONVOLUTION
-                    && bits->common.repeat != PIXMAN_REPEAT_PAD)
+                    && bits->common.repeat != PIXMAN_REPEAT_PAD && bits->common.repeat != PIXMAN_REPEAT_REFLECT)
 		fetchMask = get_fetch(wide);
 	    else
 		fetchMask = get_fetch_transformed(wide);
