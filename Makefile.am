@@ -48,6 +48,8 @@ $(gpg_file): $(sha1_tgz)
 	@echo "Please enter your GPG password to sign the checksum."
 	gpg --armor --sign $^ 
 
+HASHFILES = $(sha1_tgz) $(sha1_tbz2) $(md5_tgz) $(md5_tbz2)
+
 release-verify-newer:
 	@echo -n "Checking that no $(VERSION) release already exists at $(RELEASE_XORG_HOST)..."
 	@ssh $(RELEASE_XORG_HOST) test ! -e $(RELEASE_XORG_DIR)/$(tar_gz) \
@@ -61,16 +63,16 @@ release-verify-newer:
 	@echo "Good."
 
 release-remove-old:
-	$(RM) $(tar_gz) $(tar_bz2) $(sha1_tgz) $(gpg_file)
+	$(RM) $(tar_gz) $(tar_bz2) $(HASHFILES) $(gpg_file)
 
 ensure-prev:
 	@if [[ "$(PREV)" == "" ]]; then							\
 		echo ""							          &&	\
 		echo "You must set the PREV variable on the make command line to" &&	\
-		echo "the last version."				  &&	\
+		echo "the last version."				  	  &&	\
 		echo ""								  &&	\
 		echo "For example:"						  &&	\
-		echo "      make PREV=0.7.3"				  &&	\
+		echo "      make PREV=0.7.3"				  	  &&	\
 		echo ""								  &&	\
 		false;									\
 	fi
@@ -80,13 +82,13 @@ release-check: ensure-prev release-verify-newer release-remove-old distcheck
 release-tag:
 	git-tag -u $(GPGKEY) -m "$(PACKAGE) $(VERSION) release" $(PACKAGE)-$(VERSION)
 
-release-upload: release-check $(tar_gz) $(tar_bz2) $(sha1_tgz) $(gpg_file)
+release-upload: release-check $(tar_gz) $(tar_bz2) $(sha1_tgz) $(sha1_tbz2) $(md5_tgz) $(gpg_file)
 	mkdir -p releases
 	scp $(tar_gz) $(sha1_tgz) $(gpg_file) $(RELEASE_CAIRO_HOST):$(RELEASE_CAIRO_DIR)
 	scp $(tar_gz) $(tar_bz2) $(RELEASE_XORG_HOST):$(RELEASE_XORG_DIR)
 	ssh $(RELEASE_CAIRO_HOST) "rm -f $(RELEASE_CAIRO_DIR)/LATEST-$(PACKAGE)-[0-9]* && ln -s $(tar_gz) $(RELEASE_CAIRO_DIR)/LATEST-$(PACKAGE)-$(VERSION)"
 
-release-publish-message: $(sha1_tgz) $(md5_tgz) $(sha1_tbz2) $(md5_tbz2) ensure-prev
+release-publish-message: $(HASHFILES) ensure-prev
 	@echo "Please follow the instructions in RELEASING to push stuff out and"
 	@echo "send out the announcement mails.  Here is the excerpt you need:"
 	@echo ""
