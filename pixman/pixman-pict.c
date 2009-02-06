@@ -1941,7 +1941,6 @@ pixman_image_composite (pixman_op_t      op,
     if(op == PIXMAN_OP_DST)
         return;
 
-#if 0
     if (pSrc->type == BITS
         && srcTransform
         && !pMask
@@ -1962,9 +1961,7 @@ pixman_image_composite (pixman_op_t      op,
             pSrc->common.transform->matrix[2][2] == pixman_fixed_1) {
             func = fbCompositeSrcScaleNearest;
         }
-    } else
-#endif
-    if ((pSrc->type == BITS || pixman_image_can_get_solid (pSrc)) && (!pMask || pMask->type == BITS)
+    } else if ((pSrc->type == BITS || pixman_image_can_get_solid (pSrc)) && (!pMask || pMask->type == BITS)
         && !srcTransform && !maskTransform
         && !maskAlphaMap && !srcAlphaMap && !dstAlphaMap
         && (pSrc->common.filter != PIXMAN_FILTER_CONVOLUTION)
