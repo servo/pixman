@@ -31,11 +31,7 @@ Here are the steps to follow to create a new pixman release:
 
 4) Use "git commit" to record any changes made in steps 2 and 3.
 
-5) Generate the final tar files with
-
-	make distcheck
-
-   and publish the tar files by running 
+5) Generate and publish the tar files by running 
 
 	make PREV=<last version> GPGKEY=<your gpg key id> release-publish
 
@@ -57,6 +53,7 @@ Here are the steps to follow to create a new pixman release:
    configure.ac. Commit this change, and push all commits created
    during this process using
 
+	git push
 	git push --tags
 
    You must use "--tags" here; otherwise the new tag will not
