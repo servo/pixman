@@ -1208,18 +1208,18 @@ fbCompositeSrc_8888xx888 (pixman_op_t op,
 }
 
 static void
-fbCompositeSrcScaleNearest (pixman_op_t op,
-		      pixman_image_t * pSrc,
-		      pixman_image_t * pMask,
-		      pixman_image_t * pDst,
-		      int16_t      xSrc,
-		      int16_t      ySrc,
-		      int16_t      xMask,
-		      int16_t      yMask,
-		      int16_t      xDst,
-		      int16_t      yDst,
-		      uint16_t     width,
-		      uint16_t     height)
+fbCompositeSrcScaleNearest (pixman_op_t     op,
+			    pixman_image_t *pSrc,
+			    pixman_image_t *pMask,
+			    pixman_image_t *pDst,
+			    int16_t         xSrc,
+			    int16_t         ySrc,
+			    int16_t         xMask,
+			    int16_t         yMask,
+			    int16_t         xDst,
+			    int16_t         yDst,
+			    uint16_t        width,
+			    uint16_t        height)
 {
     uint32_t       *dst;
     uint32_t       *src;
@@ -1941,6 +1941,7 @@ pixman_image_composite (pixman_op_t      op,
     if(op == PIXMAN_OP_DST)
         return;
 
+#if 0
     if (pSrc->type == BITS
         && srcTransform
         && !pMask
@@ -1961,7 +1962,9 @@ pixman_image_composite (pixman_op_t      op,
             pSrc->common.transform->matrix[2][2] == pixman_fixed_1) {
             func = fbCompositeSrcScaleNearest;
         }
-    } else if ((pSrc->type == BITS || pixman_image_can_get_solid (pSrc)) && (!pMask || pMask->type == BITS)
+    } else
+#endif
+    if ((pSrc->type == BITS || pixman_image_can_get_solid (pSrc)) && (!pMask || pMask->type == BITS)
         && !srcTransform && !maskTransform
         && !maskAlphaMap && !srcAlphaMap && !dstAlphaMap
         && (pSrc->common.filter != PIXMAN_FILTER_CONVOLUTION)
