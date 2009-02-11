@@ -416,7 +416,6 @@ ACCESS(fbFetchTransformed)(bits_image_t * pict, int x, int y, int width,
         unit.vector[2] = 0;
     }
 
-    /* This allows filtering code to pretend that pixels are located at integer coordinates */
     if (pict->common.filter == PIXMAN_FILTER_NEAREST || pict->common.filter == PIXMAN_FILTER_FAST)
     {
 	fetchPixelProc32   fetch;
