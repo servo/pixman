@@ -420,7 +420,6 @@ void                    pixman_region_init_from_image    (pixman_region16_t *reg
 void                    pixman_region_fini               (pixman_region16_t *region);
 
 
-
 /* manipulation */
 void                    pixman_region_translate          (pixman_region16_t *region,
 							  int                x,
@@ -434,6 +433,12 @@ pixman_bool_t           pixman_region_union              (pixman_region16_t *new
 							  pixman_region16_t *reg1,
 							  pixman_region16_t *reg2);
 pixman_bool_t           pixman_region_union_rect         (pixman_region16_t *dest,
+							  pixman_region16_t *source,
+							  int                x,
+							  int                y,
+							  unsigned int       width,
+							  unsigned int       height);
+pixman_bool_t		pixman_region_intersect_rect     (pixman_region16_t *dest,
 							  pixman_region16_t *source,
 							  int                x,
 							  int                y,
@@ -521,6 +526,12 @@ pixman_bool_t           pixman_region32_intersect          (pixman_region32_t *n
 pixman_bool_t           pixman_region32_union              (pixman_region32_t *new_reg,
 							    pixman_region32_t *reg1,
 							    pixman_region32_t *reg2);
+pixman_bool_t		pixman_region32_intersect_rect     (pixman_region32_t *dest,
+							    pixman_region32_t *source,
+							    int                x,
+							    int                y,
+							    unsigned int       width,
+							    unsigned int       height);
 pixman_bool_t           pixman_region32_union_rect         (pixman_region32_t *dest,
 							    pixman_region32_t *source,
 							    int                x,
