@@ -703,7 +703,11 @@ pixman_image_fill_rectangles (pixman_op_t		    op,
 		pixman_box32_t *boxes;
 
 		pixman_region32_init_rect (&fill_region, rects[i].x, rects[i].y, rects[i].width, rects[i].height);
-		pixman_region32_intersect (&fill_region, &fill_region, &dest->common.clip_region);
+		if (!pixman_region32_intersect (&fill_region,
+						&fill_region,
+						&dest->common.clip_region))
+		    return FALSE;
+
 
 		boxes = pixman_region32_rectangles (&fill_region, &n_boxes);
 		for (j = 0; j < n_boxes; ++j)
