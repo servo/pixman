@@ -572,7 +572,7 @@ pixman_region_appendNonO (
 {									\
     int newRects;							\
     if ((newRects = rEnd - r)) {					\
-	RECTALLOC(newReg, newRects);					\
+	RECTALLOC_BAIL(newReg, newRects, bail);					\
 	memmove((char *)PIXREGION_TOP(newReg),(char *)r, 			\
               newRects * sizeof(box_type_t));				\
 	newReg->data->numRects += newRects;				\
@@ -752,7 +752,8 @@ pixman_op(
 		bot = MIN(r1->y2, r2y1);
 		if (top != bot)	{
 		    curBand = newReg->data->numRects;
-		    pixman_region_appendNonO(newReg, r1, r1BandEnd, top, bot);
+		    if (!pixman_region_appendNonO(newReg, r1, r1BandEnd, top, bot))
+			goto bail;
 		    Coalesce(newReg, prevBand, curBand);
 		}
 	    }
@@ -763,7 +764,8 @@ pixman_op(
 		bot = MIN(r2->y2, r1y1);
 		if (top != bot) {
 		    curBand = newReg->data->numRects;
-		    pixman_region_appendNonO(newReg, r2, r2BandEnd, top, bot);
+		    if (!pixman_region_appendNonO(newReg, r2, r2BandEnd, top, bot))
+			goto bail;
 		    Coalesce(newReg, prevBand, curBand);
 		}
 	    }
@@ -779,8 +781,12 @@ pixman_op(
 	ybot = MIN(r1->y2, r2->y2);
 	if (ybot > ytop) {
 	    curBand = newReg->data->numRects;
-	    (* overlapFunc)(newReg, r1, r1BandEnd, r2, r2BandEnd, ytop, ybot,
-			    pOverlap);
+	    if (!(* overlapFunc)(newReg,
+				 r1, r1BandEnd,
+				 r2, r2BandEnd,
+				 ytop, ybot,
+				 pOverlap))
+		goto bail;
 	    Coalesce(newReg, prevBand, curBand);
 	}
 
@@ -805,7 +811,10 @@ pixman_op(
 	/* Do first nonOverlap1Func call, which may be able to coalesce */
 	FindBand(r1, r1BandEnd, r1End, r1y1);
 	curBand = newReg->data->numRects;
-	pixman_region_appendNonO(newReg, r1, r1BandEnd, MAX(r1y1, ybot), r1->y2);
+	if (!pixman_region_appendNonO(newReg,
+				      r1, r1BandEnd,
+				      MAX(r1y1, ybot), r1->y2))
+	    goto bail;
 	Coalesce(newReg, prevBand, curBand);
 	/* Just append the rest of the boxes  */
 	AppendRegions(newReg, r1BandEnd, r1End);
@@ -814,7 +823,10 @@ pixman_op(
 	/* Do first nonOverlap2Func call, which may be able to coalesce */
 	FindBand(r2, r2BandEnd, r2End, r2y1);
 	curBand = newReg->data->numRects;
-	pixman_region_appendNonO(newReg, r2, r2BandEnd, MAX(r2y1, ybot), r2->y2);
+	if (!pixman_region_appendNonO(newReg,
+				      r2, r2BandEnd,
+				      MAX(r2y1, ybot), r2->y2))
+	    goto bail;
 	Coalesce(newReg, prevBand, curBand);
 	/* Append rest of boxes */
 	AppendRegions(newReg, r2BandEnd, r2End);
@@ -840,6 +852,11 @@ pixman_op(
     }
 
     return TRUE;
+
+bail:
+    if (oldData)
+	free(oldData);
+    return pixman_break (newReg);
 }
 
 /*-
