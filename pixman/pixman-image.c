@@ -631,6 +631,8 @@ color_to_pixel (pixman_color_t *color,
 	  format == PIXMAN_x8r8g8b8	||
 	  format == PIXMAN_a8b8g8r8	||
 	  format == PIXMAN_x8b8g8r8	||
+	  format == PIXMAN_b8g8r8a8	||
+	  format == PIXMAN_b8g8r8x8	||
 	  format == PIXMAN_r5g6b5	||
 	  format == PIXMAN_b5g6r5	||
 	  format == PIXMAN_a8))
@@ -644,6 +646,13 @@ color_to_pixel (pixman_color_t *color,
 	    ((c & 0x00ff0000) >> 16) |
 	    ((c & 0x0000ff00) >>  0) |
 	    ((c & 0x000000ff) << 16);
+    }
+    if (PIXMAN_FORMAT_TYPE (format) == PIXMAN_TYPE_BGRA)
+    {
+	c = ((c & 0xff000000) >> 24) |
+	    ((c & 0x00ff0000) >>  8) |
+	    ((c & 0x0000ff00) <<  8) |
+	    ((c & 0x000000ff) << 24);
     }
 
     if (format == PIXMAN_a8)
@@ -765,6 +774,8 @@ pixman_image_can_get_solid (pixman_image_t *image)
     case PIXMAN_x8r8g8b8:
     case PIXMAN_a8b8g8r8:
     case PIXMAN_x8b8g8r8:
+    case PIXMAN_b8g8r8a8:
+    case PIXMAN_b8g8r8x8:
     case PIXMAN_r8g8b8:
     case PIXMAN_b8g8r8:
     case PIXMAN_r5g6b5:

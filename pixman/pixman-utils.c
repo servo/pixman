@@ -461,6 +461,8 @@ pixman_format_supported_destination (pixman_format_code_t format)
     case PIXMAN_x8r8g8b8:
     case PIXMAN_a8b8g8r8:
     case PIXMAN_x8b8g8r8:
+    case PIXMAN_b8g8r8a8:
+    case PIXMAN_b8g8r8x8:
     case PIXMAN_r8g8b8:
     case PIXMAN_b8g8r8:
     case PIXMAN_r5g6b5:
@@ -531,6 +533,8 @@ pixman_format_supported_source (pixman_format_code_t format)
     case PIXMAN_x8r8g8b8:
     case PIXMAN_a8b8g8r8:
     case PIXMAN_x8b8g8r8:
+    case PIXMAN_b8g8r8a8:
+    case PIXMAN_b8g8r8x8:
     case PIXMAN_r8g8b8:
     case PIXMAN_b8g8r8:
     case PIXMAN_r5g6b5:

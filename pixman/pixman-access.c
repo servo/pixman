@@ -120,6 +120,36 @@ fbFetch_x8b8g8r8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
 }
 
 static FASTCALL void
+fbFetch_b8g8r8a8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
+{
+    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const uint32_t *pixel = (uint32_t *)bits + x;
+    const uint32_t *end = pixel + width;
+    while (pixel < end) {
+	uint32_t p = READ(pict, pixel++);
+	*buffer++ = ((p & 0xff000000) >> 24) |
+	    ((p & 0x00ff0000) >> 8) |
+	    ((p & 0x0000ff00) << 8) |
+	    ((p & 0x000000ff) << 24);
+    }
+}
+
+static FASTCALL void
+fbFetch_b8g8r8x8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
+{
+    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const uint32_t *pixel = (uint32_t *)bits + x;
+    const uint32_t *end = pixel + width;
+    while (pixel < end) {
+	uint32_t p = READ(pict, pixel++);
+	*buffer++ = 0xff000000 |
+	    ((p & 0xff000000) >> 24) |
+	    ((p & 0x00ff0000) >> 8) |
+	    ((p & 0x0000ff00) << 8);
+    }
+}
+
+static FASTCALL void
 fbFetch_a2b10g10r10 (bits_image_t *pict, int x, int y, int width, uint64_t *buffer)
 {
     const uint32_t *bits = pict->bits + y*pict->rowstride;
@@ -693,6 +723,8 @@ fetchProc32 ACCESS(pixman_fetchProcForPicture32) (bits_image_t * pict)
     case PIXMAN_x8r8g8b8: return fbFetch_x8r8g8b8;
     case PIXMAN_a8b8g8r8: return fbFetch_a8b8g8r8;
     case PIXMAN_x8b8g8r8: return fbFetch_x8b8g8r8;
+    case PIXMAN_b8g8r8a8: return fbFetch_b8g8r8a8;
+    case PIXMAN_b8g8r8x8: return fbFetch_b8g8r8x8;
     /* These two require wide compositing */
     case PIXMAN_a2b10g10r10: return NULL;
     case PIXMAN_x2b10g10r10: return NULL;
@@ -841,6 +873,30 @@ fbFetchPixel_x8b8g8r8 (bits_image_t *pict, int offset, int line)
 	    ((pixel >> 16) & 0xff) |
 	    (pixel & 0x0000ff00) |
 	    ((pixel & 0xff) << 16));
+}
+
+static FASTCALL uint32_t
+fbFetchPixel_b8g8r8a8 (bits_image_t *pict, int offset, int line)
+{
+    uint32_t *bits = pict->bits + line*pict->rowstride;
+    uint32_t  pixel = READ(pict, (uint32_t *)bits + offset);
+
+    return ((pixel & 0xff000000) >> 24 |
+	    (pixel & 0x00ff0000) >> 8 |
+	    (pixel & 0x0000ff00) << 8 |
+	    (pixel & 0x000000ff) << 24);
+}
+
+static FASTCALL uint32_t
+fbFetchPixel_b8g8r8x8 (bits_image_t *pict, int offset, int line)
+{
+    uint32_t *bits = pict->bits + line*pict->rowstride;
+    uint32_t  pixel = READ(pict, (uint32_t *)bits + offset);
+
+    return ((0xff000000) |
+	    (pixel & 0xff000000) >> 24 |
+	    (pixel & 0x00ff0000) >> 8 |
+	    (pixel & 0x0000ff00) << 8);
 }
 
 static FASTCALL uint32_t
@@ -1283,6 +1339,8 @@ fetchPixelProc32 ACCESS(pixman_fetchPixelProcForPicture32) (bits_image_t * pict)
     case PIXMAN_x8r8g8b8: return fbFetchPixel_x8r8g8b8;
     case PIXMAN_a8b8g8r8: return fbFetchPixel_a8b8g8r8;
     case PIXMAN_x8b8g8r8: return fbFetchPixel_x8b8g8r8;
+    case PIXMAN_b8g8r8a8: return fbFetchPixel_b8g8r8a8;
+    case PIXMAN_b8g8r8x8: return fbFetchPixel_b8g8r8x8;
     /* These two require wide compositing */
     case PIXMAN_a2b10g10r10: return fbFetchPixel32_generic_lossy;
     case PIXMAN_x2b10g10r10: return fbFetchPixel32_generic_lossy;
@@ -1425,6 +1483,33 @@ fbStore_x8b8g8r8 (pixman_image_t *image,
     uint32_t *pixel = (uint32_t *)bits + x;
     for (i = 0; i < width; ++i)
 	WRITE(image, pixel++, (values[i] & 0x0000ff00) | ((values[i] >> 16) & 0xff) | ((values[i] & 0xff) << 16));
+}
+
+static FASTCALL void
+fbStore_b8g8r8a8 (pixman_image_t *image,
+		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
+{
+    int i;
+    uint32_t *pixel = (uint32_t *)bits + x;
+    for (i = 0; i < width; ++i)
+	WRITE(image, pixel++,
+	    ((values[i] >> 24) & 0x000000ff) |
+	    ((values[i] >>  8) & 0x0000ff00) |
+	    ((values[i] <<  8) & 0x00ff0000) |
+	    ((values[i] << 24) & 0xff000000));
+}
+
+static FASTCALL void
+fbStore_b8g8r8x8 (pixman_image_t *image,
+		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
+{
+    int i;
+    uint32_t *pixel = (uint32_t *)bits + x;
+    for (i = 0; i < width; ++i)
+	WRITE(image, pixel++,
+	    ((values[i] >>  8) & 0x0000ff00) |
+	    ((values[i] <<  8) & 0x00ff0000) |
+	    ((values[i] << 24) & 0xff000000));
 }
 
 static FASTCALL void
@@ -1816,6 +1901,8 @@ storeProc32 ACCESS(pixman_storeProcForPicture32) (bits_image_t * pict)
     case PIXMAN_x8r8g8b8: return fbStore_x8r8g8b8;
     case PIXMAN_a8b8g8r8: return fbStore_a8b8g8r8;
     case PIXMAN_x8b8g8r8: return fbStore_x8b8g8r8;
+    case PIXMAN_b8g8r8a8: return fbStore_b8g8r8a8;
+    case PIXMAN_b8g8r8x8: return fbStore_b8g8r8x8;
 
         /* 24bpp formats */
     case PIXMAN_r8g8b8: return fbStore_r8g8b8;
