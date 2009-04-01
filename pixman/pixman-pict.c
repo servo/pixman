@@ -1969,6 +1969,8 @@ pixman_image_composite (pixman_op_t      op,
             pSrc->common.transform->matrix[2][1] == 0 &&
             pSrc->common.transform->matrix[2][2] == pixman_fixed_1) {
             func = fbCompositeSrcScaleNearest;
+            /* Like the general path, fbCompositeSrcScaleNearest handles all the repeat types itself */
+            srcRepeat = FALSE;
         }
     } else if ((pSrc->type == BITS || pixman_image_can_get_solid (pSrc)) && (!pMask || pMask->type == BITS)
         && !srcTransform && !maskTransform
