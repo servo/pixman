@@ -63,11 +63,18 @@ AM_INIT_AUTOMAKE([dist-bzip2])
 
 AM_CONFIG_HEADER(config.h)
 
+AC_CANONICAL_HOST
+
 AC_PROG_CC
 AC_PROG_LIBTOOL
 AC_CHECK_FUNCS([getisax])
 AC_C_BIGENDIAN
 AC_C_INLINE
+
+# Checks for Sun Studio compilers
+AC_CHECK_DECL([__SUNPRO_C], [SUNCC="yes"], [SUNCC="no"])
+AC_CHECK_DECL([__amd64], [AMD64_ABI="yes"], [AMD64_ABI="no"])
+
 # 
 # We ignore pixman_major in the version here because the major version should
 # always be encoded in the actual library name. Ie., the soname is:
@@ -141,12 +148,23 @@ AC_MSG_RESULT($have_sunstudio8)
 dnl ===========================================================================
 dnl Check for MMX
 
-MMX_CFLAGS="-mmmx -Winline"
+if test "x$MMX_CFLAGS" = "x" ; then
+   if test "x$SUNCC" = "xyes"; then
+      # Sun Studio doesn't have an -xarch=mmx flag, so we have to use sse
+      # but if we're building 64-bit, mmx & sse support is on by default and
+      # -xarch=sse throws an error instead
+      if test "$AMD64_ABI" = "no" ; then
+         MMX_CFLAGS="-xarch=sse"
+      fi
+   else
+      MMX_CFLAGS="-mmmx -Winline"
+   fi
+fi
 
 have_mmx_intrinsics=no
 AC_MSG_CHECKING(whether to use MMX intrinsics)
 xserver_save_CFLAGS=$CFLAGS
-CFLAGS="$CFLAGS $MMX_CFLAGS"
+CFLAGS="$MMX_CFLAGS $CFLAGS"
 AC_COMPILE_IFELSE([
 #if defined(__GNUC__) && (__GNUC__ < 3 || (__GNUC__ == 3 && __GNUC_MINOR__ < 4))
 error "Need GCC >= 3.4 for MMX intrinsics"
@@ -183,12 +201,21 @@ AM_CONDITIONAL(USE_MMX, test $have_mmx_intrinsics = yes)
 dnl ===========================================================================
 dnl Check for SSE2
 
-SSE2_CFLAGS="-mmmx -msse2 -Winline"
+if test "x$SSE2_CFLAGS" = "x" ; then
+   if test "x$SUNCC" = "xyes"; then
+      # SSE2 is enabled by default in the Sun Studio 64-bit environment
+      if test "$AMD64_ABI" = "no" ; then
+         SSE2_CFLAGS="-xarch=sse2"
+      fi
+   else
+      SSE2_CFLAGS="-mmmx -msse2 -Winline"
+   fi
+fi
 
 have_sse2_intrinsics=no
 AC_MSG_CHECKING(whether to use SSE2 intrinsics)
 xserver_save_CFLAGS=$CFLAGS
-CFLAGS="$CFLAGS -msse2 $SSE2_CFLAGS"
+CFLAGS="$SSE2_CFLAGS $CFLAGS"
 
 AC_COMPILE_IFELSE([
 #if defined(__GNUC__) && (__GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 2))
@@ -226,10 +253,31 @@ fi
 
 AM_CONDITIONAL(USE_SSE2, test $have_sse2_intrinsics = yes)
 
-dnl ========================================================
-AC_SUBST(MMX_CFLAGS)
-AC_SUBST(SSE2_CFLAGS)
+dnl ===========================================================================
+dnl Other special flags needed when building code using MMX or SSE instructions
+case $host_os in
+   solaris*)
+      # When building 32-bit binaries, apply a mapfile to ensure that the
+      # binaries aren't flagged as only able to run on MMX+SSE capable CPUs
+      # since they check at runtime before using those instructions
+      if test "$AMD64_ABI" = "no" ; then
+         HWCAP_LDFLAGS='-Wl,-M,$(srcdir)/solaris-hwcap.mapfile'
+      fi
+      if test "x$MMX_LDFLAGS" = "x" ; then
+         MMX_LDFLAGS="$HWCAP_LDFLAGS"
+      fi
+      if test "x$SSE2_LDFLAGS" = "x" ; then
+	 SSE2_LDFLAGS="$HWCAP_LDFLAGS"
+      fi
+      ;;
+esac
 
+AC_SUBST(MMX_CFLAGS)
+AC_SUBST(MMX_LDFLAGS)
+AC_SUBST(SSE2_CFLAGS)
+AC_SUBST(SSE2_LDFLAGS)
+
+dnl ===========================================================================
 dnl Check for VMX/Altivec
 if test -n "`$CC -v 2>&1 | grep version | grep Apple`"; then
     VMX_CFLAGS="-faltivec"

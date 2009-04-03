@@ -54,6 +54,7 @@ libpixman_mmx_la_SOURCES = \
 	pixman-mmx.h
 libpixman_mmx_la_CFLAGS = $(DEP_CFLAGS) $(MMX_CFLAGS)
 libpixman_mmx_la_LIBADD = $(DEP_LIBS)
+libpixman_1_la_LDFLAGS += $(MMX_LDFLAGS)
 libpixman_1_la_LIBADD += libpixman-mmx.la
 endif
 
@@ -77,6 +78,7 @@ libpixman_sse2_la_SOURCES = \
 	pixman-sse2.h
 libpixman_sse2_la_CFLAGS = $(DEP_CFLAGS) $(SSE2_CFLAGS)
 libpixman_sse2_la_LIBADD = $(DEP_LIBS)
+libpixman_1_la_LDFLAGS += $(SSE2_LDFLAGS)
 libpixman_1_la_LIBADD += libpixman-sse2.la
 endif
 

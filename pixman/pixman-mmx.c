@@ -71,15 +71,21 @@
  * possible.
  */
 
-/* --------------- MMX primitivess ------------------------------------ */
+/* --------------- MMX primitives ------------------------------------- */
+
+typedef uint64_t ullong;
 
 #ifdef __GNUC__
-typedef unsigned long long ullong;
 typedef ullong mmxdatafield;
-#endif
-#ifdef _MSC_VER
-typedef unsigned __int64 ullong;
+#else
 typedef __m64 mmxdatafield;
+/* If __m64 is defined as a struct or union, define M64_MEMBER to be the
+   name of the member used to access the data */
+# ifdef _MSC_VER
+#  define M64_MEMBER m64_u64
+# elif defined(__SUNPRO_C)
+#  define M64_MEMBER l_
+# endif
 #endif
 
 typedef struct
@@ -101,42 +107,31 @@ typedef struct
     mmxdatafield mmx_000000000000ffff;
 } MMXData;
 
+#if defined(_MSC_VER)
+# define MMXDATA_INIT(field, val) { val##UI64 }
+#elif defined(M64_MEMBER)	/* __m64 is a struct, not an integral type */
+# define MMXDATA_INIT(field, val) field =   { val##ULL }
+#else				/* __m64 is an integral type */
+# define MMXDATA_INIT(field, val) field =   val##ULL
+#endif
+
 static const MMXData c =
 {
-#ifdef __GNUC__
-    .mmx_4x00ff =			0x00ff00ff00ff00ffULL,
-    .mmx_4x0080 =			0x0080008000800080ULL,
-    .mmx_565_rgb =			0x000001f0003f001fULL,
-    .mmx_565_unpack_multiplier =	0x0000008404100840ULL,
-    .mmx_565_r =			0x000000f800000000ULL,
-    .mmx_565_g =			0x0000000000fc0000ULL,
-    .mmx_565_b =			0x00000000000000f8ULL,
-    .mmx_mask_0 =			0xffffffffffff0000ULL,
-    .mmx_mask_1 =			0xffffffff0000ffffULL,
-    .mmx_mask_2 =			0xffff0000ffffffffULL,
-    .mmx_mask_3 =			0x0000ffffffffffffULL,
-    .mmx_full_alpha =			0x00ff000000000000ULL,
-    .mmx_ffff0000ffff0000 =		0xffff0000ffff0000ULL,
-    .mmx_0000ffff00000000 =		0x0000ffff00000000ULL,
-    .mmx_000000000000ffff =		0x000000000000ffffULL,
-#endif
-#ifdef _MSC_VER
-    { 0x00ff00ff00ff00ffUI64 },
-    { 0x0080008000800080UI64 },
-    { 0x000001f0003f001fUI64 },
-    { 0x0000008404100840UI64 },
-    { 0x000000f800000000UI64 },
-    { 0x0000000000fc0000UI64 },
-    { 0x00000000000000f8UI64 },
-    { 0xffffffffffff0000UI64 },
-    { 0xffffffff0000ffffUI64 },
-    { 0xffff0000ffffffffUI64 },
-    { 0x0000ffffffffffffUI64 },
-    { 0x00ff000000000000UI64 },
-    { 0xffff0000ffff0000UI64 },
-    { 0x0000ffff00000000UI64 },
-    { 0x000000000000ffffUI64 },
-#endif
+    MMXDATA_INIT(.mmx_4x00ff,			0x00ff00ff00ff00ff),
+    MMXDATA_INIT(.mmx_4x0080,			0x0080008000800080),
+    MMXDATA_INIT(.mmx_565_rgb,			0x000001f0003f001f),
+    MMXDATA_INIT(.mmx_565_unpack_multiplier,	0x0000008404100840),
+    MMXDATA_INIT(.mmx_565_r,			0x000000f800000000),
+    MMXDATA_INIT(.mmx_565_g,			0x0000000000fc0000),
+    MMXDATA_INIT(.mmx_565_b,			0x00000000000000f8),
+    MMXDATA_INIT(.mmx_mask_0,			0xffffffffffff0000),
+    MMXDATA_INIT(.mmx_mask_1,			0xffffffff0000ffff),
+    MMXDATA_INIT(.mmx_mask_2,			0xffff0000ffffffff),
+    MMXDATA_INIT(.mmx_mask_3,			0x0000ffffffffffff),
+    MMXDATA_INIT(.mmx_full_alpha,		0x00ff000000000000),
+    MMXDATA_INIT(.mmx_ffff0000ffff0000,		0xffff0000ffff0000),
+    MMXDATA_INIT(.mmx_0000ffff00000000,		0x0000ffff00000000),
+    MMXDATA_INIT(.mmx_000000000000ffff,		0x000000000000ffff),
 };
 
 #ifdef __GNUC__
@@ -145,9 +140,7 @@ static const MMXData c =
 #    else
 #        define MC(x) ((__m64)c.mmx_##x)
 #    endif
-#endif
-
-#ifdef _MSC_VER
+#else
 #    define MC(x) c.mmx_##x
 #endif
 
@@ -156,15 +149,13 @@ M64 (ullong x)
 {
 #ifdef __ICC
     return _mm_cvtsi64_m64 (x);
-#elif defined (__GNUC__)
-    return (__m64)x;
-#endif
-
-#ifdef _MSC_VER
+#elif defined M64_MEMBER	/* __m64 is a struct, not an integral type */
     __m64 res;
 
-    res.m64_u64 = x;
+    res.M64_MEMBER = x;
     return res;
+#else				/* __m64 is an integral type */
+    return (__m64)x;
 #endif
 }
 
@@ -173,15 +164,11 @@ ULLONG (__m64 x)
 {
 #ifdef __ICC
     return _mm_cvtm64_si64 (x);
-#elif defined (__GNUC__)
-    return (ullong)x;
-#endif
-
-#ifdef _MSC_VER
-    ullong res;
-
-    res = x.m64_u64;
+#elif defined M64_MEMBER	/* __m64 is a struct, not an integral type */
+    ullong res = x.M64_MEMBER;
     return res;
+#else				/* __m64 is an integral type */
+    return (ullong)x;
 #endif
 }
 
@@ -2864,7 +2851,7 @@ pixman_blt_mmx (uint32_t *src_bits,
 
 	while (w >= 64)
 	{
-#ifdef __GNUC__
+#if defined (__GNUC__) || (defined(__SUNPRO_C) && (__SUNPRO_C >= 0x590))
 	    __asm__ (
 		"movq	  (%1),	  %%mm0\n"
 		"movq	 8(%1),	  %%mm1\n"

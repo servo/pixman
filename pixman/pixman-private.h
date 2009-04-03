@@ -70,7 +70,7 @@
 /* 'inline' is available only in C++ in MSVC */
 #   define inline __inline
 #   define force_inline __forceinline
-#elif defined __GNUC__
+#elif defined __GNUC__ || (defined(__SUNPRO_C) && (__SUNPRO_C >= 0x590))
 #   define inline __inline__
 #   define force_inline __inline__ __attribute__ ((__always_inline__))
 #else
