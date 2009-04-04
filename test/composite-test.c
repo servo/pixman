@@ -1,10 +1,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "pixman.h"
-
 #include <gtk/gtk.h>
 
-static GdkPixbuf *
+GdkPixbuf *
 pixbuf_from_argb32 (uint32_t *bits,
 		    int width,
 		    int height,
@@ -15,20 +14,36 @@ pixbuf_from_argb32 (uint32_t *bits,
     int p_stride = gdk_pixbuf_get_rowstride (pixbuf);
     guint32 *p_bits = (guint32 *)gdk_pixbuf_get_pixels (pixbuf);
     int w, h;
-
+    
     for (h = 0; h < height; ++h)
     {
 	for (w = 0; w < width; ++w)
 	{
 	    uint32_t argb = bits[h * stride + w];
-	    guint32 rgba;
+	    guint r, g, b, a;
+	    char *pb = p_bits;
 
-	    rgba = (argb << 8) | (argb >> 24);
+	    pb += h * p_stride + w * 4;
 
-	    p_bits[h * (p_stride / 4) + w] = rgba;
+	    r = (argb & 0x00ff0000) >> 16;
+	    g = (argb & 0x0000ff00) >> 8;
+	    b = (argb & 0x000000ff) >> 0;
+	    a = (argb & 0xff000000) >> 24;
+
+	    if (a)
+	    {
+		r = (r * 255) / a;
+		g = (g * 255) / a;
+		b = (b * 255) / a;
+	    }
+
+	    pb[0] = r;
+	    pb[1] = g;
+	    pb[2] = b;
+	    pb[3] = a;
 	}
     }
-
+    
     return pixbuf;
 }
 

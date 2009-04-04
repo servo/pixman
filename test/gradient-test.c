@@ -20,14 +20,27 @@ pixbuf_from_argb32 (uint32_t *bits,
 	for (w = 0; w < width; ++w)
 	{
 	    uint32_t argb = bits[h * stride + w];
-	    guint32 abgr;
-	    
-	    abgr = (argb & 0xff000000) |
-		(argb & 0xff) << 16 |
-		(argb & 0x00ff00) |
-		(argb & 0xff0000) >> 16;
-	    
-	    p_bits[h * (p_stride / 4) + w] = abgr;
+	    guint r, g, b, a;
+	    char *pb = p_bits;
+
+	    pb += h * p_stride + w * 4;
+
+	    r = (argb & 0x00ff0000) >> 16;
+	    g = (argb & 0x0000ff00) >> 8;
+	    b = (argb & 0x000000ff) >> 0;
+	    a = (argb & 0xff000000) >> 24;
+
+	    if (a)
+	    {
+		r = (r * 255) / a;
+		g = (g * 255) / a;
+		b = (b * 255) / a;
+	    }
+
+	    pb[0] = r;
+	    pb[1] = g;
+	    pb[2] = b;
+	    pb[3] = a;
 	}
     }
     
