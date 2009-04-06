@@ -265,7 +265,7 @@ pixman_edge_step (pixman_edge_t *e, int n)
  * elements of an edge structure
  */
 static void
-_pixman_edge_tMultiInit (pixman_edge_t *e, int n, pixman_fixed_t *stepx_p, pixman_fixed_t *dx_p)
+_pixman_edge_multi_init (pixman_edge_t *e, int n, pixman_fixed_t *stepx_p, pixman_fixed_t *dx_p)
 {
     pixman_fixed_t	stepx;
     pixman_fixed_48_16_t	ne;
@@ -320,8 +320,8 @@ pixman_edge_init (pixman_edge_t	*e,
 	    e->e = 0;
 	}
 
-	_pixman_edge_tMultiInit (e, STEP_Y_SMALL(n), &e->stepx_small, &e->dx_small);
-	_pixman_edge_tMultiInit (e, STEP_Y_BIG(n), &e->stepx_big, &e->dx_big);
+	_pixman_edge_multi_init (e, STEP_Y_SMALL(n), &e->stepx_small, &e->dx_small);
+	_pixman_edge_multi_init (e, STEP_Y_BIG(n), &e->stepx_big, &e->dx_big);
     }
     pixman_edge_step (e, y_start - y_top);
 }
