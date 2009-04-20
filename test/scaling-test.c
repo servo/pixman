@@ -151,8 +151,8 @@ uint32_t test_composite(uint32_t initcrc, int testnum, int verbose)
 
     lcg_srand(testnum);
 
-    src_bpp = /*(lcg_rand_n(2) == 0) ? 2 :*/ 4;
-    dst_bpp = /*(lcg_rand_n(2) == 0) ? 2 :*/ 4;
+    src_bpp = (lcg_rand_n(2) == 0) ? 2 : 4;
+    dst_bpp = (lcg_rand_n(2) == 0) ? 2 : 4;
     op = (lcg_rand_n(2) == 0) ? PIXMAN_OP_SRC : PIXMAN_OP_OVER;
 
     src_width = lcg_rand_n(MAX_SRC_WIDTH) + 1;
@@ -161,6 +161,8 @@ uint32_t test_composite(uint32_t initcrc, int testnum, int verbose)
     dst_height = lcg_rand_n(MAX_DST_HEIGHT) + 1;
     src_stride = src_width * src_bpp + lcg_rand_n(MAX_STRIDE) * src_bpp;
     dst_stride = dst_width * dst_bpp + lcg_rand_n(MAX_STRIDE) * dst_bpp;
+    if (src_stride & 3) src_stride += 2;
+    if (dst_stride & 3) dst_stride += 2;
 
     src_x = -src_width + lcg_rand_n(src_width * 3);
     src_y = -src_height + lcg_rand_n(src_height * 3);
@@ -187,8 +189,8 @@ uint32_t test_composite(uint32_t initcrc, int testnum, int verbose)
         dst_fmt, dst_width, dst_height, dstbuf, dst_stride);
 
     if (lcg_rand_n(2) == 0) {
-	scale_x = 32768 + lcg_rand_n(65536);
-	scale_y = 32768 + lcg_rand_n(65536);
+        scale_x = 32768 + lcg_rand_n(65536);
+        scale_y = 32768 + lcg_rand_n(65536);
         pixman_transform_init_scale(&transform, scale_x, scale_y);
         pixman_image_set_transform(src_img, &transform);
     }
@@ -205,6 +207,7 @@ uint32_t test_composite(uint32_t initcrc, int testnum, int verbose)
     h = lcg_rand_n(MAX_DST_HEIGHT * 2);
 
     if (verbose) {
+        printf("src_fmt=%08X, dst_fmt=%08X\n", src_fmt, dst_fmt);
         printf("op=%d, scale_x=%d, scale_y=%d, repeat=%d\n",
             op, scale_x, scale_y, repeat);
         printf("src_width=%d, src_height=%d, dst_width=%d, dst_height=%d\n",
@@ -212,6 +215,26 @@ uint32_t test_composite(uint32_t initcrc, int testnum, int verbose)
         printf("src_x=%d, src_y=%d, dst_x=%d, dst_y=%d\n",
             src_x, src_y, dst_x, dst_y);
         printf("w=%d, h=%d\n", w, h);
+    }
+
+    if (lcg_rand_n(2) == 0) {
+        pixman_box16_t clip_boxes[2];
+        int n = lcg_rand_n(2) + 1;
+        for (i = 0; i < n; i++) {
+            clip_boxes[i].x1 = lcg_rand_n(src_width);
+            clip_boxes[i].y1 = lcg_rand_n(src_height);
+            clip_boxes[i].x2 = clip_boxes[i].x1 + lcg_rand_n(src_width - clip_boxes[i].x1);
+            clip_boxes[i].y2 = clip_boxes[i].y1 + lcg_rand_n(src_height - clip_boxes[i].y1);
+            if (verbose) {
+                printf("source clip box: [%d,%d-%d,%d]\n",
+                    clip_boxes[i].x1, clip_boxes[i].y1,
+                    clip_boxes[i].x2, clip_boxes[i].y2);
+            }
+        }
+        pixman_region_init_rects(&clip, clip_boxes, n);
+        pixman_image_set_clip_region(src_img, &clip);
+        pixman_image_set_source_clipping(src_img, 1);
+        pixman_region_fini(&clip);
     }
 
     pixman_image_composite (op, src_img, NULL, dst_img,
@@ -229,6 +252,12 @@ uint32_t test_composite(uint32_t initcrc, int testnum, int verbose)
 
     pixman_image_unref (src_img);
     pixman_image_unref (dst_img);
+
+    if (dst_fmt == PIXMAN_x8r8g8b8) {
+        /* ignore unused part */
+        for (i = 0; i < dst_stride * dst_height / 4; i++)
+            dstbuf[i] &= 0xFFFFFF;
+    }
 
     crc32 = Crc32_ComputeBuf(initcrc, dstbuf, dst_stride * dst_height);
     free(srcbuf);
@@ -256,6 +285,15 @@ int main(int argc, char *argv[])
             crc = test_composite(crc, i, 0);
         }
         printf("crc32=%08X\n", crc);
+        if (n == 10000) {
+            /* predefined value for running with all the fastpath functions disabled  */
+            /* it needs to be updated every time changes are introduced to this program! */
+            if (crc == 0xF2EC6250) {
+                printf("scaling test passed\n");
+            } else {
+                printf("scaling test failed!\n");
+            }
+        }
     }
     return 0;
 }
