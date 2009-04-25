@@ -4,11 +4,13 @@ INCLUDES = -I$(top_srcdir)/pixman -I$(top_builddir)/pixman
 TESTPROGRAMS =			\
 	region-test		\
 	scaling-test		\
-	fetch-test
+	fetch-test		\
+	trap-crasher
 
 fetch_test_LDADD = $(TEST_LDADD)
 region_test_LDADD = $(TEST_LDADD)
 scaling_test_LDADD = $(TEST_LDADD)
+trap_crasher_LDADD = $(TEST_LDADD)
 
 # GTK using test programs
 
