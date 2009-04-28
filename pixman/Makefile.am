@@ -43,7 +43,8 @@ pixman-combine64.c : combine.inc pixman-combine64.h combine.pl
 pixman-combine64.h : combine.h.inc combine.pl
 	$(PERL) $(srcdir)/combine.pl 16 < $(srcdir)/combine.h.inc > $@ || ($(RM) $@; exit 1)
 
-EXTRA_DIST = Makefile.win32 combine.inc combine.pl pixman-region.c combine.h.inc
+EXTRA_DIST = Makefile.win32 combine.inc combine.pl pixman-region.c \
+	combine.h.inc solaris-hwcap.mapfile
 CLEANFILES = pixman-combine32.c pixman-combine64.c pixman-combine32.h pixman-combine64.h
 
 # mmx code
