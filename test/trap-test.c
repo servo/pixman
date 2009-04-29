@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <gtk/gtk.h>
+#include <string.h>
 #include "pixman.h"
 
 GdkPixbuf *
@@ -21,7 +22,7 @@ pixbuf_from_argb32 (uint32_t *bits,
 	{
 	    uint32_t argb = bits[h * stride + w];
 	    guint r, g, b, a;
-	    char *pb = p_bits;
+	    char *pb = (char *)p_bits;
 
 	    pb += h * p_stride + w * 4;
 
