@@ -10,6 +10,21 @@ The pixman code is not particularly nice to put it mildly. Among the issues are
 
   may be one of the uglies names ever created.
 
+  coding style: 
+  	 use the one from cairo except that pixman uses this brace style:
+	 
+		while (blah)
+		{
+		}
+
+	Format do while like this:
+
+	       do 
+	       {
+
+	       } 
+	       while (...);
+
 - PIXMAN_COMPOSITE_RECT_GENERAL() is horribly complex
 
 - switch case logic in pixman-access.c
@@ -28,6 +43,11 @@ The pixman code is not particularly nice to put it mildly. Among the issues are
 
 - Code related to particular image types should be split into individual
   files.
+
+	pixman-bits-image.c
+	pixman-linear-gradient-image.c
+	pixman-radial-gradient-image.c
+	pixman-solid-image.c
 
 - Fast path code should be split into files based on architecture:
 
@@ -67,4 +87,16 @@ Issues that must be kept in mind:
 	 whenever possible.
 
 The "horizontal" classification should be a bit in the image, the
-"vertical" classification should just happen inside the gradient file.
+"vertical" classification should just happen inside the gradient
+file. Note though that
+
+      (a) these will change if the tranformation/repeat changes.
+
+      (b) at the moment the optimization for linear gradients
+          takes the source rectangle into account. Presumably
+	  this is to also optimize the case where the gradient
+	  is close enough to horizontal?
+
+Who is responsible for repeats? In principle it should be the scanline
+fetch. Right now NORMAL repeats are handled by walk_composite_region()
+while other repeats are handled by the scanline code.
