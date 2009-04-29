@@ -42,66 +42,6 @@
 #define PIXMAN_COMPOSITE_RECT_GENERAL pixman_composite_rect_general_no_accessors
 #endif
 
-static unsigned int
-SourcePictureClassify (source_image_t *pict,
-		       int	       x,
-		       int	       y,
-		       int	       width,
-		       int	       height)
-{
-    if (pict->common.type == SOLID)
-    {
-	pict->class = SOURCE_IMAGE_CLASS_HORIZONTAL;
-    }
-    else if (pict->common.type == LINEAR)
-    {
-	linear_gradient_t *linear = (linear_gradient_t *)pict;
-	pixman_vector_t   v;
-	pixman_fixed_32_32_t l;
-	pixman_fixed_48_16_t dx, dy, a, b, off;
-	pixman_fixed_48_16_t factors[4];
-	int	     i;
-
-	dx = linear->p2.x - linear->p1.x;
-	dy = linear->p2.y - linear->p1.y;
-	l = dx * dx + dy * dy;
-	if (l)
-	{
-	    a = (dx << 32) / l;
-	    b = (dy << 32) / l;
-	}
-	else
-	{
-	    a = b = 0;
-	}
-
-	off = (-a * linear->p1.x
-	       -b * linear->p1.y) >> 16;
-
-	for (i = 0; i < 3; i++)
-	{
-	    v.vector[0] = pixman_int_to_fixed ((i % 2) * (width  - 1) + x);
-	    v.vector[1] = pixman_int_to_fixed ((i / 2) * (height - 1) + y);
-	    v.vector[2] = pixman_fixed_1;
-
-	    if (pict->common.transform)
-	    {
-		if (!pixman_transform_point_3d (pict->common.transform, &v))
-		    return SOURCE_IMAGE_CLASS_UNKNOWN;
-	    }
-
-	    factors[i] = ((a * v.vector[0] + b * v.vector[1]) >> 16) + off;
-	}
-
-	if (factors[2] == factors[0])
-	    pict->class = SOURCE_IMAGE_CLASS_HORIZONTAL;
-	else if (factors[1] == factors[0])
-	    pict->class = SOURCE_IMAGE_CLASS_VERTICAL;
-    }
-
-    return pict->class;
-}
-
 static void fbFetchSolid(bits_image_t * pict, int x, int y, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
 {
     uint32_t color;
@@ -252,9 +192,9 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
     else if (IS_SOURCE_IMAGE (data->src))
     {
 	fetchSrc = get_fetch_source_pict(wide);
-	srcClass = SourcePictureClassify ((source_image_t *)data->src,
-					  data->xSrc, data->ySrc,
-					  data->width, data->height);
+	srcClass = _pixman_image_classify (data->src,
+					   data->xSrc, data->ySrc,
+					   data->width, data->height);
     }
     else
     {
@@ -291,9 +231,9 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 	if (IS_SOURCE_IMAGE (data->mask))
 	{
 	    fetchMask = (scanFetchProc)pixmanFetchSourcePict;
-	    maskClass = SourcePictureClassify ((source_image_t *)data->mask,
-					       data->xMask, data->yMask,
-					       data->width, data->height);
+	    maskClass = _pixman_image_classify (data->mask,
+						data->xMask, data->yMask,
+						data->width, data->height);
 	}
 	else
 	{

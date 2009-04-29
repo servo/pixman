@@ -32,10 +32,78 @@
 
 #define Alpha(x) ((x) >> 24)
 
+static source_pict_class_t
+SourcePictureClassify (pixman_image_t *image,
+		       int	       x,
+		       int	       y,
+		       int	       width,
+		       int	       height)
+{
+    source_image_t *pict = &image->source;
+    
+    if (pict->class != SOURCE_IMAGE_CLASS_UNKNOWN)
+	return pict->class;
+
+    pict->class = SOURCE_IMAGE_CLASS_NEITHER;
+    
+    if (pict->common.type == SOLID)
+    {
+	pict->class = SOURCE_IMAGE_CLASS_HORIZONTAL;
+    }
+    else if (pict->common.type == LINEAR)
+    {
+	linear_gradient_t *linear = (linear_gradient_t *)pict;
+	pixman_vector_t   v;
+	pixman_fixed_32_32_t l;
+	pixman_fixed_48_16_t dx, dy, a, b, off;
+	pixman_fixed_48_16_t factors[4];
+	int	     i;
+
+	dx = linear->p2.x - linear->p1.x;
+	dy = linear->p2.y - linear->p1.y;
+	l = dx * dx + dy * dy;
+	if (l)
+	{
+	    a = (dx << 32) / l;
+	    b = (dy << 32) / l;
+	}
+	else
+	{
+	    a = b = 0;
+	}
+
+	off = (-a * linear->p1.x
+	       -b * linear->p1.y) >> 16;
+
+	for (i = 0; i < 3; i++)
+	{
+	    v.vector[0] = pixman_int_to_fixed ((i % 2) * (width  - 1) + x);
+	    v.vector[1] = pixman_int_to_fixed ((i / 2) * (height - 1) + y);
+	    v.vector[2] = pixman_fixed_1;
+
+	    if (pict->common.transform)
+	    {
+		if (!pixman_transform_point_3d (pict->common.transform, &v))
+		    return SOURCE_IMAGE_CLASS_UNKNOWN;
+	    }
+
+	    factors[i] = ((a * v.vector[0] + b * v.vector[1]) >> 16) + off;
+	}
+
+	if (factors[2] == factors[0])
+	    pict->class = SOURCE_IMAGE_CLASS_HORIZONTAL;
+	else if (factors[1] == factors[0])
+	    pict->class = SOURCE_IMAGE_CLASS_VERTICAL;
+    }
+
+    return pict->class;
+}
+
 static void
 init_source_image (source_image_t *image)
 {
     image->class = SOURCE_IMAGE_CLASS_UNKNOWN;
+    image->common.classify = SourcePictureClassify;
 }
 
 static pixman_bool_t
@@ -98,6 +166,19 @@ allocate_image (void)
     }
 
     return image;
+}
+
+source_pict_class_t
+_pixman_image_classify (pixman_image_t *image,
+			int             x,
+			int             y,
+			int             width,
+			int             height)
+{
+    if (image->common.classify)
+	return image->common.classify (image, x, y, width, height);
+    else
+	return SOURCE_IMAGE_CLASS_NEITHER;
 }
 
 /* Ref Counting */

@@ -280,8 +280,21 @@ typedef enum
 {
     SOURCE_IMAGE_CLASS_UNKNOWN,
     SOURCE_IMAGE_CLASS_HORIZONTAL,
-    SOURCE_IMAGE_CLASS_VERTICAL
+    SOURCE_IMAGE_CLASS_VERTICAL,
+    SOURCE_IMAGE_CLASS_NEITHER
 } source_pict_class_t;
+
+typedef source_pict_class_t (* classify_func_t) (pixman_image_t *image,
+						 int             x,
+						 int             y,
+						 int             width,
+						 int             height);
+
+source_pict_class_t _pixman_image_classify (pixman_image_t *image,
+					    int             x,
+					    int             y,
+					    int             width,
+					    int             height);
 
 struct point
 {
@@ -306,6 +319,7 @@ struct image_common
     pixman_bool_t		component_alpha;
     pixman_read_memory_func_t	read_func;
     pixman_write_memory_func_t	write_func;
+    classify_func_t		classify;
 };
 
 struct source_image
@@ -380,6 +394,7 @@ union pixman_image
     image_type_t		type;
     image_common_t		common;
     bits_image_t		bits;
+    source_image_t		source;
     gradient_t			gradient;
     linear_gradient_t		linear;
     conical_gradient_t		conical;
