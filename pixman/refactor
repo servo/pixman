@@ -1,0 +1,70 @@
+Refactoring pixman
+
+The pixman code is not particularly nice to put it mildly. Among the issues are
+
+- inconsistent naming style (fb vs Fb, camelCase vs
+  underscore_naming). Sometimes there is even inconsistency *within*
+  one name.
+
+      fetchProc32 ACCESS(pixman_fetchProcForPicture32)
+
+  may be one of the uglies names ever created.
+
+- PIXMAN_COMPOSITE_RECT_GENERAL() is horribly complex
+
+- switch case logic in pixman-access.c
+
+  Instead it would be better to just store function pointers in the
+  image objects themselves,
+
+  	get_pixel()
+	get_scanline()
+
+- Much of the scanline fetching code is for formats that no one 
+  ever uses. a2r2g2b2 anyone?
+
+  It would probably be worthwhile having a generic fetcher for any
+  pixman format whatsoever.
+
+- Code related to particular image types should be split into individual
+  files.
+
+- Fast path code should be split into files based on architecture:
+
+       pixman-mmx-fastpath.c
+       pixman-sse2-fastpath.c
+       pixman-c-fastpath.c
+
+       etc.
+
+  Each of these files should then export a fastpath table, which would
+  be declared in pixman-private.h. This should allow us to get rid
+  of the pixman-mmx.h files.
+
+There should then be *one* file that implements pixman_image_composite(). 
+This should do this:
+
+     optimize_operator();
+
+     convert 1x1 repeat to solid (actually this should be done at
+     image creation time).
+     
+     is there a useful fastpath?
+
+There should be a file called pixman-cpu.c that contains all the
+architecture specific stuff to detect what CPU features we have.
+
+Issues that must be kept in mind:
+
+       - we need accessor code to be preserved
+
+       - maybe there should be a "store_scanline" too?
+
+         Is this sufficient?
+
+	 We should preserve the optimization where the
+	 compositing happens directly in the destination
+	 whenever possible.
+
+The "horizontal" classification should be a bit in the image, the
+"vertical" classification should just happen inside the gradient file.
