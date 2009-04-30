@@ -190,7 +190,7 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 				       data->xSrc, data->ySrc,
 				       data->width, data->height);
 
-    maskClass = SOURCE_IMAGE_CLASS_NEITHER;
+    maskClass = SOURCE_IMAGE_CLASS_UNKNOWN;
     if (data->mask)
     {
 	maskClass = _pixman_image_classify (data->mask,

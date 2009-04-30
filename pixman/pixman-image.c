@@ -41,10 +41,7 @@ SourcePictureClassify (pixman_image_t *image,
 {
     source_image_t *pict = &image->source;
     
-    if (pict->class != SOURCE_IMAGE_CLASS_UNKNOWN)
-	return pict->class;
-
-    pict->class = SOURCE_IMAGE_CLASS_NEITHER;
+    pict->class = SOURCE_IMAGE_CLASS_UNKNOWN;
     
     if (pict->common.type == SOLID)
     {
@@ -84,7 +81,10 @@ SourcePictureClassify (pixman_image_t *image,
 	    if (pict->common.transform)
 	    {
 		if (!pixman_transform_point_3d (pict->common.transform, &v))
-		    return SOURCE_IMAGE_CLASS_UNKNOWN;
+		{
+		    pict->class = SOURCE_IMAGE_CLASS_UNKNOWN;
+		    goto out;
+		}
 	    }
 
 	    factors[i] = ((a * v.vector[0] + b * v.vector[1]) >> 16) + off;
@@ -96,6 +96,7 @@ SourcePictureClassify (pixman_image_t *image,
 	    pict->class = SOURCE_IMAGE_CLASS_VERTICAL;
     }
 
+out:
     return pict->class;
 }
 
@@ -179,7 +180,7 @@ _pixman_image_classify (pixman_image_t *image,
     if (image->common.classify)
 	return image->common.classify (image, x, y, width, height);
     else
-	return SOURCE_IMAGE_CLASS_NEITHER;
+	return SOURCE_IMAGE_CLASS_UNKNOWN;
 }
 
 /* Ref Counting */

@@ -281,7 +281,6 @@ typedef enum
     SOURCE_IMAGE_CLASS_UNKNOWN,
     SOURCE_IMAGE_CLASS_HORIZONTAL,
     SOURCE_IMAGE_CLASS_VERTICAL,
-    SOURCE_IMAGE_CLASS_NEITHER
 } source_pict_class_t;
 
 typedef source_pict_class_t (* classify_func_t) (pixman_image_t *image,
