@@ -36,19 +36,10 @@
 
 #include "pixman-private.h"
 
-#ifdef PIXMAN_FB_ACCESSORS
-#define PIXMAN_COMPOSITE_RECT_GENERAL pixman_composite_rect_general_accessors
-#else
-#define PIXMAN_COMPOSITE_RECT_GENERAL pixman_composite_rect_general_no_accessors
-#endif
-
-#ifndef PIXMAN_FB_ACCESSORS
-static
-#endif
-void
-PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
-			       void *src_buffer, void *mask_buffer, 
-			       void *dest_buffer, const int wide)
+static void
+pixman_composite_rect_general_internal (const FbComposeData *data,
+					void *src_buffer, void *mask_buffer, 
+					void *dest_buffer, const int wide)
 {
     int i;
     scanStoreProc store;
@@ -86,19 +77,18 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 
     store = _pixman_image_get_storer (data->dest, wide);
 
-#ifndef PIXMAN_FB_ACCESSORS
     // Skip the store step and composite directly into the
     // destination if the output format of the compose func matches
     // the destination format.
     if (!wide &&
 	!data->dest->common.alpha_map &&
+	!data->dest->common.write_func && 
 	(data->op == PIXMAN_OP_ADD || data->op == PIXMAN_OP_OVER) &&
 	(data->dest->bits.format == PIXMAN_a8r8g8b8 ||
 	 data->dest->bits.format == PIXMAN_x8r8g8b8))
     {
 	store = NULL;
     }
-#endif
 
     if (!store)
     {
@@ -283,8 +273,6 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
     }
 }
 
-#ifndef PIXMAN_FB_ACCESSORS
-
 #define SCANLINE_BUFFER_LENGTH 8192
 
 void
@@ -314,25 +302,10 @@ pixman_composite_rect_general (const FbComposeData *data)
     mask_buffer = src_buffer + data->width * Bpp;
     dest_buffer = mask_buffer + data->width * Bpp;
 
-    if (data->src->common.read_func			||
-	data->src->common.write_func			||
-	(data->mask && data->mask->common.read_func)	||
-	(data->mask && data->mask->common.write_func)	||
-	data->dest->common.read_func			||
-	data->dest->common.write_func)
-    {
-	pixman_composite_rect_general_accessors (data, src_buffer, mask_buffer,
-						 dest_buffer, wide);
-    }
-    else
-    {
-	pixman_composite_rect_general_no_accessors (data, src_buffer,
-						    mask_buffer, dest_buffer,
-						    wide);
-    }
+    pixman_composite_rect_general_internal (data, src_buffer,
+					    mask_buffer, dest_buffer,
+					    wide);
 
     if (scanline_buffer != stack_scanline_buffer)
 	free (scanline_buffer);
 }
-
-#endif
