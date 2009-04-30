@@ -170,6 +170,39 @@ static inline scanStoreProc get_store_external_alpha(const int wide)
 	return (scanStoreProc)ACCESS(fbStoreExternalAlpha);
 }
 
+static scanFetchProc
+get_fetcher (pixman_image_t *image, int wide)
+{
+    if (IS_SOURCE_IMAGE (image))
+    {
+	return get_fetch_source_pict(wide);
+    }
+    else
+    {
+	bits_image_t *bits = (bits_image_t *)image;
+
+	if (bits->common.alpha_map)
+	{
+	    return get_fetch_external_alpha(wide);
+	}
+	else if ((bits->common.repeat != PIXMAN_REPEAT_NONE) &&
+		 bits->width == 1 &&
+		 bits->height == 1)
+	{
+	    return get_fetch_solid(wide);
+	}
+	else if (!bits->common.transform && bits->common.filter != PIXMAN_FILTER_CONVOLUTION
+                && bits->common.repeat != PIXMAN_REPEAT_PAD && bits->common.repeat != PIXMAN_REPEAT_REFLECT)
+	{
+	    return get_fetch(wide);
+	}
+	else
+	{
+	    return get_fetch_transformed(wide);
+	}
+    }
+}
+
 #ifndef PIXMAN_FB_ACCESSORS
 static
 #endif
@@ -200,34 +233,8 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
     
     if (data->op == PIXMAN_OP_CLEAR)
         fetchSrc = NULL;
-    else if (IS_SOURCE_IMAGE (data->src))
-    {
-	fetchSrc = get_fetch_source_pict(wide);
-    }
     else
-    {
-	bits_image_t *bits = (bits_image_t *)data->src;
-
-	if (bits->common.alpha_map)
-	{
-	    fetchSrc = get_fetch_external_alpha(wide);
-	}
-	else if ((bits->common.repeat != PIXMAN_REPEAT_NONE) &&
-		 bits->width == 1 &&
-		 bits->height == 1)
-	{
-	    fetchSrc = get_fetch_solid(wide);
-	}
-	else if (!bits->common.transform && bits->common.filter != PIXMAN_FILTER_CONVOLUTION
-                && bits->common.repeat != PIXMAN_REPEAT_PAD && bits->common.repeat != PIXMAN_REPEAT_REFLECT)
-	{
-	    fetchSrc = get_fetch(wide);
-	}
-	else
-	{
-	    fetchSrc = get_fetch_transformed(wide);
-	}
-    }
+	fetchSrc = get_fetcher (data->src, wide);
 
     if (!data->mask || data->op == PIXMAN_OP_CLEAR)
     {
@@ -235,29 +242,7 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
     }
     else
     {
-	if (IS_SOURCE_IMAGE (data->mask))
-	{
-	    fetchMask = (scanFetchProc)pixmanFetchSourcePict;
-	}
-	else
-	{
-	    bits_image_t *bits = (bits_image_t *)data->mask;
-
-	    if (bits->common.alpha_map)
-	    {
-		fetchMask = get_fetch_external_alpha(wide);
-	    }
-	    else if ((bits->common.repeat != PIXMAN_REPEAT_NONE) &&
-		     bits->width == 1 && bits->height == 1)
-	    {
-		fetchMask = get_fetch_solid(wide);
-	    }
-	    else if (!bits->common.transform && bits->common.filter != PIXMAN_FILTER_CONVOLUTION
-                    && bits->common.repeat != PIXMAN_REPEAT_PAD && bits->common.repeat != PIXMAN_REPEAT_REFLECT)
-		fetchMask = get_fetch(wide);
-	    else
-		fetchMask = get_fetch_transformed(wide);
-	}
+	fetchMask = get_fetcher (data->mask, wide);
     }
 
     if (data->dest->common.alpha_map)
