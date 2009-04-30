@@ -55,7 +55,6 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
     scanFetchProc fetchSrc = NULL, fetchMask = NULL, fetchDest = NULL;
     uint32_t *bits;
     int32_t stride;
-    int xoff, yoff;
     source_pict_class_t srcClass, maskClass;
 
     srcClass = _pixman_image_classify (data->src,
@@ -105,13 +104,11 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
     {
 	bits = data->dest->bits.bits;
 	stride = data->dest->bits.rowstride;
-	xoff = yoff = 0;
     }
     else
     {
 	bits = NULL;
 	stride = 0;
-	xoff = yoff = 0;
     }
 
     if (fetchSrc		   &&
@@ -178,8 +175,8 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 	    else
 	    {
 		/* blend */
-		compose (bits + (data->yDest + i+ yoff) * stride +
-			 data->xDest + xoff,
+		compose (bits + (data->yDest + i) * stride +
+			 data->xDest,
 			 src_buffer, mask_buffer, data->width);
 	    }
 	}
@@ -278,8 +275,8 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 	    else
 	    {
 		/* blend */
-		compose (bits + (data->yDest + i+ yoff) * stride +
-			 data->xDest + xoff,
+		compose (bits + (data->yDest + i) * stride +
+			 data->xDest,
 			 src_mask_buffer, data->width);
 	    }
 	}
