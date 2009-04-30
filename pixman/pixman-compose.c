@@ -47,6 +47,7 @@ pixman_composite_rect_general_internal (const FbComposeData *data,
     uint32_t *bits;
     int32_t stride;
     source_pict_class_t srcClass, maskClass;
+    pixman_bool_t component_alpha;
 
     srcClass = _pixman_image_classify (data->src,
 				       data->xSrc, data->ySrc,
@@ -101,16 +102,32 @@ pixman_composite_rect_general_internal (const FbComposeData *data,
 	stride = 0;
     }
 
-    if (fetchSrc		   &&
+    component_alpha =
+	fetchSrc		   &&
 	fetchMask		   &&
 	data->mask		   &&
 	data->mask->common.type == BITS &&
 	data->mask->common.component_alpha &&
-	PIXMAN_FORMAT_RGB (data->mask->bits.format))
+	PIXMAN_FORMAT_RGB (data->mask->bits.format);
+
     {
-	CombineFunc32 compose =
-	    wide ? (CombineFunc32)pixman_composeFunctions64.combineC[data->op] :
-		   pixman_composeFunctions.combineC[data->op];
+	CombineFunc32 compose;
+
+	if (wide)
+	{
+	    if (component_alpha)
+		compose = (CombineFunc32)pixman_composeFunctions64.combineC[data->op];
+	    else
+		compose = (CombineFunc32)pixman_composeFunctions64.combineU[data->op];
+	}
+	else
+	{
+	    if (component_alpha)
+		compose = pixman_composeFunctions.combineC[data->op];
+	    else
+		compose = pixman_composeFunctions.combineU[data->op];
+	}
+
 	if (!compose)
 	    return;
 
@@ -172,106 +189,6 @@ pixman_composite_rect_general_internal (const FbComposeData *data,
 		compose (bits + (data->yDest + i) * stride +
 			 data->xDest,
 			 src_buffer, mask_buffer, data->width);
-	    }
-	}
-    }
-    else
-    {
-	void *src_mask_buffer = 0;
-	const int useMask = (fetchMask != NULL);
-	CombineFunc32 compose =
-	    wide ? (CombineFunc32)pixman_composeFunctions64.combineU[data->op] :
-		   pixman_composeFunctions.combineU[data->op];
-	if (!compose)
-	    return;
-
-	for (i = 0; i < data->height; ++i) {
-	    /* fill first half of scanline with source */
-	    if (fetchSrc)
-	    {
-		if (fetchMask)
-		{
-		    /* fetch mask before source so that fetching of
-		       source can be optimized */
-		    fetchMask (data->mask, data->xMask, data->yMask + i,
-			       data->width, mask_buffer, 0, 0);
-
-		    if (maskClass == SOURCE_IMAGE_CLASS_HORIZONTAL)
-			fetchMask = NULL;
-		}
-
-		if (srcClass == SOURCE_IMAGE_CLASS_HORIZONTAL)
-		{
-		    fetchSrc (data->src, data->xSrc, data->ySrc + i,
-			      data->width, src_buffer, 0, 0);
-
-		    if (useMask)
-		    {
-			if (wide)
-			    pixman_composeFunctions64.combineU[PIXMAN_OP_IN] (mask_buffer, src_buffer, NULL, data->width);
-			else
-			    pixman_composeFunctions.combineU[PIXMAN_OP_IN] (mask_buffer, src_buffer, NULL, data->width);
-
-			src_mask_buffer = mask_buffer;
-		    }
-		    else
-			src_mask_buffer = src_buffer;
-
-		    fetchSrc = NULL;
-		}
-		else
-		{
-		    fetchSrc (data->src, data->xSrc, data->ySrc + i,
-			      data->width, src_buffer,
-			      useMask ? mask_buffer : NULL, 0xff000000);
-
-		    if (useMask) {
-			if (wide)
-			    pixman_composeFunctions64.combineMaskU (src_buffer,
-								    mask_buffer,
-								    data->width);
-			else
-			    pixman_composeFunctions.combineMaskU (src_buffer,
-								  mask_buffer,
-								  data->width);
-		    }
-
-		    src_mask_buffer = src_buffer;
-		}
-	    }
-	    else if (fetchMask)
-	    {
-		fetchMask (data->mask, data->xMask, data->yMask + i,
-			   data->width, mask_buffer, 0, 0);
-
-		if (wide)
-		    pixman_composeFunctions64.combineU[PIXMAN_OP_IN] (mask_buffer, src_buffer, NULL, data->width);
-		else
-		    pixman_composeFunctions.combineU[PIXMAN_OP_IN] (mask_buffer, src_buffer, NULL, data->width);
-
-		src_mask_buffer = mask_buffer;
-	    }
-
-	    if (store)
-	    {
-		/* fill dest into second half of scanline */
-		if (fetchDest)
-		    fetchDest (data->dest, data->xDest, data->yDest + i,
-			       data->width, dest_buffer, 0, 0);
-
-		/* blend */
-		compose (dest_buffer, src_mask_buffer, NULL, data->width);
-
-		/* write back */
-		store (data->dest, data->xDest, data->yDest + i, data->width,
-		       dest_buffer);
-	    }
-	    else
-	    {
-		/* blend */
-		compose (bits + (data->yDest + i) * stride +
-			 data->xDest,
-			 src_mask_buffer, NULL, data->width);
 	    }
 	}
     }
