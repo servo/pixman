@@ -42,50 +42,6 @@
 #define PIXMAN_COMPOSITE_RECT_GENERAL pixman_composite_rect_general_no_accessors
 #endif
 
-static void
-fbStore(bits_image_t * pict, int x, int y, int width, uint32_t *buffer)
-{
-    uint32_t *bits;
-    int32_t stride;
-    storeProc32 store = ACCESS(pixman_storeProcForPicture32)(pict);
-    const pixman_indexed_t * indexed = pict->indexed;
-
-    bits = pict->bits;
-    stride = pict->rowstride;
-    bits += y*stride;
-    store((pixman_image_t *)pict, bits, buffer, x, width, indexed);
-}
-
-static void
-fbStore64(bits_image_t * pict, int x, int y, int width, uint64_t *buffer)
-{
-    uint32_t *bits;
-    int32_t stride;
-    storeProc64 store = ACCESS(pixman_storeProcForPicture64)(pict);
-    const pixman_indexed_t * indexed = pict->indexed;
-
-    bits = pict->bits;
-    stride = pict->rowstride;
-    bits += y*stride;
-    store((pixman_image_t *)pict, bits, buffer, x, width, indexed);
-}
-
-static inline scanStoreProc get_store(const int wide)
-{
-    if (wide)
-	return (scanStoreProc)fbStore64;
-    else
-	return (scanStoreProc)fbStore;
-}
-
-static inline scanStoreProc get_store_external_alpha(const int wide)
-{
-    if (wide)
-	return (scanStoreProc)ACCESS(fbStoreExternalAlpha64);
-    else
-	return (scanStoreProc)ACCESS(fbStoreExternalAlpha);
-}
-
 #ifndef PIXMAN_FB_ACCESSORS
 static
 #endif
@@ -129,27 +85,21 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
     else
 	fetchDest = _pixman_image_get_fetcher (data->dest, wide);
 
-    if (data->dest->common.alpha_map)
-    {
-	store = get_store_external_alpha(wide);
-    }
-    else
-    {
-	store = get_store(wide);
+    store = _pixman_image_get_storer (data->dest, wide);
 
 #ifndef PIXMAN_FB_ACCESSORS
-	// Skip the store step and composite directly into the
-	// destination if the output format of the compose func matches
-	// the destination format.
-	if (!wide &&
-	    (data->op == PIXMAN_OP_ADD || data->op == PIXMAN_OP_OVER) &&
-	    (data->dest->bits.format == PIXMAN_a8r8g8b8 ||
-	     data->dest->bits.format == PIXMAN_x8r8g8b8))
-	{
-	    store = NULL;
-	}
-#endif
+    // Skip the store step and composite directly into the
+    // destination if the output format of the compose func matches
+    // the destination format.
+    if (!wide &&
+	!data->dest->common.alpha_map &&
+	(data->op == PIXMAN_OP_ADD || data->op == PIXMAN_OP_OVER) &&
+	(data->dest->bits.format == PIXMAN_a8r8g8b8 ||
+	 data->dest->bits.format == PIXMAN_x8r8g8b8))
+    {
+	store = NULL;
     }
+#endif
 
     if (!store)
     {

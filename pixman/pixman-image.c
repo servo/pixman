@@ -274,6 +274,56 @@ _pixman_image_get_fetcher (pixman_image_t *image,
     }
 }
 
+#define WRITE_ACCESS(f) ((image->common.write_func)? f##_accessors : f)
+
+static void
+fbStore(bits_image_t * image, int x, int y, int width, uint32_t *buffer)
+{
+    uint32_t *bits;
+    int32_t stride;
+    storeProc32 store = WRITE_ACCESS(pixman_storeProcForPicture32)(image);
+    const pixman_indexed_t * indexed = image->indexed;
+
+    bits = image->bits;
+    stride = image->rowstride;
+    bits += y*stride;
+    store((pixman_image_t *)image, bits, buffer, x, width, indexed);
+}
+
+static void
+fbStore64(bits_image_t * image, int x, int y, int width, uint64_t *buffer)
+{
+    uint32_t *bits;
+    int32_t stride;
+    storeProc64 store = WRITE_ACCESS(pixman_storeProcForPicture64)(image);
+    const pixman_indexed_t * indexed = image->indexed;
+
+    bits = image->bits;
+    stride = image->rowstride;
+    bits += y*stride;
+    store((pixman_image_t *)image, bits, buffer, x, width, indexed);
+}
+
+scanStoreProc
+_pixman_image_get_storer (pixman_image_t *image,
+			  int             wide)
+{
+    if (image->common.alpha_map)
+    {
+	if (wide)
+	    return (scanStoreProc)WRITE_ACCESS(fbStoreExternalAlpha64);
+	else
+	    return (scanStoreProc)WRITE_ACCESS(fbStoreExternalAlpha);
+    }
+    else
+    {
+	if (wide)
+	    return (scanStoreProc)fbStore64;
+	else
+	    return (scanStoreProc)fbStore;
+    }
+}
+
 /* Ref Counting */
 PIXMAN_EXPORT pixman_image_t *
 pixman_image_ref (pixman_image_t *image)

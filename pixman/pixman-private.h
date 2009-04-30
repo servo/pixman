@@ -303,7 +303,9 @@ scanFetchProc
 _pixman_image_get_fetcher (pixman_image_t *image,
 			   int             wide);
 
-
+scanStoreProc
+_pixman_image_get_storer (pixman_image_t *image,
+			  int             wide);
 
 struct point
 {
