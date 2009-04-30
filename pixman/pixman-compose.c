@@ -181,20 +181,28 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
     int i;
     scanStoreProc store;
     scanFetchProc fetchSrc = NULL, fetchMask = NULL, fetchDest = NULL;
-    unsigned int srcClass = SOURCE_IMAGE_CLASS_UNKNOWN;
-    unsigned int maskClass = SOURCE_IMAGE_CLASS_UNKNOWN;
     uint32_t *bits;
     int32_t stride;
     int xoff, yoff;
+    source_pict_class_t srcClass, maskClass;
 
+    srcClass = _pixman_image_classify (data->src,
+				       data->xSrc, data->ySrc,
+				       data->width, data->height);
+
+    maskClass = SOURCE_IMAGE_CLASS_NEITHER;
+    if (data->mask)
+    {
+	maskClass = _pixman_image_classify (data->mask,
+					    data->xSrc, data->ySrc,
+					    data->width, data->height);
+    }
+    
     if (data->op == PIXMAN_OP_CLEAR)
         fetchSrc = NULL;
     else if (IS_SOURCE_IMAGE (data->src))
     {
 	fetchSrc = get_fetch_source_pict(wide);
-	srcClass = _pixman_image_classify (data->src,
-					   data->xSrc, data->ySrc,
-					   data->width, data->height);
     }
     else
     {
@@ -209,7 +217,6 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 		 bits->height == 1)
 	{
 	    fetchSrc = get_fetch_solid(wide);
-	    srcClass = SOURCE_IMAGE_CLASS_HORIZONTAL;
 	}
 	else if (!bits->common.transform && bits->common.filter != PIXMAN_FILTER_CONVOLUTION
                 && bits->common.repeat != PIXMAN_REPEAT_PAD && bits->common.repeat != PIXMAN_REPEAT_REFLECT)
@@ -231,9 +238,6 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 	if (IS_SOURCE_IMAGE (data->mask))
 	{
 	    fetchMask = (scanFetchProc)pixmanFetchSourcePict;
-	    maskClass = _pixman_image_classify (data->mask,
-						data->xMask, data->yMask,
-						data->width, data->height);
 	}
 	else
 	{
@@ -247,7 +251,6 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 		     bits->width == 1 && bits->height == 1)
 	    {
 		fetchMask = get_fetch_solid(wide);
-		maskClass = SOURCE_IMAGE_CLASS_HORIZONTAL;
 	    }
 	    else if (!bits->common.transform && bits->common.filter != PIXMAN_FILTER_CONVOLUTION
                     && bits->common.repeat != PIXMAN_REPEAT_PAD && bits->common.repeat != PIXMAN_REPEAT_REFLECT)

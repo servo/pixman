@@ -163,6 +163,7 @@ allocate_image (void)
 	common->ref_count = 1;
 	common->read_func = NULL;
 	common->write_func = NULL;
+	common->classify = NULL;
     }
 
     return image;
