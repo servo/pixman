@@ -246,39 +246,28 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 	fetchDest = get_fetch_external_alpha(wide);
 	store = get_store_external_alpha(wide);
 
-	if (data->op == PIXMAN_OP_CLEAR || data->op == PIXMAN_OP_SRC)
-	    fetchDest = NULL;
     }
     else
     {
 	fetchDest = get_fetch(wide);
 	store = get_store(wide);
 
-	switch (data->op)
-	{
-	case PIXMAN_OP_CLEAR:
-	case PIXMAN_OP_SRC:
-	    fetchDest = NULL;
 #ifndef PIXMAN_FB_ACCESSORS
-	    /* fall-through */
-	case PIXMAN_OP_ADD:
-	case PIXMAN_OP_OVER:
-	    switch (data->dest->bits.format) {
-	    case PIXMAN_a8r8g8b8:
-	    case PIXMAN_x8r8g8b8:
-		// Skip the store step and composite directly into the
-		// destination if the output format of the compose func matches
-		// the destination format.
-		if (!wide)
-		    store = NULL;
-		break;
-	    default:
-		break;
-	    }
-#endif
-	    break;
+	// Skip the store step and composite directly into the
+	// destination if the output format of the compose func matches
+	// the destination format.
+	if (!wide &&
+	    (data->op == PIXMAN_OP_ADD || data->op == PIXMAN_OP_OVER) &&
+	    (data->dest->bits.format == PIXMAN_a8r8g8b8 ||
+	     data->dest->bits.format == PIXMAN_x8r8g8b8))
+	{
+	    store = NULL;
 	}
+#endif
     }
+
+    if (data->op == PIXMAN_OP_CLEAR || data->op == PIXMAN_OP_SRC)
+	fetchDest = NULL;
 
     if (!store)
     {
