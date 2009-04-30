@@ -635,8 +635,6 @@ fbCombineMaskAlphaC (const comp4_t *src, comp4_t *mask)
     *(mask) = a;
 }
 
-
-
 FASTCALL static void
 fbCombineClearC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
@@ -1192,7 +1190,7 @@ fbCombineConjointXorC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, i
     fbCombineConjointGeneralC (dest, src, mask, width, CombineXor);
 }
 
-static CombineFuncU pixman_fbCombineFuncU[] = {
+static CombineFunc pixman_fbCombineFuncU[] = {
     fbCombineClear,
     fbCombineSrcU,
     NULL, /* CombineDst */
@@ -1239,7 +1237,7 @@ static CombineFuncU pixman_fbCombineFuncU[] = {
     fbCombineConjointXorU,
 };
 
-static CombineFuncC pixman_fbCombineFuncC[] = {
+static CombineFunc pixman_fbCombineFuncC[] = {
     fbCombineClearC,
     fbCombineSrcC,
     NULL, /* Dest */

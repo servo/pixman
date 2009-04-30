@@ -54,7 +54,7 @@ main (int argc, char **argv)
 	src[i] = 0x7f7f0000; /* red */
 
     for (i = 0; i < WIDTH * HEIGHT; ++i)
-	dest[i] = 0x7f0000ff; /* blue */
+	dest[i] = 0x7f00007f; /* blue */
     
     src_img = pixman_image_create_bits (PIXMAN_a8r8g8b8,
 					WIDTH, HEIGHT,

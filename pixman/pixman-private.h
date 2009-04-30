@@ -152,9 +152,8 @@ typedef struct point point_t;
  */
 
 #define FASTCALL
-typedef FASTCALL void (*CombineMaskU32) (uint32_t *src, const uint32_t *mask, int width);
-typedef FASTCALL void (*CombineFuncU32) (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width);
-typedef FASTCALL void (*CombineFuncC32) (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width);
+typedef FASTCALL void (*CombineMask32) (uint32_t *src, const uint32_t *mask, int width);
+typedef FASTCALL void (*CombineFunc32) (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width);
 typedef FASTCALL void (*fetchProc32)(bits_image_t *pict, int x, int y, int width,
                                      uint32_t *buffer);
 typedef FASTCALL uint32_t (*fetchPixelProc32)(bits_image_t *pict, int offset, int line);
@@ -162,9 +161,8 @@ typedef FASTCALL void (*storeProc32)(pixman_image_t *, uint32_t *bits,
                                      const uint32_t *values, int x, int width,
                                      const pixman_indexed_t *);
 
-typedef FASTCALL void (*CombineMaskU64) (uint64_t *src, const uint64_t *mask, int width);
-typedef FASTCALL void (*CombineFuncU64) (uint64_t *dest, const uint64_t *src, const uint64_t *mask, int width);
-typedef FASTCALL void (*CombineFuncC64) (uint64_t *dest, const uint64_t *src, const uint64_t *mask, int width);
+typedef FASTCALL void (*CombineMask64) (uint64_t *src, const uint64_t *mask, int width);
+typedef FASTCALL void (*CombineFunc64) (uint64_t *dest, const uint64_t *src, const uint64_t *mask, int width);
 typedef FASTCALL void (*fetchProc64)(bits_image_t *pict, int x, int y, int width,
                                      uint64_t *buffer);
 typedef FASTCALL uint64_t (*fetchPixelProc64)(bits_image_t *pict, int offset, int line);
@@ -188,15 +186,15 @@ typedef struct _FbComposeData {
 } FbComposeData;
 
 typedef struct _FbComposeFunctions32 {
-    CombineFuncU32 *combineU;
-    CombineFuncC32 *combineC;
-    CombineMaskU32 combineMaskU;
+    CombineFunc32 *combineU;
+    CombineFunc32 *combineC;
+    CombineMask32 combineMaskU;
 } FbComposeFunctions32;
 
 typedef struct _FbComposeFunctions64 {
-    CombineFuncU64 *combineU;
-    CombineFuncC64 *combineC;
-    CombineMaskU64 combineMaskU;
+    CombineFunc64 *combineU;
+    CombineFunc64 *combineC;
+    CombineMask64 combineMaskU;
 } FbComposeFunctions64;
 
 extern FbComposeFunctions32 pixman_composeFunctions;

@@ -108,13 +108,17 @@ pixman_composite_rect_general_internal (const FbComposeData *data,
 	data->mask->common.component_alpha &&
 	PIXMAN_FORMAT_RGB (data->mask->bits.format))
     {
-	CombineFuncC32 compose =
-	    wide ? (CombineFuncC32)pixman_composeFunctions64.combineC[data->op] :
+	CombineFunc32 compose =
+	    wide ? (CombineFunc32)pixman_composeFunctions64.combineC[data->op] :
 		   pixman_composeFunctions.combineC[data->op];
 	if (!compose)
 	    return;
 
-	for (i = 0; i < data->height; ++i) {
+	if (!fetchMask)
+	    mask_buffer = NULL;
+	
+	for (i = 0; i < data->height; ++i)
+	{
 	    /* fill first half of scanline with source */
 	    if (fetchSrc)
 	    {
@@ -175,8 +179,8 @@ pixman_composite_rect_general_internal (const FbComposeData *data,
     {
 	void *src_mask_buffer = 0;
 	const int useMask = (fetchMask != NULL);
-	CombineFuncU32 compose =
-	    wide ? (CombineFuncU32)pixman_composeFunctions64.combineU[data->op] :
+	CombineFunc32 compose =
+	    wide ? (CombineFunc32)pixman_composeFunctions64.combineU[data->op] :
 		   pixman_composeFunctions.combineU[data->op];
 	if (!compose)
 	    return;
