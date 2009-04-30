@@ -1,21 +1,84 @@
+Roadmap
+
+See "Render Algorithm" below for rationale
+
+Images will eventually have these virtual functions:
+
+       get_scanline()
+       get_scanline_wide()
+       get_pixel()
+       get_pixel_wide()
+       get_untransformed_pixel()
+       get_untransformed_pixel_wide()
+       get_unfiltered_pixel()
+       get_unfiltered_pixel_wide()
+
+       store_scanline()
+       store_scanline_wide()
+
+1.
+
+Initially we will jsut have get_scanline() and get_scanline_wide();
+these will be based on the ones in pixman-compose. Hopefully this will
+reduce the complexity in pixman_composite_rect_general().
+
+Note that there is access considerations - the compose function is
+being compiled twice.
+
+
+2.
+
+Split image types into their own source files. Export noop virtual
+reinit() call.  Call this whenever a property of the image changes.
+
+
+3. 
+
+Split the get_scanline() call into smaller functions that are
+initialized by the reinit() call.
+
+
+
 The Render Algorithm:
 	(first repeat, then filter, then transform, then clip)
 
-starting from a destination pixel (x, y), do
+Starting from a destination pixel (x, y), do
 
 	1 x = x - xDst + xSrc
 	  y = y - yDst + ySrc
 
-	1.5 reject pixel that is outside the clip	// ie., clip is not affect by repeat or transform
-							// (This also answers the old FIXME in 
-							//  in pixman_compute_region()
-							// Also, if we are ignoring the hierarchy clip
-							// altogether, 
-	2 Transform pixel: (x, y) = T(x, y)
+	2 reject pixel that is outside the clip
 
-	3 Call p = GetUntransformedPixel (x, y)
+	This treats clipping as something that happens after
+	transformation, which I think is correct for client clips. For
+	hierarchy clips it is wrong, but who really cares? Without
+	GraphicsExposes hierarchy clips are basically irrelevant. Yes,
+	you could imagine cases where the pixels of a subwindow of a
+	redirected, transformed window should be treated as
+	transparent. I don't really care
 
-	4 If the image has an alpha map, then
+	Basically, I think the render spec should say that pixels that
+	are unavailable due to the hierarcy have undefined content,
+	and that GraphicsExposes are not generated. Ie., basically
+	that using non-redirected windows as sources is fail. This is
+	at least consistent with the current implementation and we can
+	update the spec later if someone makes it work.
+
+	The implication for render is that it should stop passing the
+	hierarchy clip to pixman. In pixman, if a souce image has a
+	clip it should be used in computing the composite region and
+	nowhere else, regardless of what "has_client_clip" says. The
+	default should be for there to not be any clip.
+
+	I would really like to get rid of the client clip as well for
+	source images, but unfortunately there is at least one
+	application in the wild that uses them.
+
+	3 Transform pixel: (x, y) = T(x, y)
+
+	4 Call p = GetUntransformedPixel (x, y)
+
+	5 If the image has an alpha map, then
 
 		Call GetUntransformedPixel (x, y) on the alpha map
 		
@@ -25,14 +88,14 @@ starting from a destination pixel (x, y), do
 
 	Where GetUnTransformedPixel is:
 
-	5 switch (filter)
+	6 switch (filter)
 	  {
 	  case NEAREST:
 		return GetUnfilteredPixel (x, y);
 		break;
 
 	  case BILINEAR:
-		return GetUnfilteredPixel (...) // 4 times + return.
+		return GetUnfilteredPixel (...) // 4 times 
 		break;
 
 	  case CONVOLUTION:
@@ -42,7 +105,7 @@ starting from a destination pixel (x, y), do
 
 	Where GetUnfilteredPixel (x, y) is
 
-	6 switch (repeat)
+	7 switch (repeat)
 	   {
 	   case REPEAT_NORMAL:
 	   case REPEAT_PAD:
@@ -60,7 +123,7 @@ starting from a destination pixel (x, y), do
 
 	Where GetRawPixel (x, y) is
 
-	7 Compute the pixel in question, depending on image type.
+	8 Compute the pixel in question, depending on image type.
 
 For gradients, repeat has a totally different meaning, so
 UnfilteredPixel() and RawPixel() must be the same function so that
@@ -79,7 +142,7 @@ So, the GetRawPixel
 It is then possible to build things like "get scanline" or "get tile" on
 top of this. In the simplest case, just repeatedly calling GetPixel()
 would work, but specialized get_scanline()s or get_tile()s could be
-plugged in for common cases.
+plugged in for common cases. 
 
 By not plugging anything in for images with access functions, we only
 have to compile the pixel functions twice, not the scanline functions.
@@ -160,6 +223,18 @@ issues are
   Each of these files should then export a fastpath table, which would
   be declared in pixman-private.h. This should allow us to get rid
   of the pixman-mmx.h files.
+
+  The fast path table should describe each fast path. Ie there should
+  be bitfields indicating what things the fast path can handle, rather than
+  like now where it is only allowed to take one format per src/mask/dest. Ie., 
+
+  { 
+    FAST_a8r8g8b8 | FAST_x8r8g8b8,
+    FAST_null,
+    FAST_x8r8g8b8,
+    FAST_repeat_normal | FAST_repeat_none,
+    the_fast_path
+  }
 
 There should then be *one* file that implements pixman_image_composite(). 
 This should do this:
