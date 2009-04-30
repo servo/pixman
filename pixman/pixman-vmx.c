@@ -567,7 +567,7 @@ vmxCombineAddU (uint32_t *dest, const uint32_t *src, int width)
 }
 
 static FASTCALL void
-vmxCombineSrcC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+vmxCombineSrcC (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     int i;
     vector unsigned int  vdest, vsrc, vmask;
@@ -598,7 +598,7 @@ vmxCombineSrcC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 }
 
 static FASTCALL void
-vmxCombineOverC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+vmxCombineOverC (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     int i;
     vector unsigned int  vdest, vsrc, vmask;
@@ -631,7 +631,7 @@ vmxCombineOverC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 }
 
 static FASTCALL void
-vmxCombineOverReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+vmxCombineOverReverseC (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     int i;
     vector unsigned int  vdest, vsrc, vmask;
@@ -665,7 +665,7 @@ vmxCombineOverReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width
 }
 
 static FASTCALL void
-vmxCombineInC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+vmxCombineInC (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     int i;
     vector unsigned int  vdest, vsrc, vmask;
@@ -699,7 +699,7 @@ vmxCombineInC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 }
 
 static FASTCALL void
-vmxCombineInReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+vmxCombineInReverseC (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     int i;
     vector unsigned int  vdest, vsrc, vmask;
@@ -733,7 +733,7 @@ vmxCombineInReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 }
 
 static FASTCALL void
-vmxCombineOutC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+vmxCombineOutC (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     int i;
     vector unsigned int  vdest, vsrc, vmask;
@@ -768,7 +768,7 @@ vmxCombineOutC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 }
 
 static FASTCALL void
-vmxCombineOutReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+vmxCombineOutReverseC (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     int i;
     vector unsigned int  vdest, vsrc, vmask;
@@ -804,7 +804,7 @@ vmxCombineOutReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 }
 
 static FASTCALL void
-vmxCombineAtopC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+vmxCombineAtopC (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     int i;
     vector unsigned int  vdest, vsrc, vmask;
@@ -845,7 +845,7 @@ vmxCombineAtopC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 }
 
 static FASTCALL void
-vmxCombineAtopReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+vmxCombineAtopReverseC (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     int i;
     vector unsigned int  vdest, vsrc, vmask;
@@ -886,7 +886,7 @@ vmxCombineAtopReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width
 }
 
 static FASTCALL void
-vmxCombineXorC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+vmxCombineXorC (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     int i;
     vector unsigned int  vdest, vsrc, vmask;
@@ -927,7 +927,7 @@ vmxCombineXorC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 }
 
 static FASTCALL void
-vmxCombineAddC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+vmxCombineAddC (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     int i;
     vector unsigned int  vdest, vsrc, vmask;

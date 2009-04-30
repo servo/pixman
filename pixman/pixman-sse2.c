@@ -1452,7 +1452,7 @@ coreCombineOverReverseCsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t *p
 }
 
 static force_inline void
-coreCombineInCsse2 (uint32_t *pd, uint32_t *ps, uint32_t *pm, int w)
+coreCombineInCsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int w)
 {
     uint32_t s, m, d;
 
@@ -1523,7 +1523,7 @@ coreCombineInCsse2 (uint32_t *pd, uint32_t *ps, uint32_t *pm, int w)
 }
 
 static force_inline void
-coreCombineInReverseCsse2 (uint32_t *pd, uint32_t *ps, uint32_t *pm, int w)
+coreCombineInReverseCsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int w)
 {
     uint32_t s, m, d;
 
@@ -1596,7 +1596,7 @@ coreCombineInReverseCsse2 (uint32_t *pd, uint32_t *ps, uint32_t *pm, int w)
 }
 
 static force_inline void
-coreCombineOutCsse2 (uint32_t *pd, uint32_t *ps, uint32_t *pm, int w)
+coreCombineOutCsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int w)
 {
     uint32_t s, m, d;
 
@@ -1668,7 +1668,7 @@ coreCombineOutCsse2 (uint32_t *pd, uint32_t *ps, uint32_t *pm, int w)
 }
 
 static force_inline void
-coreCombineOutReverseCsse2 (uint32_t *pd, uint32_t *ps, uint32_t *pm, int w)
+coreCombineOutReverseCsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int w)
 {
     uint32_t s, m, d;
 
@@ -1759,7 +1759,7 @@ coreCombineAtopCPixelsse2 (uint32_t src, uint32_t mask, uint32_t dst)
 }
 
 static force_inline void
-coreCombineAtopCsse2 (uint32_t *pd, uint32_t *ps, uint32_t *pm, int w)
+coreCombineAtopCsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int w)
 {
     uint32_t s, m, d;
 
@@ -1852,7 +1852,7 @@ coreCombineReverseAtopCPixelsse2 (uint32_t src, uint32_t mask, uint32_t dst)
 }
 
 static force_inline void
-coreCombineReverseAtopCsse2 (uint32_t *pd, uint32_t *ps, uint32_t *pm, int w)
+coreCombineReverseAtopCsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int w)
 {
     uint32_t s, m, d;
 
@@ -1946,7 +1946,7 @@ coreCombineXorCPixelsse2 (uint32_t src, uint32_t mask, uint32_t dst)
 }
 
 static force_inline void
-coreCombineXorCsse2 (uint32_t *pd, uint32_t *ps, uint32_t *pm, int w)
+coreCombineXorCsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int w)
 {
     uint32_t s, m, d;
 
@@ -2024,7 +2024,7 @@ coreCombineXorCsse2 (uint32_t *pd, uint32_t *ps, uint32_t *pm, int w)
 }
 
 static force_inline void
-coreCombineAddCsse2 (uint32_t *pd, uint32_t *ps, uint32_t *pm, int w)
+coreCombineAddCsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int w)
 {
     uint32_t s, m, d;
 
@@ -2207,77 +2207,77 @@ sse2CombineSaturateU (uint32_t *dst, const uint32_t *src, int width)
 }
 
 static FASTCALL void
-sse2CombineSrcC (uint32_t *dst, uint32_t *src, uint32_t *mask, int width)
+sse2CombineSrcC (uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
     coreCombineSrcCsse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static FASTCALL void
-sse2CombineOverC (uint32_t *dst, uint32_t *src, uint32_t *mask, int width)
+sse2CombineOverC (uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
     coreCombineOverCsse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static FASTCALL void
-sse2CombineOverReverseC (uint32_t *dst, uint32_t *src, uint32_t *mask, int width)
+sse2CombineOverReverseC (uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
     coreCombineOverReverseCsse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static FASTCALL void
-sse2CombineInC (uint32_t *dst, uint32_t *src, uint32_t *mask, int width)
+sse2CombineInC (uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
     coreCombineInCsse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static FASTCALL void
-sse2CombineInReverseC (uint32_t *dst, uint32_t *src, uint32_t *mask, int width)
+sse2CombineInReverseC (uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
     coreCombineInReverseCsse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static FASTCALL void
-sse2CombineOutC (uint32_t *dst, uint32_t *src, uint32_t *mask, int width)
+sse2CombineOutC (uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
     coreCombineOutCsse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static FASTCALL void
-sse2CombineOutReverseC (uint32_t *dst, uint32_t *src, uint32_t *mask, int width)
+sse2CombineOutReverseC (uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
     coreCombineOutReverseCsse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static FASTCALL void
-sse2CombineAtopC (uint32_t *dst, uint32_t *src, uint32_t *mask, int width)
+sse2CombineAtopC (uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
     coreCombineAtopCsse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static FASTCALL void
-sse2CombineAtopReverseC (uint32_t *dst, uint32_t *src, uint32_t *mask, int width)
+sse2CombineAtopReverseC (uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
     coreCombineReverseAtopCsse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static FASTCALL void
-sse2CombineXorC (uint32_t *dst, uint32_t *src, uint32_t *mask, int width)
+sse2CombineXorC (uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
     coreCombineXorCsse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static FASTCALL void
-sse2CombineAddC (uint32_t *dst, uint32_t *src, uint32_t *mask, int width)
+sse2CombineAddC (uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
     coreCombineAddCsse2 (dst, src, mask, width);
     _mm_empty();
@@ -2578,7 +2578,7 @@ fbCompositeSolidMask_nx8888x8888Csse2 (pixman_op_t op,
     while (height--)
     {
         int w = width;
-        uint32_t *pm = (uint32_t *)maskLine;
+        const uint32_t *pm = (uint32_t *)maskLine;
         uint32_t *pd = (uint32_t *)dstLine;
 
         dstLine += dstStride;
@@ -4411,14 +4411,14 @@ fbCompositeSrcAdd_8888x8888sse2 (pixman_op_t 	op,
 
 pixman_bool_t
 pixmanBltsse2 (uint32_t *src_bits,
-		uint32_t *dst_bits,
-		int src_stride,
-		int dst_stride,
-		int src_bpp,
-		int dst_bpp,
-		int src_x, int src_y,
-		int dst_x, int dst_y,
-		int width, int height)
+	       uint32_t *dst_bits,
+	       int src_stride,
+	       int dst_stride,
+	       int src_bpp,
+	       int dst_bpp,
+	       int src_x, int src_y,
+	       int dst_x, int dst_y,
+	       int width, int height)
 {
     uint8_t *	src_bytes;
     uint8_t *	dst_bytes;

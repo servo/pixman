@@ -663,7 +663,7 @@ mmxCombineSaturateU (uint32_t *dest, const uint32_t *src, int width)
 
 
 static FASTCALL void
-mmxCombineSrcC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+mmxCombineSrcC (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     const uint32_t *end = src + width;
     while (src < end) {
@@ -679,7 +679,7 @@ mmxCombineSrcC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 }
 
 static FASTCALL void
-mmxCombineOverC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+mmxCombineOverC (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     const uint32_t *end = src + width;
     while (src < end) {
@@ -698,7 +698,7 @@ mmxCombineOverC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 }
 
 static FASTCALL void
-mmxCombineOverReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+mmxCombineOverReverseC (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     const uint32_t *end = src + width;
     while (src < end) {
@@ -718,7 +718,7 @@ mmxCombineOverReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width
 
 
 static FASTCALL void
-mmxCombineInC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+mmxCombineInC (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     const uint32_t *end = src + width;
     while (src < end) {
@@ -737,7 +737,7 @@ mmxCombineInC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 }
 
 static FASTCALL void
-mmxCombineInReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+mmxCombineInReverseC (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     const uint32_t *end = src + width;
     while (src < end) {
@@ -756,7 +756,7 @@ mmxCombineInReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 }
 
 static FASTCALL void
-mmxCombineOutC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+mmxCombineOutC (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     const uint32_t *end = src + width;
     while (src < end) {
@@ -776,7 +776,7 @@ mmxCombineOutC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 }
 
 static FASTCALL void
-mmxCombineOutReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+mmxCombineOutReverseC (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     const uint32_t *end = src + width;
     while (src < end) {
@@ -796,7 +796,7 @@ mmxCombineOutReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 }
 
 static FASTCALL void
-mmxCombineAtopC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+mmxCombineAtopC (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     const uint32_t *end = src + width;
     while (src < end) {
@@ -818,7 +818,7 @@ mmxCombineAtopC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 }
 
 static FASTCALL void
-mmxCombineAtopReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+mmxCombineAtopReverseC (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     const uint32_t *end = src + width;
     while (src < end) {
@@ -840,7 +840,7 @@ mmxCombineAtopReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width
 }
 
 static FASTCALL void
-mmxCombineXorC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+mmxCombineXorC (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     const uint32_t *end = src + width;
     while (src < end) {
@@ -863,7 +863,7 @@ mmxCombineXorC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 }
 
 static FASTCALL void
-mmxCombineAddC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+mmxCombineAddC (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     const uint32_t *end = src + width;
     while (src < end) {
