@@ -237,13 +237,9 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 	fetchSrc = get_fetcher (data->src, wide);
 
     if (!data->mask || data->op == PIXMAN_OP_CLEAR)
-    {
 	fetchMask = NULL;
-    }
     else
-    {
 	fetchMask = get_fetcher (data->mask, wide);
-    }
 
     if (data->dest->common.alpha_map)
     {
