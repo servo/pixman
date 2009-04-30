@@ -36,25 +36,47 @@ pixman_fbCombineMaskU (comp4_t *src, const comp4_t *mask, int width)
  * All of the composing functions
  */
 
+static force_inline comp4_t
+combineMask (const comp4_t *src, const comp4_t *mask, int i)
+{
+    comp4_t s = *(src + i);
+
+    if (mask)
+    {
+	comp4_t m = *(mask + i) >> A_SHIFT;
+	
+	FbByteMul (s, m);
+    }
+    
+    return s;
+}
+
 FASTCALL static void
-fbCombineClear (comp4_t *dest, const comp4_t *src, int width)
+fbCombineClear (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     memset(dest, 0, width*sizeof(comp4_t));
 }
 
 FASTCALL static void
-fbCombineSrcU (comp4_t *dest, const comp4_t *src, int width)
+fbCombineSrcU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
-    memcpy(dest, src, width*sizeof(comp4_t));
+    int i;
+
+    for (i = 0; i < width; ++i)
+    {
+	comp4_t s = combineMask (src, mask, i);
+
+	*(dest + i) = s;
+    }
 }
 
 /* if the Src is opaque, call fbCombineSrcU */
 FASTCALL static void
-fbCombineOverU (comp4_t *dest, const comp4_t *src, int width)
+fbCombineOverU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
-        comp4_t s = *(src + i);
+        comp4_t s = combineMask (src, mask, i);
         comp4_t d = *(dest + i);
         comp4_t ia = Alpha(~s);
 
@@ -65,11 +87,11 @@ fbCombineOverU (comp4_t *dest, const comp4_t *src, int width)
 
 /* if the Dst is opaque, this is a noop */
 FASTCALL static void
-fbCombineOverReverseU (comp4_t *dest, const comp4_t *src, int width)
+fbCombineOverReverseU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
-        comp4_t s = *(src + i);
+        comp4_t s = combineMask (src, mask, i);
         comp4_t d = *(dest + i);
         comp4_t ia = Alpha(~*(dest + i));
         FbByteMulAdd(s, ia, d);
@@ -79,11 +101,11 @@ fbCombineOverReverseU (comp4_t *dest, const comp4_t *src, int width)
 
 /* if the Dst is opaque, call fbCombineSrcU */
 FASTCALL static void
-fbCombineInU (comp4_t *dest, const comp4_t *src, int width)
+fbCombineInU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
-        comp4_t s = *(src + i);
+        comp4_t s = combineMask (src, mask, i);
         comp4_t a = Alpha(*(dest + i));
         FbByteMul(s, a);
 	*(dest + i) = s;
@@ -92,12 +114,13 @@ fbCombineInU (comp4_t *dest, const comp4_t *src, int width)
 
 /* if the Src is opaque, this is a noop */
 FASTCALL static void
-fbCombineInReverseU (comp4_t *dest, const comp4_t *src, int width)
+fbCombineInReverseU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
-        comp4_t d = *(dest + i);
-        comp4_t a = Alpha(*(src + i));
+	comp4_t s = combineMask (src, mask, i);
+	comp4_t d = *(dest + i);
+        comp4_t a = Alpha(s);
         FbByteMul(d, a);
 	*(dest + i) = d;
     }
@@ -105,11 +128,11 @@ fbCombineInReverseU (comp4_t *dest, const comp4_t *src, int width)
 
 /* if the Dst is opaque, call fbCombineClear */
 FASTCALL static void
-fbCombineOutU (comp4_t *dest, const comp4_t *src, int width)
+fbCombineOutU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
-        comp4_t s = *(src + i);
+        comp4_t s = combineMask (src, mask, i);
         comp4_t a = Alpha(~*(dest + i));
         FbByteMul(s, a);
 	*(dest + i) = s;
@@ -118,12 +141,13 @@ fbCombineOutU (comp4_t *dest, const comp4_t *src, int width)
 
 /* if the Src is opaque, call fbCombineClear */
 FASTCALL static void
-fbCombineOutReverseU (comp4_t *dest, const comp4_t *src, int width)
+fbCombineOutReverseU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
+	comp4_t s = combineMask (src, mask, i);
         comp4_t d = *(dest + i);
-        comp4_t a = Alpha(~*(src + i));
+        comp4_t a = Alpha(~s);
         FbByteMul(d, a);
 	*(dest + i) = d;
     }
@@ -133,11 +157,11 @@ fbCombineOutReverseU (comp4_t *dest, const comp4_t *src, int width)
 /* if the Dst is opaque, call fbCombineOverU */
 /* if both the Src and Dst are opaque, call fbCombineSrcU */
 FASTCALL static void
-fbCombineAtopU (comp4_t *dest, const comp4_t *src, int width)
+fbCombineAtopU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
-        comp4_t s = *(src + i);
+        comp4_t s = combineMask (src, mask, i);
         comp4_t d = *(dest + i);
         comp4_t dest_a = Alpha(d);
         comp4_t src_ia = Alpha(~s);
@@ -151,11 +175,11 @@ fbCombineAtopU (comp4_t *dest, const comp4_t *src, int width)
 /* if the Dst is opaque, call fbCombineInReverseU */
 /* if both the Src and Dst are opaque, call fbCombineDstU */
 FASTCALL static void
-fbCombineAtopReverseU (comp4_t *dest, const comp4_t *src, int width)
+fbCombineAtopReverseU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
-        comp4_t s = *(src + i);
+        comp4_t s = combineMask (src, mask, i);
         comp4_t d = *(dest + i);
         comp4_t src_a = Alpha(s);
         comp4_t dest_ia = Alpha(~d);
@@ -169,11 +193,11 @@ fbCombineAtopReverseU (comp4_t *dest, const comp4_t *src, int width)
 /* if the Dst is opaque, call fbCombineOverReverseU */
 /* if both the Src and Dst are opaque, call fbCombineClear */
 FASTCALL static void
-fbCombineXorU (comp4_t *dest, const comp4_t *src, int width)
+fbCombineXorU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
-        comp4_t s = *(src + i);
+        comp4_t s = combineMask (src, mask, i);
         comp4_t d = *(dest + i);
         comp4_t src_ia = Alpha(~s);
         comp4_t dest_ia = Alpha(~d);
@@ -184,11 +208,11 @@ fbCombineXorU (comp4_t *dest, const comp4_t *src, int width)
 }
 
 FASTCALL static void
-fbCombineAddU (comp4_t *dest, const comp4_t *src, int width)
+fbCombineAddU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
-        comp4_t s = *(src + i);
+        comp4_t s = combineMask (src, mask, i);
         comp4_t d = *(dest + i);
         FbByteAdd(d, s);
 	*(dest + i) = d;
@@ -199,11 +223,11 @@ fbCombineAddU (comp4_t *dest, const comp4_t *src, int width)
 /* if the Dst is opaque, call fbCombineAddU */
 /* if both the Src and Dst are opaque, call fbCombineAddU */
 FASTCALL static void
-fbCombineSaturateU (comp4_t *dest, const comp4_t *src, int width)
+fbCombineSaturateU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
-        comp4_t s = *(src + i);
+        comp4_t s = combineMask (src, mask, i);
         comp4_t d = *(dest + i);
         comp2_t sa, da;
 
@@ -311,11 +335,11 @@ fbCombineConjointInPart (comp1_t a, comp1_t b)
 }
 
 FASTCALL static void
-fbCombineDisjointGeneralU (comp4_t *dest, const comp4_t *src, int width, comp1_t combine)
+fbCombineDisjointGeneralU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width, comp1_t combine)
 {
     int i;
     for (i = 0; i < width; ++i) {
-        comp4_t s = *(src + i);
+        comp4_t s = combineMask (src, mask, i);
         comp4_t d = *(dest + i);
         comp4_t m,n,o,p;
         comp2_t Fa, Fb, t, u, v;
@@ -361,11 +385,11 @@ fbCombineDisjointGeneralU (comp4_t *dest, const comp4_t *src, int width, comp1_t
 }
 
 FASTCALL static void
-fbCombineDisjointOverU (comp4_t *dest, const comp4_t *src, int width)
+fbCombineDisjointOverU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
-        comp4_t s = *(src + i);
+        comp4_t s = combineMask (src, mask, i);
         comp2_t a = s >> A_SHIFT;
 
         if (a != 0x00)
@@ -383,53 +407,53 @@ fbCombineDisjointOverU (comp4_t *dest, const comp4_t *src, int width)
 }
 
 FASTCALL static void
-fbCombineDisjointInU (comp4_t *dest, const comp4_t *src, int width)
+fbCombineDisjointInU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
-    fbCombineDisjointGeneralU (dest, src, width, CombineAIn);
+    fbCombineDisjointGeneralU (dest, src, mask, width, CombineAIn);
 }
 
 FASTCALL static void
-fbCombineDisjointInReverseU (comp4_t *dest, const comp4_t *src, int width)
+fbCombineDisjointInReverseU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
-    fbCombineDisjointGeneralU (dest, src, width, CombineBIn);
+    fbCombineDisjointGeneralU (dest, src, mask, width, CombineBIn);
 }
 
 FASTCALL static void
-fbCombineDisjointOutU (comp4_t *dest, const comp4_t *src, int width)
+fbCombineDisjointOutU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
-    fbCombineDisjointGeneralU (dest, src, width, CombineAOut);
+    fbCombineDisjointGeneralU (dest, src, mask, width, CombineAOut);
 }
 
 FASTCALL static void
-fbCombineDisjointOutReverseU (comp4_t *dest, const comp4_t *src, int width)
+fbCombineDisjointOutReverseU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
-    fbCombineDisjointGeneralU (dest, src, width, CombineBOut);
+    fbCombineDisjointGeneralU (dest, src, mask, width, CombineBOut);
 }
 
 FASTCALL static void
-fbCombineDisjointAtopU (comp4_t *dest, const comp4_t *src, int width)
+fbCombineDisjointAtopU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
-    fbCombineDisjointGeneralU (dest, src, width, CombineAAtop);
+    fbCombineDisjointGeneralU (dest, src, mask, width, CombineAAtop);
 }
 
 FASTCALL static void
-fbCombineDisjointAtopReverseU (comp4_t *dest, const comp4_t *src, int width)
+fbCombineDisjointAtopReverseU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
-    fbCombineDisjointGeneralU (dest, src, width, CombineBAtop);
+    fbCombineDisjointGeneralU (dest, src, mask, width, CombineBAtop);
 }
 
 FASTCALL static void
-fbCombineDisjointXorU (comp4_t *dest, const comp4_t *src, int width)
+fbCombineDisjointXorU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
-    fbCombineDisjointGeneralU (dest, src, width, CombineXor);
+    fbCombineDisjointGeneralU (dest, src, mask, width, CombineXor);
 }
 
 FASTCALL static void
-fbCombineConjointGeneralU (comp4_t *dest, const comp4_t *src, int width, comp1_t combine)
+fbCombineConjointGeneralU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width, comp1_t combine)
 {
     int i;
     for (i = 0; i < width; ++i) {
-        comp4_t s = *(src + i);
+        comp4_t s = combineMask (src, mask, i);
         comp4_t d = *(dest + i);
         comp4_t m,n,o,p;
         comp2_t Fa, Fb, t, u, v;
@@ -475,60 +499,60 @@ fbCombineConjointGeneralU (comp4_t *dest, const comp4_t *src, int width, comp1_t
 }
 
 FASTCALL static void
-fbCombineConjointOverU (comp4_t *dest, const comp4_t *src, int width)
+fbCombineConjointOverU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
-    fbCombineConjointGeneralU (dest, src, width, CombineAOver);
+    fbCombineConjointGeneralU (dest, src, mask, width, CombineAOver);
 }
 
 
 FASTCALL static void
-fbCombineConjointOverReverseU (comp4_t *dest, const comp4_t *src, int width)
+fbCombineConjointOverReverseU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
-    fbCombineConjointGeneralU (dest, src, width, CombineBOver);
+    fbCombineConjointGeneralU (dest, src, mask, width, CombineBOver);
 }
 
 
 FASTCALL static void
-fbCombineConjointInU (comp4_t *dest, const comp4_t *src, int width)
+fbCombineConjointInU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
-    fbCombineConjointGeneralU (dest, src, width, CombineAIn);
+    fbCombineConjointGeneralU (dest, src, mask, width, CombineAIn);
 }
 
 
 FASTCALL static void
-fbCombineConjointInReverseU (comp4_t *dest, const comp4_t *src, int width)
+fbCombineConjointInReverseU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
-    fbCombineConjointGeneralU (dest, src, width, CombineBIn);
+    fbCombineConjointGeneralU (dest, src, mask, width, CombineBIn);
 }
 
 FASTCALL static void
-fbCombineConjointOutU (comp4_t *dest, const comp4_t *src, int width)
+fbCombineConjointOutU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
-    fbCombineConjointGeneralU (dest, src, width, CombineAOut);
+    fbCombineConjointGeneralU (dest, src, mask, width, CombineAOut);
 }
 
 FASTCALL static void
-fbCombineConjointOutReverseU (comp4_t *dest, const comp4_t *src, int width)
+fbCombineConjointOutReverseU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
-    fbCombineConjointGeneralU (dest, src, width, CombineBOut);
+    fbCombineConjointGeneralU (dest, src, mask, width, CombineBOut);
 }
 
 FASTCALL static void
-fbCombineConjointAtopU (comp4_t *dest, const comp4_t *src, int width)
+fbCombineConjointAtopU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
-    fbCombineConjointGeneralU (dest, src, width, CombineAAtop);
+    fbCombineConjointGeneralU (dest, src, mask, width, CombineAAtop);
 }
 
 FASTCALL static void
-fbCombineConjointAtopReverseU (comp4_t *dest, const comp4_t *src, int width)
+fbCombineConjointAtopReverseU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
-    fbCombineConjointGeneralU (dest, src, width, CombineBAtop);
+    fbCombineConjointGeneralU (dest, src, mask, width, CombineBAtop);
 }
 
 FASTCALL static void
-fbCombineConjointXorU (comp4_t *dest, const comp4_t *src, int width)
+fbCombineConjointXorU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
-    fbCombineConjointGeneralU (dest, src, width, CombineXor);
+    fbCombineConjointGeneralU (dest, src, mask, width, CombineXor);
 }
 
 /********************************************************************************/

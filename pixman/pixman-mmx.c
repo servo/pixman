@@ -891,6 +891,7 @@ fbComposeSetupMMX(void)
     /* check if we have MMX support and initialize accordingly */
     if (pixman_have_mmx())
     {
+#if 0
         pixman_composeFunctions.combineU[PIXMAN_OP_OVER] = mmxCombineOverU;
         pixman_composeFunctions.combineU[PIXMAN_OP_OVER_REVERSE] = mmxCombineOverReverseU;
         pixman_composeFunctions.combineU[PIXMAN_OP_IN] = mmxCombineInU;
@@ -902,6 +903,7 @@ fbComposeSetupMMX(void)
         pixman_composeFunctions.combineU[PIXMAN_OP_XOR] = mmxCombineXorU;
         pixman_composeFunctions.combineU[PIXMAN_OP_ADD] = mmxCombineAddU;
         pixman_composeFunctions.combineU[PIXMAN_OP_SATURATE] = mmxCombineSaturateU;
+#endif
 
         pixman_composeFunctions.combineC[PIXMAN_OP_SRC] = mmxCombineSrcC;
         pixman_composeFunctions.combineC[PIXMAN_OP_OVER] = mmxCombineOverC;

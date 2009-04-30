@@ -1036,6 +1036,7 @@ void fbComposeSetupVMX (void)
 {
     /* check if we have VMX support and initialize accordingly */
     if (pixman_have_vmx ()) {
+#if 0
         pixman_composeFunctions.combineU[PIXMAN_OP_OVER] = vmxCombineOverU;
         pixman_composeFunctions.combineU[PIXMAN_OP_OVER_REVERSE] = vmxCombineOverReverseU;
         pixman_composeFunctions.combineU[PIXMAN_OP_IN] = vmxCombineInU;
@@ -1046,6 +1047,7 @@ void fbComposeSetupVMX (void)
         pixman_composeFunctions.combineU[PIXMAN_OP_ATOP_REVERSE] = vmxCombineAtopReverseU;
         pixman_composeFunctions.combineU[PIXMAN_OP_XOR] = vmxCombineXorU;
         pixman_composeFunctions.combineU[PIXMAN_OP_ADD] = vmxCombineAddU;
+#endif
 
         pixman_composeFunctions.combineC[PIXMAN_OP_SRC] = vmxCombineSrcC;
         pixman_composeFunctions.combineC[PIXMAN_OP_OVER] = vmxCombineOverC;

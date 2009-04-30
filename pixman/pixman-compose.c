@@ -204,9 +204,9 @@ pixman_composite_rect_general_internal (const FbComposeData *data,
 		    if (useMask)
 		    {
 			if (wide)
-			    pixman_composeFunctions64.combineU[PIXMAN_OP_IN] (mask_buffer, src_buffer, data->width);
+			    pixman_composeFunctions64.combineU[PIXMAN_OP_IN] (mask_buffer, src_buffer, NULL, data->width);
 			else
-			    pixman_composeFunctions.combineU[PIXMAN_OP_IN] (mask_buffer, src_buffer, data->width);
+			    pixman_composeFunctions.combineU[PIXMAN_OP_IN] (mask_buffer, src_buffer, NULL, data->width);
 
 			src_mask_buffer = mask_buffer;
 		    }
@@ -241,9 +241,9 @@ pixman_composite_rect_general_internal (const FbComposeData *data,
 			   data->width, mask_buffer, 0, 0);
 
 		if (wide)
-		    pixman_composeFunctions64.combineU[PIXMAN_OP_IN] (mask_buffer, src_buffer, data->width);
+		    pixman_composeFunctions64.combineU[PIXMAN_OP_IN] (mask_buffer, src_buffer, NULL, data->width);
 		else
-		    pixman_composeFunctions.combineU[PIXMAN_OP_IN] (mask_buffer, src_buffer, data->width);
+		    pixman_composeFunctions.combineU[PIXMAN_OP_IN] (mask_buffer, src_buffer, NULL, data->width);
 
 		src_mask_buffer = mask_buffer;
 	    }
@@ -256,7 +256,7 @@ pixman_composite_rect_general_internal (const FbComposeData *data,
 			       data->width, dest_buffer, 0, 0);
 
 		/* blend */
-		compose (dest_buffer, src_mask_buffer, data->width);
+		compose (dest_buffer, src_mask_buffer, NULL, data->width);
 
 		/* write back */
 		store (data->dest, data->xDest, data->yDest + i, data->width,
@@ -267,7 +267,7 @@ pixman_composite_rect_general_internal (const FbComposeData *data,
 		/* blend */
 		compose (bits + (data->yDest + i) * stride +
 			 data->xDest,
-			 src_mask_buffer, data->width);
+			 src_mask_buffer, NULL, data->width);
 	    }
 	}
     }

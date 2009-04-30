@@ -2321,6 +2321,7 @@ fbComposeSetupSSE2(void)
         xMaskAlpha = createMask_2x32_64 (0x00ff0000, 0x00000000);
 
         /* SSE code patch for fbcompose.c */
+#if 0
         pixman_composeFunctions.combineU[PIXMAN_OP_OVER] = sse2CombineOverU;
         pixman_composeFunctions.combineU[PIXMAN_OP_OVER_REVERSE] = sse2CombineOverReverseU;
         pixman_composeFunctions.combineU[PIXMAN_OP_IN] = sse2CombineInU;
@@ -2334,6 +2335,7 @@ fbComposeSetupSSE2(void)
         pixman_composeFunctions.combineU[PIXMAN_OP_ADD] = sse2CombineAddU;
 
         pixman_composeFunctions.combineU[PIXMAN_OP_SATURATE] = sse2CombineSaturateU;
+#endif
 
         pixman_composeFunctions.combineC[PIXMAN_OP_SRC] = sse2CombineSrcC;
         pixman_composeFunctions.combineC[PIXMAN_OP_OVER] = sse2CombineOverC;
