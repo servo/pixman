@@ -183,6 +183,97 @@ _pixman_image_classify (pixman_image_t *image,
 	return SOURCE_IMAGE_CLASS_UNKNOWN;
 }
 
+#define READ_ACCESS(f) ((image->common.read_func)? f##_accessors : f)
+
+static void fbFetchSolid(bits_image_t * image, int x, int y, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
+{
+    uint32_t color;
+    uint32_t *end;
+    fetchPixelProc32 fetch = READ_ACCESS(pixman_fetchPixelProcForPicture32)(image);
+
+    color = fetch(image, 0, 0);
+
+    end = buffer + width;
+    while (buffer < end)
+	*(buffer++) = color;
+}
+
+static void fbFetchSolid64(bits_image_t * image, int x, int y, int width, uint64_t *buffer, void *unused, uint32_t unused2)
+{
+    uint64_t color;
+    uint64_t *end;
+    fetchPixelProc64 fetch = READ_ACCESS(pixman_fetchPixelProcForPicture64)(image);
+
+    color = fetch(image, 0, 0);
+
+    end = buffer + width;
+    while (buffer < end)
+	*(buffer++) = color;
+}
+
+static void fbFetch(bits_image_t * image, int x, int y, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
+{
+    fetchProc32 fetch = READ_ACCESS(pixman_fetchProcForPicture32)(image);
+
+    fetch(image, x, y, width, buffer);
+}
+
+static void fbFetch64(bits_image_t * image, int x, int y, int width, uint64_t *buffer, void *unused, uint32_t unused2)
+{
+    fetchProc64 fetch = READ_ACCESS(pixman_fetchProcForPicture64)(image);
+
+    fetch(image, x, y, width, buffer);
+}
+
+scanFetchProc
+_pixman_image_get_fetcher (pixman_image_t *image,
+			   int             wide)
+{
+    if (IS_SOURCE_IMAGE (image))
+    {
+	if (wide)
+	    return (scanFetchProc)pixmanFetchSourcePict64;
+	else
+	    return (scanFetchProc)pixmanFetchSourcePict;
+    }
+    else
+    {
+	bits_image_t *bits = (bits_image_t *)image;
+
+	if (bits->common.alpha_map)
+	{
+	    if (wide)
+		return (scanFetchProc)READ_ACCESS(fbFetchExternalAlpha64);
+	    else
+		return (scanFetchProc)READ_ACCESS(fbFetchExternalAlpha);
+	}
+	else if ((bits->common.repeat != PIXMAN_REPEAT_NONE) &&
+		 bits->width == 1 &&
+		 bits->height == 1)
+	{
+	    if (wide)
+		return (scanFetchProc)fbFetchSolid64;
+	    else
+		return (scanFetchProc)fbFetchSolid;
+	}
+	else if (!bits->common.transform && bits->common.filter != PIXMAN_FILTER_CONVOLUTION
+                && bits->common.repeat != PIXMAN_REPEAT_PAD && bits->common.repeat != PIXMAN_REPEAT_REFLECT)
+	{
+	    if (wide)
+		return (scanFetchProc)fbFetch64;
+	    else
+		return (scanFetchProc)fbFetch;
+	}
+	else
+	{
+	    if (wide)
+		return (scanFetchProc)READ_ACCESS(fbFetchTransformed64);
+	    else
+		return (scanFetchProc)READ_ACCESS(fbFetchTransformed);
+	}
+    }
+}
+
 /* Ref Counting */
 PIXMAN_EXPORT pixman_image_t *
 pixman_image_ref (pixman_image_t *image)

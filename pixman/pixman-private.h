@@ -289,11 +289,21 @@ typedef source_pict_class_t (* classify_func_t) (pixman_image_t *image,
 						 int             width,
 						 int             height);
 
+typedef void (*scanStoreProc)(pixman_image_t *, int, int, int, uint32_t *);
+typedef void (*scanFetchProc)(pixman_image_t *, int, int, int, uint32_t *,
+			      uint32_t *, uint32_t);
+
 source_pict_class_t _pixman_image_classify (pixman_image_t *image,
 					    int             x,
 					    int             y,
 					    int             width,
 					    int             height);
+
+scanFetchProc
+_pixman_image_get_fetcher (pixman_image_t *image,
+			   int             wide);
+
+
 
 struct point
 {
