@@ -1,6 +1,106 @@
+The Render Algorithm:
+	(first repeat, then filter, then transform, then clip)
+
+starting from a destination pixel (x, y), do
+
+	1 x = x - xDst + xSrc
+	  y = y - yDst + ySrc
+
+	1.5 reject pixel that is outside the clip	// ie., clip is not affect by repeat or transform
+							// (This also answers the old FIXME in 
+							//  in pixman_compute_region()
+							// Also, if we are ignoring the hierarchy clip
+							// altogether, 
+	2 Transform pixel: (x, y) = T(x, y)
+
+	3 Call p = GetUntransformedPixel (x, y)
+
+	4 If the image has an alpha map, then
+
+		Call GetUntransformedPixel (x, y) on the alpha map
+		
+		add resulting alpha channel to p
+
+	   return p
+
+	Where GetUnTransformedPixel is:
+
+	5 switch (filter)
+	  {
+	  case NEAREST:
+		return GetUnfilteredPixel (x, y);
+		break;
+
+	  case BILINEAR:
+		return GetUnfilteredPixel (...) // 4 times + return.
+		break;
+
+	  case CONVOLUTION:
+		return GetUnfilteredPixel (...) // as many times as necessary.
+		break;
+	  }
+
+	Where GetUnfilteredPixel (x, y) is
+
+	6 switch (repeat)
+	   {
+	   case REPEAT_NORMAL:
+	   case REPEAT_PAD:
+	   case REPEAT_REFLECT:
+		// adjust x, y as appropriate
+		break;
+
+	   case REPEAT_NONE:
+	        if (x, y) is outside image bounds
+		     return 0;
+		break;
+	   }
+
+	   return GetRawPixel(x, y)
+
+	Where GetRawPixel (x, y) is
+
+	7 Compute the pixel in question, depending on image type.
+
+For gradients, repeat has a totally different meaning, so
+UnfilteredPixel() and RawPixel() must be the same function so that
+gradients can do their own repeat algorithm.
+
+So, the GetRawPixel
+
+	for bits must deal with repeats
+	for gradients must deal with repeats (differently)
+	for solids, should ignore repeats.
+
+	for polygons, when we add them, either ignore repeats or do
+	something similar to bits (in which case, we may want an extra
+	layer of indirection to modify the coordinates).
+
+It is then possible to build things like "get scanline" or "get tile" on
+top of this. In the simplest case, just repeatedly calling GetPixel()
+would work, but specialized get_scanline()s or get_tile()s could be
+plugged in for common cases.
+
+By not plugging anything in for images with access functions, we only
+have to compile the pixel functions twice, not the scanline functions.
+
+And we can get rid of fetchers for the bizarre formats that no one
+uses. Such as b2g3r3 etc. r1g2b1? Seriously? It is also worth
+considering a generic format based pixel fetcher for these edge cases.
+
+Since the actual routines depend on the image attributes, the images
+must be notified when those change and update their function pointers
+appropriately. So there should probably be a virtual function called
+(* reinit) or something like that.
+
+There will also be wide fetchers for both pixels and lines. The line
+fetcher will just call the wide pixel fetcher. The wide pixel fetcher
+will just call expand, except for 10 bit formats.
+
 Refactoring pixman
 
-The pixman code is not particularly nice to put it mildly. Among the issues are
+The pixman code is not particularly nice to put it mildly. Among the
+issues are
 
 - inconsistent naming style (fb vs Fb, camelCase vs
   underscore_naming). Sometimes there is even inconsistency *within*
@@ -86,6 +186,9 @@ Issues that must be kept in mind:
 	 compositing happens directly in the destination
 	 whenever possible.
 
+	- It should be possible to create GPU samplers from the
+	  images.
+
 The "horizontal" classification should be a bit in the image, the
 "vertical" classification should just happen inside the gradient
 file. Note though that
@@ -100,3 +203,11 @@ file. Note though that
 Who is responsible for repeats? In principle it should be the scanline
 fetch. Right now NORMAL repeats are handled by walk_composite_region()
 while other repeats are handled by the scanline code.
+
+
+(Random note on filtering: do you filter before or after
+transformation?  Hardware is going to filter after transformation;
+this is also what pixman does currently). It's not completely clear
+what filtering *after* transformation means. One thing that might look
+good would be to do *supersampling*, ie., compute multiple subpixels
+per destination pixel, then average them together.
