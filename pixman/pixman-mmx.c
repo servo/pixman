@@ -935,8 +935,8 @@ fbComposeSetupMMX(void)
         pixman_composeFunctions.combineU[PIXMAN_OP_OVER] = mmxCombineOverU;
         pixman_composeFunctions.combineU[PIXMAN_OP_OVER_REVERSE] = mmxCombineOverReverseU;
         pixman_composeFunctions.combineU[PIXMAN_OP_IN] = mmxCombineInU;
-#if 0
         pixman_composeFunctions.combineU[PIXMAN_OP_IN_REVERSE] = mmxCombineInReverseU;
+#if 0
         pixman_composeFunctions.combineU[PIXMAN_OP_OUT] = mmxCombineOutU;
         pixman_composeFunctions.combineU[PIXMAN_OP_OUT_REVERSE] = mmxCombineOutReverseU;
         pixman_composeFunctions.combineU[PIXMAN_OP_ATOP] = mmxCombineAtopU;
