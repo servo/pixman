@@ -2503,8 +2503,8 @@ fbComposeSetupSSE2(void)
         /* SSE code patch for fbcompose.c */
         pixman_composeFunctions.combineU[PIXMAN_OP_OVER] = sse2CombineOverU;
         pixman_composeFunctions.combineU[PIXMAN_OP_OVER_REVERSE] = sse2CombineOverReverseU;
-#if 0
         pixman_composeFunctions.combineU[PIXMAN_OP_IN] = sse2CombineInU;
+#if 0
         pixman_composeFunctions.combineU[PIXMAN_OP_IN_REVERSE] = sse2CombineInReverseU;
         pixman_composeFunctions.combineU[PIXMAN_OP_OUT] = sse2CombineOutU;
         pixman_composeFunctions.combineU[PIXMAN_OP_OUT_REVERSE] = sse2CombineOutReverseU;
