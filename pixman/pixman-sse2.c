@@ -506,22 +506,29 @@ combine1 (const uint32_t *ps, const uint32_t *pm)
 static force_inline __m128i
 combine4 (const __m128i *ps, const __m128i *pm)
 {
-    __m128i s = load128Unaligned (ps);
-
+    __m128i xmmSrcLo, xmmSrcHi;
+    __m128i xmmMskLo, xmmMskHi;
+    __m128i s;
+    
     if (pm)
     {
-	__m128i xmmSrcLo, xmmSrcHi;
-	__m128i xmmMskLo, xmmMskHi;
-
 	xmmMskLo = load128Unaligned (pm);
+
+        if (!packAlpha (xmmMskLo))
+	    return _mm_setzero_si128 ();
+    }
+    
+    s = load128Unaligned (ps);
 	
+    if (pm)
+    {
 	unpack_128_2x128 (s, &xmmSrcLo, &xmmSrcHi);
 	unpack_128_2x128 (xmmMskLo, &xmmMskLo, &xmmMskHi);
-
+	
 	expandAlpha_2x128 (xmmMskLo, xmmMskHi, &xmmMskLo, &xmmMskHi);
-
+	
 	pixMultiply_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmMskLo, &xmmMskHi, &xmmSrcLo, &xmmSrcHi);
-
+	
 	s = pack_2x128_128 (xmmSrcLo, xmmSrcHi);
     }
 
