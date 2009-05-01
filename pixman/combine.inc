@@ -62,11 +62,16 @@ fbCombineSrcU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width
 {
     int i;
 
-    for (i = 0; i < width; ++i)
+    if (!mask)
+	memcpy (dest, src, width * sizeof (comp4_t));
+    else
     {
-	comp4_t s = combineMask (src, mask, i);
-
-	*(dest + i) = s;
+	for (i = 0; i < width; ++i)
+	{
+	    comp4_t s = combineMask (src, mask, i);
+	    
+	    *(dest + i) = s;
+	}
     }
 }
 
