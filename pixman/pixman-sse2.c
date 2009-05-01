@@ -311,7 +311,7 @@ load128Aligned (__m128i* src)
 
 /* load 4 pixels from a unaligned address */
 static force_inline __m128i
-load128Unaligned (__m128i* src)
+load128Unaligned (const __m128i* src)
 {
     return _mm_loadu_si128 (src);
 }
@@ -482,8 +482,54 @@ coreCombineOverUPixelsse2 (uint32_t src, uint32_t dst)
     return dst;
 }
 
+static force_inline uint32_t
+combine1 (const uint32_t *ps, const uint32_t *pm)
+{
+    uint32_t s = *ps;
+
+    if (pm)
+    {
+	__m64 ms, mm;
+
+	mm = unpack_32_1x64 (*pm);
+	mm = expandAlpha_1x64 (mm);
+	
+	ms = unpack_32_1x64 (s);
+	ms = pixMultiply_1x64 (ms, mm);
+
+	s = pack_1x64_32 (ms);
+    }
+
+    return s;
+}
+
+static force_inline __m128i
+combine4 (const __m128i *ps, const __m128i *pm)
+{
+    __m128i s = load128Unaligned (ps);
+
+    if (pm)
+    {
+	__m128i xmmSrcLo, xmmSrcHi;
+	__m128i xmmMskLo, xmmMskHi;
+
+	xmmMskLo = load128Unaligned (pm);
+	
+	unpack_128_2x128 (s, &xmmSrcLo, &xmmSrcHi);
+	unpack_128_2x128 (xmmMskLo, &xmmMskLo, &xmmMskHi);
+
+	expandAlpha_2x128 (xmmMskLo, xmmMskHi, &xmmMskLo, &xmmMskHi);
+
+	pixMultiply_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmMskLo, &xmmMskHi, &xmmSrcLo, &xmmSrcHi);
+
+	s = pack_2x128_128 (xmmSrcLo, xmmSrcHi);
+    }
+
+    return s;
+}
+
 static force_inline void
-coreCombineOverUsse2 (uint32_t* pd, const uint32_t* ps, int w)
+coreCombineOverUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm, int w)
 {
     uint32_t pa;
     uint32_t s, d;
@@ -495,30 +541,36 @@ coreCombineOverUsse2 (uint32_t* pd, const uint32_t* ps, int w)
     /* call prefetch hint to optimize cache load*/
     cachePrefetch ((__m128i*)ps);
     cachePrefetch ((__m128i*)pd);
+    cachePrefetch ((__m128i*)pm);
 
     /* Align dst on a 16-byte boundary */
     while (w &&
            ((unsigned long)pd & 15))
     {
         d = *pd;
-        s = *ps++;
+        s = combine1 (ps, pm);
 
         *pd++ = coreCombineOverUPixelsse2 (s, d);
+	ps++;
+	if (pm)
+	    pm++;
         w--;
     }
 
     /* call prefetch hint to optimize cache load*/
     cachePrefetch ((__m128i*)ps);
     cachePrefetch ((__m128i*)pd);
+    cachePrefetch ((__m128i*)pm);
 
     while (w >= 4)
     {
         /* fill cache line with next memory */
         cachePrefetchNext ((__m128i*)ps);
         cachePrefetchNext ((__m128i*)pd);
+	cachePrefetchNext ((__m128i*)pm);
 
         /* I'm loading unaligned because I'm not sure about the address alignment. */
-        xmmSrcHi = load128Unaligned ((__m128i*) ps);
+        xmmSrcHi = combine4 ((__m128i*)ps, (__m128i*)pm);
 
         /* Check the alpha channel */
         pa = packAlpha (xmmSrcHi);
@@ -545,20 +597,25 @@ coreCombineOverUsse2 (uint32_t* pd, const uint32_t* ps, int w)
         w -= 4;
         ps += 4;
         pd += 4;
+	if (pm)
+	    pm += 4;
     }
 
     while (w)
     {
         d = *pd;
-        s = *ps++;
+        s = combine1 (ps, pm);
 
         *pd++ = coreCombineOverUPixelsse2 (s, d);
+	ps++;
+	if (pm)
+	    pm++;
         w--;
     }
 }
 
 static force_inline void
-coreCombineOverReverseUsse2 (uint32_t* pd, const uint32_t* ps, int w)
+coreCombineOverReverseUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm, int w)
 {
     uint32_t s, d;
 
@@ -569,30 +626,36 @@ coreCombineOverReverseUsse2 (uint32_t* pd, const uint32_t* ps, int w)
     /* call prefetch hint to optimize cache load*/
     cachePrefetch ((__m128i*)ps);
     cachePrefetch ((__m128i*)pd);
+    cachePrefetch ((__m128i*)pm);
 
     /* Align dst on a 16-byte boundary */
     while (w &&
            ((unsigned long)pd & 15))
     {
         d = *pd;
-        s = *ps++;
+        s = combine1 (ps, pm);
 
         *pd++ = coreCombineOverUPixelsse2 (d, s);
         w--;
+	ps++;
+	if (pm)
+	    pm++;
     }
 
     /* call prefetch hint to optimize cache load*/
     cachePrefetch ((__m128i*)ps);
     cachePrefetch ((__m128i*)pd);
+    cachePrefetch ((__m128i*)pm);
 
     while (w >= 4)
     {
         /* fill cache line with next memory */
         cachePrefetchNext ((__m128i*)ps);
         cachePrefetchNext ((__m128i*)pd);
+	cachePrefetchNext ((__m128i*)pm);
 
         /* I'm loading unaligned because I'm not sure about the address alignment. */
-        xmmSrcHi = load128Unaligned ((__m128i*) ps);
+        xmmSrcHi = combine4 ((__m128i*)ps, (__m128i*)pm);
         xmmDstHi = load128Aligned ((__m128i*) pd);
 
         unpack_128_2x128 (xmmSrcHi, &xmmSrcLo, &xmmSrcHi);
@@ -608,15 +671,20 @@ coreCombineOverReverseUsse2 (uint32_t* pd, const uint32_t* ps, int w)
         w -= 4;
         ps += 4;
         pd += 4;
+	if (pm)
+	    pm += 4;
     }
 
     while (w)
     {
         d = *pd;
-        s = *ps++;
+        s = combine1 (ps, pm);
 
         *pd++ = coreCombineOverUPixelsse2 (d, s);
+	ps++;
         w--;
+	if (pm)
+	    pm++;
     }
 }
 
@@ -638,7 +706,7 @@ coreCombineInUPixelsse2 (uint32_t src, uint32_t dst)
 }
 
 static force_inline void
-coreCombineInUsse2 (uint32_t* pd, const uint32_t* ps, int w)
+coreCombineInUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm, int w)
 {
     uint32_t s, d;
 
@@ -648,28 +716,34 @@ coreCombineInUsse2 (uint32_t* pd, const uint32_t* ps, int w)
     /* call prefetch hint to optimize cache load*/
     cachePrefetch ((__m128i*)ps);
     cachePrefetch ((__m128i*)pd);
+    cachePrefetch ((__m128i*)pm);
 
     while (w && ((unsigned long) pd & 15))
     {
-        s = *ps++;
+        s = combine1 (ps, pm);
         d = *pd;
 
         *pd++ = coreCombineInUPixelsse2 (d, s);
         w--;
+	ps++;
+	if (pm)
+	    pm++;
     }
 
     /* call prefetch hint to optimize cache load*/
     cachePrefetch ((__m128i*)ps);
     cachePrefetch ((__m128i*)pd);
+    cachePrefetch ((__m128i*)pm);
 
     while (w >= 4)
     {
         /* fill cache line with next memory */
         cachePrefetchNext ((__m128i*)ps);
         cachePrefetchNext ((__m128i*)pd);
+	cachePrefetchNext ((__m128i*)pm);
 
         xmmDstHi = load128Aligned ((__m128i*) pd);
-        xmmSrcHi = load128Unaligned ((__m128i*) ps);
+        xmmSrcHi = combine4 ((__m128i*) ps, (__m128i*) pm);
 
         unpack_128_2x128 (xmmDstHi, &xmmDstLo, &xmmDstHi);
         expandAlpha_2x128 (xmmDstLo, xmmDstHi, &xmmDstLo, &xmmDstHi);
@@ -682,20 +756,25 @@ coreCombineInUsse2 (uint32_t* pd, const uint32_t* ps, int w)
         ps += 4;
         pd += 4;
         w -= 4;
+	if (pm)
+	    pm += 4;
     }
 
     while (w)
     {
-        s = *ps++;
+        s = combine1 (ps, pm);
         d = *pd;
 
         *pd++ = coreCombineInUPixelsse2 (d, s);
         w--;
+	ps++;
+	if (pm)
+	    pm++;
     }
 }
 
 static force_inline void
-coreCombineReverseInUsse2 (uint32_t* pd, const uint32_t* ps, int w)
+coreCombineReverseInUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t *pm, int w)
 {
     uint32_t s, d;
 
@@ -705,28 +784,34 @@ coreCombineReverseInUsse2 (uint32_t* pd, const uint32_t* ps, int w)
     /* call prefetch hint to optimize cache load*/
     cachePrefetch ((__m128i*)ps);
     cachePrefetch ((__m128i*)pd);
+    cachePrefetch ((__m128i*)pm);
 
     while (w && ((unsigned long) pd & 15))
     {
-        s = *ps++;
+        s = combine1 (ps, pm);
         d = *pd;
 
         *pd++ = coreCombineInUPixelsse2 (s, d);
+	ps++;
         w--;
+	if (pm)
+	    pm++;
     }
 
     /* call prefetch hint to optimize cache load*/
     cachePrefetch ((__m128i*)ps);
     cachePrefetch ((__m128i*)pd);
+    cachePrefetch ((__m128i*)pm);
 
     while (w >= 4)
     {
         /* fill cache line with next memory */
         cachePrefetchNext ((__m128i*)ps);
         cachePrefetchNext ((__m128i*)pd);
+	cachePrefetchNext ((__m128i*)pm);
 
         xmmDstHi = load128Aligned ((__m128i*) pd);
-        xmmSrcHi = load128Unaligned ((__m128i*) ps);
+        xmmSrcHi = combine4 ((__m128i*) ps, (__m128i*)pm);
 
         unpack_128_2x128 (xmmSrcHi, &xmmSrcLo, &xmmSrcHi);
         expandAlpha_2x128 (xmmSrcLo, xmmSrcHi, &xmmSrcLo, &xmmSrcHi);
@@ -739,37 +824,47 @@ coreCombineReverseInUsse2 (uint32_t* pd, const uint32_t* ps, int w)
         ps += 4;
         pd += 4;
         w -= 4;
+	if (pm)
+	    pm += 4;
     }
 
     while (w)
     {
-        s = *ps++;
+        s = combine1 (ps, pm);
         d = *pd;
 
         *pd++ = coreCombineInUPixelsse2 (s, d);
         w--;
+	ps++;
+	if (pm)
+	    pm++;
     }
 }
 
 static force_inline void
-coreCombineReverseOutUsse2 (uint32_t* pd, const uint32_t* ps, int w)
+coreCombineReverseOutUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm, int w)
 {
     /* call prefetch hint to optimize cache load*/
     cachePrefetch ((__m128i*)ps);
     cachePrefetch ((__m128i*)pd);
+    cachePrefetch ((__m128i*)pm);
 
     while (w && ((unsigned long) pd & 15))
     {
-        uint32_t s = *ps++;
+        uint32_t s = combine1 (ps, pm);
         uint32_t d = *pd;
 
         *pd++ = pack_1x64_32 (pixMultiply_1x64 (unpack_32_1x64 (d), negate_1x64 (expandAlpha_1x64 (unpack_32_1x64 (s)))));
+	if (pm)
+	    pm++;
+	ps++;
         w--;
     }
 
     /* call prefetch hint to optimize cache load*/
     cachePrefetch ((__m128i*)ps);
     cachePrefetch ((__m128i*)pd);
+    cachePrefetch ((__m128i*)pm);
 
     while (w >= 4)
     {
@@ -779,8 +874,9 @@ coreCombineReverseOutUsse2 (uint32_t* pd, const uint32_t* ps, int w)
         /* fill cache line with next memory */
         cachePrefetchNext ((__m128i*)ps);
         cachePrefetchNext ((__m128i*)pd);
+	cachePrefetchNext ((__m128i*)pm);
 
-        xmmSrcHi = load128Unaligned ((__m128i*) ps);
+        xmmSrcHi = combine4 ((__m128i*)ps, (__m128i*)pm);
         xmmDstHi = load128Aligned ((__m128i*) pd);
 
         unpack_128_2x128 (xmmSrcHi, &xmmSrcLo, &xmmSrcHi);
@@ -795,38 +891,48 @@ coreCombineReverseOutUsse2 (uint32_t* pd, const uint32_t* ps, int w)
 
         ps += 4;
         pd += 4;
+	if (pm)
+	    pm += 4;
         w -= 4;
     }
 
     while (w)
     {
-        uint32_t s = *ps++;
+        uint32_t s = combine1 (ps, pm);
         uint32_t d = *pd;
 
         *pd++ = pack_1x64_32 (pixMultiply_1x64 (unpack_32_1x64 (d), negate_1x64 (expandAlpha_1x64 (unpack_32_1x64 (s)))));
+	ps++;
+	if (pm)
+	    pm++;
         w--;
     }
 }
 
 static force_inline void
-coreCombineOutUsse2 (uint32_t* pd, const uint32_t* ps, int w)
+coreCombineOutUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm, int w)
 {
     /* call prefetch hint to optimize cache load*/
     cachePrefetch ((__m128i*)ps);
     cachePrefetch ((__m128i*)pd);
+    cachePrefetch ((__m128i*)pm);
 
     while (w && ((unsigned long) pd & 15))
     {
-        uint32_t s = *ps++;
+        uint32_t s = combine1 (ps, pm);
         uint32_t d = *pd;
 
         *pd++ = pack_1x64_32 (pixMultiply_1x64 (unpack_32_1x64 (s), negate_1x64 (expandAlpha_1x64 (unpack_32_1x64 (d)))));
         w--;
+	ps++;
+	if (pm)
+	    pm++;
     }
 
     /* call prefetch hint to optimize cache load*/
     cachePrefetch ((__m128i*)ps);
     cachePrefetch ((__m128i*)pd);
+    cachePrefetch ((__m128i*)pm);
 
     while (w >= 4)
     {
@@ -836,8 +942,9 @@ coreCombineOutUsse2 (uint32_t* pd, const uint32_t* ps, int w)
         /* fill cache line with next memory */
         cachePrefetchNext ((__m128i*)ps);
         cachePrefetchNext ((__m128i*)pd);
+	cachePrefetchNext ((__m128i*)pm);
 
-        xmmSrcHi = load128Unaligned ((__m128i*) ps);
+        xmmSrcHi = combine4 ((__m128i*) ps, (__m128i*)pm);
         xmmDstHi = load128Aligned ((__m128i*) pd);
 
         unpack_128_2x128 (xmmSrcHi, &xmmSrcLo, &xmmSrcHi);
@@ -853,15 +960,20 @@ coreCombineOutUsse2 (uint32_t* pd, const uint32_t* ps, int w)
         ps += 4;
         pd += 4;
         w -= 4;
+	if (pm)
+	    pm += 4;
     }
 
     while (w)
     {
-        uint32_t s = *ps++;
+        uint32_t s = combine1 (ps, pm);
         uint32_t d = *pd;
 
         *pd++ = pack_1x64_32 (pixMultiply_1x64 (unpack_32_1x64 (s), negate_1x64 (expandAlpha_1x64 (unpack_32_1x64 (d)))));
         w--;
+	ps++;
+	if (pm)
+	    pm++;
     }
 }
 
@@ -878,7 +990,7 @@ coreCombineAtopUPixelsse2 (uint32_t src, uint32_t dst)
 }
 
 static force_inline void
-coreCombineAtopUsse2 (uint32_t* pd, const uint32_t* ps, int w)
+coreCombineAtopUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm, int w)
 {
     uint32_t s, d;
 
@@ -890,27 +1002,33 @@ coreCombineAtopUsse2 (uint32_t* pd, const uint32_t* ps, int w)
     /* call prefetch hint to optimize cache load*/
     cachePrefetch ((__m128i*)ps);
     cachePrefetch ((__m128i*)pd);
+    cachePrefetch ((__m128i*)pm);
 
     while (w && ((unsigned long) pd & 15))
     {
-        s = *ps++;
+        s = combine1 (ps, pm);
         d = *pd;
 
         *pd++ = coreCombineAtopUPixelsse2 (s, d);
         w--;
+	ps++;
+	if (pm)
+	    pm++;
     }
 
     /* call prefetch hint to optimize cache load*/
     cachePrefetch ((__m128i*)ps);
     cachePrefetch ((__m128i*)pd);
+    cachePrefetch ((__m128i*)pm);
 
     while (w >= 4)
     {
         /* fill cache line with next memory */
         cachePrefetchNext ((__m128i*)ps);
         cachePrefetchNext ((__m128i*)pd);
+	cachePrefetchNext ((__m128i*)pm);
 
-        xmmSrcHi = load128Unaligned ((__m128i*) ps);
+        xmmSrcHi = combine4 ((__m128i*)ps, (__m128i*)pm);
         xmmDstHi = load128Aligned ((__m128i*) pd);
 
         unpack_128_2x128 (xmmSrcHi, &xmmSrcLo, &xmmSrcHi);
@@ -930,15 +1048,20 @@ coreCombineAtopUsse2 (uint32_t* pd, const uint32_t* ps, int w)
         ps += 4;
         pd += 4;
         w -= 4;
+	if (pm)
+	    pm += 4;
     }
 
     while (w)
     {
-        s = *ps++;
+        s = combine1 (ps, pm);
         d = *pd;
 
         *pd++ = coreCombineAtopUPixelsse2 (s, d);
         w--;
+	ps++;
+	if (pm)
+	    pm++;
     }
 }
 
@@ -955,7 +1078,7 @@ coreCombineReverseAtopUPixelsse2 (uint32_t src, uint32_t dst)
 }
 
 static force_inline void
-coreCombineReverseAtopUsse2 (uint32_t* pd, const uint32_t* ps, int w)
+coreCombineReverseAtopUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm, int w)
 {
     uint32_t s, d;
 
@@ -967,27 +1090,33 @@ coreCombineReverseAtopUsse2 (uint32_t* pd, const uint32_t* ps, int w)
     /* call prefetch hint to optimize cache load*/
     cachePrefetch ((__m128i*)ps);
     cachePrefetch ((__m128i*)pd);
+    cachePrefetch ((__m128i*)pm);
 
     while (w && ((unsigned long) pd & 15))
     {
-        s = *ps++;
+        s = combine1 (ps, pm);
         d = *pd;
 
         *pd++ = coreCombineReverseAtopUPixelsse2 (s, d);
+	ps++;
         w--;
+	if (pm)
+	    pm++;
     }
 
     /* call prefetch hint to optimize cache load*/
     cachePrefetch ((__m128i*)ps);
     cachePrefetch ((__m128i*)pd);
+    cachePrefetch ((__m128i*)pm);
 
     while (w >= 4)
     {
         /* fill cache line with next memory */
         cachePrefetchNext ((__m128i*)ps);
         cachePrefetchNext ((__m128i*)pd);
+	cachePrefetchNext ((__m128i*)pm);
 
-        xmmSrcHi = load128Unaligned ((__m128i*) ps);
+        xmmSrcHi = combine4 ((__m128i*)ps, (__m128i*)pm);
         xmmDstHi = load128Aligned ((__m128i*) pd);
 
         unpack_128_2x128 (xmmSrcHi, &xmmSrcLo, &xmmSrcHi);
@@ -1007,15 +1136,20 @@ coreCombineReverseAtopUsse2 (uint32_t* pd, const uint32_t* ps, int w)
         ps += 4;
         pd += 4;
         w -= 4;
+	if (pm)
+	    pm += 4;
     }
 
     while (w)
     {
-        s = *ps++;
+        s = combine1 (ps, pm);
         d = *pd;
 
         *pd++ = coreCombineReverseAtopUPixelsse2 (s, d);
+	ps++;
         w--;
+	if (pm)
+	    pm++;
     }
 }
 
@@ -1032,13 +1166,14 @@ coreCombineXorUPixelsse2 (uint32_t src, uint32_t dst)
 }
 
 static force_inline void
-coreCombineXorUsse2 (uint32_t* dst, const uint32_t* src, int width)
+coreCombineXorUsse2 (uint32_t* dst, const uint32_t* src, const uint32_t *mask, int width)
 {
     int w = width;
     uint32_t s, d;
     uint32_t* pd = dst;
     const uint32_t* ps = src;
-
+    const uint32_t* pm = mask;
+    
     __m128i xmmSrc, xmmSrcLo, xmmSrcHi;
     __m128i xmmDst, xmmDstLo, xmmDstHi;
     __m128i xmmAlphaSrcLo, xmmAlphaSrcHi;
@@ -1047,27 +1182,33 @@ coreCombineXorUsse2 (uint32_t* dst, const uint32_t* src, int width)
     /* call prefetch hint to optimize cache load*/
     cachePrefetch ((__m128i*)ps);
     cachePrefetch ((__m128i*)pd);
+    cachePrefetch ((__m128i*)pm);
 
     while (w && ((unsigned long) pd & 15))
     {
-        s = *ps++;
+        s = combine1 (ps, pm);
         d = *pd;
 
         *pd++ = coreCombineXorUPixelsse2 (s, d);
         w--;
+	ps++;
+	if (pm)
+	    pm++;
     }
 
     /* call prefetch hint to optimize cache load*/
     cachePrefetch ((__m128i*)ps);
     cachePrefetch ((__m128i*)pd);
+    cachePrefetch ((__m128i*)pm);
 
     while (w >= 4)
     {
         /* fill cache line with next memory */
         cachePrefetchNext ((__m128i*)ps);
         cachePrefetchNext ((__m128i*)pd);
+	cachePrefetchNext ((__m128i*)pm);
 
-        xmmSrc = load128Unaligned ((__m128i*) ps);
+        xmmSrc = combine4 ((__m128i*) ps, (__m128i*) pm);
         xmmDst = load128Aligned ((__m128i*) pd);
 
         unpack_128_2x128 (xmmSrc, &xmmSrcLo, &xmmSrcHi);
@@ -1088,34 +1229,44 @@ coreCombineXorUsse2 (uint32_t* dst, const uint32_t* src, int width)
         ps += 4;
         pd += 4;
         w -= 4;
+	if (pm)
+	    pm += 4;
     }
 
     while (w)
     {
-        s = *ps++;
+        s = combine1 (ps, pm);
         d = *pd;
 
         *pd++ = coreCombineXorUPixelsse2 (s, d);
         w--;
+	ps++;
+	if (pm)
+	    pm++;
     }
 }
 
 static force_inline void
-coreCombineAddUsse2 (uint32_t* dst, const uint32_t* src, int width)
+coreCombineAddUsse2 (uint32_t* dst, const uint32_t* src, const uint32_t* mask, int width)
 {
     int w = width;
     uint32_t s,d;
     uint32_t* pd = dst;
     const uint32_t* ps = src;
+    const uint32_t* pm = mask;
 
     /* call prefetch hint to optimize cache load*/
     cachePrefetch ((__m128i*)ps);
     cachePrefetch ((__m128i*)pd);
+    cachePrefetch ((__m128i*)pm);
 
     while (w && (unsigned long)pd & 15)
     {
-        s = *ps++;
+        s = combine1 (ps, pm);
         d = *pd;
+	ps++;
+	if (pm)
+	    pm++;
         *pd++ = _mm_cvtsi64_si32 (_mm_adds_pu8 (_mm_cvtsi32_si64 (s), _mm_cvtsi32_si64 (d)));
         w--;
     }
@@ -1123,26 +1274,36 @@ coreCombineAddUsse2 (uint32_t* dst, const uint32_t* src, int width)
     /* call prefetch hint to optimize cache load*/
     cachePrefetch ((__m128i*)ps);
     cachePrefetch ((__m128i*)pd);
+    cachePrefetch ((__m128i*)pm);
 
     while (w >= 4)
     {
+	__m128i s;
+	
         /* fill cache line with next memory */
         cachePrefetchNext ((__m128i*)ps);
         cachePrefetchNext ((__m128i*)pd);
+	cachePrefetchNext ((__m128i*)pm);
 
+	s = combine4((__m128i*)ps,(__m128i*)pm);
+	
         save128Aligned( (__m128i*)pd,
-                        _mm_adds_epu8( load128Unaligned((__m128i*)ps),
-                                       load128Aligned  ((__m128i*)pd)) );
+                        _mm_adds_epu8( s, load128Aligned  ((__m128i*)pd)) );
         pd += 4;
         ps += 4;
+	if (pm)
+	    pm += 4;
         w -= 4;
     }
 
     while (w--)
     {
-        s = *ps++;
+        s = combine1 (ps, pm);
         d = *pd;
+	ps++;
         *pd++ = _mm_cvtsi64_si32 (_mm_adds_pu8 (_mm_cvtsi32_si64 (s), _mm_cvtsi32_si64 (d)));
+	if (pm)
+	    pm++;
     }
 }
 
@@ -1163,7 +1324,7 @@ coreCombineSaturateUPixelsse2 (uint32_t src, uint32_t dst)
 }
 
 static force_inline void
-coreCombineSaturateUsse2 (uint32_t *pd, const uint32_t *ps, int w)
+coreCombineSaturateUsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int w)
 {
     uint32_t s,d;
 
@@ -1173,27 +1334,33 @@ coreCombineSaturateUsse2 (uint32_t *pd, const uint32_t *ps, int w)
     /* call prefetch hint to optimize cache load*/
     cachePrefetch ((__m128i*)ps);
     cachePrefetch ((__m128i*)pd);
+    cachePrefetch ((__m128i*)pm);
 
     while (w && (unsigned long)pd & 15)
     {
-        s = *ps++;
+        s = combine1 (ps, pm);
         d = *pd;
         *pd++ = coreCombineSaturateUPixelsse2 (s, d);
         w--;
+	ps++;
+	if (pm)
+	    pm++;
     }
 
     /* call prefetch hint to optimize cache load*/
     cachePrefetch ((__m128i*)ps);
     cachePrefetch ((__m128i*)pd);
+    cachePrefetch ((__m128i*)pm);
 
     while (w >= 4)
     {
         /* fill cache line with next memory */
         cachePrefetchNext ((__m128i*)ps);
         cachePrefetchNext ((__m128i*)pd);
+	cachePrefetchNext ((__m128i*)pm);
 
         xmmDst = load128Aligned  ((__m128i*)pd);
-        xmmSrc = load128Unaligned((__m128i*)ps);
+        xmmSrc = combine4 ((__m128i*)ps, (__m128i*)pm);
 
         packCmp = _mm_movemask_epi8 (_mm_cmpgt_epi32 (_mm_srli_epi32 (xmmSrc, 24),
                                                       _mm_srli_epi32 (_mm_xor_si128 (xmmDst, Maskff000000), 24)));
@@ -1201,21 +1368,29 @@ coreCombineSaturateUsse2 (uint32_t *pd, const uint32_t *ps, int w)
         /* if some alpha src is grater than respective ~alpha dst */
         if (packCmp)
         {
-            s = *ps++;
+            s = combine1 (ps++, pm);
             d = *pd;
             *pd++ = coreCombineSaturateUPixelsse2 (s, d);
+	    if (pm)
+		pm++;
 
-            s = *ps++;
+            s = combine1 (ps++, pm);
             d = *pd;
             *pd++ = coreCombineSaturateUPixelsse2 (s, d);
+	    if (pm)
+		pm++;
 
-            s = *ps++;
+            s = combine1 (ps++, pm);
             d = *pd;
             *pd++ = coreCombineSaturateUPixelsse2 (s, d);
+	    if (pm)
+		pm++;
 
-            s = *ps++;
+            s = combine1 (ps++, pm);
             d = *pd;
             *pd++ = coreCombineSaturateUPixelsse2 (s, d);
+	    if (pm)
+		pm++;
         }
         else
         {
@@ -1223,6 +1398,8 @@ coreCombineSaturateUsse2 (uint32_t *pd, const uint32_t *ps, int w)
 
             pd += 4;
             ps += 4;
+	    if (pm)
+		pm += 4;
         }
 
         w -= 4;
@@ -1230,9 +1407,12 @@ coreCombineSaturateUsse2 (uint32_t *pd, const uint32_t *ps, int w)
 
     while (w--)
     {
-        s = *ps++;
+        s = combine1 (ps, pm);
         d = *pd;
         *pd++ = coreCombineSaturateUPixelsse2 (s, d);
+	ps++;
+	if (pm)
+	    pm++;
     }
 }
 
@@ -2125,84 +2305,84 @@ createMask_2x32_128 (uint32_t mask0, uint32_t mask1)
 static FASTCALL void
 sse2CombineMaskU (uint32_t *dst, const uint32_t *src, int width)
 {
-    coreCombineReverseInUsse2 (dst, src, width);
+    coreCombineReverseInUsse2 (dst, src, NULL, width);
     _mm_empty();
 }
 
 static FASTCALL void
-sse2CombineOverU (uint32_t *dst, const uint32_t *src, int width)
+sse2CombineOverU (uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
-    coreCombineOverUsse2 (dst, src, width);
+    coreCombineOverUsse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static FASTCALL void
-sse2CombineOverReverseU (uint32_t *dst, const uint32_t *src, int width)
+sse2CombineOverReverseU (uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
-    coreCombineOverReverseUsse2 (dst, src, width);
+    coreCombineOverReverseUsse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static FASTCALL void
-sse2CombineInU (uint32_t *dst, const uint32_t *src, int width)
+sse2CombineInU (uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
-    coreCombineInUsse2 (dst, src, width);
+    coreCombineInUsse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static FASTCALL void
-sse2CombineInReverseU (uint32_t *dst, const uint32_t *src, int width)
+sse2CombineInReverseU (uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
-    coreCombineReverseInUsse2 (dst, src, width);
+    coreCombineReverseInUsse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static FASTCALL void
-sse2CombineOutU (uint32_t *dst, const uint32_t *src, int width)
+sse2CombineOutU (uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
-    coreCombineOutUsse2 (dst, src, width);
+    coreCombineOutUsse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static FASTCALL void
-sse2CombineOutReverseU (uint32_t *dst, const uint32_t *src, int width)
+sse2CombineOutReverseU (uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
-    coreCombineReverseOutUsse2 (dst, src, width);
+    coreCombineReverseOutUsse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static FASTCALL void
-sse2CombineAtopU (uint32_t *dst, const uint32_t *src, int width)
+sse2CombineAtopU (uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
-    coreCombineAtopUsse2 (dst, src, width);
+    coreCombineAtopUsse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static FASTCALL void
-sse2CombineAtopReverseU (uint32_t *dst, const uint32_t *src, int width)
+sse2CombineAtopReverseU (uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
-    coreCombineReverseAtopUsse2 (dst, src, width);
+    coreCombineReverseAtopUsse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static FASTCALL void
-sse2CombineXorU (uint32_t *dst, const uint32_t *src, int width)
+sse2CombineXorU (uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
-    coreCombineXorUsse2 (dst, src, width);
+    coreCombineXorUsse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static FASTCALL void
-sse2CombineAddU (uint32_t *dst, const uint32_t *src, int width)
+sse2CombineAddU (uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
-    coreCombineAddUsse2 (dst, src, width);
+    coreCombineAddUsse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static FASTCALL void
-sse2CombineSaturateU (uint32_t *dst, const uint32_t *src, int width)
+sse2CombineSaturateU (uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
-    coreCombineSaturateUsse2 (dst, src, width);
+    coreCombineSaturateUsse2 (dst, src, mask, width);
     _mm_empty();
 }
 
@@ -2327,7 +2507,6 @@ fbComposeSetupSSE2(void)
         pixman_composeFunctions.combineU[PIXMAN_OP_IN] = sse2CombineInU;
         pixman_composeFunctions.combineU[PIXMAN_OP_IN_REVERSE] = sse2CombineInReverseU;
         pixman_composeFunctions.combineU[PIXMAN_OP_OUT] = sse2CombineOutU;
-
         pixman_composeFunctions.combineU[PIXMAN_OP_OUT_REVERSE] = sse2CombineOutReverseU;
         pixman_composeFunctions.combineU[PIXMAN_OP_ATOP] = sse2CombineAtopU;
         pixman_composeFunctions.combineU[PIXMAN_OP_ATOP_REVERSE] = sse2CombineAtopReverseU;
@@ -2921,7 +3100,7 @@ fbCompositeSrc_8888x8888sse2 (pixman_op_t op,
 
     while (height--)
     {
-        coreCombineOverUsse2 (dst, src, width);
+        coreCombineOverUsse2 (dst, src, NULL, width);
 
         dst += dstStride;
         src += srcStride;
@@ -4351,7 +4530,7 @@ fbCompositeSrcAdd_8000x8000sse2 (pixman_op_t op,
             w--;
         }
 
-        coreCombineAddUsse2 ((uint32_t*)dst, (uint32_t*)src, w >> 2);
+        coreCombineAddUsse2 ((uint32_t*)dst, (uint32_t*)src, NULL, w >> 2);
 
         /* Small tail */
         dst += w & 0xfffc;
@@ -4401,7 +4580,7 @@ fbCompositeSrcAdd_8888x8888sse2 (pixman_op_t 	op,
         src = srcLine;
         srcLine += srcStride;
 
-        coreCombineAddUsse2 (dst, src, width);
+        coreCombineAddUsse2 (dst, src, NULL, width);
     }
 
     _mm_empty();
