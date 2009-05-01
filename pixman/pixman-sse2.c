@@ -2511,10 +2511,8 @@ fbComposeSetupSSE2(void)
         pixman_composeFunctions.combineU[PIXMAN_OP_ATOP_REVERSE] = sse2CombineAtopReverseU;
         pixman_composeFunctions.combineU[PIXMAN_OP_XOR] = sse2CombineXorU;
         pixman_composeFunctions.combineU[PIXMAN_OP_ADD] = sse2CombineAddU;
-#if 0
 
         pixman_composeFunctions.combineU[PIXMAN_OP_SATURATE] = sse2CombineSaturateU;
-#endif
 
         pixman_composeFunctions.combineC[PIXMAN_OP_SRC] = sse2CombineSrcC;
         pixman_composeFunctions.combineC[PIXMAN_OP_OVER] = sse2CombineOverC;
