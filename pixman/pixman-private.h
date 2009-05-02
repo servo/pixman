@@ -152,7 +152,6 @@ typedef struct point point_t;
  */
 
 #define FASTCALL
-typedef FASTCALL void (*CombineMask32) (uint32_t *src, const uint32_t *mask, int width);
 typedef FASTCALL void (*CombineFunc32) (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width);
 typedef FASTCALL void (*fetchProc32)(bits_image_t *pict, int x, int y, int width,
                                      uint32_t *buffer);
@@ -188,7 +187,6 @@ typedef struct _FbComposeData {
 typedef struct _FbComposeFunctions32 {
     CombineFunc32 *combineU;
     CombineFunc32 *combineC;
-    CombineMask32 combineMaskU;
 } FbComposeFunctions32;
 
 typedef struct _FbComposeFunctions64 {

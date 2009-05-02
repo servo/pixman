@@ -274,6 +274,8 @@ _pixman_image_get_fetcher (pixman_image_t *image,
     }
 }
 
+
+
 #define WRITE_ACCESS(f) ((image->common.write_func)? f##_accessors : f)
 
 static void

@@ -2310,13 +2310,6 @@ createMask_2x32_128 (uint32_t mask0, uint32_t mask1)
 /* SSE2 code patch for fbcompose.c */
 
 static FASTCALL void
-sse2CombineMaskU (uint32_t *dst, const uint32_t *src, int width)
-{
-    coreCombineReverseInUsse2 (dst, src, NULL, width);
-    _mm_empty();
-}
-
-static FASTCALL void
 sse2CombineOverU (uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
     coreCombineOverUsse2 (dst, src, mask, width);
@@ -2532,8 +2525,6 @@ fbComposeSetupSSE2(void)
         pixman_composeFunctions.combineC[PIXMAN_OP_ATOP_REVERSE] = sse2CombineAtopReverseC;
         pixman_composeFunctions.combineC[PIXMAN_OP_XOR] = sse2CombineXorC;
         pixman_composeFunctions.combineC[PIXMAN_OP_ADD] = sse2CombineAddC;
-
-        pixman_composeFunctions.combineMaskU = sse2CombineMaskU;
 
 	_mm_empty();
     }

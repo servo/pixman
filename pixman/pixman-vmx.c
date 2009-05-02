@@ -209,37 +209,6 @@ over (vector unsigned int src, vector unsigned int srca,
         vec_st ((vector unsigned int) tmp1, 0, dest );
 
 static FASTCALL void
-vmxCombineMaskU (uint32_t *src, const uint32_t *msk, int width)
-{
-    int i;
-    vector unsigned int  vsrc, vmsk;
-    vector unsigned char tmp1, tmp2, tmp3, tmp4, edges,
-                         src_mask, msk_mask, store_mask;
-
-    COMPUTE_SHIFT_MASKS(src, msk)
-
-    /* printf ("%s\n",__PRETTY_FUNCTION__); */
-    for (i = width/4; i > 0; i--) {
-
-        LOAD_VECTORS(src, msk)
-
-        vsrc = pix_multiply (vsrc, splat_alpha (vmsk));
-
-        STORE_VECTOR(src)
-
-        msk+=4;
-        src+=4;
-    }
-
-    for (i = width%4; --i >= 0;) {
-        uint32_t a = msk[i] >> 24;
-        uint32_t s = src[i];
-        FbByteMul (s, a);
-        src[i] = s;
-    }
-}
-
-static FASTCALL void
 vmxCombineOverU (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
@@ -1060,7 +1029,5 @@ void fbComposeSetupVMX (void)
         pixman_composeFunctions.combineC[PIXMAN_OP_ATOP_REVERSE] = vmxCombineAtopReverseC;
         pixman_composeFunctions.combineC[PIXMAN_OP_XOR] = vmxCombineXorC;
         pixman_composeFunctions.combineC[PIXMAN_OP_ADD] = vmxCombineAddC;
-
-        pixman_composeFunctions.combineMaskU = vmxCombineMaskU;
     }
 }

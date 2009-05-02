@@ -18,21 +18,6 @@
 
 
 /*
- * Combine src and mask
- */
-FASTCALL static void
-pixman_fbCombineMaskU (comp4_t *src, const comp4_t *mask, int width)
-{
-    int i;
-    for (i = 0; i < width; ++i) {
-        comp4_t a = *(mask + i) >> A_SHIFT;
-        comp4_t s = *(src + i);
-        FbByteMul(s, a);
-        *(src + i) = s;
-    }
-}
-
-/*
  * All of the composing functions
  */
 
@@ -1291,6 +1276,5 @@ static CombineFunc pixman_fbCombineFuncC[] = {
 
 FbComposeFunctions pixman_composeFunctions = {
     pixman_fbCombineFuncU,
-    pixman_fbCombineFuncC,
-    pixman_fbCombineMaskU
+    pixman_fbCombineFuncC, 
 };

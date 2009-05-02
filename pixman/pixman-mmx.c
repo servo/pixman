@@ -422,28 +422,6 @@ pix_add_mul (__m64 x, __m64 a, __m64 y, __m64 b)
 
 /* --------------- MMX code patch for fbcompose.c --------------------- */
 
-static FASTCALL void
-mmxCombineMaskU (uint32_t *src, const uint32_t *mask, int width)
-{
-    const uint32_t *end = mask + width;
-    while (mask < end) {
-        uint32_t mmask = *mask;
-	uint32_t maska = mmask >> 24;
-	if (maska == 0) {
-	    *src = 0;
-	} else if (maska != 0xff) {
-	    __m64 a = load8888(mmask);
-	    __m64 s = load8888(*src);
-	    a = expand_alpha(a);
-	    s = pix_multiply(s, a);
-	    *src = store8888(s);
-	}
-	++src;
-	++mask;
-    }
-    _mm_empty();
-}
-
 static force_inline uint32_t
 combine (const uint32_t *src, const uint32_t *mask)
 {
@@ -955,8 +933,6 @@ fbComposeSetupMMX(void)
         pixman_composeFunctions.combineC[PIXMAN_OP_ATOP_REVERSE] = mmxCombineAtopReverseC;
         pixman_composeFunctions.combineC[PIXMAN_OP_XOR] = mmxCombineXorC;
         pixman_composeFunctions.combineC[PIXMAN_OP_ADD] = mmxCombineAddC;
-
-        pixman_composeFunctions.combineMaskU = mmxCombineMaskU;
     }
 
     initialized = TRUE;
