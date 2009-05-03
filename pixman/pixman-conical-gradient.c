@@ -27,7 +27,8 @@
 static void
 conical_gradient_property_changed (pixman_image_t *image)
 {
-    
+    image->common.get_scanline_64 = (scanFetchProc)pixmanFetchSourcePict64;
+    image->common.get_scanline_32 = (scanFetchProc)pixmanFetchSourcePict;
 }
 
 PIXMAN_EXPORT pixman_image_t *

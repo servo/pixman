@@ -37,7 +37,8 @@ solid_fill_classify (pixman_image_t *image,
 static void
 solid_fill_property_changed (pixman_image_t *image)
 {
-    
+    image->common.get_scanline_64 = (scanFetchProc)pixmanFetchSourcePict64;
+    image->common.get_scanline_32 = (scanFetchProc)pixmanFetchSourcePict;
 }
 
 static uint32_t

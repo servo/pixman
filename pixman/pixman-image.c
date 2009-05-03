@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 
 #include "pixman-private.h"
 
@@ -142,15 +143,10 @@ static void fbFetch64(bits_image_t * image, int x, int y, int width, uint64_t *b
 static void
 set_fetchers (pixman_image_t *image)
 {
-    if (IS_SOURCE_IMAGE (image))
-    {
-	image->common.get_scanline_64 = (scanFetchProc)pixmanFetchSourcePict64;
-	image->common.get_scanline_32 = (scanFetchProc)pixmanFetchSourcePict;
-    }
-    else
+    if (!IS_SOURCE_IMAGE (image))
     {
 	bits_image_t *bits = (bits_image_t *)image;
-
+	
 	if (bits->common.alpha_map)
 	{
 	    image->common.get_scanline_64 =
@@ -186,6 +182,10 @@ _pixman_image_get_fetcher (pixman_image_t *image,
 			   int             wide)
 {
     set_fetchers (image);
+
+    assert (image->common.get_scanline_64);
+    assert (image->common.get_scanline_32);
+    
     if (wide)
 	return image->common.get_scanline_64;
     else
