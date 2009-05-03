@@ -32,228 +32,6 @@
 
 #include "pixman-private.h"
 
-typedef struct
-{
-    uint32_t        left_ag;
-    uint32_t        left_rb;
-    uint32_t        right_ag;
-    uint32_t        right_rb;
-    int32_t       left_x;
-    int32_t       right_x;
-    int32_t       stepper;
-
-    pixman_gradient_stop_t	*stops;
-    int                      num_stops;
-    unsigned int             spread;
-
-    int		  need_reset;
-} GradientWalker;
-
-static void
-_gradient_walker_init (GradientWalker  *walker,
-		       gradient_t      *gradient,
-		       unsigned int     spread)
-{
-    walker->num_stops = gradient->n_stops;
-    walker->stops     = gradient->stops;
-    walker->left_x    = 0;
-    walker->right_x   = 0x10000;
-    walker->stepper   = 0;
-    walker->left_ag   = 0;
-    walker->left_rb   = 0;
-    walker->right_ag  = 0;
-    walker->right_rb  = 0;
-    walker->spread    = spread;
-
-    walker->need_reset = TRUE;
-}
-
-static void
-_gradient_walker_reset (GradientWalker  *walker,
-                        pixman_fixed_32_32_t     pos)
-{
-    int32_t                  x, left_x, right_x;
-    pixman_color_t          *left_c, *right_c;
-    int                      n, count = walker->num_stops;
-    pixman_gradient_stop_t *      stops = walker->stops;
-
-    static const pixman_color_t   transparent_black = { 0, 0, 0, 0 };
-
-    switch (walker->spread)
-    {
-    case PIXMAN_REPEAT_NORMAL:
-	x = (int32_t)pos & 0xFFFF;
-	for (n = 0; n < count; n++)
-	    if (x < stops[n].x)
-		break;
-	if (n == 0) {
-	    left_x =  stops[count-1].x - 0x10000;
-	    left_c = &stops[count-1].color;
-	} else {
-	    left_x =  stops[n-1].x;
-	    left_c = &stops[n-1].color;
-	}
-
-	if (n == count) {
-	    right_x =  stops[0].x + 0x10000;
-	    right_c = &stops[0].color;
-	} else {
-	    right_x =  stops[n].x;
-	    right_c = &stops[n].color;
-	}
-	left_x  += (pos - x);
-	right_x += (pos - x);
-	break;
-
-    case PIXMAN_REPEAT_PAD:
-	for (n = 0; n < count; n++)
-	    if (pos < stops[n].x)
-		break;
-
-	if (n == 0) {
-	    left_x =  INT32_MIN;
-	    left_c = &stops[0].color;
-	} else {
-	    left_x =  stops[n-1].x;
-	    left_c = &stops[n-1].color;
-	}
-
-	if (n == count) {
-	    right_x =  INT32_MAX;
-	    right_c = &stops[n-1].color;
-	} else {
-	    right_x =  stops[n].x;
-	    right_c = &stops[n].color;
-	}
-	break;
-
-    case PIXMAN_REPEAT_REFLECT:
-	x = (int32_t)pos & 0xFFFF;
-	if ((int32_t)pos & 0x10000)
-	    x = 0x10000 - x;
-	for (n = 0; n < count; n++)
-	    if (x < stops[n].x)
-		break;
-
-	if (n == 0) {
-	    left_x =  -stops[0].x;
-	    left_c = &stops[0].color;
-	} else {
-	    left_x =  stops[n-1].x;
-	    left_c = &stops[n-1].color;
-	}
-
-	if (n == count) {
-	    right_x = 0x20000 - stops[n-1].x;
-	    right_c = &stops[n-1].color;
-	} else {
-	    right_x =  stops[n].x;
-	    right_c = &stops[n].color;
-	}
-
-	if ((int32_t)pos & 0x10000) {
-	    pixman_color_t  *tmp_c;
-	    int32_t          tmp_x;
-
-	    tmp_x   = 0x10000 - right_x;
-	    right_x = 0x10000 - left_x;
-	    left_x  = tmp_x;
-
-	    tmp_c   = right_c;
-	    right_c = left_c;
-	    left_c  = tmp_c;
-
-	    x = 0x10000 - x;
-	}
-	left_x  += (pos - x);
-	right_x += (pos - x);
-	break;
-
-    default:  /* RepeatNone */
-	for (n = 0; n < count; n++)
-	    if (pos < stops[n].x)
-		break;
-
-	if (n == 0)
-	{
-	    left_x  =  INT32_MIN;
-	    right_x =  stops[0].x;
-	    left_c  = right_c = (pixman_color_t*) &transparent_black;
-	}
-	else if (n == count)
-	{
-	    left_x  = stops[n-1].x;
-	    right_x = INT32_MAX;
-	    left_c  = right_c = (pixman_color_t*) &transparent_black;
-	}
-	else
-	{
-	    left_x  =  stops[n-1].x;
-	    right_x =  stops[n].x;
-	    left_c  = &stops[n-1].color;
-	    right_c = &stops[n].color;
-	}
-    }
-
-    walker->left_x   = left_x;
-    walker->right_x  = right_x;
-    walker->left_ag  = ((left_c->alpha >> 8) << 16)   | (left_c->green >> 8);
-    walker->left_rb  = ((left_c->red & 0xff00) << 8)  | (left_c->blue >> 8);
-    walker->right_ag = ((right_c->alpha >> 8) << 16)  | (right_c->green >> 8);
-    walker->right_rb = ((right_c->red & 0xff00) << 8) | (right_c->blue >> 8);
-
-    if ( walker->left_x == walker->right_x                ||
-	 ( walker->left_ag == walker->right_ag &&
-	   walker->left_rb == walker->right_rb )   )
-    {
-	walker->stepper = 0;
-    }
-    else
-    {
-	int32_t width = right_x - left_x;
-	walker->stepper = ((1 << 24) + width/2)/width;
-    }
-
-    walker->need_reset = FALSE;
-}
-
-#define  GRADIENT_WALKER_NEED_RESET(w,x)				\
-    ( (w)->need_reset || (x) < (w)->left_x || (x) >= (w)->right_x)
-
-
-/* the following assumes that GRADIENT_WALKER_NEED_RESET(w,x) is FALSE */
-static uint32_t
-_gradient_walker_pixel (GradientWalker  *walker,
-                        pixman_fixed_32_32_t     x)
-{
-    int  dist, idist;
-    uint32_t  t1, t2, a, color;
-
-    if (GRADIENT_WALKER_NEED_RESET (walker, x))
-        _gradient_walker_reset (walker, x);
-
-    dist  = ((int)(x - walker->left_x)*walker->stepper) >> 16;
-    idist = 256 - dist;
-
-    /* combined INTERPOLATE and premultiply */
-    t1 = walker->left_rb*idist + walker->right_rb*dist;
-    t1 = (t1 >> 8) & 0xff00ff;
-
-    t2  = walker->left_ag*idist + walker->right_ag*dist;
-    t2 &= 0xff00ff00;
-
-    color = t2 & 0xff000000;
-    a     = t2 >> 24;
-
-    t1  = t1*a + 0x800080;
-    t1  = (t1 + ((t1 >> 8) & 0xff00ff)) >> 8;
-
-    t2  = (t2 >> 8)*a + 0x800080;
-    t2  = (t2 + ((t2 >> 8) & 0xff00ff));
-
-    return (color | (t1 & 0xff00ff) | (t2 & 0xff00));
-}
-
 void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width,
                            uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
 {
@@ -276,7 +54,7 @@ void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width,
 
     gradient = (gradient_t *)pict;
 
-    _gradient_walker_init (&walker, gradient, pict->common.repeat);
+    _pixman_gradient_walker_init (&walker, gradient, pict->common.repeat);
 
     if (pict->common.type == LINEAR) {
 	pixman_vector_t v, unit;
@@ -323,7 +101,7 @@ void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width,
 	    {
 		register uint32_t color;
 
-		color = _gradient_walker_pixel( &walker, t );
+		color = _pixman_gradient_walker_pixel( &walker, t );
 		while (buffer < end)
 		    *(buffer++) = color;
 	    }
@@ -332,7 +110,7 @@ void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width,
                 if (!mask) {
                     while (buffer < end)
                     {
-			*(buffer) = _gradient_walker_pixel (&walker, t);
+			*(buffer) = _pixman_gradient_walker_pixel (&walker, t);
                         buffer += 1;
                         t      += inc;
                     }
@@ -340,7 +118,7 @@ void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width,
                     while (buffer < end) {
                         if (*mask++ & maskBits)
                         {
-			    *(buffer) = _gradient_walker_pixel (&walker, t);
+			    *(buffer) = _pixman_gradient_walker_pixel (&walker, t);
                         }
                         buffer += 1;
                         t      += inc;
@@ -369,7 +147,7 @@ void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width,
 		    t = ((a * x + b * y) >> 16) + off;
 		}
 
- 		color = _gradient_walker_pixel( &walker, t );
+ 		color = _pixman_gradient_walker_pixel( &walker, t );
 		while (buffer < end)
 		    *(buffer++) = color;
 	    }
@@ -387,7 +165,7 @@ void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width,
 			    y = ((pixman_fixed_48_16_t)v.vector[1] << 16) / v.vector[2];
 			    t = ((a*x + b*y) >> 16) + off;
 			}
-			*(buffer) = _gradient_walker_pixel (&walker, t);
+			*(buffer) = _pixman_gradient_walker_pixel (&walker, t);
 		    }
 		    ++buffer;
 		    v.vector[0] += unit.vector[0];
@@ -570,7 +348,7 @@ void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width,
 			else
 			    t = (pixman_fixed_48_16_t) ((- B + sqrt(det)) / (2.0 * radial->A) * 65536);
 
-			*(buffer) = _gradient_walker_pixel (&walker, t);
+			*(buffer) = _pixman_gradient_walker_pixel (&walker, t);
 		    }
 		    ++buffer;
 
@@ -615,7 +393,7 @@ void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width,
 			else
 			    t = (pixman_fixed_48_16_t) ((- B + sqrt(det)) / (2.0 * radial->A) * 65536);
 
-			*(buffer) = _gradient_walker_pixel (&walker, t);
+			*(buffer) = _pixman_gradient_walker_pixel (&walker, t);
 		    }
 		    ++buffer;
 
@@ -641,7 +419,7 @@ void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width,
                         angle = atan2(ry, rx) + a;
 			t     = (pixman_fixed_48_16_t) (angle * (65536. / (2*M_PI)));
 
-			*(buffer) = _gradient_walker_pixel (&walker, t);
+			*(buffer) = _pixman_gradient_walker_pixel (&walker, t);
 		    }
 
                     ++buffer;
@@ -668,7 +446,7 @@ void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width,
 			angle = atan2(y, x) + a;
 			t     = (pixman_fixed_48_16_t) (angle * (65536. / (2*M_PI)));
 
-			*(buffer) = _gradient_walker_pixel (&walker, t);
+			*(buffer) = _pixman_gradient_walker_pixel (&walker, t);
 		    }
 
                     ++buffer;

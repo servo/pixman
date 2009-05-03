@@ -428,6 +428,39 @@ union pixman_image
     solid_fill_t		solid;
 };
 
+/* Gradient walker
+ */
+typedef struct
+{
+    uint32_t        left_ag;
+    uint32_t        left_rb;
+    uint32_t        right_ag;
+    uint32_t        right_rb;
+    int32_t       left_x;
+    int32_t       right_x;
+    int32_t       stepper;
+
+    pixman_gradient_stop_t	*stops;
+    int                      num_stops;
+    unsigned int             spread;
+
+    int		  need_reset;
+} GradientWalker;
+
+void
+_pixman_gradient_walker_init (GradientWalker  *walker,
+			      gradient_t      *gradient,
+			      unsigned int     spread);
+
+void
+_pixman_gradient_walker_reset (GradientWalker       *walker,
+			       pixman_fixed_32_32_t  pos);
+
+uint32_t
+_pixman_gradient_walker_pixel (GradientWalker       *walker,
+			       pixman_fixed_32_32_t  x);
+
+
 
 #define LOG2_BITMAP_PAD 5
 #define FB_STIP_SHIFT	LOG2_BITMAP_PAD

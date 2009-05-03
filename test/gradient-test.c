@@ -54,9 +54,8 @@ main (int argc, char **argv)
     r_inner = 0;
     r_outer = pixman_double_to_fixed (50.0);
     
-    src_img = pixman_image_create_radial_gradient (&c_inner, &c_outer,
-						   r_inner, r_outer,
-						   stops, 2);
+    src_img = pixman_image_create_conical_gradient (&c_inner, r_inner,
+						    stops, 2);
 #if 0
     src_img = pixman_image_create_conical_gradient (&c_inner, r_inner,
 						    stops, 2);
