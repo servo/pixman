@@ -301,6 +301,9 @@ scanStoreProc
 _pixman_image_get_storer (pixman_image_t *image,
 			  int             wide);
 
+pixman_image_t *
+_pixman_image_allocate (void);
+
 struct point
 {
     int16_t x, y;

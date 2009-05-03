@@ -43,11 +43,7 @@ SourcePictureClassify (pixman_image_t *image,
     
     pict->class = SOURCE_IMAGE_CLASS_UNKNOWN;
     
-    if (pict->common.type == SOLID)
-    {
-	pict->class = SOURCE_IMAGE_CLASS_HORIZONTAL;
-    }
-    else if (pict->common.type == LINEAR)
+    if (pict->common.type == LINEAR)
     {
 	linear_gradient_t *linear = (linear_gradient_t *)pict;
 	pixman_vector_t   v;
@@ -131,18 +127,8 @@ init_gradient (gradient_t     *gradient,
     return TRUE;
 }
 
-static uint32_t
-color_to_uint32 (const pixman_color_t *color)
-{
-    return
-	(color->alpha >> 8 << 24) |
-	(color->red >> 8 << 16) |
-        (color->green & 0xff00) |
-	(color->blue >> 8);
-}
-
-static pixman_image_t *
-allocate_image (void)
+pixman_image_t *
+_pixman_image_allocate (void)
 {
     pixman_image_t *image = malloc (sizeof (pixman_image_t));
 
@@ -385,21 +371,6 @@ pixman_image_unref (pixman_image_t *image)
 
 /* Constructors */
 PIXMAN_EXPORT pixman_image_t *
-pixman_image_create_solid_fill (pixman_color_t *color)
-{
-    pixman_image_t *img = allocate_image();
-    if (!img)
-	return NULL;
-
-    init_source_image (&img->solid.common);
-
-    img->type = SOLID;
-    img->solid.color = color_to_uint32 (color);
-
-    return img;
-}
-
-PIXMAN_EXPORT pixman_image_t *
 pixman_image_create_linear_gradient (pixman_point_fixed_t         *p1,
 				     pixman_point_fixed_t         *p2,
 				     const pixman_gradient_stop_t *stops,
@@ -410,7 +381,7 @@ pixman_image_create_linear_gradient (pixman_point_fixed_t         *p1,
 
     return_val_if_fail (n_stops >= 2, NULL);
 
-    image = allocate_image();
+    image = _pixman_image_allocate();
 
     if (!image)
 	return NULL;
@@ -445,7 +416,7 @@ pixman_image_create_radial_gradient (pixman_point_fixed_t         *inner,
 
     return_val_if_fail (n_stops >= 2, NULL);
 
-    image = allocate_image();
+    image = _pixman_image_allocate();
 
     if (!image)
 	return NULL;
@@ -482,7 +453,7 @@ pixman_image_create_conical_gradient (pixman_point_fixed_t *center,
 				      const pixman_gradient_stop_t *stops,
 				      int n_stops)
 {
-    pixman_image_t *image = allocate_image();
+    pixman_image_t *image = _pixman_image_allocate();
     conical_gradient_t *conical;
 
     if (!image)
@@ -584,7 +555,7 @@ pixman_image_create_bits (pixman_format_code_t  format,
 	    return NULL;
     }
 
-    image = allocate_image();
+    image = _pixman_image_allocate();
 
     if (!image) {
 	if (free_me)
@@ -844,6 +815,16 @@ pixman_image_get_depth (pixman_image_t *image)
 	return PIXMAN_FORMAT_DEPTH (image->bits.format);
 
     return 0;
+}
+
+static uint32_t
+color_to_uint32 (const pixman_color_t *color)
+{
+    return
+	(color->alpha >> 8 << 24) |
+	(color->red >> 8 << 16) |
+        (color->green & 0xff00) |
+	(color->blue >> 8);
 }
 
 static pixman_bool_t

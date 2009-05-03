@@ -17,6 +17,7 @@ libpixman_1_la_SOURCES =		\
 	pixman-compose.c		\
 	pixman-pict.c			\
 	pixman-source.c			\
+	pixman-solid-fill.c		\
 	pixman-transformed.c		\
 	pixman-transformed-accessors.c	\
 	pixman-utils.c			\
