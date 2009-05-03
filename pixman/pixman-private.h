@@ -308,6 +308,9 @@ pixman_bool_t
 _pixman_init_gradient (gradient_t     *gradient,
 		       const pixman_gradient_stop_t *stops,
 		       int	       n_stops);
+void
+_pixman_image_reset_clip_region (pixman_image_t *image);
+
 struct point
 {
     int16_t x, y;

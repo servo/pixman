@@ -299,51 +299,8 @@ pixman_image_unref (pixman_image_t *image)
 
 /* Constructors */
 
-static uint32_t *
-create_bits (pixman_format_code_t format,
-	     int		  width,
-	     int		  height,
-	     int		 *rowstride_bytes)
-{
-    int stride;
-    int buf_size;
-    int bpp;
-
-    /* what follows is a long-winded way, avoiding any possibility of integer
-     * overflows, of saying:
-     * stride = ((width * bpp + FB_MASK) >> FB_SHIFT) * sizeof (uint32_t);
-     */
-
-    bpp = PIXMAN_FORMAT_BPP (format);
-    if (pixman_multiply_overflows_int (width, bpp))
-	return NULL;
-
-    stride = width * bpp;
-    if (pixman_addition_overflows_int (stride, FB_MASK))
-	return NULL;
-
-    stride += FB_MASK;
-    stride >>= FB_SHIFT;
-
-#if FB_SHIFT < 2
-    if (pixman_multiply_overflows_int (stride, sizeof (uint32_t)))
-	return NULL;
-#endif
-    stride *= sizeof (uint32_t);
-
-    if (pixman_multiply_overflows_int (height, stride))
-	return NULL;
-
-    buf_size = height * stride;
-
-    if (rowstride_bytes)
-	*rowstride_bytes = stride;
-
-    return calloc (buf_size, 1);
-}
-
-static void
-reset_clip_region (pixman_image_t *image)
+void
+_pixman_image_reset_clip_region (pixman_image_t *image)
 {
     pixman_region32_fini (&image->common.clip_region);
 
@@ -358,56 +315,6 @@ reset_clip_region (pixman_image_t *image)
     }
 }
 
-PIXMAN_EXPORT pixman_image_t *
-pixman_image_create_bits (pixman_format_code_t  format,
-			  int                   width,
-			  int                   height,
-			  uint32_t	       *bits,
-			  int			rowstride_bytes)
-{
-    pixman_image_t *image;
-    uint32_t *free_me = NULL;
-
-    /* must be a whole number of uint32_t's
-     */
-    return_val_if_fail (bits == NULL ||
-			(rowstride_bytes % sizeof (uint32_t)) == 0, NULL);
-
-    if (!bits && width && height)
-    {
-	free_me = bits = create_bits (format, width, height, &rowstride_bytes);
-	if (!bits)
-	    return NULL;
-    }
-
-    image = _pixman_image_allocate();
-
-    if (!image) {
-	if (free_me)
-	    free (free_me);
-	return NULL;
-    }
-    
-    image->type = BITS;
-    image->bits.format = format;
-    image->bits.width = width;
-    image->bits.height = height;
-    image->bits.bits = bits;
-    image->bits.free_me = free_me;
-
-    image->bits.rowstride = rowstride_bytes / (int) sizeof (uint32_t); /* we store it in number
-								  * of uint32_t's
-								  */
-    image->bits.indexed = NULL;
-
-    pixman_region32_fini (&image->common.full_region);
-    pixman_region32_init_rect (&image->common.full_region, 0, 0,
-			       image->bits.width, image->bits.height);
-
-    reset_clip_region (image);
-    return image;
-}
-
 PIXMAN_EXPORT pixman_bool_t
 pixman_image_set_clip_region32 (pixman_image_t *image,
 				pixman_region32_t *region)
@@ -420,7 +327,7 @@ pixman_image_set_clip_region32 (pixman_image_t *image,
     }
     else
     {
-	reset_clip_region (image);
+	_pixman_image_reset_clip_region (image);
 
 	return TRUE;
     }
@@ -439,7 +346,7 @@ pixman_image_set_clip_region (pixman_image_t    *image,
     }
     else
     {
-	reset_clip_region (image);
+	_pixman_image_reset_clip_region (image);
 
 	return TRUE;
     }
