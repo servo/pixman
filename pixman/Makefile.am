@@ -6,6 +6,7 @@ libpixman_1_la_SOURCES =		\
 	pixman.h			\
 	pixman-access.c			\
 	pixman-access-accessors.c	\
+	pixman-cpu.c			\
 	pixman-gradient-walker.c	\
 	pixman-region16.c		\
 	pixman-region32.c		\
