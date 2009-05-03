@@ -19,6 +19,7 @@ libpixman_1_la_SOURCES =		\
 	pixman-source.c			\
 	pixman-solid-fill.c		\
 	pixman-linear-gradient.c	\
+	pixman-radial-gradient.c	\
 	pixman-transformed.c		\
 	pixman-transformed-accessors.c	\
 	pixman-utils.c			\

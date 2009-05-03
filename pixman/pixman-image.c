@@ -300,50 +300,6 @@ pixman_image_unref (pixman_image_t *image)
 /* Constructors */
 
 PIXMAN_EXPORT pixman_image_t *
-pixman_image_create_radial_gradient (pixman_point_fixed_t         *inner,
-				     pixman_point_fixed_t         *outer,
-				     pixman_fixed_t                inner_radius,
-				     pixman_fixed_t                outer_radius,
-				     const pixman_gradient_stop_t *stops,
-				     int                           n_stops)
-{
-    pixman_image_t *image;
-    radial_gradient_t *radial;
-
-    return_val_if_fail (n_stops >= 2, NULL);
-
-    image = _pixman_image_allocate();
-
-    if (!image)
-	return NULL;
-
-    radial = &image->radial;
-
-    if (!_pixman_init_gradient (&radial->common, stops, n_stops))
-    {
-	free (image);
-	return NULL;
-    }
-
-    image->type = RADIAL;
-
-    radial->c1.x = inner->x;
-    radial->c1.y = inner->y;
-    radial->c1.radius = inner_radius;
-    radial->c2.x = outer->x;
-    radial->c2.y = outer->y;
-    radial->c2.radius = outer_radius;
-    radial->cdx = pixman_fixed_to_double (radial->c2.x - radial->c1.x);
-    radial->cdy = pixman_fixed_to_double (radial->c2.y - radial->c1.y);
-    radial->dr = pixman_fixed_to_double (radial->c2.radius - radial->c1.radius);
-    radial->A = (radial->cdx * radial->cdx
-		 + radial->cdy * radial->cdy
-		 - radial->dr  * radial->dr);
-
-    return image;
-}
-
-PIXMAN_EXPORT pixman_image_t *
 pixman_image_create_conical_gradient (pixman_point_fixed_t *center,
 				      pixman_fixed_t angle,
 				      const pixman_gradient_stop_t *stops,
