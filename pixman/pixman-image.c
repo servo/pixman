@@ -139,16 +139,13 @@ static void fbFetch64(bits_image_t * image, int x, int y, int width, uint64_t *b
     fetch(image, x, y, width, buffer);
 }
 
-scanFetchProc
-_pixman_image_get_fetcher (pixman_image_t *image,
-			   int             wide)
+static void
+set_fetchers (pixman_image_t *image)
 {
     if (IS_SOURCE_IMAGE (image))
     {
-	if (wide)
-	    return (scanFetchProc)pixmanFetchSourcePict64;
-	else
-	    return (scanFetchProc)pixmanFetchSourcePict;
+	image->common.get_scanline_64 = (scanFetchProc)pixmanFetchSourcePict64;
+	image->common.get_scanline_32 = (scanFetchProc)pixmanFetchSourcePict;
     }
     else
     {
@@ -156,36 +153,43 @@ _pixman_image_get_fetcher (pixman_image_t *image,
 
 	if (bits->common.alpha_map)
 	{
-	    if (wide)
-		return (scanFetchProc)READ_ACCESS(fbFetchExternalAlpha64);
-	    else
-		return (scanFetchProc)READ_ACCESS(fbFetchExternalAlpha);
+	    image->common.get_scanline_64 =
+		(scanFetchProc)READ_ACCESS(fbFetchExternalAlpha64);
+	    image->common.get_scanline_32 =
+		(scanFetchProc)READ_ACCESS(fbFetchExternalAlpha);
 	}
 	else if ((bits->common.repeat != PIXMAN_REPEAT_NONE) &&
 		 bits->width == 1 &&
 		 bits->height == 1)
 	{
-	    if (wide)
-		return (scanFetchProc)fbFetchSolid64;
-	    else
-		return (scanFetchProc)fbFetchSolid;
+	    image->common.get_scanline_64 = (scanFetchProc)fbFetchSolid64;
+	    image->common.get_scanline_32 = (scanFetchProc)fbFetchSolid;
 	}
-	else if (!bits->common.transform && bits->common.filter != PIXMAN_FILTER_CONVOLUTION
-                && bits->common.repeat != PIXMAN_REPEAT_PAD && bits->common.repeat != PIXMAN_REPEAT_REFLECT)
+	else if (!bits->common.transform &&
+		 bits->common.filter != PIXMAN_FILTER_CONVOLUTION &&
+		 bits->common.repeat != PIXMAN_REPEAT_PAD &&
+		 bits->common.repeat != PIXMAN_REPEAT_REFLECT)
 	{
-	    if (wide)
-		return (scanFetchProc)fbFetch64;
-	    else
-		return (scanFetchProc)fbFetch;
+	    image->common.get_scanline_64 = (scanFetchProc)fbFetch64;
+	    image->common.get_scanline_32 = (scanFetchProc)fbFetch;
 	}
 	else
 	{
-	    if (wide)
-		return (scanFetchProc)READ_ACCESS(fbFetchTransformed64);
-	    else
-		return (scanFetchProc)READ_ACCESS(fbFetchTransformed);
+	    image->common.get_scanline_64 = (scanFetchProc)READ_ACCESS(fbFetchTransformed64);
+	    image->common.get_scanline_32 = (scanFetchProc)READ_ACCESS(fbFetchTransformed);
 	}
     }
+}
+
+scanFetchProc
+_pixman_image_get_fetcher (pixman_image_t *image,
+			   int             wide)
+{
+    set_fetchers (image);
+    if (wide)
+	return image->common.get_scanline_64;
+    else
+	return image->common.get_scanline_32;
 }
 
 
@@ -243,6 +247,8 @@ _pixman_image_get_storer (pixman_image_t *image,
 static void
 image_property_changed (pixman_image_t *image)
 {
+    
+    
     image->common.property_changed (image);
 }
 

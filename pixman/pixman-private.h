@@ -337,6 +337,8 @@ struct image_common
     pixman_write_memory_func_t	write_func;
     classify_func_t		classify;
     property_changed_func_t	property_changed;
+    scanFetchProc		get_scanline_32;
+    scanFetchProc		get_scanline_64;
 };
 
 struct source_image
