@@ -304,6 +304,10 @@ _pixman_image_get_storer (pixman_image_t *image,
 pixman_image_t *
 _pixman_image_allocate (void);
 
+pixman_bool_t
+_pixman_init_gradient (gradient_t     *gradient,
+		       const pixman_gradient_stop_t *stops,
+		       int	       n_stops);
 struct point
 {
     int16_t x, y;

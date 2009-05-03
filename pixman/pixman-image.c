@@ -32,85 +32,12 @@
 
 #define Alpha(x) ((x) >> 24)
 
-static source_pict_class_t
-SourcePictureClassify (pixman_image_t *image,
-		       int	       x,
-		       int	       y,
-		       int	       width,
-		       int	       height)
-{
-    source_image_t *pict = &image->source;
-    
-    pict->class = SOURCE_IMAGE_CLASS_UNKNOWN;
-    
-    if (pict->common.type == LINEAR)
-    {
-	linear_gradient_t *linear = (linear_gradient_t *)pict;
-	pixman_vector_t   v;
-	pixman_fixed_32_32_t l;
-	pixman_fixed_48_16_t dx, dy, a, b, off;
-	pixman_fixed_48_16_t factors[4];
-	int	     i;
-
-	dx = linear->p2.x - linear->p1.x;
-	dy = linear->p2.y - linear->p1.y;
-	l = dx * dx + dy * dy;
-	if (l)
-	{
-	    a = (dx << 32) / l;
-	    b = (dy << 32) / l;
-	}
-	else
-	{
-	    a = b = 0;
-	}
-
-	off = (-a * linear->p1.x
-	       -b * linear->p1.y) >> 16;
-
-	for (i = 0; i < 3; i++)
-	{
-	    v.vector[0] = pixman_int_to_fixed ((i % 2) * (width  - 1) + x);
-	    v.vector[1] = pixman_int_to_fixed ((i / 2) * (height - 1) + y);
-	    v.vector[2] = pixman_fixed_1;
-
-	    if (pict->common.transform)
-	    {
-		if (!pixman_transform_point_3d (pict->common.transform, &v))
-		{
-		    pict->class = SOURCE_IMAGE_CLASS_UNKNOWN;
-		    goto out;
-		}
-	    }
-
-	    factors[i] = ((a * v.vector[0] + b * v.vector[1]) >> 16) + off;
-	}
-
-	if (factors[2] == factors[0])
-	    pict->class = SOURCE_IMAGE_CLASS_HORIZONTAL;
-	else if (factors[1] == factors[0])
-	    pict->class = SOURCE_IMAGE_CLASS_VERTICAL;
-    }
-
-out:
-    return pict->class;
-}
-
-static void
-init_source_image (source_image_t *image)
-{
-    image->class = SOURCE_IMAGE_CLASS_UNKNOWN;
-    image->common.classify = SourcePictureClassify;
-}
-
-static pixman_bool_t
-init_gradient (gradient_t     *gradient,
-	       const pixman_gradient_stop_t *stops,
-	       int	       n_stops)
+pixman_bool_t
+_pixman_init_gradient (gradient_t     *gradient,
+		       const pixman_gradient_stop_t *stops,
+		       int	       n_stops)
 {
     return_val_if_fail (n_stops > 0, FALSE);
-
-    init_source_image (&gradient->common);
 
     gradient->stops = pixman_malloc_ab (n_stops, sizeof (pixman_gradient_stop_t));
     if (!gradient->stops)
@@ -123,6 +50,7 @@ init_gradient (gradient_t     *gradient,
     gradient->stop_range = 0xffff;
     gradient->color_table = NULL;
     gradient->color_table_size = 0;
+    gradient->common.class = SOURCE_IMAGE_CLASS_UNKNOWN;
 
     return TRUE;
 }
@@ -370,38 +298,6 @@ pixman_image_unref (pixman_image_t *image)
 }
 
 /* Constructors */
-PIXMAN_EXPORT pixman_image_t *
-pixman_image_create_linear_gradient (pixman_point_fixed_t         *p1,
-				     pixman_point_fixed_t         *p2,
-				     const pixman_gradient_stop_t *stops,
-				     int                           n_stops)
-{
-    pixman_image_t *image;
-    linear_gradient_t *linear;
-
-    return_val_if_fail (n_stops >= 2, NULL);
-
-    image = _pixman_image_allocate();
-
-    if (!image)
-	return NULL;
-
-    linear = &image->linear;
-
-    if (!init_gradient (&linear->common, stops, n_stops))
-    {
-	free (image);
-	return NULL;
-    }
-
-    linear->p1 = *p1;
-    linear->p2 = *p2;
-
-    image->type = LINEAR;
-
-    return image;
-}
-
 
 PIXMAN_EXPORT pixman_image_t *
 pixman_image_create_radial_gradient (pixman_point_fixed_t         *inner,
@@ -423,7 +319,7 @@ pixman_image_create_radial_gradient (pixman_point_fixed_t         *inner,
 
     radial = &image->radial;
 
-    if (!init_gradient (&radial->common, stops, n_stops))
+    if (!_pixman_init_gradient (&radial->common, stops, n_stops))
     {
 	free (image);
 	return NULL;
@@ -461,7 +357,7 @@ pixman_image_create_conical_gradient (pixman_point_fixed_t *center,
 
     conical = &image->conical;
 
-    if (!init_gradient (&conical->common, stops, n_stops))
+    if (!_pixman_init_gradient (&conical->common, stops, n_stops))
     {
 	free (image);
 	return NULL;
