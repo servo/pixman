@@ -34,6 +34,12 @@ solid_fill_classify (pixman_image_t *image,
     return (image->source.class = SOURCE_IMAGE_CLASS_HORIZONTAL);
 }
 
+static void
+solid_fill_property_changed (pixman_image_t *image)
+{
+    
+}
+
 static uint32_t
 color_to_uint32 (const pixman_color_t *color)
 {
@@ -52,11 +58,14 @@ pixman_image_create_solid_fill (pixman_color_t *color)
     if (!img)
 	return NULL;
 
-    img->source.class = SOURCE_IMAGE_CLASS_UNKNOWN;
-    img->common.classify = solid_fill_classify;
-    
     img->type = SOLID;
     img->solid.color = color_to_uint32 (color);
 
+    img->source.class = SOURCE_IMAGE_CLASS_UNKNOWN;
+    img->common.classify = solid_fill_classify;
+    img->common.property_changed = solid_fill_property_changed;
+
+    solid_fill_property_changed (img);
+    
     return img;
 }

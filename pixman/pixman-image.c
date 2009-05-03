@@ -240,6 +240,12 @@ _pixman_image_get_storer (pixman_image_t *image,
     }
 }
 
+static void
+image_property_changed (pixman_image_t *image)
+{
+    image->common.property_changed (image);
+}
+
 /* Ref Counting */
 PIXMAN_EXPORT pixman_image_t *
 pixman_image_ref (pixman_image_t *image)
@@ -320,17 +326,22 @@ pixman_image_set_clip_region32 (pixman_image_t *image,
 				pixman_region32_t *region)
 {
     image_common_t *common = (image_common_t *)image;
+    pixman_bool_t result;
 
     if (region)
     {
-	return pixman_region32_copy (&common->clip_region, region);
+	result = pixman_region32_copy (&common->clip_region, region);
     }
     else
     {
 	_pixman_image_reset_clip_region (image);
 
-	return TRUE;
+	result = TRUE;
     }
+
+    image_property_changed (image);
+
+    return result;
 }
 
 
@@ -339,17 +350,22 @@ pixman_image_set_clip_region (pixman_image_t    *image,
 			      pixman_region16_t *region)
 {
     image_common_t *common = (image_common_t *)image;
+    pixman_bool_t result;
 
     if (region)
     {
-	return pixman_region32_copy_from_region16 (&common->clip_region, region);
+	result = pixman_region32_copy_from_region16 (&common->clip_region, region);
     }
     else
     {
 	_pixman_image_reset_clip_region (image);
 
-	return TRUE;
+	result = TRUE;
     }
+
+    image_property_changed (image);
+
+    return result;
 }
 
 /* Sets whether the clip region includes a clip region set by the client
@@ -359,6 +375,8 @@ pixman_image_set_has_client_clip (pixman_image_t *image,
 				  pixman_bool_t	  client_clip)
 {
     image->common.has_client_clip = client_clip;
+
+    image_property_changed (image);
 }
 
 PIXMAN_EXPORT pixman_bool_t
@@ -374,6 +392,7 @@ pixman_image_set_transform (pixman_image_t           *image,
     };
 
     image_common_t *common = (image_common_t *)image;
+    pixman_bool_t result;
 
     if (common->transform == transform)
 	return TRUE;
@@ -382,16 +401,24 @@ pixman_image_set_transform (pixman_image_t           *image,
     {
 	free(common->transform);
 	common->transform = NULL;
-	return TRUE;
+	result = TRUE;
+	goto out;
     }
 
     if (common->transform == NULL)
 	common->transform = malloc (sizeof (pixman_transform_t));
+
     if (common->transform == NULL)
-	return FALSE;
+    {
+	result = FALSE;
+	goto out;
+    }
 
     memcpy(common->transform, transform, sizeof(pixman_transform_t));
 
+out:
+    image_property_changed (image);
+    
     return TRUE;
 }
 
@@ -400,6 +427,8 @@ pixman_image_set_repeat (pixman_image_t  *image,
 			 pixman_repeat_t  repeat)
 {
     image->common.repeat = repeat;
+
+    image_property_changed (image);
 }
 
 PIXMAN_EXPORT pixman_bool_t
@@ -432,6 +461,8 @@ pixman_image_set_filter (pixman_image_t       *image,
 
     common->filter_params = new_params;
     common->n_filter_params = n_params;
+
+    image_property_changed (image);
     return TRUE;
 }
 
@@ -445,6 +476,8 @@ pixman_image_set_source_clipping (pixman_image_t  *image,
 	common->src_clip = &common->clip_region;
     else
 	common->src_clip = &common->full_region;
+
+    image_property_changed (image);
 }
 
 /* Unlike all the other property setters, this function does not
@@ -458,6 +491,8 @@ pixman_image_set_indexed (pixman_image_t	 *image,
     bits_image_t *bits = (bits_image_t *)image;
 
     bits->indexed = indexed;
+
+    image_property_changed (image);
 }
 
 PIXMAN_EXPORT void
@@ -483,6 +518,8 @@ pixman_image_set_alpha_map (pixman_image_t *image,
 
     common->alpha_origin.x = x;
     common->alpha_origin.y = y;
+
+    image_property_changed (image);
 }
 
 PIXMAN_EXPORT void
@@ -490,6 +527,8 @@ pixman_image_set_component_alpha   (pixman_image_t       *image,
 				    pixman_bool_t         component_alpha)
 {
     image->common.component_alpha = component_alpha;
+
+    image_property_changed (image);
 }
 
 
@@ -502,6 +541,8 @@ pixman_image_set_accessors (pixman_image_t             *image,
 
     image->common.read_func = read_func;
     image->common.write_func = write_func;
+
+    image_property_changed (image);
 }
 
 PIXMAN_EXPORT uint32_t *

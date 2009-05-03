@@ -24,6 +24,12 @@
 #include <stdlib.h>
 #include "pixman-private.h"
 
+static void
+bits_image_property_changed (pixman_image_t *image)
+{
+    
+}
+
 static uint32_t *
 create_bits (pixman_format_code_t format,
 	     int		  width,
@@ -113,6 +119,11 @@ pixman_image_create_bits (pixman_format_code_t  format,
     pixman_region32_init_rect (&image->common.full_region, 0, 0,
 			       image->bits.width, image->bits.height);
 
+    image->common.property_changed = bits_image_property_changed;
+    
+    bits_image_property_changed (image);
+    
     _pixman_image_reset_clip_region (image);
+
     return image;
 }

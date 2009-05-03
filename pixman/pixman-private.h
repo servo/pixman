@@ -277,12 +277,6 @@ typedef enum
     SOURCE_IMAGE_CLASS_VERTICAL,
 } source_pict_class_t;
 
-typedef source_pict_class_t (* classify_func_t) (pixman_image_t *image,
-						 int             x,
-						 int             y,
-						 int             width,
-						 int             height);
-
 typedef void (*scanStoreProc)(pixman_image_t *, int, int, int, uint32_t *);
 typedef void (*scanFetchProc)(pixman_image_t *, int, int, int, uint32_t *,
 			      uint32_t *, uint32_t);
@@ -316,6 +310,13 @@ struct point
     int16_t x, y;
 };
 
+typedef source_pict_class_t (* classify_func_t) (pixman_image_t *image,
+						 int             x,
+						 int             y,
+						 int             width,
+						 int             height);
+typedef void (* property_changed_func_t)        (pixman_image_t *image);
+
 struct image_common
 {
     image_type_t		type;
@@ -335,6 +336,7 @@ struct image_common
     pixman_read_memory_func_t	read_func;
     pixman_write_memory_func_t	write_func;
     classify_func_t		classify;
+    property_changed_func_t	property_changed;
 };
 
 struct source_image

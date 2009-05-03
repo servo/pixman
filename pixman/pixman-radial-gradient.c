@@ -24,6 +24,12 @@
 #include <stdlib.h>
 #include "pixman-private.h"
 
+static void
+radial_gradient_property_changed (pixman_image_t *image)
+{
+    
+}
+
 PIXMAN_EXPORT pixman_image_t *
 pixman_image_create_radial_gradient (pixman_point_fixed_t         *inner,
 				     pixman_point_fixed_t         *outer,
@@ -65,6 +71,10 @@ pixman_image_create_radial_gradient (pixman_point_fixed_t         *inner,
 		 + radial->cdy * radial->cdy
 		 - radial->dr  * radial->dr);
 
+    image->common.property_changed = radial_gradient_property_changed;
+
+    radial_gradient_property_changed (image);
+    
     return image;
 }
 

@@ -83,6 +83,12 @@ linear_gradient_classify (pixman_image_t *image,
     return image->source.class;
 }
 
+static void
+linear_gradient_property_changed (pixman_image_t *image)
+{
+    
+}
+
 PIXMAN_EXPORT pixman_image_t *
 pixman_image_create_linear_gradient (pixman_point_fixed_t         *p1,
 				     pixman_point_fixed_t         *p2,
@@ -113,6 +119,9 @@ pixman_image_create_linear_gradient (pixman_point_fixed_t         *p1,
     image->type = LINEAR;
     image->source.class = SOURCE_IMAGE_CLASS_UNKNOWN;
     image->common.classify = linear_gradient_classify;
+    image->common.property_changed = linear_gradient_property_changed;
+
+    linear_gradient_property_changed (image);
     
     return image;
 }

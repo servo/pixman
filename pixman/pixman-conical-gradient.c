@@ -24,11 +24,17 @@
 #include <stdlib.h>
 #include "pixman-private.h"
 
+static void
+conical_gradient_property_changed (pixman_image_t *image)
+{
+    
+}
+
 PIXMAN_EXPORT pixman_image_t *
-pixman_image_create_conical_gradient (pixman_point_fixed_t *center,
-				      pixman_fixed_t angle,
+pixman_image_create_conical_gradient (pixman_point_fixed_t         *center,
+				      pixman_fixed_t                angle,
 				      const pixman_gradient_stop_t *stops,
-				      int n_stops)
+				      int                           n_stops)
 {
     pixman_image_t *image = _pixman_image_allocate();
     conical_gradient_t *conical;
@@ -48,5 +54,9 @@ pixman_image_create_conical_gradient (pixman_point_fixed_t *center,
     conical->center = *center;
     conical->angle = angle;
 
+    image->common.property_changed = conical_gradient_property_changed;
+
+    conical_gradient_property_changed (image);
+    
     return image;
 }
