@@ -7,6 +7,7 @@
 
 #include "pixman.h"
 #include <time.h>
+#include <assert.h>
 
 #ifndef FALSE
 #define FALSE 0
