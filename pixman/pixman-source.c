@@ -32,27 +32,15 @@
 
 #include "pixman-private.h"
 
-void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width,
-                           uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
+void
+pixmanFetchGradient(gradient_t *gradient, int x, int y, int width,
+		    uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
 {
-#if 0
-    SourcePictPtr   pGradient = pict->pSourcePict;
-#endif
     GradientWalker  walker;
     uint32_t       *end = buffer + width;
-    gradient_t	    *gradient;
+    source_image_t *pict;
 
-    if (pict->common.type == SOLID)
-    {
-	register uint32_t color = ((solid_fill_t *)pict)->color;
-
-	while (buffer < end)
-	    *(buffer++) = color;
-
-	return;
-    }
-
-    gradient = (gradient_t *)pict;
+    pict = (source_image_t *)gradient;
 
     _pixman_gradient_walker_init (&walker, gradient, pict->common.repeat);
 

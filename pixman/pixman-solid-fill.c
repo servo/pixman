@@ -24,6 +24,19 @@
 #include <config.h>
 #include "pixman-private.h"
 
+static void
+solid_fill_get_scanline_32 (pixman_image_t *image, int x, int y, int width,
+			    uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
+{
+    uint32_t *end = buffer + width;
+    register uint32_t color = ((solid_fill_t *)image)->color;
+    
+    while (buffer < end)
+	*(buffer++) = color;
+    
+    return;
+}
+
 static source_pict_class_t
 solid_fill_classify (pixman_image_t *image,
 		     int	     x,
@@ -37,7 +50,7 @@ solid_fill_classify (pixman_image_t *image,
 static void
 solid_fill_property_changed (pixman_image_t *image)
 {
-    image->common.get_scanline_32 = (scanFetchProc)pixmanFetchSourcePict;
+    image->common.get_scanline_32 = (scanFetchProc)solid_fill_get_scanline_32;
     image->common.get_scanline_64 = (scanFetchProc)_pixman_image_get_scanline_64_generic;
 }
 

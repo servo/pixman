@@ -220,7 +220,7 @@ storeProc64 pixman_storeProcForPicture64_accessors (bits_image_t *);
 void pixman_expand(uint64_t *dst, const uint32_t *src, pixman_format_code_t, int width);
 void pixman_contract(uint32_t *dst, const uint64_t *src, int width);
 
-void pixmanFetchSourcePict(source_image_t *, int x, int y, int width,
+void pixmanFetchGradient (gradient_t *, int x, int y, int width,
                            uint32_t *buffer, uint32_t *mask, uint32_t maskBits);
 void _pixman_image_get_scanline_64_generic (pixman_image_t * pict, int x, int y, int width,
 					    uint64_t *buffer, uint64_t *mask, uint32_t maskBits);
