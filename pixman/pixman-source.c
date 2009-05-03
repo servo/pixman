@@ -47,7 +47,6 @@ pixmanFetchGradient(gradient_t *gradient, int x, int y, int width,
     if (pict->common.type == LINEAR) {
 	assert (0);
     } else {
-
 /*
  * In the radial gradient problem we are given two circles (c₁,r₁) and
  * (c₂,r₂) that define the gradient itself. Then, for any point p, we
@@ -162,34 +161,34 @@ pixmanFetchGradient(gradient_t *gradient, int x, int y, int width,
  *
  * t = (-2·B ± ⎷(B² - 4·A·C)) / 2·A
  */
-        /* radial or conical */
-        pixman_bool_t affine = TRUE;
-        double cx = 1.;
-        double cy = 0.;
-        double cz = 0.;
-	double rx = x + 0.5;
-	double ry = y + 0.5;
-        double rz = 1.;
-
-        if (pict->common.transform) {
-            pixman_vector_t v;
-            /* reference point is the center of the pixel */
-            v.vector[0] = pixman_int_to_fixed(x) + pixman_fixed_1/2;
-            v.vector[1] = pixman_int_to_fixed(y) + pixman_fixed_1/2;
-            v.vector[2] = pixman_fixed_1;
-            if (!pixman_transform_point_3d (pict->common.transform, &v))
-                return;
-
-            cx = pict->common.transform->matrix[0][0]/65536.;
-            cy = pict->common.transform->matrix[1][0]/65536.;
-            cz = pict->common.transform->matrix[2][0]/65536.;
-            rx = v.vector[0]/65536.;
-            ry = v.vector[1]/65536.;
-            rz = v.vector[2]/65536.;
-            affine = pict->common.transform->matrix[2][0] == 0 && v.vector[2] == pixman_fixed_1;
-        }
-
         if (pict->common.type == RADIAL) {
+	    /* radial or conical */
+	    pixman_bool_t affine = TRUE;
+	    double cx = 1.;
+	    double cy = 0.;
+	    double cz = 0.;
+	    double rx = x + 0.5;
+	    double ry = y + 0.5;
+	    double rz = 1.;
+	    
+	    if (pict->common.transform) {
+		pixman_vector_t v;
+		/* reference point is the center of the pixel */
+		v.vector[0] = pixman_int_to_fixed(x) + pixman_fixed_1/2;
+		v.vector[1] = pixman_int_to_fixed(y) + pixman_fixed_1/2;
+		v.vector[2] = pixman_fixed_1;
+		if (!pixman_transform_point_3d (pict->common.transform, &v))
+		    return;
+		
+		cx = pict->common.transform->matrix[0][0]/65536.;
+		cy = pict->common.transform->matrix[1][0]/65536.;
+		cz = pict->common.transform->matrix[2][0]/65536.;
+		rx = v.vector[0]/65536.;
+		ry = v.vector[1]/65536.;
+		rz = v.vector[2]/65536.;
+		affine = pict->common.transform->matrix[2][0] == 0 && v.vector[2] == pixman_fixed_1;
+	    }
+	    
 	    radial_gradient_t *radial = (radial_gradient_t *)pict;
             if (affine) {
                 while (buffer < end) {
@@ -275,6 +274,33 @@ pixmanFetchGradient(gradient_t *gradient, int x, int y, int width,
                 }
             }
         } else /* SourcePictTypeConical */ {
+	    /* radial or conical */
+	    pixman_bool_t affine = TRUE;
+	    double cx = 1.;
+	    double cy = 0.;
+	    double cz = 0.;
+	    double rx = x + 0.5;
+	    double ry = y + 0.5;
+	    double rz = 1.;
+	    
+	    if (pict->common.transform) {
+		pixman_vector_t v;
+		/* reference point is the center of the pixel */
+		v.vector[0] = pixman_int_to_fixed(x) + pixman_fixed_1/2;
+		v.vector[1] = pixman_int_to_fixed(y) + pixman_fixed_1/2;
+		v.vector[2] = pixman_fixed_1;
+		if (!pixman_transform_point_3d (pict->common.transform, &v))
+		    return;
+		
+		cx = pict->common.transform->matrix[0][0]/65536.;
+		cy = pict->common.transform->matrix[1][0]/65536.;
+		cz = pict->common.transform->matrix[2][0]/65536.;
+		rx = v.vector[0]/65536.;
+		ry = v.vector[1]/65536.;
+		rz = v.vector[2]/65536.;
+		affine = pict->common.transform->matrix[2][0] == 0 && v.vector[2] == pixman_fixed_1;
+	    }
+	    
 	    conical_gradient_t *conical = (conical_gradient_t *)pict;
             double a = conical->angle/(180.*65536);
             if (affine) {

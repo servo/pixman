@@ -31,6 +31,13 @@ radial_gradient_property_changed (pixman_image_t *image)
     image->common.get_scanline_64 = (scanFetchProc)_pixman_image_get_scanline_64_generic;
 }
 
+static void
+radial_gradient_get_scanline_32 (pixman_image_t *image, int x, int y, int width,
+				 uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
+{
+    
+}
+
 PIXMAN_EXPORT pixman_image_t *
 pixman_image_create_radial_gradient (pixman_point_fixed_t         *inner,
 				     pixman_point_fixed_t         *outer,
