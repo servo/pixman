@@ -63,18 +63,24 @@ pixman_composite_rect_general_internal (const FbComposeData *data,
     
     if (data->op == PIXMAN_OP_CLEAR)
         fetchSrc = NULL;
+    else if (wide)
+	fetchSrc = _pixman_image_get_scanline_64;
     else
-	fetchSrc = _pixman_image_get_fetcher (data->src, wide);
+	fetchSrc = _pixman_image_get_scanline_32;
 
     if (!data->mask || data->op == PIXMAN_OP_CLEAR)
 	fetchMask = NULL;
+    else if (wide)
+	fetchMask = _pixman_image_get_scanline_64;
     else
-	fetchMask = _pixman_image_get_fetcher (data->mask, wide);
+	fetchMask = _pixman_image_get_scanline_32;
 
     if (data->op == PIXMAN_OP_CLEAR || data->op == PIXMAN_OP_SRC)
 	fetchDest = NULL;
+    else if (wide)
+	fetchDest = _pixman_image_get_scanline_64;
     else
-	fetchDest = _pixman_image_get_fetcher (data->dest, wide);
+	fetchDest = _pixman_image_get_scanline_32;
 
     store = _pixman_image_get_storer (data->dest, wide);
 

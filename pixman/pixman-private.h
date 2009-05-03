@@ -287,9 +287,16 @@ source_pict_class_t _pixman_image_classify (pixman_image_t *image,
 					    int             width,
 					    int             height);
 
-scanFetchProc
-_pixman_image_get_fetcher (pixman_image_t *image,
-			   int             wide);
+void
+_pixman_image_get_scanline_32 (pixman_image_t *image, int x, int y, int width,
+			       uint32_t *buffer, uint32_t *mask, uint32_t mask_bits);
+
+/* Even thought the type of buffer is uint32_t *, the function actually expects
+ * a uint64_t *buffer.
+ */
+void
+_pixman_image_get_scanline_64 (pixman_image_t *image, int x, int y, int width,
+			       uint32_t *buffer, uint32_t *unused, uint32_t unused2);
 
 scanStoreProc
 _pixman_image_get_storer (pixman_image_t *image,
