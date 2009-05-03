@@ -90,7 +90,7 @@ bits_image_property_changed (pixman_image_t *image)
     if (bits->common.alpha_map)
     {
 	image->common.get_scanline_64 =
-	    (scanFetchProc)READ_ACCESS(fbFetchExternalAlpha64);
+	    (scanFetchProc)_pixman_image_get_scanline_64_generic;
 	image->common.get_scanline_32 =
 	    (scanFetchProc)READ_ACCESS(fbFetchExternalAlpha);
     }
@@ -112,7 +112,7 @@ bits_image_property_changed (pixman_image_t *image)
     else
     {
 	image->common.get_scanline_64 =
-	    (scanFetchProc)READ_ACCESS(fbFetchTransformed64);
+	    (scanFetchProc)_pixman_image_get_scanline_64_generic;
 	image->common.get_scanline_32 =
 	    (scanFetchProc)READ_ACCESS(fbFetchTransformed);
     }

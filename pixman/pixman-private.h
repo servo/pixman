@@ -222,9 +222,8 @@ void pixman_contract(uint32_t *dst, const uint64_t *src, int width);
 
 void pixmanFetchSourcePict(source_image_t *, int x, int y, int width,
                            uint32_t *buffer, uint32_t *mask, uint32_t maskBits);
-void pixmanFetchSourcePict64(source_image_t *, int x, int y, int width,
-                             uint64_t *buffer, uint64_t *mask, uint32_t maskBits);
-
+void _pixman_image_get_scanline_64_generic (pixman_image_t * pict, int x, int y, int width,
+					    uint64_t *buffer, uint64_t *mask, uint32_t maskBits);
 void fbFetchTransformed(bits_image_t *, int x, int y, int width,
                         uint32_t *buffer, uint32_t *mask, uint32_t maskBits);
 void fbStoreExternalAlpha(bits_image_t *, int x, int y, int width,
@@ -241,21 +240,11 @@ void fbFetchExternalAlpha_accessors(bits_image_t *, int x, int y, int width,
                                     uint32_t *buffer, uint32_t *mask,
                                     uint32_t maskBits);
 
-void fbFetchTransformed64(bits_image_t *, int x, int y, int width,
-                          uint64_t *buffer, uint64_t *mask, uint32_t maskBits);
 void fbStoreExternalAlpha64(bits_image_t *, int x, int y, int width,
                             uint64_t *buffer);
-void fbFetchExternalAlpha64(bits_image_t *, int x, int y, int width,
-                            uint64_t *buffer, uint64_t *mask, uint32_t maskBits);
 
-void fbFetchTransformed64_accessors(bits_image_t *, int x, int y, int width,
-                                    uint64_t *buffer, uint64_t *mask,
-                                    uint32_t maskBits);
 void fbStoreExternalAlpha64_accessors(bits_image_t *, int x, int y, int width,
                                       uint64_t *buffer);
-void fbFetchExternalAlpha64_accessors(bits_image_t *, int x, int y, int width,
-                                      uint64_t *buffer, uint64_t *mask,
-                                      uint32_t maskBits);
 
 /* end */
 

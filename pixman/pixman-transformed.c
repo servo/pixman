@@ -472,30 +472,6 @@ ACCESS(fbFetchTransformed)(bits_image_t * pict, int x, int y, int width,
     }
 }
 
-void
-ACCESS(fbFetchTransformed64)(bits_image_t * pict, int x, int y, int width,
-                             uint64_t *buffer, uint64_t *mask, uint32_t maskBits)
-{
-    // TODO: Don't lose precision for wide pictures!
-    uint32_t *mask8 = NULL;
-
-    // Contract the mask image, if one exists, so that the 32-bit fetch function
-    // can use it.
-    if (mask) {
-        mask8 = pixman_malloc_ab(width, sizeof(uint32_t));
-        pixman_contract(mask8, mask, width);
-    }
-
-    // Fetch the image into the first half of buffer.
-    ACCESS(fbFetchTransformed)(pict, x, y, width, (uint32_t*)buffer, mask8,
-                               maskBits);
-
-    // Expand from 32bpp to 64bpp in place.
-    pixman_expand(buffer, (uint32_t*)buffer, PIXMAN_a8r8g8b8, width);
-
-    free(mask8);
-}
-
 #define SCANLINE_BUFFER_LENGTH 2048
 
 void
@@ -526,45 +502,6 @@ ACCESS(fbFetchExternalAlpha)(bits_image_t * pict, int x, int y, int width,
 		| (div_255(Red(*(buffer + i)) * a) << 16)
 		| (div_255(Green(*(buffer + i)) * a) << 8)
 		| (div_255(Blue(*(buffer + i)) * a));
-	}
-    }
-
-    if (alpha_buffer != _alpha_buffer)
-        free(alpha_buffer);
-}
-
-void
-ACCESS(fbFetchExternalAlpha64)(bits_image_t * pict, int x, int y, int width,
-                               uint64_t *buffer, uint64_t *mask,
-                               uint32_t maskBits)
-{
-    int i;
-    uint64_t _alpha_buffer[SCANLINE_BUFFER_LENGTH];
-    uint64_t *alpha_buffer = _alpha_buffer;
-    uint64_t maskBits64;
-
-    if (!pict->common.alpha_map) {
-        ACCESS(fbFetchTransformed64) (pict, x, y, width, buffer, mask, maskBits);
-	return;
-    }
-    if (width > SCANLINE_BUFFER_LENGTH)
-        alpha_buffer = (uint64_t *) pixman_malloc_ab (width, sizeof(uint64_t));
-
-    ACCESS(fbFetchTransformed64)(pict, x, y, width, buffer, mask, maskBits);
-    ACCESS(fbFetchTransformed64)((bits_image_t *)pict->common.alpha_map, x - pict->common.alpha_origin.x,
-                                 y - pict->common.alpha_origin.y, width,
-                                 alpha_buffer, mask, maskBits);
-
-    pixman_expand(&maskBits64, &maskBits, PIXMAN_a8r8g8b8, 1);
-
-    for (i = 0; i < width; ++i) {
-        if (!mask || mask[i] & maskBits64)
-	{
-	    int64_t a = alpha_buffer[i]>>48;
-	    *(buffer + i) = (a << 48)
-		| (div_65535(Red64(*(buffer + i)) * a) << 32)
-		| (div_65535(Green64(*(buffer + i)) * a) << 16)
-		| (div_65535(Blue64(*(buffer + i)) * a));
 	}
     }
 

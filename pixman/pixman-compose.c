@@ -216,7 +216,7 @@ pixman_composite_rect_general (const FbComposeData *data)
     const int Bpp = wide ? 8 : 4;
     uint8_t *scanline_buffer = stack_scanline_buffer;
     uint8_t *src_buffer, *mask_buffer, *dest_buffer;
-
+    
     if (data->width * Bpp > SCANLINE_BUFFER_LENGTH)
     {
 	scanline_buffer = pixman_malloc_abc (data->width, 3, Bpp);
