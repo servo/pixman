@@ -37,8 +37,6 @@ reinit() call.  Call this whenever a property of the image changes.
 Split the get_scanline() call into smaller functions that are
 initialized by the reinit() call.
 
-
-
 The Render Algorithm:
 	(first repeat, then filter, then transform, then clip)
 
@@ -159,6 +157,84 @@ appropriately. So there should probably be a virtual function called
 There will also be wide fetchers for both pixels and lines. The line
 fetcher will just call the wide pixel fetcher. The wide pixel fetcher
 will just call expand, except for 10 bit formats.
+
+Rendering pipeline:
+
+Drawable:
+	1. Repeat the drawable according to the repeat attribute
+	2. Reconstruct a continuous image according to the filter
+	3. Transform according to the transform attribute
+	4. Position image such that src_x, src_y is over dst_x, dst_y
+	5. If a pixel is not in the source clip, then no compositing
+	   takes place there.
+	6. Sample once per destination pixel 
+
+	Note that the top left sample in a drawable has coordinates
+	(0.5, 0.5).
+
+Gradient:
+	1. Unless gradient type is conical, repeat the underlying (0, 1)
+		gradient according to the repeat attribute
+	2. Integrate the gradient across the plane according to type.
+	3. Transform according to transform attribute
+	4. Position gradient 
+	5. Clip
+	6. Sample once per destination pixel.
+
+Solid Fill:
+	1. Repeat has no effect
+	2. Image is already continuous and defined for the entire plane
+	3. Transform has no effect
+	4. Positioning has no effect
+	5. Clip
+	6. Sample once per destination pixel.
+
+Polygon:
+	1. Repeat has no effect
+	2. Image is already continuous and defined on the whole plane
+	3. Transform according to transform attribute
+	4. Position image
+	5. Clip
+	6. Supersample 15x17 per destination pixel.
+
+Possibly interesting additions:
+	- More general transformations, such as warping, or general
+	  shading.
+
+	- Shader image where a function is called to generate the
+          pixel (ie., uploading assembly code).
+
+	- Resampling kernels
+
+	  In principle the polygon image uses a 15x17 box filter for
+	  resampling. If we allow general resampling filters, then we
+	  get all the various antialiasing types for free. 
+
+	  Bilinear downsampling looks terrible and could be much 
+	  improved by a resampling filter. NEAREST reconstruction
+	  combined with a box resampling filter is what GdkPixbuf
+	  does, I believe.
+
+	  Useful for high frequency gradients as well.
+
+	  (Note that the difference between a reconstruction and a
+	  resampling filter is mainly where in the pipeline they
+	  occur. High quality resampling should use correctly oriented
+	  kernel so it should happen after transformation. 
+
+	  An implementation can transform the resampling kernel and
+	  convolve it with the reconstruction if it so desires, but it
+	  will need to deal with the fact that the resampling kernel
+	  will not necessarily be pixel aligned.
+
+	- Dithering
+
+	  If people dither something that is already dithered, it will
+	  look terrible, but don't do that, then.
+
+	- Whether the alpha channel should be interpreted as luminance
+          modulation or as coverage (intensity modulation).  This is a
+          bit of a departure from the rendering model though.
 
 Refactoring pixman
 
