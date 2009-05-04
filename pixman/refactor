@@ -18,7 +18,7 @@ Images will eventually have these virtual functions:
 
 1.
 
-Initially we will jsut have get_scanline() and get_scanline_wide();
+Initially we will just have get_scanline() and get_scanline_wide();
 these will be based on the ones in pixman-compose. Hopefully this will
 reduce the complexity in pixman_composite_rect_general().
 
@@ -161,12 +161,19 @@ will just call expand, except for 10 bit formats.
 Rendering pipeline:
 
 Drawable:
+	0. if (picture has alpha map)
+		0.1. Position alpha map according to the alpha_x/alpha_y
+	        0.2. Replace the alpha channel of source with the one
+		     from the alpha map. Outside the geometry of the alpha
+		     map no replacement takes place.
+		(FIXME: should this be "... the alpha channel is 0"?)
 	1. Repeat the drawable according to the repeat attribute
 	2. Reconstruct a continuous image according to the filter
 	3. Transform according to the transform attribute
 	4. Position image such that src_x, src_y is over dst_x, dst_y
-	5. If a pixel is not in the source clip, then no compositing
-	   takes place there.
+	5. Clip. If a pixel is not in the source clip, then no
+	   compositing takes place at that pixel. (Ie., it's not
+	   treated as 0).
 	6. Sample once per destination pixel 
 
 	Note that the top left sample in a drawable has coordinates
