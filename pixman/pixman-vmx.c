@@ -1031,3 +1031,10 @@ void fbComposeSetupVMX (void)
         pixman_composeFunctions.combineC[PIXMAN_OP_ADD] = vmxCombineAddC;
     }
 }
+
+static const FastPathInfo vmx_fast_path_array[] =
+{
+    { PIXMAN_OP_NONE },
+};
+
+const FastPathInfo *const vmx_fast_paths = vmx_fast_path_array;

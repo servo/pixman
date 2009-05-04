@@ -49,6 +49,8 @@ pixman_bool_t pixman_have_mmx(void);
 
 #ifdef USE_MMX
 
+extern const FastPathInfo *const mmx_fast_paths;
+
 pixman_bool_t 
 pixman_blt_mmx (uint32_t *src_bits,
 		uint32_t *dst_bits,

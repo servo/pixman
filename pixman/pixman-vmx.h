@@ -37,6 +37,8 @@ pixman_bool_t pixman_have_vmx(void);
 
 #ifdef USE_VMX
 
+extern const FastPathInfo *const vmx_fast_paths = vmx_fast_path_array;
+
 #define AVV(x...) {x}
 
 void fbComposeSetupVMX (void);

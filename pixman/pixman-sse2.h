@@ -49,6 +49,8 @@ pixman_bool_t pixman_have_sse2(void);
 
 #ifdef USE_SSE2
 
+extern const FastPathInfo *const sse2_fast_paths;
+
 void fbComposeSetupSSE2(void);
 
 pixman_bool_t
