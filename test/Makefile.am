@@ -29,16 +29,16 @@ noinst_PROGRAMS = $(TESTPROGRAMS)
 INCLUDES += $(GTK_CFLAGS)
 
 gradient_test_LDADD = $(GTK_LDADD)
-gradient_test_SOURCES = gradient-test.c utils.c
+gradient_test_SOURCES = gradient-test.c utils.c utils.h
 
 composite_test_LDADD = $(GTK_LDADD)
-composite_test_SOURCES = composite-test.c utils.c
+composite_test_SOURCES = composite-test.c utils.c utils.h
 
 clip_test_LDADD = $(GTK_LDADD)
-clip_test_SOURCES = clip-test.c utils.c
+clip_test_SOURCES = clip-test.c utils.c utils.h
 
 trap_test_LDADD = $(GTK_LDADD)
-trap_test_SOURCES = trap-test.c utils.c
+trap_test_SOURCES = trap-test.c utils.c utils.h
 
 endif
 
