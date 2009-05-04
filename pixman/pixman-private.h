@@ -175,6 +175,8 @@ typedef struct
     uint32_t			flags;
 } FastPathInfo;
 
+extern const FastPathInfo *const c_fast_paths;
+
 /* FIXME - the types and structures below should be give proper names
  */
 
