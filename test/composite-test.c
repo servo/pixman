@@ -1,82 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "pixman.h"
-#include <gtk/gtk.h>
-
-GdkPixbuf *
-pixbuf_from_argb32 (uint32_t *bits,
-		    int width,
-		    int height,
-		    int stride)
-{
-    GdkPixbuf *pixbuf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, TRUE,
-					8, width, height);
-    int p_stride = gdk_pixbuf_get_rowstride (pixbuf);
-    guint32 *p_bits = (guint32 *)gdk_pixbuf_get_pixels (pixbuf);
-    int w, h;
-    
-    for (h = 0; h < height; ++h)
-    {
-	for (w = 0; w < width; ++w)
-	{
-	    uint32_t argb = bits[h * stride + w];
-	    guint r, g, b, a;
-	    char *pb = p_bits;
-
-	    pb += h * p_stride + w * 4;
-
-	    r = (argb & 0x00ff0000) >> 16;
-	    g = (argb & 0x0000ff00) >> 8;
-	    b = (argb & 0x000000ff) >> 0;
-	    a = (argb & 0xff000000) >> 24;
-
-	    if (a)
-	    {
-		r = (r * 255) / a;
-		g = (g * 255) / a;
-		b = (b * 255) / a;
-	    }
-
-	    pb[0] = r;
-	    pb[1] = g;
-	    pb[2] = b;
-	    pb[3] = a;
-	}
-    }
-    
-    return pixbuf;
-}
-
-static gboolean
-on_expose (GtkWidget *widget, GdkEventExpose *expose, gpointer data)
-{
-    GdkPixbuf *pixbuf = data;
-    
-    gdk_draw_pixbuf (widget->window, NULL,
-		     pixbuf, 0, 0, 0, 0,
-		     gdk_pixbuf_get_width (pixbuf),
-		     gdk_pixbuf_get_height (pixbuf),
-		     GDK_RGB_DITHER_NONE,
-		     0, 0);
-
-    return TRUE;
-}
-
-static void
-show_window (uint32_t *bits, int w, int h, int stride)
-{
-    GdkPixbuf *pixbuf;
-
-    GtkWidget *window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-
-    pixbuf = pixbuf_from_argb32 (bits, w, h, stride);
-
-    g_signal_connect (window, "expose_event", G_CALLBACK (on_expose), pixbuf);
-    
-    gtk_widget_show (window);
-
-    gtk_main ();
-}
+#include "utils.h"
 
 #define WIDTH	100
 #define HEIGHT	100
@@ -123,8 +48,7 @@ main (int argc, char **argv)
     uint32_t *dest = malloc (WIDTH * HEIGHT * 4);
     pixman_image_t *src_img;
     pixman_image_t *dest_img;
-    int i, j;
-    gtk_init (&argc, &argv);
+    int i;
 
     for (i = 0; i < WIDTH * HEIGHT; ++i)
 	src[i] = 0x7f7f0000; /* red */
@@ -148,23 +72,12 @@ main (int argc, char **argv)
     pixman_image_composite (PIXMAN_OP_OVER, src_img, NULL, dest_img,
 			    0, 0, 0, 0, 0, 0, WIDTH, HEIGHT);
 
-#if 0
-    for (i = 0; i < WIDTH; ++i)
-    {
-	for (j = 0; j < HEIGHT; ++j)
-	    g_print ("%x, ", dest[i * WIDTH + j]);
-	g_print ("\n");
-    }
-#endif
-    
-    show_window (dest, WIDTH, HEIGHT, WIDTH);
+    show_image (dest_img);
     
     pixman_image_unref (src_img);
     pixman_image_unref (dest_img);
     free (src);
     free (dest);
-
-
     
     return 0;
 }
