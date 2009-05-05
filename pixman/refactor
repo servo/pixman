@@ -1,5 +1,40 @@
 Roadmap
 
+- Move all the fetchers etc. into pixman-image to make pixman-compose.c
+  less intimidating.
+
+  DONE
+
+- Make combiners for unified alpha take a mask argument. That way
+  we won't need two separate paths for unified vs component in the
+  general compositing code.
+
+  DONE, except that the Altivec code needs to be updated. Luca is
+  looking into that.
+
+- Delete separate 'unified alpha' path
+ 
+  DONE
+
+- Split images into their own files
+
+  DONE
+
+- Split the gradient walker code out into its own file
+
+  DONE
+
+- Add scanline getters per image
+
+  DONE
+
+- Generic 64 bit fetcher 
+
+  DONE
+
+- Split fast path tables into their respective architecture dependent
+  files.
+
 See "Render Algorithm" below for rationale
 
 Images will eventually have these virtual functions:
