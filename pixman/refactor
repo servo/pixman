@@ -295,6 +295,12 @@ Possibly interesting additions:
 	  compositing, the whole thing ends up being equivalent to the
 	  output kernel from above.
 
+	- Glyph polygons
+
+	  If glyphs could be given as polygons, they could be
+	  positioned and rasterized more accurately. The glyph
+	  structure would need subpixel positioning though.
+
 	- Color space conversion
 
 	  The complete model here is that each surface has a color
