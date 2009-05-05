@@ -198,21 +198,28 @@ Rendering pipeline:
 Drawable:
 	0. if (picture has alpha map)
 		0.1. Position alpha map according to the alpha_x/alpha_y
-	        0.2. Replace the alpha channel of source with the one
-		     from the alpha map. Outside the geometry of the alpha
-		     map no replacement takes place.
-		(FIXME: should this be "... the alpha channel is 0"?)
+	        0.2. Where the two drawables intersect, the alpha channel
+		     Replace the alpha channel of source with the one
+		     from the alpha map. Replacement only takes place
+		     in the intersection of the two drawables' geometries.
 	1. Repeat the drawable according to the repeat attribute
 	2. Reconstruct a continuous image according to the filter
 	3. Transform according to the transform attribute
 	4. Position image such that src_x, src_y is over dst_x, dst_y
-	5. Clip. If a pixel is not in the source clip, then no
-	   compositing takes place at that pixel. (Ie., it's not
+	5. Sample once per destination pixel 
+	6. Clip. If a pixel is not within the source clip, then no
+	   compositing takes place at that pixel. (Ie., it's *not*
 	   treated as 0).
-	6. Sample once per destination pixel 
 
-	Note that the top left sample in a drawable has coordinates
-	(0.5, 0.5).
+	Sampling a drawable: 
+
+	- If the channel does not have an alpha channel, the pixels in it
+	  are treated as opaque.
+
+	Note on reconstruction:
+
+	- The top left pixel has coordinates (0.5, 0.5) and pixels are
+	  spaced 1 apart.
 
 Gradient:
 	1. Unless gradient type is conical, repeat the underlying (0, 1)
@@ -220,24 +227,24 @@ Gradient:
 	2. Integrate the gradient across the plane according to type.
 	3. Transform according to transform attribute
 	4. Position gradient 
-	5. Clip
-	6. Sample once per destination pixel.
+	5. Sample once per destination pixel.
+ 	6. Clip
 
 Solid Fill:
 	1. Repeat has no effect
 	2. Image is already continuous and defined for the entire plane
 	3. Transform has no effect
 	4. Positioning has no effect
-	5. Clip
-	6. Sample once per destination pixel.
+	5. Sample once per destination pixel.
+	6. Clip
 
 Polygon:
 	1. Repeat has no effect
 	2. Image is already continuous and defined on the whole plane
 	3. Transform according to transform attribute
 	4. Position image
-	5. Clip
-	6. Supersample 15x17 per destination pixel.
+	5. Supersample 15x17 per destination pixel.
+	6. Clip
 
 Possibly interesting additions:
 	- More general transformations, such as warping, or general
@@ -261,22 +268,45 @@ Possibly interesting additions:
 
 	  (Note that the difference between a reconstruction and a
 	  resampling filter is mainly where in the pipeline they
-	  occur. High quality resampling should use correctly oriented
-	  kernel so it should happen after transformation. 
+	  occur. High quality resampling should use a correctly
+	  oriented kernel so it should happen after transformation.
 
 	  An implementation can transform the resampling kernel and
 	  convolve it with the reconstruction if it so desires, but it
 	  will need to deal with the fact that the resampling kernel
 	  will not necessarily be pixel aligned.
 
+	- Color space conversion
+
+	  The complete model here is that each surface has a color
+	  space associated with it and that the compositing operation
+	  also has one associated with it. Note also that gradients
+	  should have associcated colorspaces.
+
 	- Dithering
 
 	  If people dither something that is already dithered, it will
-	  look terrible, but don't do that, then.
+	  look terrible, but don't do that, then. (Dithering happens
+	  after resampling if at all - what is the relationship
+	  with color spaces? Presumably dithering should happen in linear
+	  intensity space).
 
-	- Whether the alpha channel should be interpreted as luminance
-          modulation or as coverage (intensity modulation).  This is a
-          bit of a departure from the rendering model though.
+	- Luminance vs. coverage for the alpha channel
+
+	  Whether the alpha channel should be interpreted as luminance
+          modulation or as coverage (intensity modulation). This is a
+          bit of a departure from the rendering model though. It could
+	  also be considered whether it should be possible to have 
+	  both channels in the same drawable.
+
+	- Floating point surfaces, 16, 32 and possibly 64 bit per
+	  channel.
+
+	Incompatible changes:
+
+	- Gradients could be specified with premultiplied colors. (You
+	  can use a mask to get things like gradients from solid red to
+	  transparent red.
 
 Refactoring pixman
 
