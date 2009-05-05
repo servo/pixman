@@ -295,12 +295,6 @@ Possibly interesting additions:
 	  compositing, the whole thing ends up being equivalent to the
 	  output kernel from above.
 
-	- Glyph polygons
-
-	  If glyphs could be given as polygons, they could be
-	  positioned and rasterized more accurately. The glyph
-	  structure would need subpixel positioning though.
-
 	- Color space conversion
 
 	  The complete model here is that each surface has a color
@@ -316,6 +310,17 @@ Possibly interesting additions:
 	  with color spaces? Presumably dithering should happen in linear
 	  intensity space).
 
+	- Floating point surfaces, 16, 32 and possibly 64 bit per
+	  channel.
+
+	Maybe crack:
+
+	- Glyph polygons
+
+	  If glyphs could be given as polygons, they could be
+	  positioned and rasterized more accurately. The glyph
+	  structure would need subpixel positioning though.
+
 	- Luminance vs. coverage for the alpha channel
 
 	  Whether the alpha channel should be interpreted as luminance
@@ -324,8 +329,20 @@ Possibly interesting additions:
 	  also be considered whether it should be possible to have 
 	  both channels in the same drawable.
 
-	- Floating point surfaces, 16, 32 and possibly 64 bit per
-	  channel.
+	- Alternative for component alpha
+
+	  - Set component-alpha on the output image.
+
+	    - This means each of the components are sampled
+	      independently and composited in the corresponding
+	      channel only.
+
+	  - Have 3 x oversampled mask
+
+	  - Scale it down by 3 horizontally, with [ 1/3, 1/3, 1/3 ]
+            resampling filter. 
+
+	    Is this equivalent to just using a component alpha mask?
 
 	Incompatible changes:
 
