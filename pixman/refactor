@@ -276,6 +276,25 @@ Possibly interesting additions:
 	  will need to deal with the fact that the resampling kernel
 	  will not necessarily be pixel aligned.
 
+	  "Output kernels"
+
+	  One could imagine doing the resampling after compositing,
+	  ie., for each destination pixel sample each source image 16
+	  times, then composite those subpixels individually, then
+	  finally apply a kernel.
+
+	  However, this is effectively the same as full screen
+	  antialiasing, which is a simpler way to think about it. So
+	  resampling kernels may make sense for individual images, but
+	  not as a post-compositing step.
+	  
+	  Fullscreen AA is inefficient without chained compositing
+	  though. Consider an (image scaled up to oversample size IN
+	  some polygon) scaled down to screen size. With the current
+	  implementation, there will be a huge temporary. With chained
+	  compositing, the whole thing ends up being equivalent to the
+	  output kernel from above.
+
 	- Color space conversion
 
 	  The complete model here is that each surface has a color
