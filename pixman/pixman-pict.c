@@ -653,7 +653,7 @@ fbCompositeSrc_8888x8888 (pixman_op_t op,
 	    a = s >> 24;
 	    if (a == 0xff)
 		WRITE(pDst, dst, s & dstMask);
-	    else if (a)
+	    else if (s)
 		WRITE(pDst, dst, fbOver (s, READ(pDst, dst)) & dstMask);
 	    dst++;
 	}
@@ -745,7 +745,7 @@ fbCompositeSrc_8888x0565 (pixman_op_t op,
 	{
 	    s = READ(pSrc, src++);
 	    a = s >> 24;
-	    if (a)
+	    if (s)
 	    {
 		if (a == 0xff)
 		    d = s;
