@@ -35,6 +35,7 @@
 #include "pixman-vmx.h"
 #include "pixman-sse2.h"
 #include "pixman-arm-simd.h"
+#include "pixman-arm-neon.h"
 #include "pixman-combine32.h"
 
 #if defined(USE_ARM_SIMD) && defined(_MSC_VER)
