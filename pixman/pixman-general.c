@@ -393,16 +393,8 @@ general_composite (pixman_implementation_t *	imp,
     pixman_bool_t srcTransform = src->common.transform != NULL;
     pixman_bool_t maskTransform = FALSE;
 
-#ifdef USE_MMX
-    fbComposeSetupMMX();
-#endif
-
 #ifdef USE_VMX
     fbComposeSetupVMX();
-#endif
-
-#ifdef USE_SSE2
-    fbComposeSetupSSE2();
 #endif
 
     if (srcRepeat && srcTransform &&
@@ -428,16 +420,6 @@ general_composite (pixman_implementation_t *	imp,
 	}
     }
     
-#ifdef USE_MMX
-    if (_pixman_run_fast_path (mmx_fast_paths, imp,
-			       op, src, mask, dest,
-			       src_x, src_y,
-			       mask_x, mask_y,
-			       dest_x, dest_y,
-			       width, height))
-	return;
-#endif
-
 #ifdef USE_VMX
     if (_pixman_run_fast_path (vmx_fast_paths, imp,
 			       op, src, mask, dest,

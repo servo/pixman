@@ -3140,39 +3140,66 @@ static const FastPathInfo mmx_fast_path_array[] =
 };
 const FastPathInfo *const mmx_fast_paths = mmx_fast_path_array;
 
+static void
+mmx_composite (pixman_implementation_t *imp,
+	       pixman_op_t     op,
+	       pixman_image_t *src,
+	       pixman_image_t *mask,
+	       pixman_image_t *dest,
+	       int32_t         src_x,
+	       int32_t         src_y,
+	       int32_t         mask_x,
+	       int32_t         mask_y,
+	       int32_t         dest_x,
+	       int32_t         dest_y,
+	       int32_t         width,
+	       int32_t         height)
+{
+    if (_pixman_run_fast_path (mmx_fast_paths, imp,
+			       op, src, mask, dest,
+			       src_x, src_y,
+			       mask_x, mask_y,
+			       dest_x, dest_y,
+			       width, height))
+	return;
+
+    _pixman_implementation_composite (imp->delegate,
+				      op, src, mask, dest, src_x, src_y,
+				      mask_x, mask_y, dest_x, dest_y,
+				      width, height);
+}
+
 pixman_implementation_t *
 _pixman_implementation_create_mmx (pixman_implementation_t *toplevel)
 {
     pixman_implementation_t *general = _pixman_implementation_create_fast_path (NULL);
     pixman_implementation_t *imp = _pixman_implementation_create (toplevel, general);
 
-    /* check if we have MMX support and initialize accordingly */
-    if (pixman_have_mmx())
-    {
-	imp->combine_32[PIXMAN_OP_OVER] = mmxCombineOverU;
-        imp->combine_32[PIXMAN_OP_OVER_REVERSE] = mmxCombineOverReverseU;
-        imp->combine_32[PIXMAN_OP_IN] = mmxCombineInU;
-        imp->combine_32[PIXMAN_OP_IN_REVERSE] = mmxCombineInReverseU;
-        imp->combine_32[PIXMAN_OP_OUT] = mmxCombineOutU;
-        imp->combine_32[PIXMAN_OP_OUT_REVERSE] = mmxCombineOutReverseU;
-        imp->combine_32[PIXMAN_OP_ATOP] = mmxCombineAtopU;
-        imp->combine_32[PIXMAN_OP_ATOP_REVERSE] = mmxCombineAtopReverseU;
-        imp->combine_32[PIXMAN_OP_XOR] = mmxCombineXorU; 
-	imp->combine_32[PIXMAN_OP_ADD] = mmxCombineAddU;
-        imp->combine_32[PIXMAN_OP_SATURATE] = mmxCombineSaturateU;
+    imp->combine_32[PIXMAN_OP_OVER] = mmxCombineOverU;
+    imp->combine_32[PIXMAN_OP_OVER_REVERSE] = mmxCombineOverReverseU;
+    imp->combine_32[PIXMAN_OP_IN] = mmxCombineInU;
+    imp->combine_32[PIXMAN_OP_IN_REVERSE] = mmxCombineInReverseU;
+    imp->combine_32[PIXMAN_OP_OUT] = mmxCombineOutU;
+    imp->combine_32[PIXMAN_OP_OUT_REVERSE] = mmxCombineOutReverseU;
+    imp->combine_32[PIXMAN_OP_ATOP] = mmxCombineAtopU;
+    imp->combine_32[PIXMAN_OP_ATOP_REVERSE] = mmxCombineAtopReverseU;
+    imp->combine_32[PIXMAN_OP_XOR] = mmxCombineXorU; 
+    imp->combine_32[PIXMAN_OP_ADD] = mmxCombineAddU;
+    imp->combine_32[PIXMAN_OP_SATURATE] = mmxCombineSaturateU;
+    
+    imp->combine_32_ca[PIXMAN_OP_SRC] = mmxCombineSrcC;
+    imp->combine_32_ca[PIXMAN_OP_OVER] = mmxCombineOverC;
+    imp->combine_32_ca[PIXMAN_OP_OVER_REVERSE] = mmxCombineOverReverseC;
+    imp->combine_32_ca[PIXMAN_OP_IN] = mmxCombineInC;
+    imp->combine_32_ca[PIXMAN_OP_IN_REVERSE] = mmxCombineInReverseC;
+    imp->combine_32_ca[PIXMAN_OP_OUT] = mmxCombineOutC;
+    imp->combine_32_ca[PIXMAN_OP_OUT_REVERSE] = mmxCombineOutReverseC;
+    imp->combine_32_ca[PIXMAN_OP_ATOP] = mmxCombineAtopC;
+    imp->combine_32_ca[PIXMAN_OP_ATOP_REVERSE] = mmxCombineAtopReverseC;
+    imp->combine_32_ca[PIXMAN_OP_XOR] = mmxCombineXorC;
+    imp->combine_32_ca[PIXMAN_OP_ADD] = mmxCombineAddC;
 
-        imp->combine_32_ca[PIXMAN_OP_SRC] = mmxCombineSrcC;
-        imp->combine_32_ca[PIXMAN_OP_OVER] = mmxCombineOverC;
-        imp->combine_32_ca[PIXMAN_OP_OVER_REVERSE] = mmxCombineOverReverseC;
-        imp->combine_32_ca[PIXMAN_OP_IN] = mmxCombineInC;
-        imp->combine_32_ca[PIXMAN_OP_IN_REVERSE] = mmxCombineInReverseC;
-        imp->combine_32_ca[PIXMAN_OP_OUT] = mmxCombineOutC;
-        imp->combine_32_ca[PIXMAN_OP_OUT_REVERSE] = mmxCombineOutReverseC;
-        imp->combine_32_ca[PIXMAN_OP_ATOP] = mmxCombineAtopC;
-        imp->combine_32_ca[PIXMAN_OP_ATOP_REVERSE] = mmxCombineAtopReverseC;
-        imp->combine_32_ca[PIXMAN_OP_XOR] = mmxCombineXorC;
-        imp->combine_32_ca[PIXMAN_OP_ADD] = mmxCombineAddC;
-    }
+    imp->composite = mmx_composite;
 
     return imp;
 }
