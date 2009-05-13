@@ -973,6 +973,9 @@ _pixman_implementation_composite (pixman_implementation_t *	imp,
 /* Specific implementations */
 pixman_implementation_t *
 _pixman_implementation_create_general (pixman_implementation_t *toplevel);
-
+#ifdef USE_MMX
+pixman_implementation_t *
+_pixman_implementation_create_mmx (pixman_implementation_t *toplevel);
+#endif
 
 #endif /* PIXMAN_PRIVATE_H */
