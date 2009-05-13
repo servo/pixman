@@ -460,7 +460,7 @@ static unsigned int detectCPUFeatures(void) {
     return features;
 }
 
-pixman_bool_t
+static pixman_bool_t
 pixman_have_mmx (void)
 {
     static pixman_bool_t initialized = FALSE;
@@ -477,7 +477,7 @@ pixman_have_mmx (void)
 }
 
 #ifdef USE_SSE2
-pixman_bool_t
+static pixman_bool_t
 pixman_have_sse2 (void)
 {
     static pixman_bool_t initialized = FALSE;
