@@ -2537,7 +2537,7 @@ fbComposeSetupSSE2(void)
  * fbCompositeSolid_nx8888
  */
 
-void
+static void
 fbCompositeSolid_nx8888sse2 (pixman_op_t op,
 			    pixman_image_t * pSrc,
 			    pixman_image_t * pMask,
@@ -2623,7 +2623,7 @@ fbCompositeSolid_nx8888sse2 (pixman_op_t op,
 /* -------------------------------------------------------------------------------------------------
  * fbCompositeSolid_nx0565
  */
-void
+static void
 fbCompositeSolid_nx0565sse2 (pixman_op_t op,
 			    pixman_image_t * pSrc,
 			    pixman_image_t * pMask,
@@ -2712,7 +2712,7 @@ fbCompositeSolid_nx0565sse2 (pixman_op_t op,
  * fbCompositeSolidMask_nx8888x8888C
  */
 
-void
+static void
 fbCompositeSolidMask_nx8888x8888Csse2 (pixman_op_t op,
 				      pixman_image_t * pSrc,
 				      pixman_image_t * pMask,
@@ -2846,7 +2846,7 @@ fbCompositeSolidMask_nx8888x8888Csse2 (pixman_op_t op,
  * fbCompositeSrc_8888x8x8888
  */
 
-void
+static void
 fbCompositeSrc_8888x8x8888sse2 (pixman_op_t op,
 			       pixman_image_t * pSrc,
 			       pixman_image_t * pMask,
@@ -2958,7 +2958,7 @@ fbCompositeSrc_8888x8x8888sse2 (pixman_op_t op,
 /* -------------------------------------------------------------------------------------------------
  * fbCompositeSrc_x888xnx8888
  */
-void
+static void
 fbCompositeSrc_x888xnx8888sse2 (pixman_op_t op,
 			       pixman_image_t * pSrc,
 			       pixman_image_t * pMask,
@@ -3070,7 +3070,7 @@ fbCompositeSrc_x888xnx8888sse2 (pixman_op_t op,
 /* -------------------------------------------------------------------------------------------------
  * fbCompositeSrc_8888x8888
  */
-void
+static void
 fbCompositeSrc_8888x8888sse2 (pixman_op_t op,
 			     pixman_image_t * pSrc,
 			     pixman_image_t * pMask,
@@ -3118,7 +3118,7 @@ fbCompositeSrc_8888x0565pixel (uint32_t src, uint16_t dst)
                                                    expand565_16_1x64 (dst))));
 }
 
-void
+static void
 fbCompositeSrc_8888x0565sse2 (pixman_op_t op,
 			     pixman_image_t * pSrc,
 			     pixman_image_t * pMask,
@@ -3231,7 +3231,7 @@ fbCompositeSrc_8888x0565sse2 (pixman_op_t op,
  * fbCompositeSolidMask_nx8x8888
  */
 
-void
+static void
 fbCompositeSolidMask_nx8x8888sse2 (pixman_op_t op,
 				  pixman_image_t * pSrc,
 				  pixman_image_t * pMask,
@@ -3508,7 +3508,7 @@ pixmanFillsse2 (uint32_t *bits,
     return TRUE;
 }
 
-void
+static void
 fbCompositeSolidMaskSrc_nx8x8888sse2 (pixman_op_t op,
 				     pixman_image_t * pSrc,
 				     pixman_image_t * pMask,
@@ -3643,7 +3643,7 @@ fbCompositeSolidMaskSrc_nx8x8888sse2 (pixman_op_t op,
  * fbCompositeSolidMask_nx8x0565
  */
 
-void
+static void
 fbCompositeSolidMask_nx8x0565sse2 (pixman_op_t op,
 				  pixman_image_t * pSrc,
 				  pixman_image_t * pMask,
@@ -3792,7 +3792,7 @@ fbCompositeSolidMask_nx8x0565sse2 (pixman_op_t op,
  * fbCompositeSrc_8888RevNPx0565
  */
 
-void
+static void
 fbCompositeSrc_8888RevNPx0565sse2 (pixman_op_t op,
 				  pixman_image_t * pSrc,
 				  pixman_image_t * pMask,
@@ -3925,7 +3925,7 @@ fbCompositeSrc_8888RevNPx0565sse2 (pixman_op_t op,
  * fbCompositeSrc_8888RevNPx8888
  */
 
-void
+static void
 fbCompositeSrc_8888RevNPx8888sse2 (pixman_op_t op,
 				  pixman_image_t * pSrc,
 				  pixman_image_t * pMask,
@@ -4038,7 +4038,7 @@ fbCompositeSrc_8888RevNPx8888sse2 (pixman_op_t op,
  * fbCompositeSolidMask_nx8888x0565C
  */
 
-void
+static void
 fbCompositeSolidMask_nx8888x0565Csse2 (pixman_op_t op,
 				      pixman_image_t * pSrc,
 				      pixman_image_t * pMask,
@@ -4186,7 +4186,7 @@ fbCompositeSolidMask_nx8888x0565Csse2 (pixman_op_t op,
  * fbCompositeIn_nx8x8
  */
 
-void
+static void
 fbCompositeIn_nx8x8sse2 (pixman_op_t op,
 			pixman_image_t * pSrc,
 			pixman_image_t * pMask,
@@ -4288,7 +4288,7 @@ fbCompositeIn_nx8x8sse2 (pixman_op_t op,
  * fbCompositeIn_8x8
  */
 
-void
+static void
 fbCompositeIn_8x8sse2 (pixman_op_t op,
 		      pixman_image_t * pSrc,
 		      pixman_image_t * pMask,
@@ -4377,7 +4377,7 @@ fbCompositeIn_8x8sse2 (pixman_op_t op,
  * fbCompositeSrcAdd_8888x8x8
  */
 
-void
+static void
 fbCompositeSrcAdd_8888x8x8sse2 (pixman_op_t op,
 			       pixman_image_t * pSrc,
 			       pixman_image_t * pMask,
@@ -4482,7 +4482,7 @@ fbCompositeSrcAdd_8888x8x8sse2 (pixman_op_t op,
  * fbCompositeSrcAdd_8000x8000
  */
 
-void
+static void
 fbCompositeSrcAdd_8000x8000sse2 (pixman_op_t op,
 				pixman_image_t * pSrc,
 				pixman_image_t * pMask,
@@ -4548,7 +4548,7 @@ fbCompositeSrcAdd_8000x8000sse2 (pixman_op_t op,
 /* -------------------------------------------------------------------------------------------------
  * fbCompositeSrcAdd_8888x8888
  */
-void
+static void
 fbCompositeSrcAdd_8888x8888sse2 (pixman_op_t 	op,
 				pixman_image_t *	pSrc,
 				pixman_image_t *	pMask,
@@ -4725,7 +4725,7 @@ pixmanBltsse2 (uint32_t *src_bits,
     return TRUE;
 }
 
-void
+static void
 fbCompositeCopyAreasse2 (pixman_op_t       op,
 			pixman_image_t *	pSrc,
 			pixman_image_t *	pMask,
