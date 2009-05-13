@@ -688,3 +688,157 @@ _pixman_walk_composite_region (pixman_implementation_t *imp,
     pixman_region32_fini (&reg);
 }
 
+static pixman_bool_t
+mask_is_solid (pixman_image_t *mask)
+{
+    if (mask->type == SOLID)
+	return TRUE;
+
+    if (mask->type == BITS &&
+	mask->common.repeat == PIXMAN_REPEAT_NORMAL &&
+	mask->bits.width == 1 &&
+	mask->bits.height == 1)
+    {
+	return TRUE;
+    }
+
+    return FALSE;
+}
+
+static const FastPathInfo *
+get_fast_path (const FastPathInfo *fast_paths,
+	       pixman_op_t         op,
+	       pixman_image_t     *pSrc,
+	       pixman_image_t     *pMask,
+	       pixman_image_t     *pDst,
+	       pixman_bool_t       is_pixbuf)
+{
+    const FastPathInfo *info;
+
+    for (info = fast_paths; info->op != PIXMAN_OP_NONE; info++)
+    {
+	pixman_bool_t valid_src		= FALSE;
+	pixman_bool_t valid_mask	= FALSE;
+
+	if (info->op != op)
+	    continue;
+
+	if ((info->src_format == PIXMAN_solid && pixman_image_can_get_solid (pSrc))		||
+	    (pSrc->type == BITS && info->src_format == pSrc->bits.format))
+	{
+	    valid_src = TRUE;
+	}
+
+	if (!valid_src)
+	    continue;
+
+	if ((info->mask_format == PIXMAN_null && !pMask)			||
+	    (pMask && pMask->type == BITS && info->mask_format == pMask->bits.format))
+	{
+	    valid_mask = TRUE;
+
+	    if (info->flags & NEED_SOLID_MASK)
+	    {
+		if (!pMask || !mask_is_solid (pMask))
+		    valid_mask = FALSE;
+	    }
+
+	    if (info->flags & NEED_COMPONENT_ALPHA)
+	    {
+		if (!pMask || !pMask->common.component_alpha)
+		    valid_mask = FALSE;
+	    }
+	}
+
+	if (!valid_mask)
+	    continue;
+	
+	if (info->dest_format != pDst->bits.format)
+	    continue;
+
+	if ((info->flags & NEED_PIXBUF) && !is_pixbuf)
+	    continue;
+
+	return info;
+    }
+
+    return NULL;
+}
+
+pixman_composite_func_t
+_pixman_look_up_fast_path (const FastPathInfo *paths,
+			   pixman_op_t op,
+			   pixman_image_t *src,
+			   pixman_image_t *mask,
+			   pixman_image_t *dest,
+			   int32_t src_x,
+			   int32_t src_y,
+			   int32_t mask_x,
+			   int32_t mask_y)
+{
+    pixman_composite_func_t func = NULL;
+    pixman_bool_t src_repeat = src->common.repeat == PIXMAN_REPEAT_NORMAL;
+    pixman_bool_t mask_repeat = mask->common.repeat == PIXMAN_REPEAT_NORMAL;
+    
+    if ((src->type == BITS || pixman_image_can_get_solid (src)) &&
+	(!mask || mask->type == BITS)
+        && !src->common.transform && !mask->common.transform
+        && !mask->common.alpha_map && !src->common.alpha_map && !dest->common.alpha_map
+        && (src->common.filter != PIXMAN_FILTER_CONVOLUTION)
+        && (src->common.repeat != PIXMAN_REPEAT_PAD)
+        && (src->common.repeat != PIXMAN_REPEAT_REFLECT)
+        && (!mask || (mask->common.filter != PIXMAN_FILTER_CONVOLUTION &&
+		      mask->common.repeat != PIXMAN_REPEAT_PAD &&
+		      mask->common.repeat != PIXMAN_REPEAT_REFLECT))
+	&& !src->common.read_func && !src->common.write_func
+	&& !(mask && mask->common.read_func)
+	&& !(mask && mask->common.write_func)
+	&& !dest->common.read_func
+	&& !dest->common.write_func)
+    {
+	const FastPathInfo *info;	
+	pixman_bool_t pixbuf;
+
+	pixbuf =
+	    src && src->type == BITS		&&
+	    mask && mask->type == BITS		&&
+	    src->bits.bits == mask->bits.bits	&&
+	    src_x == mask_x			&&
+	    src_y == mask_y			&&
+	    !mask->common.component_alpha	&&
+	    !mask_repeat;
+	
+	info = get_fast_path (paths, op, src, mask, dest, pixbuf);
+
+	if (info)
+	{
+	    func = info->func;
+		
+	    if (info->src_format == PIXMAN_solid)
+		src_repeat = FALSE;
+
+	    if (info->mask_format == PIXMAN_solid || info->flags & NEED_SOLID_MASK)
+		mask_repeat = FALSE;
+
+	    if ((src_repeat			&&
+		 src->bits.width == 1		&&
+		 src->bits.height == 1)	||
+		(mask_repeat			&&
+		 mask->bits.width == 1		&&
+		 mask->bits.height == 1))
+	    {
+		/* If src or mask are repeating 1x1 images and src_repeat or
+		 * mask_repeat are still TRUE, it means the fast path we
+		 * selected does not actually handle repeating images.
+		 *
+		 * So rather than call the "fast path" with a zillion
+		 * 1x1 requests, we just fall back to the general code (which
+		 * does do something sensible with 1x1 repeating images).
+		 */
+		func = NULL;
+	    }
+	}
+    }
+
+    return func;
+}
