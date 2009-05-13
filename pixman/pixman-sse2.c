@@ -4990,4 +4990,13 @@ static const FastPathInfo sse2_fast_path_array[] =
 
 const FastPathInfo *const sse2_fast_paths = sse2_fast_path_array;
 
+pixman_implementation_t *
+_pixman_implementation_create_sse2 (pixman_implementation_t *toplevel)
+{
+    pixman_implementation_t *mmx = _pixman_implementation_create_mmx (NULL);
+    pixman_implementation_t *imp = _pixman_implementation_create (toplevel, mmx);
+
+    return imp;
+}
+
 #endif /* USE_SSE2 */

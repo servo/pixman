@@ -1005,5 +1005,9 @@ _pixman_implementation_create_fast_path (pixman_implementation_t *toplevel);
 pixman_implementation_t *
 _pixman_implementation_create_mmx (pixman_implementation_t *toplevel);
 #endif
-
+#ifdef USE_SSE2
+pixman_implementation_t *
+_pixman_implementation_create_sse2 (pixman_implementation_t *toplevel);
+#endif
+    
 #endif /* PIXMAN_PRIVATE_H */
