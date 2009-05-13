@@ -4990,12 +4990,47 @@ static const FastPathInfo sse2_fast_path_array[] =
 
 const FastPathInfo *const sse2_fast_paths = sse2_fast_path_array;
 
+static void
+sse2_composite (pixman_implementation_t *imp,
+		     pixman_op_t     op,
+		     pixman_image_t *src,
+		     pixman_image_t *mask,
+		     pixman_image_t *dest,
+		     int32_t         src_x,
+		     int32_t         src_y,
+		     int32_t         mask_x,
+		     int32_t         mask_y,
+		     int32_t         dest_x,
+		     int32_t         dest_y,
+		     int32_t        width,
+		     int32_t        height)
+{
+    if (_pixman_run_fast_path (sse2_fast_paths, imp,
+			       op, src, mask, dest,
+			       src_x, src_y,
+			       mask_x, mask_y,
+			       dest_x, dest_y,
+			       width, height))
+    {
+	return;
+    }
+
+    _pixman_implementation_composite (imp->delegate, op,
+				      src, mask, dest,
+				      src_x, src_y,
+				      mask_x, mask_y,
+				      dest_x, dest_y,
+				      width, height);
+}
+
 pixman_implementation_t *
 _pixman_implementation_create_sse2 (pixman_implementation_t *toplevel)
 {
     pixman_implementation_t *mmx = _pixman_implementation_create_mmx (NULL);
     pixman_implementation_t *imp = _pixman_implementation_create (toplevel, mmx);
 
+    imp->composite = sse2_composite;
+    
     return imp;
 }
 

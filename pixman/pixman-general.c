@@ -428,16 +428,6 @@ general_composite (pixman_implementation_t *	imp,
 	}
     }
     
-#ifdef USE_SSE2
-    if (_pixman_run_fast_path (sse2_fast_paths, imp,
-			       op, src, mask, dest,
-			       src_x, src_y,
-			       mask_x, mask_y,
-			       dest_x, dest_y,
-			       width, height))
-	return;
-#endif
-
 #ifdef USE_MMX
     if (_pixman_run_fast_path (mmx_fast_paths, imp,
 			       op, src, mask, dest,
