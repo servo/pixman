@@ -437,14 +437,29 @@ general_composite (pixman_implementation_t *	imp,
 				   srcRepeat, maskRepeat, pixman_image_composite_rect);
 }
 
+static pixman_bool_t
+general_blt (pixman_implementation_t *imp,
+	     uint32_t *src_bits,
+	     uint32_t *dst_bits,
+	     int src_stride,
+	     int dst_stride,
+	     int src_bpp,
+	     int dst_bpp,
+	     int src_x, int src_y,
+	     int dst_x, int dst_y,
+	     int width, int height)
+{
+    /* We can't blit unless we have sse2 or mmx */
+    
+    return FALSE;
+}
+
 pixman_implementation_t *
 _pixman_implementation_create_general (pixman_implementation_t *toplevel)
 {
     pixman_implementation_t *imp = _pixman_implementation_create (toplevel, NULL);
     int i;
 
-    imp->composite = general_composite;
-    
     for (i = 0; i < PIXMAN_OP_LAST; ++i)
     {
 	imp->combine_32[i] = general_combine_32;
@@ -452,6 +467,8 @@ _pixman_implementation_create_general (pixman_implementation_t *toplevel)
 	imp->combine_64[i] = general_combine_64;
 	imp->combine_64_ca[i] = general_combine_64_ca;
     }
+    imp->composite = general_composite;
+    imp->blt = general_blt;
 
     return imp;
 }
