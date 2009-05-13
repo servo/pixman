@@ -149,34 +149,6 @@ typedef struct bits_image bits_image_t;
 typedef struct circle circle_t;
 typedef struct point point_t;
 
-typedef void (* CompositeFunc) (pixman_op_t,
-				pixman_image_t *, pixman_image_t *, pixman_image_t *,
-				int16_t, int16_t, int16_t, int16_t, int16_t, int16_t,
-				uint16_t, uint16_t);
-
-
-/* These "formats" both have depth 0, so they
- * will never clash with any real ones
- */
-#define PIXMAN_null		PIXMAN_FORMAT(0,0,0,0,0,0)
-#define PIXMAN_solid		PIXMAN_FORMAT(0,1,0,0,0,0)
-
-#define NEED_COMPONENT_ALPHA		(1 << 0)
-#define NEED_PIXBUF			(1 << 1)
-#define NEED_SOLID_MASK		        (1 << 2)
-
-typedef struct
-{
-    pixman_op_t			op;
-    pixman_format_code_t	src_format;
-    pixman_format_code_t	mask_format;
-    pixman_format_code_t	dest_format;
-    CompositeFunc		func;
-    uint32_t			flags;
-} FastPathInfo;
-
-extern const FastPathInfo *const c_fast_paths;
-
 /* FIXME - the types and structures below should be give proper names
  */
 
@@ -923,6 +895,28 @@ typedef void (* pixman_composite_func_t)  (pixman_implementation_t *	imp,
 					   int32_t			dest_y,
 					   int32_t			width,
 					   int32_t			height);
+
+/* These "formats" both have depth 0, so they
+ * will never clash with any real ones
+ */
+#define PIXMAN_null		PIXMAN_FORMAT(0,0,0,0,0,0)
+#define PIXMAN_solid		PIXMAN_FORMAT(0,1,0,0,0,0)
+
+#define NEED_COMPONENT_ALPHA		(1 << 0)
+#define NEED_PIXBUF			(1 << 1)
+#define NEED_SOLID_MASK		        (1 << 2)
+
+typedef struct
+{
+    pixman_op_t			op;
+    pixman_format_code_t	src_format;
+    pixman_format_code_t	mask_format;
+    pixman_format_code_t	dest_format;
+    pixman_composite_func_t	func;
+    uint32_t			flags;
+} FastPathInfo;
+
+extern const FastPathInfo *const c_fast_paths;
 
 struct pixman_implementation_t
 {

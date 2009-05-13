@@ -2538,18 +2538,19 @@ fbComposeSetupSSE2(void)
  */
 
 static void
-fbCompositeSolid_nx8888sse2 (pixman_op_t op,
+fbCompositeSolid_nx8888sse2 (pixman_implementation_t *imp,
+			     pixman_op_t op,
 			    pixman_image_t * pSrc,
 			    pixman_image_t * pMask,
 			    pixman_image_t * pDst,
-			    int16_t	xSrc,
-			    int16_t	ySrc,
-			    int16_t	xMask,
-			    int16_t	yMask,
-			    int16_t	xDst,
-			    int16_t	yDst,
-			    uint16_t	width,
-			    uint16_t	height)
+			    int32_t	xSrc,
+			    int32_t	ySrc,
+			    int32_t	xMask,
+			    int32_t	yMask,
+			    int32_t	xDst,
+			    int32_t	yDst,
+			    int32_t	width,
+			    int32_t	height)
 {
     uint32_t	src;
     uint32_t	*dstLine, *dst, d;
@@ -2624,18 +2625,19 @@ fbCompositeSolid_nx8888sse2 (pixman_op_t op,
  * fbCompositeSolid_nx0565
  */
 static void
-fbCompositeSolid_nx0565sse2 (pixman_op_t op,
+fbCompositeSolid_nx0565sse2 (pixman_implementation_t *imp,
+			     pixman_op_t op,
 			    pixman_image_t * pSrc,
 			    pixman_image_t * pMask,
 			    pixman_image_t * pDst,
-			    int16_t	xSrc,
-			    int16_t	ySrc,
-			    int16_t	xMask,
-			    int16_t	yMask,
-			    int16_t	xDst,
-			    int16_t	yDst,
-			    uint16_t	width,
-			    uint16_t	height)
+			    int32_t	xSrc,
+			    int32_t	ySrc,
+			    int32_t	xMask,
+			    int32_t	yMask,
+			    int32_t	xDst,
+			    int32_t	yDst,
+			    int32_t	width,
+			    int32_t	height)
 {
     uint32_t	src;
     uint16_t	*dstLine, *dst, d;
@@ -2713,18 +2715,19 @@ fbCompositeSolid_nx0565sse2 (pixman_op_t op,
  */
 
 static void
-fbCompositeSolidMask_nx8888x8888Csse2 (pixman_op_t op,
+fbCompositeSolidMask_nx8888x8888Csse2 (pixman_implementation_t *imp,
+				       pixman_op_t op,
 				      pixman_image_t * pSrc,
 				      pixman_image_t * pMask,
 				      pixman_image_t * pDst,
-				      int16_t	xSrc,
-				      int16_t	ySrc,
-				      int16_t	xMask,
-				      int16_t	yMask,
-				      int16_t	xDst,
-				      int16_t	yDst,
-				      uint16_t	width,
-				      uint16_t	height)
+				      int32_t	xSrc,
+				      int32_t	ySrc,
+				      int32_t	xMask,
+				      int32_t	yMask,
+				      int32_t	xDst,
+				      int32_t	yDst,
+				      int32_t	width,
+				      int32_t	height)
 {
     uint32_t	src, srca;
     uint32_t	*dstLine, d;
@@ -2847,18 +2850,19 @@ fbCompositeSolidMask_nx8888x8888Csse2 (pixman_op_t op,
  */
 
 static void
-fbCompositeSrc_8888x8x8888sse2 (pixman_op_t op,
+fbCompositeSrc_8888x8x8888sse2 (pixman_implementation_t *imp,
+				pixman_op_t op,
 			       pixman_image_t * pSrc,
 			       pixman_image_t * pMask,
 			       pixman_image_t * pDst,
-			       int16_t	xSrc,
-			       int16_t	ySrc,
-			       int16_t      xMask,
-			       int16_t      yMask,
-			       int16_t      xDst,
-			       int16_t      yDst,
-			       uint16_t     width,
-			       uint16_t     height)
+			       int32_t	xSrc,
+			       int32_t	ySrc,
+			       int32_t      xMask,
+			       int32_t      yMask,
+			       int32_t      xDst,
+			       int32_t      yDst,
+			       int32_t     width,
+			       int32_t     height)
 {
     uint32_t	*dstLine, *dst;
     uint32_t	*srcLine, *src;
@@ -2959,18 +2963,19 @@ fbCompositeSrc_8888x8x8888sse2 (pixman_op_t op,
  * fbCompositeSrc_x888xnx8888
  */
 static void
-fbCompositeSrc_x888xnx8888sse2 (pixman_op_t op,
+fbCompositeSrc_x888xnx8888sse2 (pixman_implementation_t *imp,
+				pixman_op_t op,
 			       pixman_image_t * pSrc,
 			       pixman_image_t * pMask,
 			       pixman_image_t * pDst,
-			       int16_t	xSrc,
-			       int16_t	ySrc,
-			       int16_t      xMask,
-			       int16_t      yMask,
-			       int16_t      xDst,
-			       int16_t      yDst,
-			       uint16_t     width,
-			       uint16_t     height)
+			       int32_t	xSrc,
+			       int32_t	ySrc,
+			       int32_t      xMask,
+			       int32_t      yMask,
+			       int32_t      xDst,
+			       int32_t      yDst,
+			       int32_t     width,
+			       int32_t     height)
 {
     uint32_t	*dstLine, *dst;
     uint32_t	*srcLine, *src;
@@ -3071,18 +3076,19 @@ fbCompositeSrc_x888xnx8888sse2 (pixman_op_t op,
  * fbCompositeSrc_8888x8888
  */
 static void
-fbCompositeSrc_8888x8888sse2 (pixman_op_t op,
+fbCompositeSrc_8888x8888sse2 (pixman_implementation_t *imp,
+			      pixman_op_t op,
 			     pixman_image_t * pSrc,
 			     pixman_image_t * pMask,
 			     pixman_image_t * pDst,
-			     int16_t	xSrc,
-			     int16_t	ySrc,
-			     int16_t      xMask,
-			     int16_t      yMask,
-			     int16_t      xDst,
-			     int16_t      yDst,
-			     uint16_t     width,
-			     uint16_t     height)
+			     int32_t	xSrc,
+			     int32_t	ySrc,
+			     int32_t      xMask,
+			     int32_t      yMask,
+			     int32_t      xDst,
+			     int32_t      yDst,
+			     int32_t     width,
+			     int32_t     height)
 {
     int	        dstStride, srcStride;
     uint32_t	*dstLine, *dst;
@@ -3119,18 +3125,19 @@ fbCompositeSrc_8888x0565pixel (uint32_t src, uint16_t dst)
 }
 
 static void
-fbCompositeSrc_8888x0565sse2 (pixman_op_t op,
+fbCompositeSrc_8888x0565sse2 (pixman_implementation_t *imp,
+			      pixman_op_t op,
 			     pixman_image_t * pSrc,
 			     pixman_image_t * pMask,
 			     pixman_image_t * pDst,
-			     int16_t      xSrc,
-			     int16_t      ySrc,
-			     int16_t      xMask,
-			     int16_t      yMask,
-			     int16_t      xDst,
-			     int16_t      yDst,
-			     uint16_t     width,
-			     uint16_t     height)
+			     int32_t      xSrc,
+			     int32_t      ySrc,
+			     int32_t      xMask,
+			     int32_t      yMask,
+			     int32_t      xDst,
+			     int32_t      yDst,
+			     int32_t     width,
+			     int32_t     height)
 {
     uint16_t	*dstLine, *dst, d;
     uint32_t	*srcLine, *src, s;
@@ -3232,18 +3239,19 @@ fbCompositeSrc_8888x0565sse2 (pixman_op_t op,
  */
 
 static void
-fbCompositeSolidMask_nx8x8888sse2 (pixman_op_t op,
+fbCompositeSolidMask_nx8x8888sse2 (pixman_implementation_t *imp,
+				   pixman_op_t op,
 				  pixman_image_t * pSrc,
 				  pixman_image_t * pMask,
 				  pixman_image_t * pDst,
-				  int16_t      xSrc,
-				  int16_t      ySrc,
-				  int16_t      xMask,
-				  int16_t      yMask,
-				  int16_t      xDst,
-				  int16_t      yDst,
-				  uint16_t     width,
-				  uint16_t     height)
+				  int32_t      xSrc,
+				  int32_t      ySrc,
+				  int32_t      xMask,
+				  int32_t      yMask,
+				  int32_t      xDst,
+				  int32_t      yDst,
+				  int32_t     width,
+				  int32_t     height)
 {
     uint32_t	src, srca;
     uint32_t	*dstLine, *dst;
@@ -3509,18 +3517,19 @@ pixmanFillsse2 (uint32_t *bits,
 }
 
 static void
-fbCompositeSolidMaskSrc_nx8x8888sse2 (pixman_op_t op,
+fbCompositeSolidMaskSrc_nx8x8888sse2 (pixman_implementation_t *imp,
+				      pixman_op_t op,
 				     pixman_image_t * pSrc,
 				     pixman_image_t * pMask,
 				     pixman_image_t * pDst,
-				     int16_t      xSrc,
-				     int16_t      ySrc,
-				     int16_t      xMask,
-				     int16_t      yMask,
-				     int16_t      xDst,
-				     int16_t      yDst,
-				     uint16_t     width,
-				     uint16_t     height)
+				     int32_t      xSrc,
+				     int32_t      ySrc,
+				     int32_t      xMask,
+				     int32_t      yMask,
+				     int32_t      xDst,
+				     int32_t      yDst,
+				     int32_t     width,
+				     int32_t     height)
 {
     uint32_t	src, srca;
     uint32_t	*dstLine, *dst;
@@ -3644,18 +3653,19 @@ fbCompositeSolidMaskSrc_nx8x8888sse2 (pixman_op_t op,
  */
 
 static void
-fbCompositeSolidMask_nx8x0565sse2 (pixman_op_t op,
+fbCompositeSolidMask_nx8x0565sse2 (pixman_implementation_t *imp,
+				   pixman_op_t op,
 				  pixman_image_t * pSrc,
 				  pixman_image_t * pMask,
 				  pixman_image_t * pDst,
-				  int16_t      xSrc,
-				  int16_t      ySrc,
-				  int16_t      xMask,
-				  int16_t      yMask,
-				  int16_t      xDst,
-				  int16_t      yDst,
-				  uint16_t     width,
-				  uint16_t     height)
+				  int32_t      xSrc,
+				  int32_t      ySrc,
+				  int32_t      xMask,
+				  int32_t      yMask,
+				  int32_t      xDst,
+				  int32_t      yDst,
+				  int32_t     width,
+				  int32_t     height)
 {
     uint32_t	src, srca;
     uint16_t	*dstLine, *dst, d;
@@ -3793,18 +3803,19 @@ fbCompositeSolidMask_nx8x0565sse2 (pixman_op_t op,
  */
 
 static void
-fbCompositeSrc_8888RevNPx0565sse2 (pixman_op_t op,
+fbCompositeSrc_8888RevNPx0565sse2 (pixman_implementation_t *imp,
+				   pixman_op_t op,
 				  pixman_image_t * pSrc,
 				  pixman_image_t * pMask,
 				  pixman_image_t * pDst,
-				  int16_t      xSrc,
-				  int16_t      ySrc,
-				  int16_t      xMask,
-				  int16_t      yMask,
-				  int16_t      xDst,
-				  int16_t      yDst,
-				  uint16_t     width,
-				  uint16_t     height)
+				  int32_t      xSrc,
+				  int32_t      ySrc,
+				  int32_t      xMask,
+				  int32_t      yMask,
+				  int32_t      xDst,
+				  int32_t      yDst,
+				  int32_t     width,
+				  int32_t     height)
 {
     uint16_t	*dstLine, *dst, d;
     uint32_t	*srcLine, *src, s;
@@ -3926,18 +3937,19 @@ fbCompositeSrc_8888RevNPx0565sse2 (pixman_op_t op,
  */
 
 static void
-fbCompositeSrc_8888RevNPx8888sse2 (pixman_op_t op,
+fbCompositeSrc_8888RevNPx8888sse2 (pixman_implementation_t *imp,
+				   pixman_op_t op,
 				  pixman_image_t * pSrc,
 				  pixman_image_t * pMask,
 				  pixman_image_t * pDst,
-				  int16_t      xSrc,
-				  int16_t      ySrc,
-				  int16_t      xMask,
-				  int16_t      yMask,
-				  int16_t      xDst,
-				  int16_t      yDst,
-				  uint16_t     width,
-				  uint16_t     height)
+				  int32_t      xSrc,
+				  int32_t      ySrc,
+				  int32_t      xMask,
+				  int32_t      yMask,
+				  int32_t      xDst,
+				  int32_t      yDst,
+				  int32_t     width,
+				  int32_t     height)
 {
     uint32_t	*dstLine, *dst, d;
     uint32_t	*srcLine, *src, s;
@@ -4039,18 +4051,19 @@ fbCompositeSrc_8888RevNPx8888sse2 (pixman_op_t op,
  */
 
 static void
-fbCompositeSolidMask_nx8888x0565Csse2 (pixman_op_t op,
+fbCompositeSolidMask_nx8888x0565Csse2 (pixman_implementation_t *imp,
+				       pixman_op_t op,
 				      pixman_image_t * pSrc,
 				      pixman_image_t * pMask,
 				      pixman_image_t * pDst,
-				      int16_t      xSrc,
-				      int16_t      ySrc,
-				      int16_t      xMask,
-				      int16_t      yMask,
-				      int16_t      xDst,
-				      int16_t      yDst,
-				      uint16_t     width,
-				      uint16_t     height)
+				      int32_t      xSrc,
+				      int32_t      ySrc,
+				      int32_t      xMask,
+				      int32_t      yMask,
+				      int32_t      xDst,
+				      int32_t      yDst,
+				      int32_t     width,
+				      int32_t     height)
 {
     uint32_t	src, srca;
     uint16_t	*dstLine, *dst, d;
@@ -4187,18 +4200,19 @@ fbCompositeSolidMask_nx8888x0565Csse2 (pixman_op_t op,
  */
 
 static void
-fbCompositeIn_nx8x8sse2 (pixman_op_t op,
+fbCompositeIn_nx8x8sse2 (pixman_implementation_t *imp,
+			 pixman_op_t op,
 			pixman_image_t * pSrc,
 			pixman_image_t * pMask,
 			pixman_image_t * pDst,
-			int16_t      xSrc,
-			int16_t      ySrc,
-			int16_t      xMask,
-			int16_t      yMask,
-			int16_t      xDst,
-			int16_t      yDst,
-			uint16_t     width,
-			uint16_t     height)
+			int32_t      xSrc,
+			int32_t      ySrc,
+			int32_t      xMask,
+			int32_t      yMask,
+			int32_t      xDst,
+			int32_t      yDst,
+			int32_t     width,
+			int32_t     height)
 {
     uint8_t	*dstLine, *dst;
     uint8_t	*maskLine, *mask;
@@ -4289,18 +4303,19 @@ fbCompositeIn_nx8x8sse2 (pixman_op_t op,
  */
 
 static void
-fbCompositeIn_8x8sse2 (pixman_op_t op,
+fbCompositeIn_8x8sse2 (pixman_implementation_t *imp,
+		       pixman_op_t op,
 		      pixman_image_t * pSrc,
 		      pixman_image_t * pMask,
 		      pixman_image_t * pDst,
-		      int16_t      xSrc,
-		      int16_t      ySrc,
-		      int16_t      xMask,
-		      int16_t      yMask,
-		      int16_t      xDst,
-		      int16_t      yDst,
-		      uint16_t     width,
-		      uint16_t     height)
+		      int32_t      xSrc,
+		      int32_t      ySrc,
+		      int32_t      xMask,
+		      int32_t      yMask,
+		      int32_t      xDst,
+		      int32_t      yDst,
+		      int32_t     width,
+		      int32_t     height)
 {
     uint8_t	*dstLine, *dst;
     uint8_t	*srcLine, *src;
@@ -4378,18 +4393,19 @@ fbCompositeIn_8x8sse2 (pixman_op_t op,
  */
 
 static void
-fbCompositeSrcAdd_8888x8x8sse2 (pixman_op_t op,
+fbCompositeSrcAdd_8888x8x8sse2 (pixman_implementation_t *imp,
+				pixman_op_t op,
 			       pixman_image_t * pSrc,
 			       pixman_image_t * pMask,
 			       pixman_image_t * pDst,
-			       int16_t      xSrc,
-			       int16_t      ySrc,
-			       int16_t      xMask,
-			       int16_t      yMask,
-			       int16_t      xDst,
-			       int16_t      yDst,
-			       uint16_t     width,
-			       uint16_t     height)
+			       int32_t      xSrc,
+			       int32_t      ySrc,
+			       int32_t      xMask,
+			       int32_t      yMask,
+			       int32_t      xDst,
+			       int32_t      yDst,
+			       int32_t     width,
+			       int32_t     height)
 {
     uint8_t	*dstLine, *dst;
     uint8_t	*maskLine, *mask;
@@ -4483,18 +4499,19 @@ fbCompositeSrcAdd_8888x8x8sse2 (pixman_op_t op,
  */
 
 static void
-fbCompositeSrcAdd_8000x8000sse2 (pixman_op_t op,
+fbCompositeSrcAdd_8000x8000sse2 (pixman_implementation_t *imp,
+				 pixman_op_t op,
 				pixman_image_t * pSrc,
 				pixman_image_t * pMask,
 				pixman_image_t * pDst,
-				int16_t      xSrc,
-				int16_t      ySrc,
-				int16_t      xMask,
-				int16_t      yMask,
-				int16_t      xDst,
-				int16_t      yDst,
-				uint16_t     width,
-				uint16_t     height)
+				int32_t      xSrc,
+				int32_t      ySrc,
+				int32_t      xMask,
+				int32_t      yMask,
+				int32_t      xDst,
+				int32_t      yDst,
+				int32_t     width,
+				int32_t     height)
 {
     uint8_t	*dstLine, *dst;
     uint8_t	*srcLine, *src;
@@ -4549,18 +4566,19 @@ fbCompositeSrcAdd_8000x8000sse2 (pixman_op_t op,
  * fbCompositeSrcAdd_8888x8888
  */
 static void
-fbCompositeSrcAdd_8888x8888sse2 (pixman_op_t 	op,
+fbCompositeSrcAdd_8888x8888sse2 (pixman_implementation_t *imp,
+				 pixman_op_t 	op,
 				pixman_image_t *	pSrc,
 				pixman_image_t *	pMask,
 				pixman_image_t *	 pDst,
-				int16_t		 xSrc,
-				int16_t      ySrc,
-				int16_t      xMask,
-				int16_t      yMask,
-				int16_t      xDst,
-				int16_t      yDst,
-				uint16_t     width,
-				uint16_t     height)
+				int32_t		 xSrc,
+				int32_t      ySrc,
+				int32_t      xMask,
+				int32_t      yMask,
+				int32_t      xDst,
+				int32_t      yDst,
+				int32_t     width,
+				int32_t     height)
 {
     uint32_t	*dstLine, *dst;
     uint32_t	*srcLine, *src;
@@ -4726,18 +4744,19 @@ pixmanBltsse2 (uint32_t *src_bits,
 }
 
 static void
-fbCompositeCopyAreasse2 (pixman_op_t       op,
+fbCompositeCopyAreasse2 (pixman_implementation_t *imp,
+			 pixman_op_t       op,
 			pixman_image_t *	pSrc,
 			pixman_image_t *	pMask,
 			pixman_image_t *	pDst,
-			int16_t		xSrc,
-			int16_t		ySrc,
-			int16_t		xMask,
-			int16_t		yMask,
-			int16_t		xDst,
-			int16_t		yDst,
-			uint16_t		width,
-			uint16_t		height)
+			int32_t		xSrc,
+			int32_t		ySrc,
+			int32_t		xMask,
+			int32_t		yMask,
+			int32_t		xDst,
+			int32_t		yDst,
+			int32_t		width,
+			int32_t		height)
 {
     pixmanBltsse2 (pSrc->bits.bits,
 		    pDst->bits.bits,
@@ -4751,18 +4770,19 @@ fbCompositeCopyAreasse2 (pixman_op_t       op,
 #if 0
 /* This code are buggy in MMX version, now the bug was translated to SSE2 version */
 void
-fbCompositeOver_x888x8x8888sse2 (pixman_op_t      op,
+fbCompositeOver_x888x8x8888sse2 (pixman_implementation_t *imp,
+				 pixman_op_t      op,
 				pixman_image_t * pSrc,
 				pixman_image_t * pMask,
 				pixman_image_t * pDst,
-				int16_t      xSrc,
-				int16_t      ySrc,
-				int16_t      xMask,
-				int16_t      yMask,
-				int16_t      xDst,
-				int16_t      yDst,
-				uint16_t     width,
-				uint16_t     height)
+				int32_t      xSrc,
+				int32_t      ySrc,
+				int32_t      xMask,
+				int32_t      yMask,
+				int32_t      xDst,
+				int32_t      yDst,
+				int32_t     width,
+				int32_t     height)
 {
     uint32_t	*src, *srcLine, s;
     uint32_t    *dst, *dstLine, d;

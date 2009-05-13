@@ -318,18 +318,19 @@ general_composite_rect (const FbComposeData *data)
 #include "pixman-combine32.h"
 
 static void
-fbCompositeSrcScaleNearest (pixman_op_t     op,
+fbCompositeSrcScaleNearest (pixman_implementation_t *imp,
+			    pixman_op_t     op,
 			    pixman_image_t *pSrc,
 			    pixman_image_t *pMask,
 			    pixman_image_t *pDst,
-			    int16_t         xSrc,
-			    int16_t         ySrc,
-			    int16_t         xMask,
-			    int16_t         yMask,
-			    int16_t         xDst,
-			    int16_t         yDst,
-			    uint16_t        width,
-			    uint16_t        height)
+			    int32_t         xSrc,
+			    int32_t         ySrc,
+			    int32_t         xMask,
+			    int32_t         yMask,
+			    int32_t         xDst,
+			    int32_t         yDst,
+			    int32_t        width,
+			    int32_t        height)
 {
     uint32_t       *dst;
     uint32_t       *src;
@@ -414,7 +415,8 @@ fbCompositeSrcScaleNearest (pixman_op_t     op,
 }
 
 static void
-pixman_walk_composite_region (pixman_op_t op,
+pixman_walk_composite_region (pixman_implementation_t *imp,
+			      pixman_op_t op,
 			      pixman_image_t * pSrc,
 			      pixman_image_t * pMask,
 			      pixman_image_t * pDst,
@@ -428,7 +430,7 @@ pixman_walk_composite_region (pixman_op_t op,
 			      uint16_t height,
 			      pixman_bool_t srcRepeat,
 			      pixman_bool_t maskRepeat,
-			      CompositeFunc compositeRect)
+			      pixman_composite_func_t compositeRect)
 {
     int		    n;
     const pixman_box32_t *pbox;
@@ -487,7 +489,8 @@ pixman_walk_composite_region (pixman_op_t op,
 		    if (w_this > pSrc->bits.width - x_src)
 			w_this = pSrc->bits.width - x_src;
 		}
-		(*compositeRect) (op, pSrc, pMask, pDst,
+		(*compositeRect) (imp,
+				  op, pSrc, pMask, pDst,
 				  x_src, y_src, x_msk, y_msk, x_dst, y_dst,
 				  w_this, h_this);
 		w -= w_this;
@@ -506,18 +509,19 @@ pixman_walk_composite_region (pixman_op_t op,
 }
 
 static void
-pixman_image_composite_rect  (pixman_op_t                   op,
+pixman_image_composite_rect  (pixman_implementation_t *imp,
+			      pixman_op_t                   op,
 			      pixman_image_t               *src,
 			      pixman_image_t               *mask,
 			      pixman_image_t               *dest,
-			      int16_t                       src_x,
-			      int16_t                       src_y,
-			      int16_t                       mask_x,
-			      int16_t                       mask_y,
-			      int16_t                       dest_x,
-			      int16_t                       dest_y,
-			      uint16_t                      width,
-			      uint16_t                      height)
+			      int32_t                       src_x,
+			      int32_t                       src_y,
+			      int32_t                       mask_x,
+			      int32_t                       mask_y,
+			      int32_t                       dest_x,
+			      int32_t                       dest_y,
+			      int32_t                      width,
+			      int32_t                      height)
 {
     FbComposeData compose_data;
 
@@ -659,7 +663,7 @@ general_composite (pixman_implementation_t *	imp,
     pixman_bool_t srcAlphaMap = src->common.alpha_map != NULL;
     pixman_bool_t maskAlphaMap = FALSE;
     pixman_bool_t dstAlphaMap = dest->common.alpha_map != NULL;
-    CompositeFunc func = NULL;
+    pixman_composite_func_t func = NULL;
 
 #ifdef USE_MMX
     fbComposeSetupMMX();
@@ -832,7 +836,7 @@ general_composite (pixman_implementation_t *	imp,
 	    maskRepeat = FALSE;
     }
 
-    pixman_walk_composite_region (op, src, mask, dest, src_x, src_y,
+    pixman_walk_composite_region (imp, op, src, mask, dest, src_x, src_y,
 				  mask_x, mask_y, dest_x, dest_y, width, height,
 				  srcRepeat, maskRepeat, func);
 }
