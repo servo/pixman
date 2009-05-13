@@ -932,8 +932,14 @@ struct pixman_implementation_t
     pixman_composite_func_t	composite;
     
     pixman_combine_32_func_t	combine_32[PIXMAN_OP_LAST];
+    pixman_combine_32_func_t	combine_32_ca[PIXMAN_OP_LAST];
     pixman_combine_64_func_t	combine_64[PIXMAN_OP_LAST];
+    pixman_combine_64_func_t	combine_64_ca[PIXMAN_OP_LAST];
 };
+
+pixman_implementation_t *
+_pixman_implementation_create (pixman_implementation_t *toplevel,
+			       pixman_implementation_t *delegate);
 
 void
 _pixman_implementation_combine_32 (pixman_implementation_t *	imp,
