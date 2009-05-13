@@ -1021,7 +1021,7 @@ fbCompositeSrc_8888xx888 (pixman_implementation_t *imp,
     }
 }
 
-static const FastPathInfo c_fast_path_array[] =
+static const FastPathInfo c_fast_paths[] =
 {
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_r5g6b5,   fbCompositeSolidMask_nx8x0565, 0 },
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_b5g6r5,   fbCompositeSolidMask_nx8x0565, 0 },
@@ -1069,8 +1069,6 @@ static const FastPathInfo c_fast_path_array[] =
     { PIXMAN_OP_IN,  PIXMAN_solid,     PIXMAN_a8,	PIXMAN_a8,	 fbCompositeSolidMaskIn_nx8x8, 0 },
     { PIXMAN_OP_NONE },
 };
-
-const FastPathInfo *const c_fast_paths = c_fast_path_array;
 
 static void
 fbCompositeSrcScaleNearest (pixman_implementation_t *imp,
@@ -1213,6 +1211,16 @@ fast_path_composite (pixman_implementation_t *imp,
 					   fbCompositeSrcScaleNearest);
 	    return;
 	}
+    }
+
+    if (_pixman_run_fast_path (c_fast_paths, imp,
+			       op, src, mask, dest,
+			       src_x, src_y,
+			       mask_x, mask_y,
+			       dest_x, dest_y,
+			       width, height))
+    {
+	return;
     }
 
     _pixman_implementation_composite (imp->delegate, op,

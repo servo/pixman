@@ -404,14 +404,6 @@ general_composite (pixman_implementation_t *	imp,
 	return;
 #endif
 
-    if (pixman_have_arm_simd() && _pixman_run_fast_path (c_fast_paths, imp,
-							 op, src, mask, dest,
-							 src_x, src_y,
-							 mask_x, mask_y,
-							 dest_x, dest_y,
-							 width, height))
-	return;
-    
     /* CompositeGeneral optimizes 1x1 repeating images itself */
     if (src->type == BITS &&
 	src->bits.width == 1 && src->bits.height == 1)

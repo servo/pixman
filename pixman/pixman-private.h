@@ -956,8 +956,6 @@ typedef struct
     uint32_t			flags;
 } FastPathInfo;
 
-extern const FastPathInfo *const c_fast_paths;
-
 struct pixman_implementation_t
 {
     pixman_implementation_t *	toplevel;
