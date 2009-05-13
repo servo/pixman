@@ -20,6 +20,7 @@ GTK_LDADD = $(TEST_LDADD) $(GTK_LIBS)
 
 TESTPROGRAMS +=			\
 	clip-test		\
+	clip-in			\
 	composite-test		\
 	gradient-test		\
 	trap-test
@@ -36,6 +37,9 @@ composite_test_SOURCES = composite-test.c utils.c utils.h
 
 clip_test_LDADD = $(GTK_LDADD)
 clip_test_SOURCES = clip-test.c utils.c utils.h
+
+clip_in_LDADD = $(GTK_LDADD)
+clip_in_SOURCES = clip-in.c utils.c utils.h
 
 trap_test_LDADD = $(GTK_LDADD)
 trap_test_SOURCES = trap-test.c utils.c utils.h
