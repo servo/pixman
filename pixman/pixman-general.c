@@ -2,6 +2,9 @@
  * Copyright © 2009 Red Hat, Inc.
  * Copyright © 2000 SuSE, Inc.
  * Copyright © 2007 Red Hat, Inc.
+ * Copyright © 2000 Keith Packard, member of The XFree86 Project, Inc.
+ *             2005 Lars Knoll & Zack Rusin, Trolltech
+ *             2008 Aaron Plattner, NVIDIA Corporation
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that
@@ -28,6 +31,15 @@
 #include <math.h>
 #include <assert.h>
 #include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "pixman-private.h"
+#include "pixman-mmx.h"
+#include "pixman-vmx.h"
+#include "pixman-sse2.h"
+#include "pixman-arm-simd.h"
+#include "pixman-combine32.h"
 #include "pixman-private.h"
 
 
@@ -71,38 +83,9 @@ general_combine_64_ca (pixman_implementation_t *imp, pixman_op_t op,
     f (dest, src, mask, width);
 }
 
-/*
- *
- * Copyright © 2000 Keith Packard, member of The XFree86 Project, Inc.
- *             2005 Lars Knoll & Zack Rusin, Trolltech
- *             2008 Aaron Plattner, NVIDIA Corporation
- *
- * Permission to use, copy, modify, distribute, and sell this software and its
- * documentation for any purpose is hereby granted without fee, provided that
- * the above copyright notice appear in all copies and that both that
- * copyright notice and this permission notice appear in supporting
- * documentation, and that the name of Keith Packard not be used in
- * advertising or publicity pertaining to distribution of the software without
- * specific, written prior permission.  Keith Packard makes no
- * representations about the suitability of this software for any purpose.  It
- * is provided "as is" without express or implied warranty.
- *
- * THE COPYRIGHT HOLDERS DISCLAIM ALL WARRANTIES WITH REGARD TO THIS
- * SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
- * FITNESS, IN NO EVENT SHALL THE COPYRIGHT HOLDERS BE LIABLE FOR ANY
- * SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
- * AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
- * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
- * SOFTWARE.
- */
-
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 static void
-pixman_composite_rect_general_internal (const FbComposeData *data,
+pixman_composite_rect_general_internal (pixman_implementation_t *imp,
+					const FbComposeData *data,
 					void *src_buffer, void *mask_buffer, 
 					void *dest_buffer, const int wide)
 {
@@ -185,21 +168,21 @@ pixman_composite_rect_general_internal (const FbComposeData *data,
 	PIXMAN_FORMAT_RGB (data->mask->bits.format);
 
     {
-	CombineFunc32 compose;
+	pixman_combine_32_func_t compose;
 
 	if (wide)
 	{
 	    if (component_alpha)
-		compose = (CombineFunc32)pixman_composeFunctions64.combineC[data->op];
+		compose = (pixman_combine_32_func_t)_pixman_implementation_combine_64_ca;
 	    else
-		compose = (CombineFunc32)pixman_composeFunctions64.combineU[data->op];
+		compose = (pixman_combine_32_func_t)_pixman_implementation_combine_64;
 	}
 	else
 	{
 	    if (component_alpha)
-		compose = pixman_composeFunctions.combineC[data->op];
+		compose = _pixman_implementation_combine_32_ca;
 	    else
-		compose = pixman_composeFunctions.combineU[data->op];
+		compose = _pixman_implementation_combine_32;
 	}
 
 	if (!compose)
@@ -251,7 +234,7 @@ pixman_composite_rect_general_internal (const FbComposeData *data,
 			       data->width, dest_buffer, 0, 0);
 
 		/* blend */
-		compose (dest_buffer, src_buffer, mask_buffer, data->width);
+		compose (imp, data->op, dest_buffer, src_buffer, mask_buffer, data->width);
 
 		/* write back */
 		store (&(data->dest->bits), data->xDest, data->yDest + i, data->width,
@@ -260,7 +243,7 @@ pixman_composite_rect_general_internal (const FbComposeData *data,
 	    else
 	    {
 		/* blend */
-		compose (bits + (data->yDest + i) * stride +
+		compose (imp, data->op, bits + (data->yDest + i) * stride +
 			 data->xDest,
 			 src_buffer, mask_buffer, data->width);
 	    }
@@ -271,7 +254,8 @@ pixman_composite_rect_general_internal (const FbComposeData *data,
 #define SCANLINE_BUFFER_LENGTH 8192
 
 static void
-general_composite_rect (const FbComposeData *data)
+general_composite_rect (pixman_implementation_t *imp,
+			const FbComposeData *data)
 {
     uint8_t stack_scanline_buffer[SCANLINE_BUFFER_LENGTH * 3];
     const pixman_format_code_t srcFormat =
@@ -299,23 +283,13 @@ general_composite_rect (const FbComposeData *data)
     mask_buffer = src_buffer + data->width * Bpp;
     dest_buffer = mask_buffer + data->width * Bpp;
 
-    pixman_composite_rect_general_internal (data, src_buffer,
+    pixman_composite_rect_general_internal (imp, data, src_buffer,
 					    mask_buffer, dest_buffer,
 					    wide);
 
     if (scanline_buffer != stack_scanline_buffer)
 	free (scanline_buffer);
 }
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "pixman-private.h"
-#include "pixman-mmx.h"
-#include "pixman-vmx.h"
-#include "pixman-sse2.h"
-#include "pixman-arm-simd.h"
-#include "pixman-combine32.h"
 
 static void
 pixman_image_composite_rect  (pixman_implementation_t *imp,
@@ -350,7 +324,7 @@ pixman_image_composite_rect  (pixman_implementation_t *imp,
     compose_data.width = width;
     compose_data.height = height;
 
-    general_composite_rect (&compose_data);
+    general_composite_rect (imp, &compose_data);
 }
 
 #if defined(USE_SSE2) && defined(__GNUC__) && !defined(__x86_64__) && !defined(__amd64__)
