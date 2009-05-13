@@ -675,9 +675,9 @@ _pixman_gradient_walker_pixel (GradientWalker       *walker,
 
 #define READ(img, ptr)		(*(ptr))
 #define WRITE(img, ptr, val)	(*(ptr) = (val))
-#define MEMCPY_WRAPPED(img, dst, src, size)					\
+#define MEMCPY_WRAPPED(img, dst, src, size)				\
     memcpy(dst, src, size)
-#define MEMSET_WRAPPED(img, dst, val, size)					\
+#define MEMSET_WRAPPED(img, dst, val, size)				\
     memset(dst, val, size)
 
 #endif
@@ -702,7 +702,7 @@ _pixman_gradient_walker_pixel (GradientWalker       *walker,
 		(res) = READ(img, (uint32_t *)bits__);			\
 		break;							\
 	    case 24:							\
-		(res) = Fetch24(img, (uint8_t *) bits__);			\
+		(res) = Fetch24(img, (uint8_t *) bits__);		\
 		break;							\
 	    case 16:							\
 		(res) = READ(img, (uint16_t *) bits__);			\
