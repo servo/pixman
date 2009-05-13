@@ -160,7 +160,6 @@ typedef FASTCALL void (*storeProc32)(pixman_image_t *, uint32_t *bits,
                                      const uint32_t *values, int x, int width,
                                      const pixman_indexed_t *);
 
-typedef FASTCALL void (*CombineMask64) (uint64_t *src, const uint64_t *mask, int width);
 typedef FASTCALL void (*CombineFunc64) (uint64_t *dest, const uint64_t *src, const uint64_t *mask, int width);
 typedef FASTCALL void (*fetchProc64)(bits_image_t *pict, int x, int y, int width,
                                      uint64_t *buffer);
@@ -192,7 +191,6 @@ typedef struct _FbComposeFunctions32 {
 typedef struct _FbComposeFunctions64 {
     CombineFunc64 *combineU;
     CombineFunc64 *combineC;
-    CombineMask64 combineMaskU;
 } FbComposeFunctions64;
 
 extern FbComposeFunctions32 pixman_composeFunctions;
