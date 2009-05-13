@@ -765,16 +765,21 @@ get_fast_path (const FastPathInfo *fast_paths,
     return NULL;
 }
 
-pixman_composite_func_t
-_pixman_lookup_fast_path (const FastPathInfo *paths,
-			  pixman_op_t op,
-			  pixman_image_t *src,
-			  pixman_image_t *mask,
-			  pixman_image_t *dest,
-			  int32_t src_x,
-			  int32_t src_y,
-			  int32_t mask_x,
-			  int32_t mask_y)
+pixman_bool_t
+_pixman_run_fast_path (const FastPathInfo *paths,
+		       pixman_implementation_t *imp,
+		       pixman_op_t op,
+		       pixman_image_t *src,
+		       pixman_image_t *mask,
+		       pixman_image_t *dest,
+		       int32_t src_x,
+		       int32_t src_y,
+		       int32_t mask_x,
+		       int32_t mask_y,
+		       int32_t dest_x,
+		       int32_t dest_y,
+		       int32_t width,
+		       int32_t height)
 {
     pixman_composite_func_t func = NULL;
     pixman_bool_t src_repeat = src->common.repeat == PIXMAN_REPEAT_NORMAL;
@@ -840,5 +845,17 @@ _pixman_lookup_fast_path (const FastPathInfo *paths,
 	}
     }
 
-    return func;
+    if (func)
+    {
+	_pixman_walk_composite_region (imp, op,
+				       src, mask, dest,
+				       src_x, src_y, mask_x, mask_y,
+				       dest_x, dest_y,
+				       width, height,
+				       src_repeat, mask_repeat,
+				       func);
+	return TRUE;
+    }
+    
+    return FALSE;
 }

@@ -392,7 +392,6 @@ general_composite (pixman_implementation_t *	imp,
     pixman_bool_t maskRepeat = FALSE;
     pixman_bool_t srcTransform = src->common.transform != NULL;
     pixman_bool_t maskTransform = FALSE;
-    pixman_composite_func_t func = NULL;
 
 #ifdef USE_MMX
     fbComposeSetupMMX();
@@ -430,61 +429,86 @@ general_composite (pixman_implementation_t *	imp,
     }
     
 #ifdef USE_SSE2
-    if (!func)
-	func = _pixman_lookup_fast_path (sse2_fast_paths, op, src, mask, dest, src_x, src_y, mask_x, mask_y);
+    if (_pixman_run_fast_path (sse2_fast_paths, imp,
+			       op, src, mask, dest,
+			       src_x, src_y,
+			       mask_x, mask_y,
+			       dest_x, dest_y,
+			       width, height))
+	return;
 #endif
 
 #ifdef USE_MMX
-    if (!func)
-	func = _pixman_lookup_fast_path (mmx_fast_paths, op, src, mask, dest, src_x, src_y, mask_x, mask_y);
+    if (_pixman_run_fast_path (mmx_fast_paths, imp,
+			       op, src, mask, dest,
+			       src_x, src_y,
+			       mask_x, mask_y,
+			       dest_x, dest_y,
+			       width, height))
+	return;
 #endif
 
 #ifdef USE_VMX
-    if (!func)
-	func = _pixman_lookup_fast_path (vmx_fast_paths, op, src, mask, dest, src_x, src_y, mask_x, mask_y);
+    if (_pixman_run_fast_path (vmx_fast_paths, imp,
+			       op, src, mask, dest,
+			       src_x, src_y,
+			       mask_x, mask_y,
+			       dest_x, dest_y,
+			       width, height))
+	return;
 #endif
 
 #ifdef USE_ARM_NEON
-    if (!func && pixman_have_arm_neon())
-	func = _pixman_lookup_fast_path (arm_neon_fast_paths, op, src, mask, dest, src_x, src_y, mask_x, mask_y);
+    if (pixman_have_arm_neon() && _pixman_run_fast_path (arm_neon_fast_paths, imp,
+							 op, src, mask, dest,
+							 src_x, src_y,
+							 mask_x, mask_y,
+							 dest_x, dest_y,
+							 width, height))
+	return;
 #endif
 
 #ifdef USE_ARM_SIMD
-    if (!func && pixman_have_arm_simd())
-	func = _pixman_lookup_fast_path (arm_neon_fast_paths, op, src, mask, dest, src_x, src_y, mask_x, mask_y);
+    if (pixman_have_arm_simd() && _pixman_run_fast_path (arm_simd_fast_paths, imp,
+							 op, src, mask, dest,
+							 src_x, src_y,
+							 mask_x, mask_y,
+							 dest_x, dest_y,
+							 width, height))
+	return;
 #endif
 
-    if (!func)
-	func = _pixman_lookup_fast_path (c_fast_paths, op, src, mask, dest, src_x, src_y, mask_x, mask_y);
-
-    if (!func)
+    if (pixman_have_arm_simd() && _pixman_run_fast_path (c_fast_paths, imp,
+							 op, src, mask, dest,
+							 src_x, src_y,
+							 mask_x, mask_y,
+							 dest_x, dest_y,
+							 width, height))
+	return;
+    
+    /* CompositeGeneral optimizes 1x1 repeating images itself */
+    if (src->type == BITS &&
+	src->bits.width == 1 && src->bits.height == 1)
     {
-	func = pixman_image_composite_rect;
-
-	/* CompositeGeneral optimizes 1x1 repeating images itself */
-	if (src->type == BITS &&
-	    src->bits.width == 1 && src->bits.height == 1)
-	{
-	    srcRepeat = FALSE;
-	}
-
-	if (mask && mask->type == BITS &&
-	    mask->bits.width == 1 && mask->bits.height == 1)
-	{
-	    maskRepeat = FALSE;
-	}
-
-	/* if we are transforming, repeats are handled in fbFetchTransformed */
-	if (srcTransform)
-	    srcRepeat = FALSE;
-
-	if (maskTransform)
-	    maskRepeat = FALSE;
+	srcRepeat = FALSE;
     }
+    
+    if (mask && mask->type == BITS &&
+	mask->bits.width == 1 && mask->bits.height == 1)
+    {
+	maskRepeat = FALSE;
+    }
+    
+    /* if we are transforming, repeats are handled in fbFetchTransformed */
+    if (srcTransform)
+	srcRepeat = FALSE;
+    
+    if (maskTransform)
+	maskRepeat = FALSE;
 
     _pixman_walk_composite_region (imp, op, src, mask, dest, src_x, src_y,
-				  mask_x, mask_y, dest_x, dest_y, width, height,
-				  srcRepeat, maskRepeat, func);
+				   mask_x, mask_y, dest_x, dest_y, width, height,
+				   srcRepeat, maskRepeat, pixman_image_composite_rect);
 }
 
 pixman_implementation_t *
