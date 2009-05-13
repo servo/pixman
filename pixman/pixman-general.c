@@ -454,6 +454,20 @@ general_blt (pixman_implementation_t *imp,
     return FALSE;
 }
 
+static pixman_bool_t
+general_fill (pixman_implementation_t *imp,
+	      uint32_t *bits,
+	      int stride,
+	      int bpp,
+	      int x,
+	      int y,
+	      int width,
+	      int height,
+	      uint32_t xor)
+{
+    return FALSE;
+}
+
 pixman_implementation_t *
 _pixman_implementation_create_general (pixman_implementation_t *toplevel)
 {
@@ -469,6 +483,7 @@ _pixman_implementation_create_general (pixman_implementation_t *toplevel)
     }
     imp->composite = general_composite;
     imp->blt = general_blt;
-
+    imp->fill = general_fill;
+    
     return imp;
 }

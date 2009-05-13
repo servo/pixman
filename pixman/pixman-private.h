@@ -908,6 +908,15 @@ typedef pixman_bool_t (* pixman_blt_func_t) (pixman_implementation_t *	imp,
 					     int			dst_y,
 					     int			width,
 					     int			height);
+typedef pixman_bool_t (* pixman_fill_func_t) (pixman_implementation_t *imp,
+					      uint32_t *bits,
+					      int stride,
+					      int bpp,
+					      int x,
+					      int y,
+					      int width,
+					      int height,
+					      uint32_t xor);
 
 void
 _pixman_walk_composite_region (pixman_implementation_t *imp,
@@ -956,6 +965,7 @@ struct pixman_implementation_t
 
     pixman_composite_func_t	composite;
     pixman_blt_func_t		blt;
+    pixman_fill_func_t		fill;
     
     pixman_combine_32_func_t	combine_32[PIXMAN_OP_LAST];
     pixman_combine_32_func_t	combine_32_ca[PIXMAN_OP_LAST];
@@ -1024,7 +1034,17 @@ _pixman_implementation_blt (pixman_implementation_t *	imp,
 			    int				dst_y,
 			    int				width,
 			    int				height);
-
+pixman_bool_t
+_pixman_implementation_fill (pixman_implementation_t *   imp,
+			     uint32_t *bits,
+			     int stride,
+			     int bpp,
+			     int x,
+			     int y,
+			     int width,
+			     int height,
+			     uint32_t xor);
+    
 /* Specific implementations */
 pixman_implementation_t *
 _pixman_implementation_create_general (pixman_implementation_t *toplevel);

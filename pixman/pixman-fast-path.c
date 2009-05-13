@@ -1223,6 +1223,112 @@ fast_path_composite (pixman_implementation_t *imp,
 				      width, height);
 }
 
+static void
+pixman_fill8 (uint32_t  *bits,
+	      int	stride,
+	      int	x,
+	      int	y,
+	      int	width,
+	      int	height,
+	      uint32_t  xor)
+{
+    int byte_stride = stride * (int) sizeof (uint32_t);
+    uint8_t *dst = (uint8_t *) bits;
+    uint8_t v = xor & 0xff;
+    int i;
+
+    dst = dst + y * byte_stride + x;
+
+    while (height--)
+    {
+	for (i = 0; i < width; ++i)
+	    dst[i] = v;
+
+	dst += byte_stride;
+    }
+}
+
+static void
+pixman_fill16 (uint32_t *bits,
+	       int       stride,
+	       int       x,
+	       int       y,
+	       int       width,
+	       int       height,
+	       uint32_t  xor)
+{
+    int short_stride = (stride * (int) sizeof (uint32_t)) / (int) sizeof (uint16_t);
+    uint16_t *dst = (uint16_t *)bits;
+    uint16_t v = xor & 0xffff;
+    int i;
+
+    dst = dst + y * short_stride + x;
+
+    while (height--)
+    {
+	for (i = 0; i < width; ++i)
+	    dst[i] = v;
+
+	dst += short_stride;
+    }
+}
+
+static void
+pixman_fill32 (uint32_t *bits,
+	       int       stride,
+	       int       x,
+	       int       y,
+	       int       width,
+	       int       height,
+	       uint32_t  xor)
+{
+    int i;
+
+    bits = bits + y * stride + x;
+
+    while (height--)
+    {
+	for (i = 0; i < width; ++i)
+	    bits[i] = xor;
+
+	bits += stride;
+    }
+}
+
+static pixman_bool_t
+fast_path_fill (pixman_implementation_t *imp,
+		uint32_t *bits,
+		int stride,
+		int bpp,
+		int x,
+		int y,
+		int width,
+		int height,
+		uint32_t xor)
+{
+    switch (bpp)
+    {
+    case 8:
+	pixman_fill8 (bits, stride, x, y, width, height, xor);
+	break;
+	
+    case 16:
+	pixman_fill16 (bits, stride, x, y, width, height, xor);
+	break;
+	
+    case 32:
+	pixman_fill32 (bits, stride, x, y, width, height, xor);
+	break;
+	
+    default:
+	return _pixman_implementation_fill (
+	    imp->delegate, bits, stride, bpp, x, y, width, height, xor);
+	break;
+    }
+    
+    return TRUE;
+}
+
 pixman_implementation_t *
 _pixman_implementation_create_fast_path (pixman_implementation_t *toplevel)
 {
@@ -1230,6 +1336,7 @@ _pixman_implementation_create_fast_path (pixman_implementation_t *toplevel)
     pixman_implementation_t *imp = _pixman_implementation_create (toplevel, general);
 
     imp->composite = fast_path_composite;
+    imp->fill = fast_path_fill;
     
     return imp;
 }

@@ -3194,6 +3194,26 @@ mmx_blt (pixman_implementation_t *imp,
     return TRUE;
 }
 
+static pixman_bool_t
+mmx_fill (pixman_implementation_t *imp,
+	  uint32_t *bits,
+	  int stride,
+	  int bpp,
+	  int x,
+	  int y,
+	  int width,
+	  int height,
+	  uint32_t xor)
+{
+    if (!pixman_fill_mmx (bits, stride, bpp, x, y, width, height, xor))
+    {
+	return _pixman_implementation_fill (
+	    imp->delegate, bits, stride, bpp, x, y, width, height, xor);
+    }
+
+    return TRUE;
+}
+
 pixman_implementation_t *
 _pixman_implementation_create_mmx (pixman_implementation_t *toplevel)
 {
@@ -3226,6 +3246,7 @@ _pixman_implementation_create_mmx (pixman_implementation_t *toplevel)
 
     imp->composite = mmx_composite;
     imp->blt = mmx_blt;
+    imp->fill = mmx_fill;
     
     return imp;
 }

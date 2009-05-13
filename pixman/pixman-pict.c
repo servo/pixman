@@ -136,3 +136,40 @@ pixman_image_composite (pixman_op_t      op,
 				      dest_x, dest_y,
 				      width, height);
 }
+
+PIXMAN_EXPORT pixman_bool_t
+pixman_blt (uint32_t *src_bits,
+	    uint32_t *dst_bits,
+	    int src_stride,
+	    int dst_stride,
+	    int src_bpp,
+	    int dst_bpp,
+	    int src_x, int src_y,
+	    int dst_x, int dst_y,
+	    int width, int height)
+{
+    if (!imp)
+	imp = _pixman_choose_implementation();
+    
+    return _pixman_implementation_blt (imp, src_bits, dst_bits, src_stride, dst_stride,
+				       src_bpp, dst_bpp,
+				       src_x, src_y,
+				       dst_x, dst_y,
+				       width, height);
+}
+
+PIXMAN_EXPORT pixman_bool_t
+pixman_fill (uint32_t *bits,
+	     int stride,
+	     int bpp,
+	     int x,
+	     int y,
+	     int width,
+	     int height,
+	     uint32_t xor)
+{
+    if (!imp)
+	imp = _pixman_choose_implementation();
+
+    return _pixman_implementation_fill (imp, bits, stride, bpp, x, y, width, height, xor);
+}

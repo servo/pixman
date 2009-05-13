@@ -117,6 +117,20 @@ delegate_blt (pixman_implementation_t *	imp,
 				       width, height);
 }
 
+static pixman_bool_t
+delegate_fill (pixman_implementation_t *imp,
+	       uint32_t *bits,
+	       int stride,
+	       int bpp,
+	       int x,
+	       int y,
+	       int width,
+	       int height,
+	       uint32_t xor)
+{
+    return _pixman_implementation_fill (imp->delegate, bits, stride, bpp, x, y, width, height, xor);
+}
+
 pixman_implementation_t *
 _pixman_implementation_create (pixman_implementation_t *toplevel,
 			       pixman_implementation_t *delegate)
@@ -141,6 +155,7 @@ _pixman_implementation_create (pixman_implementation_t *toplevel,
      */
     imp->composite = delegate_composite;
     imp->blt = delegate_blt;
+    imp->fill = delegate_fill;
     
     for (i = 0; i < PIXMAN_OP_LAST; ++i)
     {
@@ -236,4 +251,18 @@ _pixman_implementation_blt (pixman_implementation_t *	imp,
     return (* imp->blt) (imp, src_bits, dst_bits, src_stride, dst_stride,
 			 src_bpp, dst_bpp, src_x, src_y, dst_x, dst_y,
 			 width, height);
+}
+
+pixman_bool_t
+_pixman_implementation_fill (pixman_implementation_t *imp,
+			     uint32_t *bits,
+			     int stride,
+			     int bpp,
+			     int x,
+			     int y,
+			     int width,
+			     int height,
+			     uint32_t xor)
+{
+    return (* imp->fill) (imp->delegate, bits, stride, bpp, x, y, width, height, xor);
 }

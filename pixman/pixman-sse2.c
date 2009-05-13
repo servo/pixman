@@ -5016,6 +5016,27 @@ sse2_blt (pixman_implementation_t *imp,
     return TRUE;
 }
 
+__attribute__((__force_align_arg_pointer__))
+static pixman_bool_t
+sse2_fill (pixman_implementation_t *imp,
+	   uint32_t *bits,
+	   int stride,
+	   int bpp,
+	   int x,
+	   int y,
+	   int width,
+	   int height,
+	   uint32_t xor)
+{
+    if (!pixmanFillsse2 (bits, stride, bpp, x, y, width, height, xor))
+    {
+	return _pixman_implementation_fill (
+	    imp->delegate, bits, stride, bpp, x, y, width, height, xor);
+    }
+
+    return TRUE;
+}
+
 pixman_implementation_t *
 _pixman_implementation_create_sse2 (pixman_implementation_t *toplevel)
 {
@@ -5080,6 +5101,7 @@ _pixman_implementation_create_sse2 (pixman_implementation_t *toplevel)
     
     imp->composite = sse2_composite;
     imp->blt = sse2_blt;
+    imp->fill = sse2_fill;
     
     return imp;
 }
