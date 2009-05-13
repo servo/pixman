@@ -152,9 +152,7 @@ typedef struct point point_t;
  */
 
 #define FASTCALL
-typedef FASTCALL void (*CombineMaskU32) (uint32_t *src, const uint32_t *mask, int width);
-typedef FASTCALL void (*CombineFuncU32) (uint32_t *dest, const uint32_t *src, int width);
-typedef FASTCALL void (*CombineFuncC32) (uint32_t *dest, uint32_t *src, uint32_t *mask, int width);
+typedef FASTCALL void (*CombineFunc32) (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width);
 typedef FASTCALL void (*fetchProc32)(bits_image_t *pict, int x, int y, int width,
                                      uint32_t *buffer);
 typedef FASTCALL uint32_t (*fetchPixelProc32)(bits_image_t *pict, int offset, int line);
@@ -162,9 +160,7 @@ typedef FASTCALL void (*storeProc32)(pixman_image_t *, uint32_t *bits,
                                      const uint32_t *values, int x, int width,
                                      const pixman_indexed_t *);
 
-typedef FASTCALL void (*CombineMaskU64) (uint64_t *src, const uint64_t *mask, int width);
-typedef FASTCALL void (*CombineFuncU64) (uint64_t *dest, const uint64_t *src, int width);
-typedef FASTCALL void (*CombineFuncC64) (uint64_t *dest, uint64_t *src, uint64_t *mask, int width);
+typedef FASTCALL void (*CombineFunc64) (uint64_t *dest, const uint64_t *src, const uint64_t *mask, int width);
 typedef FASTCALL void (*fetchProc64)(bits_image_t *pict, int x, int y, int width,
                                      uint64_t *buffer);
 typedef FASTCALL uint64_t (*fetchPixelProc64)(bits_image_t *pict, int offset, int line);
@@ -188,15 +184,13 @@ typedef struct _FbComposeData {
 } FbComposeData;
 
 typedef struct _FbComposeFunctions32 {
-    CombineFuncU32 *combineU;
-    CombineFuncC32 *combineC;
-    CombineMaskU32 combineMaskU;
+    CombineFunc32 *combineU;
+    CombineFunc32 *combineC;
 } FbComposeFunctions32;
 
 typedef struct _FbComposeFunctions64 {
-    CombineFuncU64 *combineU;
-    CombineFuncC64 *combineC;
-    CombineMaskU64 combineMaskU;
+    CombineFunc64 *combineU;
+    CombineFunc64 *combineC;
 } FbComposeFunctions64;
 
 extern FbComposeFunctions32 pixman_composeFunctions;
@@ -280,8 +274,32 @@ typedef enum
 {
     SOURCE_IMAGE_CLASS_UNKNOWN,
     SOURCE_IMAGE_CLASS_HORIZONTAL,
-    SOURCE_IMAGE_CLASS_VERTICAL
+    SOURCE_IMAGE_CLASS_VERTICAL,
 } source_pict_class_t;
+
+typedef source_pict_class_t (* classify_func_t) (pixman_image_t *image,
+						 int             x,
+						 int             y,
+						 int             width,
+						 int             height);
+
+typedef void (*scanStoreProc)(pixman_image_t *, int, int, int, uint32_t *);
+typedef void (*scanFetchProc)(pixman_image_t *, int, int, int, uint32_t *,
+			      uint32_t *, uint32_t);
+
+source_pict_class_t _pixman_image_classify (pixman_image_t *image,
+					    int             x,
+					    int             y,
+					    int             width,
+					    int             height);
+
+scanFetchProc
+_pixman_image_get_fetcher (pixman_image_t *image,
+			   int             wide);
+
+scanStoreProc
+_pixman_image_get_storer (pixman_image_t *image,
+			  int             wide);
 
 struct point
 {
@@ -306,6 +324,7 @@ struct image_common
     pixman_bool_t		component_alpha;
     pixman_read_memory_func_t	read_func;
     pixman_write_memory_func_t	write_func;
+    classify_func_t		classify;
 };
 
 struct source_image
@@ -380,6 +399,7 @@ union pixman_image
     image_type_t		type;
     image_common_t		common;
     bits_image_t		bits;
+    source_image_t		source;
     gradient_t			gradient;
     linear_gradient_t		linear;
     conical_gradient_t		conical;

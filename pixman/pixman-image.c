@@ -32,10 +32,79 @@
 
 #define Alpha(x) ((x) >> 24)
 
+static source_pict_class_t
+SourcePictureClassify (pixman_image_t *image,
+		       int	       x,
+		       int	       y,
+		       int	       width,
+		       int	       height)
+{
+    source_image_t *pict = &image->source;
+    
+    pict->class = SOURCE_IMAGE_CLASS_UNKNOWN;
+    
+    if (pict->common.type == SOLID)
+    {
+	pict->class = SOURCE_IMAGE_CLASS_HORIZONTAL;
+    }
+    else if (pict->common.type == LINEAR)
+    {
+	linear_gradient_t *linear = (linear_gradient_t *)pict;
+	pixman_vector_t   v;
+	pixman_fixed_32_32_t l;
+	pixman_fixed_48_16_t dx, dy, a, b, off;
+	pixman_fixed_48_16_t factors[4];
+	int	     i;
+
+	dx = linear->p2.x - linear->p1.x;
+	dy = linear->p2.y - linear->p1.y;
+	l = dx * dx + dy * dy;
+	if (l)
+	{
+	    a = (dx << 32) / l;
+	    b = (dy << 32) / l;
+	}
+	else
+	{
+	    a = b = 0;
+	}
+
+	off = (-a * linear->p1.x
+	       -b * linear->p1.y) >> 16;
+
+	for (i = 0; i < 3; i++)
+	{
+	    v.vector[0] = pixman_int_to_fixed ((i % 2) * (width  - 1) + x);
+	    v.vector[1] = pixman_int_to_fixed ((i / 2) * (height - 1) + y);
+	    v.vector[2] = pixman_fixed_1;
+
+	    if (pict->common.transform)
+	    {
+		if (!pixman_transform_point_3d (pict->common.transform, &v))
+		{
+		    pict->class = SOURCE_IMAGE_CLASS_UNKNOWN;
+		    goto out;
+		}
+	    }
+
+	    factors[i] = ((a * v.vector[0] + b * v.vector[1]) >> 16) + off;
+	}
+
+	if (factors[2] == factors[0])
+	    pict->class = SOURCE_IMAGE_CLASS_HORIZONTAL;
+	else if (factors[1] == factors[0])
+	    pict->class = SOURCE_IMAGE_CLASS_VERTICAL;
+    }
+
+out:
+    return pict->class;
+}
+
 static void
 init_source_image (source_image_t *image)
 {
     image->class = SOURCE_IMAGE_CLASS_UNKNOWN;
+    image->common.classify = SourcePictureClassify;
 }
 
 static pixman_bool_t
@@ -95,9 +164,166 @@ allocate_image (void)
 	common->ref_count = 1;
 	common->read_func = NULL;
 	common->write_func = NULL;
+	common->classify = NULL;
     }
 
     return image;
+}
+
+source_pict_class_t
+_pixman_image_classify (pixman_image_t *image,
+			int             x,
+			int             y,
+			int             width,
+			int             height)
+{
+    if (image->common.classify)
+	return image->common.classify (image, x, y, width, height);
+    else
+	return SOURCE_IMAGE_CLASS_UNKNOWN;
+}
+
+#define READ_ACCESS(f) ((image->common.read_func)? f##_accessors : f)
+
+static void fbFetchSolid(bits_image_t * image, int x, int y, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
+{
+    uint32_t color;
+    uint32_t *end;
+    fetchPixelProc32 fetch = READ_ACCESS(pixman_fetchPixelProcForPicture32)(image);
+
+    color = fetch(image, 0, 0);
+
+    end = buffer + width;
+    while (buffer < end)
+	*(buffer++) = color;
+}
+
+static void fbFetchSolid64(bits_image_t * image, int x, int y, int width, uint64_t *buffer, void *unused, uint32_t unused2)
+{
+    uint64_t color;
+    uint64_t *end;
+    fetchPixelProc64 fetch = READ_ACCESS(pixman_fetchPixelProcForPicture64)(image);
+
+    color = fetch(image, 0, 0);
+
+    end = buffer + width;
+    while (buffer < end)
+	*(buffer++) = color;
+}
+
+static void fbFetch(bits_image_t * image, int x, int y, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
+{
+    fetchProc32 fetch = READ_ACCESS(pixman_fetchProcForPicture32)(image);
+
+    fetch(image, x, y, width, buffer);
+}
+
+static void fbFetch64(bits_image_t * image, int x, int y, int width, uint64_t *buffer, void *unused, uint32_t unused2)
+{
+    fetchProc64 fetch = READ_ACCESS(pixman_fetchProcForPicture64)(image);
+
+    fetch(image, x, y, width, buffer);
+}
+
+scanFetchProc
+_pixman_image_get_fetcher (pixman_image_t *image,
+			   int             wide)
+{
+    if (IS_SOURCE_IMAGE (image))
+    {
+	if (wide)
+	    return (scanFetchProc)pixmanFetchSourcePict64;
+	else
+	    return (scanFetchProc)pixmanFetchSourcePict;
+    }
+    else
+    {
+	bits_image_t *bits = (bits_image_t *)image;
+
+	if (bits->common.alpha_map)
+	{
+	    if (wide)
+		return (scanFetchProc)READ_ACCESS(fbFetchExternalAlpha64);
+	    else
+		return (scanFetchProc)READ_ACCESS(fbFetchExternalAlpha);
+	}
+	else if ((bits->common.repeat != PIXMAN_REPEAT_NONE) &&
+		 bits->width == 1 &&
+		 bits->height == 1)
+	{
+	    if (wide)
+		return (scanFetchProc)fbFetchSolid64;
+	    else
+		return (scanFetchProc)fbFetchSolid;
+	}
+	else if (!bits->common.transform && bits->common.filter != PIXMAN_FILTER_CONVOLUTION
+                && bits->common.repeat != PIXMAN_REPEAT_PAD && bits->common.repeat != PIXMAN_REPEAT_REFLECT)
+	{
+	    if (wide)
+		return (scanFetchProc)fbFetch64;
+	    else
+		return (scanFetchProc)fbFetch;
+	}
+	else
+	{
+	    if (wide)
+		return (scanFetchProc)READ_ACCESS(fbFetchTransformed64);
+	    else
+		return (scanFetchProc)READ_ACCESS(fbFetchTransformed);
+	}
+    }
+}
+
+
+
+#define WRITE_ACCESS(f) ((image->common.write_func)? f##_accessors : f)
+
+static void
+fbStore(bits_image_t * image, int x, int y, int width, uint32_t *buffer)
+{
+    uint32_t *bits;
+    int32_t stride;
+    storeProc32 store = WRITE_ACCESS(pixman_storeProcForPicture32)(image);
+    const pixman_indexed_t * indexed = image->indexed;
+
+    bits = image->bits;
+    stride = image->rowstride;
+    bits += y*stride;
+    store((pixman_image_t *)image, bits, buffer, x, width, indexed);
+}
+
+static void
+fbStore64(bits_image_t * image, int x, int y, int width, uint64_t *buffer)
+{
+    uint32_t *bits;
+    int32_t stride;
+    storeProc64 store = WRITE_ACCESS(pixman_storeProcForPicture64)(image);
+    const pixman_indexed_t * indexed = image->indexed;
+
+    bits = image->bits;
+    stride = image->rowstride;
+    bits += y*stride;
+    store((pixman_image_t *)image, bits, buffer, x, width, indexed);
+}
+
+scanStoreProc
+_pixman_image_get_storer (pixman_image_t *image,
+			  int             wide)
+{
+    if (image->common.alpha_map)
+    {
+	if (wide)
+	    return (scanStoreProc)WRITE_ACCESS(fbStoreExternalAlpha64);
+	else
+	    return (scanStoreProc)WRITE_ACCESS(fbStoreExternalAlpha);
+    }
+    else
+    {
+	if (wide)
+	    return (scanStoreProc)fbStore64;
+	else
+	    return (scanStoreProc)fbStore;
+    }
 }
 
 /* Ref Counting */

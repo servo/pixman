@@ -98,7 +98,7 @@ miClipPictureSrc (pixman_region32_t *	pRegion,
 	 */
 	if (pPicture->common.has_client_clip)
 	{
-	    pixman_region32_translate ( pRegion, dx, dy);
+	    pixman_region32_translate (pRegion, dx, dy);
 	    
 	    if (!pixman_region32_intersect (pRegion, pRegion, 
 					    pPicture->common.src_clip))

@@ -93,7 +93,7 @@ pixman_transform_point(const struct pixman_transform *transform,
 			v[j] += partial >> 2;
 		}
 	}
-	if (!v[2])
+	if (!(v[2] >> 16))
 		return FALSE;
 	for (j = 0; j < 2; j++)
 	{

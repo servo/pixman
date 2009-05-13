@@ -60,9 +60,7 @@ while (<STDIN>) {
     s/#define RB_MASK_PLUS_ONE\b/$& $rb_mask_plus_one/;
 
     # Add 32/64 suffix to combining function types.
-    s/\bCombineFuncC\b/CombineFuncC$pixel_size/;
-    s/\bCombineFuncU\b/CombineFuncU$pixel_size/;
-    s/\bCombineMaskU\b/CombineMaskU$pixel_size/;
+    s/\bCombineFunc\b/CombineFunc$pixel_size/;
     s/\bFbComposeFunctions\b/FbComposeFunctions$pixel_size/;
 
     # Convert comp*_t values into the appropriate real types.

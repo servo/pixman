@@ -422,36 +422,32 @@ pix_add_mul (__m64 x, __m64 a, __m64 y, __m64 b)
 
 /* --------------- MMX code patch for fbcompose.c --------------------- */
 
-static FASTCALL void
-mmxCombineMaskU (uint32_t *src, const uint32_t *mask, int width)
+static force_inline uint32_t
+combine (const uint32_t *src, const uint32_t *mask)
 {
-    const uint32_t *end = mask + width;
-    while (mask < end) {
-        uint32_t mmask = *mask;
-	uint32_t maska = mmask >> 24;
-	if (maska == 0) {
-	    *src = 0;
-	} else if (maska != 0xff) {
-	    __m64 a = load8888(mmask);
-	    __m64 s = load8888(*src);
-	    a = expand_alpha(a);
-	    s = pix_multiply(s, a);
-	    *src = store8888(s);
-	}
-	++src;
-	++mask;
+    uint32_t ssrc = *src;
+
+    if (mask)
+    {
+	__m64 m = load8888 (*mask);
+	__m64 s = load8888 (ssrc);
+
+	m = expand_alpha (m);
+	s = pix_multiply (s, m);
+
+	ssrc = store8888 (s);
     }
-    _mm_empty();
+
+    return ssrc;
 }
 
-
 static FASTCALL void
-mmxCombineOverU (uint32_t *dest, const uint32_t *src, int width)
+mmxCombineOverU (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     const uint32_t *end = dest + width;
 
     while (dest < end) {
-	uint32_t ssrc = *src;
+	uint32_t ssrc = combine (src, mask);
 	uint32_t a = ssrc >> 24;
 	if (a == 0xff) {
 	    *dest = ssrc;
@@ -463,70 +459,79 @@ mmxCombineOverU (uint32_t *dest, const uint32_t *src, int width)
 	}
 	++dest;
 	++src;
+	if (mask)
+	    ++mask;
     }
     _mm_empty();
 }
 
 static FASTCALL void
-mmxCombineOverReverseU (uint32_t *dest, const uint32_t *src, int width)
+mmxCombineOverReverseU (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     const uint32_t *end = dest + width;
 
     while (dest < end) {
 	__m64 d, da;
+	uint32_t s = combine (src, mask);
 	d = load8888(*dest);
 	da = expand_alpha(d);
-	*dest = store8888(over (d, da, load8888(*src)));
+	*dest = store8888(over (d, da, load8888(s)));
         ++dest;
         ++src;
+	if (mask)
+	    mask++;
     }
     _mm_empty();
 }
 
 static FASTCALL void
-mmxCombineInU (uint32_t *dest, const uint32_t *src, int width)
+mmxCombineInU (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     const uint32_t *end = dest + width;
 
     while (dest < end) {
         __m64 x, a;
-        x = load8888(*src);
+        x = load8888 (combine (src, mask));
         a = load8888(*dest);
         a = expand_alpha(a);
         x = pix_multiply(x, a);
         *dest = store8888(x);
         ++dest;
         ++src;
+	if (mask)
+	    mask++;
     }
     _mm_empty();
 }
 
 static FASTCALL void
-mmxCombineInReverseU (uint32_t *dest, const uint32_t *src, int width)
+mmxCombineInReverseU (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     const uint32_t *end = dest + width;
 
     while (dest < end) {
         __m64 x, a;
         x = load8888(*dest);
-        a = load8888(*src);
+        a = load8888(combine (src, mask));
         a = expand_alpha(a);
         x = pix_multiply(x, a);
         *dest = store8888(x);
         ++dest;
         ++src;
+	if (mask)
+	    mask++;
     }
     _mm_empty();
 }
 
 static FASTCALL void
-mmxCombineOutU (uint32_t *dest, const uint32_t *src, int width)
+mmxCombineOutU (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     const uint32_t *end = dest + width;
 
     while (dest < end) {
         __m64 x, a;
-        x = load8888(*src);
+        x = load8888(combine (src, mask));
         a = load8888(*dest);
         a = expand_alpha(a);
         a = negate(a);
@@ -534,37 +539,41 @@ mmxCombineOutU (uint32_t *dest, const uint32_t *src, int width)
         *dest = store8888(x);
         ++dest;
         ++src;
+	if (mask)
+	    mask++;
     }
     _mm_empty();
 }
 
 static FASTCALL void
-mmxCombineOutReverseU (uint32_t *dest, const uint32_t *src, int width)
+mmxCombineOutReverseU (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     const uint32_t *end = dest + width;
 
     while (dest < end) {
         __m64 x, a;
         x = load8888(*dest);
-        a = load8888(*src);
+        a = load8888(combine (src, mask));
         a = expand_alpha(a);
         a = negate(a);
         x = pix_multiply(x, a);
         *dest = store8888(x);
         ++dest;
         ++src;
+	if (mask)
+	    mask++;
     }
     _mm_empty();
 }
 
 static FASTCALL void
-mmxCombineAtopU (uint32_t *dest, const uint32_t *src, int width)
+mmxCombineAtopU (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     const uint32_t *end = dest + width;
 
     while (dest < end) {
         __m64 s, da, d, sia;
-        s = load8888(*src);
+        s = load8888(combine (src, mask));
         d = load8888(*dest);
         sia = expand_alpha(s);
         sia = negate(sia);
@@ -573,12 +582,14 @@ mmxCombineAtopU (uint32_t *dest, const uint32_t *src, int width)
         *dest = store8888(s);
         ++dest;
         ++src;
+	if (mask)
+	    mask++;
     }
     _mm_empty();
 }
 
 static FASTCALL void
-mmxCombineAtopReverseU (uint32_t *dest, const uint32_t *src, int width)
+mmxCombineAtopReverseU (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     const uint32_t *end;
 
@@ -586,7 +597,7 @@ mmxCombineAtopReverseU (uint32_t *dest, const uint32_t *src, int width)
 
     while (dest < end) {
         __m64 s, dia, d, sa;
-        s = load8888(*src);
+        s = load8888(combine(src, mask));
         d = load8888(*dest);
         sa = expand_alpha(s);
         dia = expand_alpha(d);
@@ -595,18 +606,20 @@ mmxCombineAtopReverseU (uint32_t *dest, const uint32_t *src, int width)
         *dest = store8888(s);
         ++dest;
         ++src;
+	if (mask)
+	    mask++;
     }
     _mm_empty();
 }
 
 static FASTCALL void
-mmxCombineXorU (uint32_t *dest, const uint32_t *src, int width)
+mmxCombineXorU (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     const uint32_t *end = dest + width;
 
     while (dest < end) {
         __m64 s, dia, d, sia;
-        s = load8888(*src);
+        s = load8888(combine(src, mask));
         d = load8888(*dest);
         sia = expand_alpha(s);
         dia = expand_alpha(d);
@@ -616,32 +629,36 @@ mmxCombineXorU (uint32_t *dest, const uint32_t *src, int width)
         *dest = store8888(s);
         ++dest;
         ++src;
+	if (mask)
+	    mask++;
     }
     _mm_empty();
 }
 
 static FASTCALL void
-mmxCombineAddU (uint32_t *dest, const uint32_t *src, int width)
+mmxCombineAddU (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     const uint32_t *end = dest + width;
     while (dest < end) {
         __m64 s, d;
-        s = load8888(*src);
+        s = load8888(combine(src,mask));
         d = load8888(*dest);
         s = pix_add(s, d);
         *dest = store8888(s);
         ++dest;
         ++src;
+	if (mask)
+	    mask++;
     }
     _mm_empty();
 }
 
 static FASTCALL void
-mmxCombineSaturateU (uint32_t *dest, const uint32_t *src, int width)
+mmxCombineSaturateU (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     const uint32_t *end = dest + width;
     while (dest < end) {
-        uint32_t s = *src;
+        uint32_t s = combine(src,mask);
         uint32_t d = *dest;
         __m64 ms = load8888(s);
         __m64 md = load8888(d);
@@ -657,13 +674,15 @@ mmxCombineSaturateU (uint32_t *dest, const uint32_t *src, int width)
         *dest = store8888(md);
         ++src;
         ++dest;
+	if (mask)
+	    mask++;
     }
     _mm_empty();
 }
 
 
 static FASTCALL void
-mmxCombineSrcC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+mmxCombineSrcC (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     const uint32_t *end = src + width;
     while (src < end) {
@@ -679,7 +698,7 @@ mmxCombineSrcC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 }
 
 static FASTCALL void
-mmxCombineOverC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+mmxCombineOverC (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     const uint32_t *end = src + width;
     while (src < end) {
@@ -698,7 +717,7 @@ mmxCombineOverC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 }
 
 static FASTCALL void
-mmxCombineOverReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+mmxCombineOverReverseC (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     const uint32_t *end = src + width;
     while (src < end) {
@@ -718,7 +737,7 @@ mmxCombineOverReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width
 
 
 static FASTCALL void
-mmxCombineInC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+mmxCombineInC (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     const uint32_t *end = src + width;
     while (src < end) {
@@ -737,7 +756,7 @@ mmxCombineInC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 }
 
 static FASTCALL void
-mmxCombineInReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+mmxCombineInReverseC (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     const uint32_t *end = src + width;
     while (src < end) {
@@ -756,7 +775,7 @@ mmxCombineInReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 }
 
 static FASTCALL void
-mmxCombineOutC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+mmxCombineOutC (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     const uint32_t *end = src + width;
     while (src < end) {
@@ -776,7 +795,7 @@ mmxCombineOutC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 }
 
 static FASTCALL void
-mmxCombineOutReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+mmxCombineOutReverseC (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     const uint32_t *end = src + width;
     while (src < end) {
@@ -796,7 +815,7 @@ mmxCombineOutReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 }
 
 static FASTCALL void
-mmxCombineAtopC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+mmxCombineAtopC (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     const uint32_t *end = src + width;
     while (src < end) {
@@ -818,7 +837,7 @@ mmxCombineAtopC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 }
 
 static FASTCALL void
-mmxCombineAtopReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+mmxCombineAtopReverseC (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     const uint32_t *end = src + width;
     while (src < end) {
@@ -840,7 +859,7 @@ mmxCombineAtopReverseC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width
 }
 
 static FASTCALL void
-mmxCombineXorC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+mmxCombineXorC (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     const uint32_t *end = src + width;
     while (src < end) {
@@ -863,7 +882,7 @@ mmxCombineXorC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
 }
 
 static FASTCALL void
-mmxCombineAddC (uint32_t *dest, uint32_t *src, uint32_t *mask, int width)
+mmxCombineAddC (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     const uint32_t *end = src + width;
     while (src < end) {
@@ -899,8 +918,8 @@ fbComposeSetupMMX(void)
         pixman_composeFunctions.combineU[PIXMAN_OP_OUT_REVERSE] = mmxCombineOutReverseU;
         pixman_composeFunctions.combineU[PIXMAN_OP_ATOP] = mmxCombineAtopU;
         pixman_composeFunctions.combineU[PIXMAN_OP_ATOP_REVERSE] = mmxCombineAtopReverseU;
-        pixman_composeFunctions.combineU[PIXMAN_OP_XOR] = mmxCombineXorU;
-        pixman_composeFunctions.combineU[PIXMAN_OP_ADD] = mmxCombineAddU;
+        pixman_composeFunctions.combineU[PIXMAN_OP_XOR] = mmxCombineXorU; 
+	pixman_composeFunctions.combineU[PIXMAN_OP_ADD] = mmxCombineAddU;
         pixman_composeFunctions.combineU[PIXMAN_OP_SATURATE] = mmxCombineSaturateU;
 
         pixman_composeFunctions.combineC[PIXMAN_OP_SRC] = mmxCombineSrcC;
@@ -914,8 +933,6 @@ fbComposeSetupMMX(void)
         pixman_composeFunctions.combineC[PIXMAN_OP_ATOP_REVERSE] = mmxCombineAtopReverseC;
         pixman_composeFunctions.combineC[PIXMAN_OP_XOR] = mmxCombineXorC;
         pixman_composeFunctions.combineC[PIXMAN_OP_ADD] = mmxCombineAddC;
-
-        pixman_composeFunctions.combineMaskU = mmxCombineMaskU;
     }
 
     initialized = TRUE;
