@@ -766,24 +766,24 @@ get_fast_path (const FastPathInfo *fast_paths,
 }
 
 pixman_composite_func_t
-_pixman_look_up_fast_path (const FastPathInfo *paths,
-			   pixman_op_t op,
-			   pixman_image_t *src,
-			   pixman_image_t *mask,
-			   pixman_image_t *dest,
-			   int32_t src_x,
-			   int32_t src_y,
-			   int32_t mask_x,
-			   int32_t mask_y)
+_pixman_lookup_fast_path (const FastPathInfo *paths,
+			  pixman_op_t op,
+			  pixman_image_t *src,
+			  pixman_image_t *mask,
+			  pixman_image_t *dest,
+			  int32_t src_x,
+			  int32_t src_y,
+			  int32_t mask_x,
+			  int32_t mask_y)
 {
     pixman_composite_func_t func = NULL;
     pixman_bool_t src_repeat = src->common.repeat == PIXMAN_REPEAT_NORMAL;
-    pixman_bool_t mask_repeat = mask->common.repeat == PIXMAN_REPEAT_NORMAL;
+    pixman_bool_t mask_repeat = mask && mask->common.repeat == PIXMAN_REPEAT_NORMAL;
     
     if ((src->type == BITS || pixman_image_can_get_solid (src)) &&
 	(!mask || mask->type == BITS)
-        && !src->common.transform && !mask->common.transform
-        && !mask->common.alpha_map && !src->common.alpha_map && !dest->common.alpha_map
+        && !src->common.transform && !(mask && mask->common.transform)
+        && !(mask && mask->common.alpha_map) && !src->common.alpha_map && !dest->common.alpha_map
         && (src->common.filter != PIXMAN_FILTER_CONVOLUTION)
         && (src->common.repeat != PIXMAN_REPEAT_PAD)
         && (src->common.repeat != PIXMAN_REPEAT_REFLECT)

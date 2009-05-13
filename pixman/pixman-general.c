@@ -353,83 +353,6 @@ pixman_image_composite_rect  (pixman_implementation_t *imp,
     general_composite_rect (&compose_data);
 }
 
-static pixman_bool_t
-mask_is_solid (pixman_image_t *mask)
-{
-    if (mask->type == SOLID)
-	return TRUE;
-
-    if (mask->type == BITS &&
-	mask->common.repeat == PIXMAN_REPEAT_NORMAL &&
-	mask->bits.width == 1 &&
-	mask->bits.height == 1)
-    {
-	return TRUE;
-    }
-
-    return FALSE;
-}
-
-static const FastPathInfo *
-get_fast_path (const FastPathInfo *fast_paths,
-	       pixman_op_t         op,
-	       pixman_image_t     *pSrc,
-	       pixman_image_t     *pMask,
-	       pixman_image_t     *pDst,
-	       pixman_bool_t       is_pixbuf)
-{
-    const FastPathInfo *info;
-
-    for (info = fast_paths; info->op != PIXMAN_OP_NONE; info++)
-    {
-	pixman_bool_t valid_src		= FALSE;
-	pixman_bool_t valid_mask	= FALSE;
-
-	if (info->op != op)
-	    continue;
-
-	if ((info->src_format == PIXMAN_solid && pixman_image_can_get_solid (pSrc))		||
-	    (pSrc->type == BITS && info->src_format == pSrc->bits.format))
-	{
-	    valid_src = TRUE;
-	}
-
-	if (!valid_src)
-	    continue;
-
-	if ((info->mask_format == PIXMAN_null && !pMask)			||
-	    (pMask && pMask->type == BITS && info->mask_format == pMask->bits.format))
-	{
-	    valid_mask = TRUE;
-
-	    if (info->flags & NEED_SOLID_MASK)
-	    {
-		if (!pMask || !mask_is_solid (pMask))
-		    valid_mask = FALSE;
-	    }
-
-	    if (info->flags & NEED_COMPONENT_ALPHA)
-	    {
-		if (!pMask || !pMask->common.component_alpha)
-		    valid_mask = FALSE;
-	    }
-	}
-
-	if (!valid_mask)
-	    continue;
-	
-	if (info->dest_format != pDst->bits.format)
-	    continue;
-
-	if ((info->flags & NEED_PIXBUF) && !is_pixbuf)
-	    continue;
-
-	return info;
-    }
-
-    return NULL;
-}
-
 #if defined(USE_SSE2) && defined(__GNUC__) && !defined(__x86_64__) && !defined(__amd64__)
 
 /*
@@ -469,9 +392,6 @@ general_composite (pixman_implementation_t *	imp,
     pixman_bool_t maskRepeat = FALSE;
     pixman_bool_t srcTransform = src->common.transform != NULL;
     pixman_bool_t maskTransform = FALSE;
-    pixman_bool_t srcAlphaMap = src->common.alpha_map != NULL;
-    pixman_bool_t maskAlphaMap = FALSE;
-    pixman_bool_t dstAlphaMap = dest->common.alpha_map != NULL;
     pixman_composite_func_t func = NULL;
 
 #ifdef USE_MMX
@@ -501,8 +421,6 @@ general_composite (pixman_implementation_t *	imp,
 	if (mask->common.filter == PIXMAN_FILTER_CONVOLUTION)
 	    maskTransform = TRUE;
 
-	maskAlphaMap = mask->common.alpha_map != 0;
-
 	if (maskRepeat && maskTransform &&
 	    mask->bits.width == 1 &&
 	    mask->bits.height == 1)
@@ -510,93 +428,34 @@ general_composite (pixman_implementation_t *	imp,
 	    maskTransform = FALSE;
 	}
     }
-
-    if ((src->type == BITS || pixman_image_can_get_solid (src)) && (!mask || mask->type == BITS)
-        && !srcTransform && !maskTransform
-        && !maskAlphaMap && !srcAlphaMap && !dstAlphaMap
-        && (src->common.filter != PIXMAN_FILTER_CONVOLUTION)
-        && (src->common.repeat != PIXMAN_REPEAT_PAD)
-        && (src->common.repeat != PIXMAN_REPEAT_REFLECT)
-        && (!mask || (mask->common.filter != PIXMAN_FILTER_CONVOLUTION &&
-		mask->common.repeat != PIXMAN_REPEAT_PAD && mask->common.repeat != PIXMAN_REPEAT_REFLECT))
-	&& !src->common.read_func && !src->common.write_func
-	&& !(mask && mask->common.read_func) && !(mask && mask->common.write_func)
-	&& !dest->common.read_func && !dest->common.write_func)
-    {
-	const FastPathInfo *info;
-	pixman_bool_t pixbuf;
-
-	pixbuf =
-	    src && src->type == BITS		&&
-	    mask && mask->type == BITS	&&
-	    src->bits.bits == mask->bits.bits &&
-	    src_x == mask_x			&&
-	    src_y == mask_y			&&
-	    !mask->common.component_alpha	&&
-	    !maskRepeat;
-	info = NULL;
-	
+    
 #ifdef USE_SSE2
-	if (pixman_have_sse2 ())
-	    info = get_fast_path (sse2_fast_paths, op, src, mask, dest, pixbuf);
+    if (!func)
+	func = _pixman_lookup_fast_path (sse2_fast_paths, op, src, mask, dest, src_x, src_y, mask_x, mask_y);
 #endif
 
 #ifdef USE_MMX
-	if (!info && pixman_have_mmx())
-	    info = get_fast_path (mmx_fast_paths, op, src, mask, dest, pixbuf);
+    if (!func)
+	func = _pixman_lookup_fast_path (mmx_fast_paths, op, src, mask, dest, src_x, src_y, mask_x, mask_y);
 #endif
 
 #ifdef USE_VMX
-
-	if (!info && pixman_have_vmx())
-	    info = get_fast_path (vmx_fast_paths, op, src, mask, dest, pixbuf);
+    if (!func)
+	func = _pixman_lookup_fast_path (vmx_fast_paths, op, src, mask, dest, src_x, src_y, mask_x, mask_y);
 #endif
 
 #ifdef USE_ARM_NEON
-        if (!info && pixman_have_arm_neon())
-            info = get_fast_path (arm_neon_fast_paths, op, src, mask, dest, pixbuf);
+    if (!func && pixman_have_arm_neon())
+	func = _pixman_lookup_fast_path (arm_neon_fast_paths, op, src, mask, dest, src_x, src_y, mask_x, mask_y);
 #endif
 
 #ifdef USE_ARM_SIMD
-	if (!info && pixman_have_arm_simd())
-	    info = get_fast_path (arm_simd_fast_paths, op, src, mask, dest, pixbuf);
+    if (!func && pixman_have_arm_simd())
+	func = _pixman_lookup_fast_path (arm_neon_fast_paths, op, src, mask, dest, src_x, src_y, mask_x, mask_y);
 #endif
 
-        if (!info)
-	    info = get_fast_path (c_fast_paths, op, src, mask, dest, pixbuf);
-
-	if (info)
-	{
-	    func = info->func;
-
-	    if (info->src_format == PIXMAN_solid)
-		srcRepeat = FALSE;
-
-	    if (info->mask_format == PIXMAN_solid	||
-		info->flags & NEED_SOLID_MASK)
-	    {
-		maskRepeat = FALSE;
-	    }
-	}
-    }
-    
-    if ((srcRepeat			&&
-	 src->bits.width == 1		&&
-	 src->bits.height == 1)	||
-	(maskRepeat			&&
-	 mask->bits.width == 1		&&
-	 mask->bits.height == 1))
-    {
-	/* If src or mask are repeating 1x1 images and srcRepeat or
-	 * maskRepeat are still TRUE, it means the fast path we
-	 * selected does not actually handle repeating images.
-	 *
-	 * So rather than call the "fast path" with a zillion
-	 * 1x1 requests, we just use the general code (which does
-	 * do something sensible with 1x1 repeating images).
-	 */
-	func = NULL;
-    }
+    if (!func)
+	func = _pixman_lookup_fast_path (c_fast_paths, op, src, mask, dest, src_x, src_y, mask_x, mask_y);
 
     if (!func)
     {

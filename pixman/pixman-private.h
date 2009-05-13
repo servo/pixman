@@ -1009,5 +1009,16 @@ _pixman_implementation_create_mmx (pixman_implementation_t *toplevel);
 pixman_implementation_t *
 _pixman_implementation_create_sse2 (pixman_implementation_t *toplevel);
 #endif
+
+pixman_composite_func_t
+_pixman_lookup_fast_path (const FastPathInfo *paths,
+			  pixman_op_t op,
+			  pixman_image_t *src,
+			  pixman_image_t *mask,
+			  pixman_image_t *dest,
+			  int32_t src_x,
+			  int32_t src_y,
+			  int32_t mask_x,
+			  int32_t mask_y);
     
 #endif /* PIXMAN_PRIVATE_H */
