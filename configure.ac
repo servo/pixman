@@ -326,11 +326,12 @@ AC_SUBST(VMX_CFLAGS)
 AM_CONDITIONAL(USE_VMX, test $have_vmx_intrinsics = yes)
 
 dnl Check for ARM SIMD instructions
+ARM_SIMD_CFLAGS=""
 
 have_arm_simd=no
 AC_MSG_CHECKING(whether to use ARM SIMD assembler)
 xserver_save_CFLAGS=$CFLAGS
-CFLAGS="$CFLAGS $ARM_CFLAGS"
+CFLAGS="$CFLAGS $ARM_SIMD_CFLAGS"
 AC_COMPILE_IFELSE([
 int main () {
     asm("uqadd8 r1, r1, r2");
@@ -350,7 +351,7 @@ fi
 if test $have_arm_simd = yes ; then
    AC_DEFINE(USE_ARM_SIMD, 1, [use ARM SIMD compiler intrinsics])
 else
-   ARM_CFLAGS=
+   ARM_SIMD_CFLAGS=
 fi
 
 AC_MSG_RESULT($have_arm_simd)
@@ -358,9 +359,78 @@ if test $enable_arm_simd = yes && test $have_arm_simd = no ; then
    AC_MSG_ERROR([ARM SIMD intrinsics not detected])
 fi
 
-AC_SUBST(ARM_CFLAGS)
+dnl Check for ARM NEON instructions
+ARM_NEON_CFLAGS="-mfpu=neon -mfloat-abi=softfp"
+
+have_arm_neon=no
+AC_MSG_CHECKING(whether to use ARM NEON)
+xserver_save_CFLAGS=$CFLAGS
+CFLAGS="$CFLAGS $ARM_NEON_CFLAGS"
+AC_COMPILE_IFELSE([
+#include <arm_neon.h>
+int main () {
+    uint8x8_t neon_test=vmov_n_u8(0);
+    return 0;
+}], have_arm_neon=yes)
+CFLAGS=$xserver_save_CFLAGS
+
+AC_ARG_ENABLE(arm-neon,
+   [AC_HELP_STRING([--disable-arm-neon],
+                   [disable ARM NEON fast paths])],
+   [enable_arm_neon=$enableval], [enable_arm_neon=auto])
+
+if test $enable_arm_neon = no ; then
+   have_arm_neon=disabled
+fi
+
+if test $have_arm_neon = yes ; then
+   AC_DEFINE(USE_ARM_NEON, 1, [use ARM NEON compiler intrinsics])
+else
+   ARM_NEON_CFLAGS=
+fi
+
+AC_MSG_RESULT($have_arm_neon)
+if test $enable_arm_neon = yes && test $have_arm_neon = no ; then
+   AC_MSG_ERROR([ARM NEON intrinsics not detected])
+fi
+
+dnl Check for GNU-style inline assembly support
+
+have_gcc_inline_asm=no
+AC_MSG_CHECKING(whether to use GNU-style inline assembler)
+AC_COMPILE_IFELSE([
+int main () {
+    /* Most modern architectures have a NOP instruction, so this is a fairly generic test. */
+	asm volatile ( "\tnop\n" : : : "cc", "memory" );
+    return 0;
+}], have_gcc_inline_asm=yes)
+
+AC_ARG_ENABLE(gcc-inline-asm,
+   [AC_HELP_STRING([--disable-gcc-inline-asm],
+                   [disable GNU-style inline assembler])],
+   [enable_gcc_inline_asm=$enableval], [enable_gcc_inline_asm=auto])
+
+if test $enable_gcc_inline_asm = no ; then
+   have_gcc_inline_asm=disabled
+fi
+
+if test $have_gcc_inline_asm = yes ; then
+   AC_DEFINE(USE_GCC_INLINE_ASM, 1, [use GNU-style inline assembler])
+fi
+
+AC_MSG_RESULT($have_gcc_inline_asm)
+if test $enable_gcc_inline_asm = yes && test $have_gcc_inline_asm = no ; then
+   AC_MSG_ERROR([GNU-style inline assembler not detected])
+fi
+
+
+AC_SUBST(ARM_SIMD_CFLAGS)
+AC_SUBST(ARM_NEON_CFLAGS)
 
 AM_CONDITIONAL(USE_ARM_SIMD, test $have_arm_simd = yes)
+AM_CONDITIONAL(USE_ARM_NEON, test $have_arm_neon = yes)
+AM_CONDITIONAL(USE_GCC_INLINE_ASM, test $have_gcc_inline_asm = yes)
+
 
 
 AC_ARG_ENABLE(gtk,

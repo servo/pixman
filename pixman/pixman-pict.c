@@ -35,6 +35,7 @@
 #include "pixman-vmx.h"
 #include "pixman-sse2.h"
 #include "pixman-arm-simd.h"
+#include "pixman-arm-neon.h"
 #include "pixman-combine32.h"
 
 #if defined(USE_ARM_SIMD) && defined(_MSC_VER)
@@ -652,7 +653,7 @@ fbCompositeSrc_8888x8888 (pixman_op_t op,
 	    a = s >> 24;
 	    if (a == 0xff)
 		WRITE(pDst, dst, s & dstMask);
-	    else if (a)
+	    else if (s)
 		WRITE(pDst, dst, fbOver (s, READ(pDst, dst)) & dstMask);
 	    dst++;
 	}
@@ -744,7 +745,7 @@ fbCompositeSrc_8888x0565 (pixman_op_t op,
 	{
 	    s = READ(pSrc, src++);
 	    a = s >> 24;
-	    if (a)
+	    if (s)
 	    {
 		if (a == 0xff)
 		    d = s;

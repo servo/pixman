@@ -33,15 +33,6 @@
 #include <arm_neon.h>
 
 
-#if !defined(__ARMCC_VERSION) && !defined(FORCE_NO_NEON_INLINE_ASM)
-// [both armcc & gcc set __GNUC__]
-// Use GNU style inline asm on gcc, for best performance
-// Use intrinsics on armcc
-// This switch determines if any GNU style inline asm is allowed
-#define USE_NEON_INLINE_ASM
-#endif
-
-
 static force_inline uint8x8x4_t unpack0565(uint16x8_t rgb)
 {
     uint16x8_t gb, b;
@@ -161,7 +152,7 @@ fbCompositeSrcAdd_8000x8000neon (pixman_op_t op,
 
             uint8_t *keep_dst;
 
-#ifndef USE_NEON_INLINE_ASM
+#ifndef USE_GCC_INLINE_ASM
             uint8x8_t sval,dval,temp;
 
             sval = vld1_u8((void*)src);
@@ -306,7 +297,7 @@ fbCompositeSrc_8888x8888neon (pixman_op_t op,
 
             uint32_t *keep_dst;
 
-#ifndef USE_NEON_INLINE_ASM
+#ifndef USE_GCC_INLINE_ASM
             uint8x8x4_t sval,dval,temp;
 
             sval = vld4_u8((void*)src);
@@ -467,7 +458,7 @@ fbCompositeSrc_x888x0565neon (pixman_op_t op,
 	    do {
 	        while (w>=8)
 	        {
-#ifndef USE_NEON_INLINE_ASM
+#ifndef USE_GCC_INLINE_ASM
 	            vst1q_u16(dst, pack0565(vld4_u8((void*)src)));
 #else
                     asm volatile (
@@ -577,7 +568,7 @@ fbCompositeSrc_8888x8x8888neon (pixman_op_t op,
 
             uint32_t *keep_dst;
 
-#ifndef USE_NEON_INLINE_ASM
+#ifndef USE_GCC_INLINE_ASM
             uint8x8x4_t sval,dval,temp;
 
             sval = vld4_u8((void*)src);
@@ -783,7 +774,7 @@ fbCompositeSolidMask_nx8x0565neon (pixman_op_t op,
             maskLine += maskStride;
             w = width;
 
-#ifndef USE_NEON_INLINE_ASM
+#ifndef USE_GCC_INLINE_ASM
             uint8x8_t alpha;
             uint16x8_t dval, temp; 
             uint8x8x4_t sval8temp;
@@ -920,7 +911,7 @@ fbCompositeSolidMask_nx8x0565neon (pixman_op_t op,
             w = width;
 
 
-#ifndef USE_NEON_INLINE_ASM
+#ifndef USE_GCC_INLINE_ASM
             uint8x8_t alpha;
             uint16x8_t dval, temp;
             uint8x8x4_t sval8temp;
@@ -1118,7 +1109,7 @@ fbCompositeSolidMask_nx8x8888neon (pixman_op_t      op,
             maskLine += maskStride;
             w = width;
 
-#ifndef USE_NEON_INLINE_ASM
+#ifndef USE_GCC_INLINE_ASM
             uint8x8_t alpha;
             uint8x8x4_t dval, temp;
 

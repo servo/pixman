@@ -82,15 +82,26 @@ libpixman_1_la_LDFLAGS += $(SSE2_LDFLAGS)
 libpixman_1_la_LIBADD += libpixman-sse2.la
 endif
 
-# arm code
+# arm simd code
 if USE_ARM_SIMD
 noinst_LTLIBRARIES += libpixman-arm-simd.la
 libpixman_arm_simd_la_SOURCES = \
 	pixman-arm-simd.c \
 	pixman-arm-simd.h
-libpixman_arm_simd_la_CFLAGS = $(DEP_CFLAGS) $(ARM_CFLAGS)
+libpixman_arm_simd_la_CFLAGS = $(DEP_CFLAGS) $(ARM_SIMD_CFLAGS)
 libpixman_arm_simd_la_LIBADD = $(DEP_LIBS)
 libpixman_1_la_LIBADD += libpixman-arm-simd.la
+endif
+
+# arm neon code
+if USE_ARM_NEON
+noinst_LTLIBRARIES += libpixman-arm-neon.la
+libpixman_arm_neon_la_SOURCES = \
+        pixman-arm-neon.c \
+        pixman-arm-neon.h
+libpixman_arm_neon_la_CFLAGS = $(DEP_CFLAGS) $(ARM_NEON_CFLAGS)
+libpixman_arm_neon_la_LIBADD = $(DEP_LIBS)
+libpixman_1_la_LIBADD += libpixman-arm-neon.la
 endif
 
 
