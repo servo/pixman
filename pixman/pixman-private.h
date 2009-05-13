@@ -970,4 +970,9 @@ _pixman_implementation_composite (pixman_implementation_t *	imp,
 				  int32_t			width,
 				  int32_t			height);
 
+/* Specific implementations */
+pixman_implementation_t *
+_pixman_implementation_create_general (pixman_implementation_t *toplevel);
+
+
 #endif /* PIXMAN_PRIVATE_H */

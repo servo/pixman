@@ -17,7 +17,6 @@ libpixman_1_la_SOURCES =			\
 	pixman-combine32.h			\
 	pixman-combine64.c			\
 	pixman-combine64.h			\
-	pixman-compose.c			\
 	pixman-general.c			\
 	pixman-pict.c				\
 	pixman-fast-path.c			\
