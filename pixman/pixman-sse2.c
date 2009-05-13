@@ -2474,59 +2474,6 @@ fbComposeSetupSSE2(void)
     /* check if we have SSE2 support and initialize accordingly */
     if (pixman_have_sse2())
     {
-        /* SSE2 constants */
-        Mask565r  = createMask_2x32_128 (0x00f80000, 0x00f80000);
-        Mask565g1 = createMask_2x32_128 (0x00070000, 0x00070000);
-        Mask565g2 = createMask_2x32_128 (0x000000e0, 0x000000e0);
-        Mask565b  = createMask_2x32_128 (0x0000001f, 0x0000001f);
-        MaskRed   = createMask_2x32_128 (0x00f80000, 0x00f80000);
-        MaskGreen = createMask_2x32_128 (0x0000fc00, 0x0000fc00);
-        MaskBlue  = createMask_2x32_128 (0x000000f8, 0x000000f8);
-	Mask565FixRB = createMask_2x32_128 (0x00e000e0, 0x00e000e0);
-	Mask565FixG = createMask_2x32_128  (0x0000c000, 0x0000c000);
-        Mask0080 = createMask_16_128 (0x0080);
-        Mask00ff = createMask_16_128 (0x00ff);
-        Mask0101 = createMask_16_128 (0x0101);
-        Maskffff = createMask_16_128 (0xffff);
-        Maskff000000 = createMask_2x32_128 (0xff000000, 0xff000000);
-        MaskAlpha = createMask_2x32_128 (0x00ff0000, 0x00000000);
-
-        /* MMX constants */
-        xMask565rgb = createMask_2x32_64 (0x000001f0, 0x003f001f);
-        xMask565Unpack = createMask_2x32_64 (0x00000084, 0x04100840);
-
-        xMask0080 = createMask_16_64 (0x0080);
-        xMask00ff = createMask_16_64 (0x00ff);
-        xMask0101 = createMask_16_64 (0x0101);
-        xMaskAlpha = createMask_2x32_64 (0x00ff0000, 0x00000000);
-
-        /* SSE code patch for fbcompose.c */
-        pixman_composeFunctions.combineU[PIXMAN_OP_OVER] = sse2CombineOverU;
-        pixman_composeFunctions.combineU[PIXMAN_OP_OVER_REVERSE] = sse2CombineOverReverseU;
-        pixman_composeFunctions.combineU[PIXMAN_OP_IN] = sse2CombineInU;
-        pixman_composeFunctions.combineU[PIXMAN_OP_IN_REVERSE] = sse2CombineInReverseU;
-        pixman_composeFunctions.combineU[PIXMAN_OP_OUT] = sse2CombineOutU;
-        pixman_composeFunctions.combineU[PIXMAN_OP_OUT_REVERSE] = sse2CombineOutReverseU;
-        pixman_composeFunctions.combineU[PIXMAN_OP_ATOP] = sse2CombineAtopU;
-        pixman_composeFunctions.combineU[PIXMAN_OP_ATOP_REVERSE] = sse2CombineAtopReverseU;
-        pixman_composeFunctions.combineU[PIXMAN_OP_XOR] = sse2CombineXorU;
-        pixman_composeFunctions.combineU[PIXMAN_OP_ADD] = sse2CombineAddU;
-
-        pixman_composeFunctions.combineU[PIXMAN_OP_SATURATE] = sse2CombineSaturateU;
-
-        pixman_composeFunctions.combineC[PIXMAN_OP_SRC] = sse2CombineSrcC;
-        pixman_composeFunctions.combineC[PIXMAN_OP_OVER] = sse2CombineOverC;
-        pixman_composeFunctions.combineC[PIXMAN_OP_OVER_REVERSE] = sse2CombineOverReverseC;
-        pixman_composeFunctions.combineC[PIXMAN_OP_IN] = sse2CombineInC;
-        pixman_composeFunctions.combineC[PIXMAN_OP_IN_REVERSE] = sse2CombineInReverseC;
-        pixman_composeFunctions.combineC[PIXMAN_OP_OUT] = sse2CombineOutC;
-        pixman_composeFunctions.combineC[PIXMAN_OP_OUT_REVERSE] = sse2CombineOutReverseC;
-        pixman_composeFunctions.combineC[PIXMAN_OP_ATOP] = sse2CombineAtopC;
-        pixman_composeFunctions.combineC[PIXMAN_OP_ATOP_REVERSE] = sse2CombineAtopReverseC;
-        pixman_composeFunctions.combineC[PIXMAN_OP_XOR] = sse2CombineXorC;
-        pixman_composeFunctions.combineC[PIXMAN_OP_ADD] = sse2CombineAddC;
-
-	_mm_empty();
     }
 
     initialized = TRUE;
@@ -5029,6 +4976,60 @@ _pixman_implementation_create_sse2 (pixman_implementation_t *toplevel)
     pixman_implementation_t *mmx = _pixman_implementation_create_mmx (NULL);
     pixman_implementation_t *imp = _pixman_implementation_create (toplevel, mmx);
 
+    /* SSE2 constants */
+    Mask565r  = createMask_2x32_128 (0x00f80000, 0x00f80000);
+    Mask565g1 = createMask_2x32_128 (0x00070000, 0x00070000);
+    Mask565g2 = createMask_2x32_128 (0x000000e0, 0x000000e0);
+    Mask565b  = createMask_2x32_128 (0x0000001f, 0x0000001f);
+    MaskRed   = createMask_2x32_128 (0x00f80000, 0x00f80000);
+    MaskGreen = createMask_2x32_128 (0x0000fc00, 0x0000fc00);
+    MaskBlue  = createMask_2x32_128 (0x000000f8, 0x000000f8);
+    Mask565FixRB = createMask_2x32_128 (0x00e000e0, 0x00e000e0);
+    Mask565FixG = createMask_2x32_128  (0x0000c000, 0x0000c000);
+    Mask0080 = createMask_16_128 (0x0080);
+    Mask00ff = createMask_16_128 (0x00ff);
+    Mask0101 = createMask_16_128 (0x0101);
+    Maskffff = createMask_16_128 (0xffff);
+    Maskff000000 = createMask_2x32_128 (0xff000000, 0xff000000);
+    MaskAlpha = createMask_2x32_128 (0x00ff0000, 0x00000000);
+    
+    /* MMX constants */
+    xMask565rgb = createMask_2x32_64 (0x000001f0, 0x003f001f);
+    xMask565Unpack = createMask_2x32_64 (0x00000084, 0x04100840);
+    
+    xMask0080 = createMask_16_64 (0x0080);
+    xMask00ff = createMask_16_64 (0x00ff);
+    xMask0101 = createMask_16_64 (0x0101);
+    xMaskAlpha = createMask_2x32_64 (0x00ff0000, 0x00000000);
+    
+    /* SSE code patch for fbcompose.c */
+    pixman_composeFunctions.combineU[PIXMAN_OP_OVER] = sse2CombineOverU;
+    pixman_composeFunctions.combineU[PIXMAN_OP_OVER_REVERSE] = sse2CombineOverReverseU;
+    pixman_composeFunctions.combineU[PIXMAN_OP_IN] = sse2CombineInU;
+    pixman_composeFunctions.combineU[PIXMAN_OP_IN_REVERSE] = sse2CombineInReverseU;
+    pixman_composeFunctions.combineU[PIXMAN_OP_OUT] = sse2CombineOutU;
+    pixman_composeFunctions.combineU[PIXMAN_OP_OUT_REVERSE] = sse2CombineOutReverseU;
+    pixman_composeFunctions.combineU[PIXMAN_OP_ATOP] = sse2CombineAtopU;
+    pixman_composeFunctions.combineU[PIXMAN_OP_ATOP_REVERSE] = sse2CombineAtopReverseU;
+    pixman_composeFunctions.combineU[PIXMAN_OP_XOR] = sse2CombineXorU;
+    pixman_composeFunctions.combineU[PIXMAN_OP_ADD] = sse2CombineAddU;
+    
+    pixman_composeFunctions.combineU[PIXMAN_OP_SATURATE] = sse2CombineSaturateU;
+    
+    pixman_composeFunctions.combineC[PIXMAN_OP_SRC] = sse2CombineSrcC;
+    pixman_composeFunctions.combineC[PIXMAN_OP_OVER] = sse2CombineOverC;
+    pixman_composeFunctions.combineC[PIXMAN_OP_OVER_REVERSE] = sse2CombineOverReverseC;
+    pixman_composeFunctions.combineC[PIXMAN_OP_IN] = sse2CombineInC;
+    pixman_composeFunctions.combineC[PIXMAN_OP_IN_REVERSE] = sse2CombineInReverseC;
+    pixman_composeFunctions.combineC[PIXMAN_OP_OUT] = sse2CombineOutC;
+    pixman_composeFunctions.combineC[PIXMAN_OP_OUT_REVERSE] = sse2CombineOutReverseC;
+    pixman_composeFunctions.combineC[PIXMAN_OP_ATOP] = sse2CombineAtopC;
+    pixman_composeFunctions.combineC[PIXMAN_OP_ATOP_REVERSE] = sse2CombineAtopReverseC;
+    pixman_composeFunctions.combineC[PIXMAN_OP_XOR] = sse2CombineXorC;
+    pixman_composeFunctions.combineC[PIXMAN_OP_ADD] = sse2CombineAddC;
+    
+    _mm_empty();
+    
     imp->composite = sse2_composite;
     
     return imp;
