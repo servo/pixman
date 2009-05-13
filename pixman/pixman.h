@@ -368,7 +368,8 @@ typedef enum
     PIXMAN_OP_CONJOINT_ATOP_REVERSE	= 0x2a,
     PIXMAN_OP_CONJOINT_XOR		= 0x2b,
 
-    PIXMAN_OP_NONE
+    PIXMAN_OP_NONE,
+    PIXMAN_OP_LAST = PIXMAN_OP_NONE
 } pixman_op_t;
 
 /*

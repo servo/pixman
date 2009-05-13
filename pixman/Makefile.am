@@ -12,6 +12,7 @@ libpixman_1_la_SOURCES =			\
 	pixman-region32.c			\
 	pixman-private.h			\
 	pixman-image.c				\
+	pixman-implementation.c			\
 	pixman-combine32.c			\
 	pixman-combine32.h			\
 	pixman-combine64.c			\

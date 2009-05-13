@@ -894,4 +894,74 @@ void pixman_timer_register (PixmanTimer *timer);
 
 #endif /* PIXMAN_TIMING */
 
+typedef struct pixman_implementation_t pixman_implementation_t;
+
+typedef void (* pixman_combine_32_func_t) (pixman_implementation_t *	imp,
+					   pixman_op_t			op,
+					   uint32_t *			dest,
+					   const uint32_t *		src,
+					   const uint32_t *		mask,
+					   int				width);
+
+typedef void (* pixman_combine_64_func_t) (pixman_implementation_t *	imp,
+					   pixman_op_t			op,
+					   uint64_t *			dest,
+					   const uint64_t *		src,
+					   const uint64_t *		mask,
+					   int				width);
+
+typedef void (* pixman_composite_func_t)  (pixman_implementation_t *	imp,
+					   pixman_op_t			op,
+					   pixman_image_t *		src,
+					   pixman_image_t *		mask,
+					   pixman_image_t *		dest,
+					   int32_t			src_x,
+					   int32_t			src_y,
+					   int32_t			mask_x,
+					   int32_t			mask_y,
+					   int32_t			dest_x,
+					   int32_t			dest_y,
+					   int32_t			width,
+					   int32_t			height);
+
+struct pixman_implementation_t
+{
+    pixman_implementation_t *	toplevel;
+    pixman_implementation_t *	delegate;
+
+    pixman_composite_func_t	composite;
+    
+    pixman_combine_32_func_t	combine_32[PIXMAN_OP_LAST];
+    pixman_combine_64_func_t	combine_64[PIXMAN_OP_LAST];
+};
+
+void
+_pixman_implementation_combine_32 (pixman_implementation_t *	imp,
+				   pixman_op_t			op,
+				   uint32_t *			dest,
+				   const uint32_t *		src,
+				   const uint32_t *		mask,
+				   int				width);
+void
+_pixman_implementation_combine_64 (pixman_implementation_t *	imp,
+				   pixman_op_t			op,
+				   uint64_t *			dest,
+				   const uint64_t *		src,
+				   const uint64_t *		mask,
+				   int				width);
+void
+_pixman_implementation_composite (pixman_implementation_t *	imp,
+				  pixman_op_t			op,
+				  pixman_image_t *		src,
+				  pixman_image_t *		mask,
+				  pixman_image_t *		dest,
+				  int32_t			src_x,
+				  int32_t			src_y,
+				  int32_t			mask_x,
+				  int32_t			mask_y,
+				  int32_t			dest_x,
+				  int32_t			dest_y,
+				  int32_t			width,
+				  int32_t			height);
+
 #endif /* PIXMAN_PRIVATE_H */
