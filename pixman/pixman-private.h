@@ -896,6 +896,24 @@ typedef void (* pixman_composite_func_t)  (pixman_implementation_t *	imp,
 					   int32_t			width,
 					   int32_t			height);
 
+void
+_pixman_walk_composite_region (pixman_implementation_t *imp,
+			      pixman_op_t op,
+			      pixman_image_t * pSrc,
+			      pixman_image_t * pMask,
+			      pixman_image_t * pDst,
+			      int16_t xSrc,
+			      int16_t ySrc,
+			      int16_t xMask,
+			      int16_t yMask,
+			      int16_t xDst,
+			      int16_t yDst,
+			      uint16_t width,
+			      uint16_t height,
+			      pixman_bool_t srcRepeat,
+			      pixman_bool_t maskRepeat,
+			       pixman_composite_func_t compositeRect);
+
 /* These "formats" both have depth 0, so they
  * will never clash with any real ones
  */
@@ -981,6 +999,8 @@ _pixman_implementation_composite (pixman_implementation_t *	imp,
 /* Specific implementations */
 pixman_implementation_t *
 _pixman_implementation_create_general (pixman_implementation_t *toplevel);
+pixman_implementation_t *
+_pixman_implementation_create_fast_path (pixman_implementation_t *toplevel);
 #ifdef USE_MMX
 pixman_implementation_t *
 _pixman_implementation_create_mmx (pixman_implementation_t *toplevel);

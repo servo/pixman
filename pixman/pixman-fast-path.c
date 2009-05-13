@@ -1071,3 +1071,165 @@ static const FastPathInfo c_fast_path_array[] =
 };
 
 const FastPathInfo *const c_fast_paths = c_fast_path_array;
+
+static void
+fbCompositeSrcScaleNearest (pixman_implementation_t *imp,
+			    pixman_op_t     op,
+			    pixman_image_t *pSrc,
+			    pixman_image_t *pMask,
+			    pixman_image_t *pDst,
+			    int32_t         xSrc,
+			    int32_t         ySrc,
+			    int32_t         xMask,
+			    int32_t         yMask,
+			    int32_t         xDst,
+			    int32_t         yDst,
+			    int32_t        width,
+			    int32_t        height)
+{
+    uint32_t       *dst;
+    uint32_t       *src;
+    int             dstStride, srcStride;
+    int             i, j;
+    pixman_vector_t v;
+    
+    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dst, 1);
+    /* pass in 0 instead of xSrc and ySrc because xSrc and ySrc need to be
+     * transformed from destination space to source space */
+    fbComposeGetStart (pSrc, 0, 0, uint32_t, srcStride, src, 1);
+    
+    /* reference point is the center of the pixel */
+    v.vector[0] = pixman_int_to_fixed(xSrc) + pixman_fixed_1 / 2;
+    v.vector[1] = pixman_int_to_fixed(ySrc) + pixman_fixed_1 / 2;
+    v.vector[2] = pixman_fixed_1;
+    
+    if (!pixman_transform_point_3d (pSrc->common.transform, &v))
+        return;
+    
+    /* Round down to closest integer, ensuring that 0.5 rounds to 0, not 1 */
+    v.vector[0] -= pixman_fixed_e;
+    v.vector[1] -= pixman_fixed_e;
+    
+    for (j = 0; j < height; j++) {
+        pixman_fixed_t vx = v.vector[0];
+        pixman_fixed_t vy = v.vector[1];
+        for (i = 0; i < width; ++i) {
+            pixman_bool_t inside_bounds;
+            uint32_t result;
+            int x, y;
+            x = vx >> 16;
+            y = vy >> 16;
+	    
+            /* apply the repeat function */
+            switch (pSrc->common.repeat) {
+	    case PIXMAN_REPEAT_NORMAL:
+		x = MOD (x, pSrc->bits.width);
+		y = MOD (y, pSrc->bits.height);
+		inside_bounds = TRUE;
+		break;
+		
+	    case PIXMAN_REPEAT_PAD:
+		x = CLIP (x, 0, pSrc->bits.width-1);
+		y = CLIP (y, 0, pSrc->bits.height-1);
+		inside_bounds = TRUE;
+		break;
+		
+	    case PIXMAN_REPEAT_REFLECT:
+		x = MOD (x, pSrc->bits.width * 2);
+		if (x >= pSrc->bits.width)
+		    x = pSrc->bits.width * 2 - x - 1;
+		y = MOD (y, pSrc->bits.height * 2);
+		if (y >= pSrc->bits.height)
+		    y = pSrc->bits.height * 2 - y - 1;
+		inside_bounds = TRUE;
+		break;
+		
+	    case PIXMAN_REPEAT_NONE:
+	    default:
+		inside_bounds = (x >= 0 && x < pSrc->bits.width && y >= 0 && y < pSrc->bits.height);
+		break;
+            }
+	    
+            if (inside_bounds) {
+                //XXX: we should move this multiplication out of the loop
+                result = READ(pSrc, src + y * srcStride + x);
+            } else {
+                result = 0;
+            }
+            WRITE(pDst, dst + i, result);
+	    
+            /* adjust the x location by a unit vector in the x direction:
+             * this is equivalent to transforming x+1 of the destination point to source space */
+            vx += pSrc->common.transform->matrix[0][0];
+        }
+        /* adjust the y location by a unit vector in the y direction
+         * this is equivalent to transforming y+1 of the destination point to source space */
+        v.vector[1] += pSrc->common.transform->matrix[1][1];
+        dst += dstStride;
+    }
+}
+
+static void
+fast_path_composite (pixman_implementation_t *imp,
+		     pixman_op_t     op,
+		     pixman_image_t *src,
+		     pixman_image_t *mask,
+		     pixman_image_t *dest,
+		     int32_t         src_x,
+		     int32_t         src_y,
+		     int32_t         mask_x,
+		     int32_t         mask_y,
+		     int32_t         dest_x,
+		     int32_t         dest_y,
+		     int32_t        width,
+		     int32_t        height)
+{
+    if (src->type == BITS
+        && src->common.transform
+        && !mask
+        && op == PIXMAN_OP_SRC
+        && !src->common.alpha_map && !dest->common.alpha_map
+        && (src->common.filter == PIXMAN_FILTER_NEAREST)
+        && PIXMAN_FORMAT_BPP(dest->bits.format) == 32
+        && src->bits.format == dest->bits.format
+        && src->common.src_clip == &(src->common.full_region)
+        && !src->common.read_func && !src->common.write_func
+        && !dest->common.read_func && !dest->common.write_func)
+    {
+        /* ensure that the transform matrix only has a scale */
+        if (src->common.transform->matrix[0][1] == 0 &&
+            src->common.transform->matrix[1][0] == 0 &&
+            src->common.transform->matrix[2][0] == 0 &&
+            src->common.transform->matrix[2][1] == 0 &&
+            src->common.transform->matrix[2][2] == pixman_fixed_1)
+	{
+	    _pixman_walk_composite_region (imp, op,
+					   src, mask, dest,
+					   src_x, src_y,
+					   mask_x, mask_y,
+					   dest_x, dest_y,
+					   width, height,
+					   FALSE, FALSE, 
+					   fbCompositeSrcScaleNearest);
+	    return;
+	}
+    }
+
+    _pixman_implementation_composite (imp->delegate, op,
+				      src, mask, dest,
+				      src_x, src_y,
+				      mask_x, mask_y,
+				      dest_x, dest_y,
+				      width, height);
+}
+
+pixman_implementation_t *
+_pixman_implementation_create_fast_path (pixman_implementation_t *toplevel)
+{
+    pixman_implementation_t *general = _pixman_implementation_create_general (NULL);
+    pixman_implementation_t *imp = _pixman_implementation_create (toplevel, general);
+
+    imp->composite = fast_path_composite;
+    
+    return imp;
+}

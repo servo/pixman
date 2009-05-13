@@ -593,3 +593,98 @@ pixman_format_supported_source (pixman_format_code_t format)
 	return FALSE;
     }
 }
+
+void
+_pixman_walk_composite_region (pixman_implementation_t *imp,
+			      pixman_op_t op,
+			      pixman_image_t * pSrc,
+			      pixman_image_t * pMask,
+			      pixman_image_t * pDst,
+			      int16_t xSrc,
+			      int16_t ySrc,
+			      int16_t xMask,
+			      int16_t yMask,
+			      int16_t xDst,
+			      int16_t yDst,
+			      uint16_t width,
+			      uint16_t height,
+			      pixman_bool_t srcRepeat,
+			      pixman_bool_t maskRepeat,
+			      pixman_composite_func_t compositeRect)
+{
+    int		    n;
+    const pixman_box32_t *pbox;
+    int		    w, h, w_this, h_this;
+    int		    x_msk, y_msk, x_src, y_src, x_dst, y_dst;
+    pixman_region32_t reg;
+    pixman_region32_t *region;
+
+    pixman_region32_init (&reg);
+    if (!pixman_compute_composite_region32 (&reg, pSrc, pMask, pDst,
+					    xSrc, ySrc, xMask, yMask, xDst, yDst, width, height))
+    {
+	return;
+    }
+
+    region = &reg;
+
+    pbox = pixman_region32_rectangles (region, &n);
+    while (n--)
+    {
+	h = pbox->y2 - pbox->y1;
+	y_src = pbox->y1 - yDst + ySrc;
+	y_msk = pbox->y1 - yDst + yMask;
+	y_dst = pbox->y1;
+	while (h)
+	{
+	    h_this = h;
+	    w = pbox->x2 - pbox->x1;
+	    x_src = pbox->x1 - xDst + xSrc;
+	    x_msk = pbox->x1 - xDst + xMask;
+	    x_dst = pbox->x1;
+	    if (maskRepeat)
+	    {
+		y_msk = MOD (y_msk, pMask->bits.height);
+		if (h_this > pMask->bits.height - y_msk)
+		    h_this = pMask->bits.height - y_msk;
+	    }
+	    if (srcRepeat)
+	    {
+		y_src = MOD (y_src, pSrc->bits.height);
+		if (h_this > pSrc->bits.height - y_src)
+		    h_this = pSrc->bits.height - y_src;
+	    }
+	    while (w)
+	    {
+		w_this = w;
+		if (maskRepeat)
+		{
+		    x_msk = MOD (x_msk, pMask->bits.width);
+		    if (w_this > pMask->bits.width - x_msk)
+			w_this = pMask->bits.width - x_msk;
+		}
+		if (srcRepeat)
+		{
+		    x_src = MOD (x_src, pSrc->bits.width);
+		    if (w_this > pSrc->bits.width - x_src)
+			w_this = pSrc->bits.width - x_src;
+		}
+		(*compositeRect) (imp,
+				  op, pSrc, pMask, pDst,
+				  x_src, y_src, x_msk, y_msk, x_dst, y_dst,
+				  w_this, h_this);
+		w -= w_this;
+		x_src += w_this;
+		x_msk += w_this;
+		x_dst += w_this;
+	    }
+	    h -= h_this;
+	    y_src += h_this;
+	    y_msk += h_this;
+	    y_dst += h_this;
+	}
+	pbox++;
+    }
+    pixman_region32_fini (&reg);
+}
+

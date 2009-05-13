@@ -3143,7 +3143,7 @@ const FastPathInfo *const mmx_fast_paths = mmx_fast_path_array;
 pixman_implementation_t *
 _pixman_implementation_create_mmx (pixman_implementation_t *toplevel)
 {
-    pixman_implementation_t *general = _pixman_implementation_create_general (NULL);
+    pixman_implementation_t *general = _pixman_implementation_create_fast_path (NULL);
     pixman_implementation_t *imp = _pixman_implementation_create (toplevel, general);
 
     /* check if we have MMX support and initialize accordingly */
