@@ -102,6 +102,8 @@ pixman_optimize_operator(pixman_op_t op, pixman_image_t *pSrc, pixman_image_t *p
 
 }
 
+static pixman_implementation_t *imp;
+
 PIXMAN_EXPORT void
 pixman_image_composite (pixman_op_t      op,
 			pixman_image_t * src,
@@ -116,8 +118,6 @@ pixman_image_composite (pixman_op_t      op,
 			uint16_t     width,
 			uint16_t     height)
 {
-    static pixman_implementation_t *imp;
-
     /*
      * Check if we can replace our operator by a simpler one if the src or dest are opaque
      * The output operator should be mathematically equivalent to the source.

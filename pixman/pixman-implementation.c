@@ -97,6 +97,26 @@ delegate_combine_64_ca (pixman_implementation_t *	imp,
 					  op, dest, src, mask, width);
 }
 
+static pixman_bool_t
+delegate_blt (pixman_implementation_t *	imp,
+	      uint32_t *		src_bits,
+	      uint32_t *		dst_bits,
+	      int			src_stride,
+	      int			dst_stride,
+	      int			src_bpp,
+	      int			dst_bpp,
+	      int			src_x,
+	      int			src_y,
+	      int			dst_x,
+	      int			dst_y,
+	      int			width,
+	      int			height)
+{
+    return _pixman_implementation_blt (imp->delegate, src_bits, dst_bits, src_stride, dst_stride,
+				       src_bpp, dst_bpp, src_x, src_y, dst_x, dst_y,
+				       width, height);
+}
+
 pixman_implementation_t *
 _pixman_implementation_create (pixman_implementation_t *toplevel,
 			       pixman_implementation_t *delegate)
@@ -120,6 +140,7 @@ _pixman_implementation_create (pixman_implementation_t *toplevel,
     /* Fill out function pointers with ones that just delegate
      */
     imp->composite = delegate_composite;
+    imp->blt = delegate_blt;
     
     for (i = 0; i < PIXMAN_OP_LAST; ++i)
     {
@@ -195,4 +216,24 @@ _pixman_implementation_composite (pixman_implementation_t *	imp,
 			src, mask, dest,
 			src_x, src_y, mask_x, mask_y, dest_x, dest_y,
 			width, height);
+}
+
+pixman_bool_t
+_pixman_implementation_blt (pixman_implementation_t *	imp,
+			    uint32_t *			src_bits,
+			    uint32_t *			dst_bits,
+			    int				src_stride,
+			    int				dst_stride,
+			    int				src_bpp,
+			    int				dst_bpp,
+			    int				src_x,
+			    int				src_y,
+			    int				dst_x,
+			    int				dst_y,
+			    int				width,
+			    int				height)
+{
+    return (* imp->blt) (imp, src_bits, dst_bits, src_stride, dst_stride,
+			 src_bpp, dst_bpp, src_x, src_y, dst_x, dst_y,
+			 width, height);
 }

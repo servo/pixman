@@ -4556,7 +4556,7 @@ fbCompositeSrcAdd_8888x8888sse2 (pixman_implementation_t *imp,
  * fbCompositeCopyAreasse2
  */
 
-pixman_bool_t
+static pixman_bool_t
 pixmanBltsse2 (uint32_t *src_bits,
 	       uint32_t *dst_bits,
 	       int src_stride,
@@ -4989,6 +4989,32 @@ sse2_composite (pixman_implementation_t *imp,
 				      width, height);
 }
 
+static pixman_bool_t
+sse2_blt (pixman_implementation_t *imp,
+	  uint32_t *src_bits,
+	  uint32_t *dst_bits,
+	  int src_stride,
+	  int dst_stride,
+	  int src_bpp,
+	  int dst_bpp,
+	  int src_x, int src_y,
+	  int dst_x, int dst_y,
+	  int width, int height)
+{
+    if (!pixmanBltsse2 (
+	    src_bits, dst_bits, src_stride, dst_stride, src_bpp, dst_bpp,
+	    src_x, src_y, dst_x, dst_y, width, height))
+
+    {
+	return _pixman_implementation_blt (
+	    imp->delegate,
+	    src_bits, dst_bits, src_stride, dst_stride, src_bpp, dst_bpp,
+	    src_x, src_y, dst_x, dst_y, width, height);
+    }
+
+    return TRUE;
+}
+
 pixman_implementation_t *
 _pixman_implementation_create_sse2 (pixman_implementation_t *toplevel)
 {
@@ -5052,6 +5078,7 @@ _pixman_implementation_create_sse2 (pixman_implementation_t *toplevel)
     imp->combine_32_ca[PIXMAN_OP_ADD] = sse2CombineAddC;
     
     imp->composite = sse2_composite;
+    imp->blt = sse2_blt;
     
     return imp;
 }

@@ -59,17 +59,6 @@ pixmanFillsse2 (uint32_t *bits,
 		 int height,
 		 uint32_t data);
 
-pixman_bool_t
-pixmanBltsse2 (uint32_t *src_bits,
-		uint32_t *dst_bits,
-		int src_stride,
-		int dst_stride,
-		int src_bpp,
-		int dst_bpp,
-		int src_x, int src_y,
-		int dst_x, int dst_y,
-		int width, int height);
-
 #endif /* USE_SSE2 */
 
 #endif /* _PIXMAN_SSE_H_ */

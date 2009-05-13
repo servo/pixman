@@ -2837,7 +2837,7 @@ fbCompositeSrcAdd_8888x8888mmx (pixman_implementation_t *imp,
     _mm_empty();
 }
 
-pixman_bool_t
+static pixman_bool_t
 pixman_blt_mmx (uint32_t *src_bits,
 		uint32_t *dst_bits,
 		int src_stride,
@@ -2973,7 +2973,7 @@ pixman_blt_mmx (uint32_t *src_bits,
     return TRUE;
 }
 
-void
+static void
 fbCompositeCopyAreammx (pixman_implementation_t *imp,
 			pixman_op_t       op,
 			pixman_image_t *	pSrc,
@@ -3062,7 +3062,7 @@ fbCompositeOver_x888x8x8888mmx (pixman_implementation_t *imp,
     _mm_empty();
 }
 
-static const FastPathInfo mmx_fast_path_array[] =
+static const FastPathInfo mmx_fast_paths[] =
 {
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_r5g6b5,   fbCompositeSolidMask_nx8x0565mmx,     0 },
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_b5g6r5,   fbCompositeSolidMask_nx8x0565mmx,     0 },
@@ -3138,7 +3138,6 @@ static const FastPathInfo mmx_fast_path_array[] =
 
     { PIXMAN_OP_NONE },
 };
-const FastPathInfo *const mmx_fast_paths = mmx_fast_path_array;
 
 static void
 mmx_composite (pixman_implementation_t *imp,
@@ -3167,6 +3166,32 @@ mmx_composite (pixman_implementation_t *imp,
 				      op, src, mask, dest, src_x, src_y,
 				      mask_x, mask_y, dest_x, dest_y,
 				      width, height);
+}
+
+static pixman_bool_t
+mmx_blt (pixman_implementation_t *imp,
+	 uint32_t *src_bits,
+	 uint32_t *dst_bits,
+	 int src_stride,
+	 int dst_stride,
+	 int src_bpp,
+	 int dst_bpp,
+	 int src_x, int src_y,
+	 int dst_x, int dst_y,
+	 int width, int height)
+{
+    if (!pixman_blt_mmx (
+	    src_bits, dst_bits, src_stride, dst_stride, src_bpp, dst_bpp,
+	    src_x, src_y, dst_x, dst_y, width, height))
+
+    {
+	return _pixman_implementation_blt (
+	    imp->delegate,
+	    src_bits, dst_bits, src_stride, dst_stride, src_bpp, dst_bpp,
+	    src_x, src_y, dst_x, dst_y, width, height);
+    }
+
+    return TRUE;
 }
 
 pixman_implementation_t *
@@ -3200,7 +3225,8 @@ _pixman_implementation_create_mmx (pixman_implementation_t *toplevel)
     imp->combine_32_ca[PIXMAN_OP_ADD] = mmxCombineAddC;
 
     imp->composite = mmx_composite;
-
+    imp->blt = mmx_blt;
+    
     return imp;
 }
 
