@@ -4989,6 +4989,7 @@ sse2_composite (pixman_implementation_t *imp,
 				      width, height);
 }
 
+__attribute__((__force_align_arg_pointer__))
 static pixman_bool_t
 sse2_blt (pixman_implementation_t *imp,
 	  uint32_t *src_bits,
