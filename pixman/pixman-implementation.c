@@ -162,7 +162,7 @@ _pixman_implementation_combine_32_ca (pixman_implementation_t *	imp,
 				      const uint32_t *		mask,
 				      int			width)
 {
-    (* imp->combine_32[op]) (imp, op, dest, src, mask, width);
+    (* imp->combine_32_ca[op]) (imp, op, dest, src, mask, width);
 }
 
 void
@@ -173,7 +173,7 @@ _pixman_implementation_combine_64_ca (pixman_implementation_t *	imp,
 				      const uint64_t *		mask,
 				      int			width)
 {
-    (* imp->combine_64[op]) (imp, op, dest, src, mask, width);
+    (* imp->combine_64_ca[op]) (imp, op, dest, src, mask, width);
 }
 
 void
