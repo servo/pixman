@@ -956,6 +956,20 @@ _pixman_implementation_combine_64 (pixman_implementation_t *	imp,
 				   const uint64_t *		mask,
 				   int				width);
 void
+_pixman_implementation_combine_32_ca (pixman_implementation_t *	imp,
+				      pixman_op_t		op,
+				      uint32_t *		dest,
+				      const uint32_t *		src,
+				      const uint32_t *		mask,
+				      int			width);
+void
+_pixman_implementation_combine_64_ca (pixman_implementation_t *	imp,
+				      pixman_op_t		op,
+				      uint64_t *		dest,
+				      const uint64_t *		src,
+				      const uint64_t *		mask,
+				      int			width);
+void
 _pixman_implementation_composite (pixman_implementation_t *	imp,
 				  pixman_op_t			op,
 				  pixman_image_t *		src,

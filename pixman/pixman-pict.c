@@ -129,10 +129,10 @@ pixman_image_composite (pixman_op_t      op,
     if (!imp)
 	imp = _pixman_implementation_create_general (NULL);
 
-    imp->composite (imp, op,
-		    src, mask, dest,
-		    src_x, src_y,
-		    mask_x, mask_y,
-		    dest_x, dest_y,
-		    width, height);
+    _pixman_implementation_composite (imp, op,
+				      src, mask, dest,
+				      src_x, src_y,
+				      mask_x, mask_y,
+				      dest_x, dest_y,
+				      width, height);
 }

@@ -73,6 +73,30 @@ delegate_combine_64 (pixman_implementation_t *	imp,
 				       op, dest, src, mask, width);
 }
 
+static void
+delegate_combine_32_ca (pixman_implementation_t *	imp,
+			pixman_op_t			op,
+			uint32_t *			dest,
+			const uint32_t *		src,
+			const uint32_t *		mask,
+			int				width)
+{
+    _pixman_implementation_combine_32_ca (imp->delegate,
+					  op, dest, src, mask, width);
+}
+
+static void
+delegate_combine_64_ca (pixman_implementation_t *	imp,
+			pixman_op_t			op,
+			uint64_t *			dest,
+			const uint64_t *		src,
+			const uint64_t *		mask,
+			int				width)
+{
+    _pixman_implementation_combine_64_ca (imp->delegate,
+					  op, dest, src, mask, width);
+}
+
 pixman_implementation_t *
 _pixman_implementation_create (pixman_implementation_t *toplevel,
 			       pixman_implementation_t *delegate)
@@ -92,7 +116,7 @@ _pixman_implementation_create (pixman_implementation_t *toplevel,
 	delegate->toplevel = imp->toplevel;
     
     imp->delegate = delegate;
-
+    
     /* Fill out function pointers with ones that just delegate
      */
     imp->composite = delegate_composite;
@@ -101,6 +125,8 @@ _pixman_implementation_create (pixman_implementation_t *toplevel,
     {
 	imp->combine_32[i] = delegate_combine_32;
 	imp->combine_64[i] = delegate_combine_64;
+	imp->combine_32_ca[i] = delegate_combine_32_ca;
+	imp->combine_64_ca[i] = delegate_combine_64_ca;
     }
     
     return imp;
@@ -114,7 +140,7 @@ _pixman_implementation_combine_32 (pixman_implementation_t *	imp,
 				   const uint32_t *		mask,
 				   int				width)
 {
-    (* imp->delegate->combine_32[op]) (imp, op, dest, src, mask, width);
+    (* imp->combine_32[op]) (imp, op, dest, src, mask, width);
 }
 
 void
@@ -125,7 +151,29 @@ _pixman_implementation_combine_64 (pixman_implementation_t *	imp,
 				   const uint64_t *		mask,
 				   int				width)
 {
-    (* imp->delegate->combine_64[op]) (imp, op, dest, src, mask, width);
+    (* imp->combine_64[op]) (imp, op, dest, src, mask, width);
+}
+
+void
+_pixman_implementation_combine_32_ca (pixman_implementation_t *	imp,
+				      pixman_op_t		op,
+				      uint32_t *		dest,
+				      const uint32_t *		src,
+				      const uint32_t *		mask,
+				      int			width)
+{
+    (* imp->combine_32[op]) (imp, op, dest, src, mask, width);
+}
+
+void
+_pixman_implementation_combine_64_ca (pixman_implementation_t *	imp,
+				      pixman_op_t		op,
+				      uint64_t *		dest,
+				      const uint64_t *		src,
+				      const uint64_t *		mask,
+				      int			width)
+{
+    (* imp->combine_64[op]) (imp, op, dest, src, mask, width);
 }
 
 void
@@ -143,8 +191,8 @@ _pixman_implementation_composite (pixman_implementation_t *	imp,
 				  int32_t			width,
 				  int32_t			height)
 {
-    (* imp->delegate->composite) (imp, op,
-				  src, mask, dest,
-				  src_x, src_y, mask_x, mask_y, dest_x, dest_y,
-				  width, height);
+    (* imp->composite) (imp, op,
+			src, mask, dest,
+			src_x, src_y, mask_x, mask_y, dest_x, dest_y,
+			width, height);
 }
