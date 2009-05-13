@@ -1021,4 +1021,7 @@ _pixman_lookup_fast_path (const FastPathInfo *paths,
 			  int32_t mask_x,
 			  int32_t mask_y);
     
+pixman_implementation_t *
+_pixman_choose_implementation (void);
+
 #endif /* PIXMAN_PRIVATE_H */

@@ -496,3 +496,19 @@ pixman_have_sse2 (void)
 
 #endif /* __amd64__ */
 #endif
+
+pixman_implementation_t *
+_pixman_choose_implementation (void)
+{
+#ifdef USE_SSE2
+    if (pixman_have_sse2 ())
+	return _pixman_implementation_create_sse2 (NULL);
+#endif
+#ifdef USE_MMX
+    if (pixman_have_mmx())
+	return _pixman_implementation_create_mmx (NULL);
+#endif
+    return _pixman_implementation_create_fast_path (NULL);
+}
+
+

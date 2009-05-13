@@ -127,7 +127,7 @@ pixman_image_composite (pixman_op_t      op,
         return;
 
     if (!imp)
-	imp = _pixman_implementation_create_fast_path (NULL);
+	imp = _pixman_choose_implementation();
 
     _pixman_implementation_composite (imp, op,
 				      src, mask, dest,
