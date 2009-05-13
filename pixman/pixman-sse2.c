@@ -33,8 +33,7 @@
 #include <mmintrin.h>
 #include <xmmintrin.h> /* for _mm_shuffle_pi16 and _MM_SHUFFLE */
 #include <emmintrin.h> /* for SSE2 intrinsics */
-
-#include "pixman-sse2.h"
+#include "pixman-private.h"
 
 #ifdef USE_SSE2
 

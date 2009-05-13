@@ -28,8 +28,6 @@
 #include <stdlib.h>
 
 #include "pixman-private.h"
-#include "pixman-mmx.h"
-#include "pixman-sse2.h"
 
 /*
  * Compute the smallest value no less than y which is on a

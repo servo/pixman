@@ -35,9 +35,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "pixman-private.h"
-#include "pixman-mmx.h"
 #include "pixman-vmx.h"
-#include "pixman-sse2.h"
 #include "pixman-arm-simd.h"
 #include "pixman-combine32.h"
 #include "pixman-private.h"

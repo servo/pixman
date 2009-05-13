@@ -38,8 +38,6 @@
 #include <mmintrin.h>
 #include "pixman-private.h"
 
-#include "pixman-mmx.h"
-
 #define noVERBOSE
 
 #ifdef VERBOSE
@@ -916,48 +914,6 @@ mmxCombineAddC (pixman_implementation_t *imp, pixman_op_t op,
     }
     _mm_empty();
 }
-
-void
-fbComposeSetupMMX(void)
-{
-    static pixman_bool_t initialized = FALSE;
-
-    if (initialized)
-	return;
-    
-    /* check if we have MMX support and initialize accordingly */
-    if (pixman_have_mmx())
-    {
-#if 0
-        pixman_composeFunctions.combineU[PIXMAN_OP_OVER] = mmxCombineOverU;
-        pixman_composeFunctions.combineU[PIXMAN_OP_OVER_REVERSE] = mmxCombineOverReverseU;
-        pixman_composeFunctions.combineU[PIXMAN_OP_IN] = mmxCombineInU;
-        pixman_composeFunctions.combineU[PIXMAN_OP_IN_REVERSE] = mmxCombineInReverseU;
-        pixman_composeFunctions.combineU[PIXMAN_OP_OUT] = mmxCombineOutU;
-        pixman_composeFunctions.combineU[PIXMAN_OP_OUT_REVERSE] = mmxCombineOutReverseU;
-        pixman_composeFunctions.combineU[PIXMAN_OP_ATOP] = mmxCombineAtopU;
-        pixman_composeFunctions.combineU[PIXMAN_OP_ATOP_REVERSE] = mmxCombineAtopReverseU;
-        pixman_composeFunctions.combineU[PIXMAN_OP_XOR] = mmxCombineXorU; 
-	pixman_composeFunctions.combineU[PIXMAN_OP_ADD] = mmxCombineAddU;
-        pixman_composeFunctions.combineU[PIXMAN_OP_SATURATE] = mmxCombineSaturateU;
-
-        pixman_composeFunctions.combineC[PIXMAN_OP_SRC] = mmxCombineSrcC;
-        pixman_composeFunctions.combineC[PIXMAN_OP_OVER] = mmxCombineOverC;
-        pixman_composeFunctions.combineC[PIXMAN_OP_OVER_REVERSE] = mmxCombineOverReverseC;
-        pixman_composeFunctions.combineC[PIXMAN_OP_IN] = mmxCombineInC;
-        pixman_composeFunctions.combineC[PIXMAN_OP_IN_REVERSE] = mmxCombineInReverseC;
-        pixman_composeFunctions.combineC[PIXMAN_OP_OUT] = mmxCombineOutC;
-        pixman_composeFunctions.combineC[PIXMAN_OP_OUT_REVERSE] = mmxCombineOutReverseC;
-        pixman_composeFunctions.combineC[PIXMAN_OP_ATOP] = mmxCombineAtopC;
-        pixman_composeFunctions.combineC[PIXMAN_OP_ATOP_REVERSE] = mmxCombineAtopReverseC;
-        pixman_composeFunctions.combineC[PIXMAN_OP_XOR] = mmxCombineXorC;
-        pixman_composeFunctions.combineC[PIXMAN_OP_ADD] = mmxCombineAddC;
-#endif
-    }
-
-    initialized = TRUE;
-}
-
 
 /* ------------------ MMX code paths called from fbpict.c ----------------------- */
 
