@@ -327,26 +327,6 @@ pixman_image_composite_rect  (pixman_implementation_t *imp,
     general_composite_rect (imp, &compose_data);
 }
 
-#if defined(USE_SSE2) && defined(__GNUC__) && !defined(__x86_64__) && !defined(__amd64__)
-
-/*
- * Work around GCC bug causing crashes in Mozilla with SSE2
- * 
- * When using SSE2 intrinsics, gcc assumes that the stack is 16 byte
- * aligned. Unfortunately some code, such as Mozilla and Mono contain
- * code that aligns the stack to 4 bytes.
- *
- * The __force_align_arg_pointer__ makes gcc generate a prologue that
- * realigns the stack pointer to 16 bytes.
- *
- * On x86-64 this is not necessary because the standard ABI already
- * calls for a 16 byte aligned stack.
- *
- * See https://bugs.freedesktop.org/show_bug.cgi?id=15693
- */
-
-__attribute__((__force_align_arg_pointer__))
-#endif
 static void
 general_composite (pixman_implementation_t *	imp,
 		   pixman_op_t			op,

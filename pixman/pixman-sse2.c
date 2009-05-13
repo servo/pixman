@@ -4863,7 +4863,7 @@ fbCompositeOver_x888x8x8888sse2 (pixman_implementation_t *imp,
 }
 #endif
 
-static const FastPathInfo sse2_fast_path_array[] =
+static const FastPathInfo sse2_fast_paths[] =
 {
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_r5g6b5,   fbCompositeSolidMask_nx8x0565sse2,     0 },
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_b5g6r5,   fbCompositeSolidMask_nx8x0565sse2,     0 },
@@ -4940,22 +4940,36 @@ static const FastPathInfo sse2_fast_path_array[] =
     { PIXMAN_OP_NONE },
 };
 
-const FastPathInfo *const sse2_fast_paths = sse2_fast_path_array;
-
+/*
+ * Work around GCC bug causing crashes in Mozilla with SSE2
+ * 
+ * When using SSE2 intrinsics, gcc assumes that the stack is 16 byte
+ * aligned. Unfortunately some code, such as Mozilla and Mono contain
+ * code that aligns the stack to 4 bytes.
+ *
+ * The __force_align_arg_pointer__ makes gcc generate a prologue that
+ * realigns the stack pointer to 16 bytes.
+ *
+ * On x86-64 this is not necessary because the standard ABI already
+ * calls for a 16 byte aligned stack.
+ *
+ * See https://bugs.freedesktop.org/show_bug.cgi?id=15693
+ */
+__attribute__((__force_align_arg_pointer__))
 static void
 sse2_composite (pixman_implementation_t *imp,
-		     pixman_op_t     op,
-		     pixman_image_t *src,
-		     pixman_image_t *mask,
-		     pixman_image_t *dest,
-		     int32_t         src_x,
-		     int32_t         src_y,
-		     int32_t         mask_x,
-		     int32_t         mask_y,
-		     int32_t         dest_x,
-		     int32_t         dest_y,
-		     int32_t        width,
-		     int32_t        height)
+		pixman_op_t     op,
+		pixman_image_t *src,
+		pixman_image_t *mask,
+		pixman_image_t *dest,
+		int32_t         src_x,
+		int32_t         src_y,
+		int32_t         mask_x,
+		int32_t         mask_y,
+		int32_t         dest_x,
+		int32_t         dest_y,
+		int32_t        width,
+		int32_t        height)
 {
     if (_pixman_run_fast_path (sse2_fast_paths, imp,
 			       op, src, mask, dest,
