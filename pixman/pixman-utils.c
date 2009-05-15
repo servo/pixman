@@ -201,8 +201,13 @@ pixman_sample_ceil_y (pixman_fixed_t y, int n)
     f = ((f + Y_FRAC_FIRST(n)) / STEP_Y_SMALL(n)) * STEP_Y_SMALL(n) + Y_FRAC_FIRST(n);
     if (f > Y_FRAC_LAST(n))
     {
-	f = Y_FRAC_FIRST(n);
-	i += pixman_fixed_1;
+	if (pixman_fixed_to_int(i) == 0x7fff)
+	{
+	    f = 0xffff; /* saturate */
+	} else {
+	    f = Y_FRAC_FIRST(n);
+	    i += pixman_fixed_1;
+	}
     }
     return (i | f);
 }
@@ -222,8 +227,13 @@ pixman_sample_floor_y (pixman_fixed_t y, int n)
     f = _div(f - Y_FRAC_FIRST(n), STEP_Y_SMALL(n)) * STEP_Y_SMALL(n) + Y_FRAC_FIRST(n);
     if (f < Y_FRAC_FIRST(n))
     {
-	f = Y_FRAC_LAST(n);
-	i -= pixman_fixed_1;
+	if (pixman_fixed_to_int(i) == 0x8000)
+	{
+	    f = 0; /* saturate */
+	} else {
+	    f = Y_FRAC_LAST(n);
+	    i -= pixman_fixed_1;
+	}
     }
     return (i | f);
 }
