@@ -7,7 +7,7 @@ $(pkgconfig_DATA): pixman-1.pc.in
 
 snapshot:
 	distdir="$(distdir)-`date '+%Y%m%d'`"; \
-	test -d "$(srcdir)/.git" && distdir=$$distdir-`cd "$(srcdir)" && git-rev-parse HEAD | cut -c 1-6`; \
+	test -d "$(srcdir)/.git" && distdir=$$distdir-`cd "$(srcdir)" && git rev-parse HEAD | cut -c 1-6`; \
 	$(MAKE) $(AM_MAKEFLAGS) distdir="$$distdir" dist
 
 GPGKEY=6FF7C1A8
@@ -80,7 +80,7 @@ ensure-prev:
 release-check: ensure-prev release-verify-newer release-remove-old distcheck
 
 release-tag:
-	git-tag -u $(GPGKEY) -m "$(PACKAGE) $(VERSION) release" $(PACKAGE)-$(VERSION)
+	git tag -u $(GPGKEY) -m "$(PACKAGE) $(VERSION) release" $(PACKAGE)-$(VERSION)
 
 release-upload: release-check $(tar_gz) $(tar_bz2) $(sha1_tgz) $(sha1_tbz2) $(md5_tgz) $(gpg_file)
 	mkdir -p releases
@@ -123,7 +123,7 @@ release-publish-message: $(HASHFILES) ensure-prev
 	@echo "	tag: $(PACKAGE)-$(VERSION)"
 	@echo ""
 	@echo "Log:"
-	@git-log --no-merges "$(PACKAGE)-$(PREV)".."$(PACKAGE)-$(VERSION)" | git shortlog | awk '{ printf "\t"; print ; }' | cut -b1-80
+	@git log --no-merges "$(PACKAGE)-$(PREV)".."$(PACKAGE)-$(VERSION)" | git shortlog | awk '{ printf "\t"; print ; }' | cut -b1-80
 	@echo "============================== CUT HERE =============================="
 	@echo ""
 
