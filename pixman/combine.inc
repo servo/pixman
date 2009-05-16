@@ -24,15 +24,21 @@
 static force_inline comp4_t
 combineMask (const comp4_t *src, const comp4_t *mask, int i)
 {
-    comp4_t s = *(src + i);
+    comp4_t s, m;
 
     if (mask)
     {
-	comp4_t m = *(mask + i) >> A_SHIFT;
-	
-	FbByteMul (s, m);
+	m = *(mask + i) >> A_SHIFT;
+
+	if (!m)
+	    return 0;
     }
-    
+
+    s = *(src + i);
+
+    if (mask)
+	FbByteMul (s, m);
+
     return s;
 }
 
