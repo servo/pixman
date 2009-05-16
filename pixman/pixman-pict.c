@@ -2300,7 +2300,7 @@ pixman_arm_read_auxv() {
     Elf32_auxv_t aux;
 
     fd = open("/proc/self/auxv", O_RDONLY);
-    if (fd > 0) {
+    if (fd >= 0) {
         while (read(fd, &aux, sizeof(Elf32_auxv_t)) == sizeof(Elf32_auxv_t)) {
             if (aux.a_type == AT_HWCAP) {
 		uint32_t hwcap = aux.a_un.a_val;
