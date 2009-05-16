@@ -252,9 +252,39 @@ pixman_composite_rect_general_internal (pixman_implementation_t *imp,
 #define SCANLINE_BUFFER_LENGTH 8192
 
 static void
-general_composite_rect (pixman_implementation_t *imp,
-			const FbComposeData *data)
+pixman_image_composite_rect  (pixman_implementation_t *imp,
+			      pixman_op_t                   op,
+			      pixman_image_t               *src,
+			      pixman_image_t               *mask,
+			      pixman_image_t               *dest,
+			      int32_t                       src_x,
+			      int32_t                       src_y,
+			      int32_t                       mask_x,
+			      int32_t                       mask_y,
+			      int32_t                       dest_x,
+			      int32_t                       dest_y,
+			      int32_t                      width,
+			      int32_t                      height)
 {
+    FbComposeData compose_data;
+    FbComposeData *data = &compose_data;
+
+    return_if_fail (src != NULL);
+    return_if_fail (dest != NULL);
+
+    compose_data.op = op;
+    compose_data.src = src;
+    compose_data.mask = mask;
+    compose_data.dest = dest;
+    compose_data.xSrc = src_x;
+    compose_data.ySrc = src_y;
+    compose_data.xMask = mask_x;
+    compose_data.yMask = mask_y;
+    compose_data.xDest = dest_x;
+    compose_data.yDest = dest_y;
+    compose_data.width = width;
+    compose_data.height = height;
+
     uint8_t stack_scanline_buffer[SCANLINE_BUFFER_LENGTH * 3];
     const pixman_format_code_t srcFormat =
 	data->src->type == BITS ? data->src->bits.format : 0;
@@ -287,42 +317,6 @@ general_composite_rect (pixman_implementation_t *imp,
 
     if (scanline_buffer != stack_scanline_buffer)
 	free (scanline_buffer);
-}
-
-static void
-pixman_image_composite_rect  (pixman_implementation_t *imp,
-			      pixman_op_t                   op,
-			      pixman_image_t               *src,
-			      pixman_image_t               *mask,
-			      pixman_image_t               *dest,
-			      int32_t                       src_x,
-			      int32_t                       src_y,
-			      int32_t                       mask_x,
-			      int32_t                       mask_y,
-			      int32_t                       dest_x,
-			      int32_t                       dest_y,
-			      int32_t                      width,
-			      int32_t                      height)
-{
-    FbComposeData compose_data;
-
-    return_if_fail (src != NULL);
-    return_if_fail (dest != NULL);
-
-    compose_data.op = op;
-    compose_data.src = src;
-    compose_data.mask = mask;
-    compose_data.dest = dest;
-    compose_data.xSrc = src_x;
-    compose_data.ySrc = src_y;
-    compose_data.xMask = mask_x;
-    compose_data.yMask = mask_y;
-    compose_data.xDest = dest_x;
-    compose_data.yDest = dest_y;
-    compose_data.width = width;
-    compose_data.height = height;
-
-    general_composite_rect (imp, &compose_data);
 }
 
 static void
