@@ -43,13 +43,15 @@ combineMask (const comp4_t *src, const comp4_t *mask, int i)
 }
 
 FASTCALL static void
-fbCombineClear (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineClear (pixman_implementation_t *imp, pixman_op_t op,
+		comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     memset(dest, 0, width*sizeof(comp4_t));
 }
 
 FASTCALL static void
-fbCombineSrcU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineSrcU (pixman_implementation_t *imp, pixman_op_t op,
+	       comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
 
@@ -68,7 +70,8 @@ fbCombineSrcU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width
 
 /* if the Src is opaque, call fbCombineSrcU */
 FASTCALL static void
-fbCombineOverU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineOverU (pixman_implementation_t *imp, pixman_op_t op,
+		comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
@@ -83,7 +86,8 @@ fbCombineOverU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int widt
 
 /* if the Dst is opaque, this is a noop */
 FASTCALL static void
-fbCombineOverReverseU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineOverReverseU (pixman_implementation_t *imp, pixman_op_t op,
+		       comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
@@ -97,7 +101,8 @@ fbCombineOverReverseU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, i
 
 /* if the Dst is opaque, call fbCombineSrcU */
 FASTCALL static void
-fbCombineInU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineInU (pixman_implementation_t *imp, pixman_op_t op,
+	      comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
@@ -110,7 +115,8 @@ fbCombineInU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 
 /* if the Src is opaque, this is a noop */
 FASTCALL static void
-fbCombineInReverseU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineInReverseU (pixman_implementation_t *imp, pixman_op_t op,
+		     comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
@@ -124,7 +130,8 @@ fbCombineInReverseU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int
 
 /* if the Dst is opaque, call fbCombineClear */
 FASTCALL static void
-fbCombineOutU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineOutU (pixman_implementation_t *imp, pixman_op_t op,
+	       comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
@@ -137,7 +144,8 @@ fbCombineOutU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width
 
 /* if the Src is opaque, call fbCombineClear */
 FASTCALL static void
-fbCombineOutReverseU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineOutReverseU (pixman_implementation_t *imp, pixman_op_t op,
+		      comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
@@ -153,7 +161,8 @@ fbCombineOutReverseU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, in
 /* if the Dst is opaque, call fbCombineOverU */
 /* if both the Src and Dst are opaque, call fbCombineSrcU */
 FASTCALL static void
-fbCombineAtopU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineAtopU (pixman_implementation_t *imp, pixman_op_t op,
+		comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
@@ -171,7 +180,8 @@ fbCombineAtopU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int widt
 /* if the Dst is opaque, call fbCombineInReverseU */
 /* if both the Src and Dst are opaque, call fbCombineDstU */
 FASTCALL static void
-fbCombineAtopReverseU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineAtopReverseU (pixman_implementation_t *imp, pixman_op_t op,
+		       comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
@@ -189,7 +199,8 @@ fbCombineAtopReverseU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, i
 /* if the Dst is opaque, call fbCombineOverReverseU */
 /* if both the Src and Dst are opaque, call fbCombineClear */
 FASTCALL static void
-fbCombineXorU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineXorU (pixman_implementation_t *imp, pixman_op_t op,
+	       comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
@@ -204,7 +215,8 @@ fbCombineXorU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width
 }
 
 FASTCALL static void
-fbCombineAddU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineAddU (pixman_implementation_t *imp, pixman_op_t op,
+	       comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
@@ -219,7 +231,8 @@ fbCombineAddU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width
 /* if the Dst is opaque, call fbCombineAddU */
 /* if both the Src and Dst are opaque, call fbCombineAddU */
 FASTCALL static void
-fbCombineSaturateU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineSaturateU (pixman_implementation_t *imp, pixman_op_t op,
+		    comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
@@ -381,7 +394,8 @@ fbCombineDisjointGeneralU (comp4_t *dest, const comp4_t *src, const comp4_t *mas
 }
 
 FASTCALL static void
-fbCombineDisjointOverU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineDisjointOverU (pixman_implementation_t *imp, pixman_op_t op,
+			comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
@@ -403,43 +417,50 @@ fbCombineDisjointOverU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, 
 }
 
 FASTCALL static void
-fbCombineDisjointInU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineDisjointInU (pixman_implementation_t *imp, pixman_op_t op,
+		      comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     fbCombineDisjointGeneralU (dest, src, mask, width, CombineAIn);
 }
 
 FASTCALL static void
-fbCombineDisjointInReverseU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineDisjointInReverseU (pixman_implementation_t *imp, pixman_op_t op,
+			     comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     fbCombineDisjointGeneralU (dest, src, mask, width, CombineBIn);
 }
 
 FASTCALL static void
-fbCombineDisjointOutU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineDisjointOutU (pixman_implementation_t *imp, pixman_op_t op,
+		       comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     fbCombineDisjointGeneralU (dest, src, mask, width, CombineAOut);
 }
 
 FASTCALL static void
-fbCombineDisjointOutReverseU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineDisjointOutReverseU (pixman_implementation_t *imp, pixman_op_t op,
+			      comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     fbCombineDisjointGeneralU (dest, src, mask, width, CombineBOut);
 }
 
 FASTCALL static void
-fbCombineDisjointAtopU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineDisjointAtopU (pixman_implementation_t *imp, pixman_op_t op,
+			comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     fbCombineDisjointGeneralU (dest, src, mask, width, CombineAAtop);
 }
 
 FASTCALL static void
-fbCombineDisjointAtopReverseU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineDisjointAtopReverseU (pixman_implementation_t *imp, pixman_op_t op,
+			       comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     fbCombineDisjointGeneralU (dest, src, mask, width, CombineBAtop);
 }
 
 FASTCALL static void
-fbCombineDisjointXorU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineDisjointXorU (pixman_implementation_t *imp, pixman_op_t op,
+		       comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     fbCombineDisjointGeneralU (dest, src, mask, width, CombineXor);
 }
@@ -495,58 +516,67 @@ fbCombineConjointGeneralU (comp4_t *dest, const comp4_t *src, const comp4_t *mas
 }
 
 FASTCALL static void
-fbCombineConjointOverU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineConjointOverU (pixman_implementation_t *imp, pixman_op_t op,
+			comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     fbCombineConjointGeneralU (dest, src, mask, width, CombineAOver);
 }
 
 
 FASTCALL static void
-fbCombineConjointOverReverseU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineConjointOverReverseU (pixman_implementation_t *imp, pixman_op_t op,
+			       comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     fbCombineConjointGeneralU (dest, src, mask, width, CombineBOver);
 }
 
 
 FASTCALL static void
-fbCombineConjointInU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineConjointInU (pixman_implementation_t *imp, pixman_op_t op,
+		      comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     fbCombineConjointGeneralU (dest, src, mask, width, CombineAIn);
 }
 
 
 FASTCALL static void
-fbCombineConjointInReverseU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineConjointInReverseU (pixman_implementation_t *imp, pixman_op_t op,
+			     comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     fbCombineConjointGeneralU (dest, src, mask, width, CombineBIn);
 }
 
 FASTCALL static void
-fbCombineConjointOutU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineConjointOutU (pixman_implementation_t *imp, pixman_op_t op,
+		       comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     fbCombineConjointGeneralU (dest, src, mask, width, CombineAOut);
 }
 
 FASTCALL static void
-fbCombineConjointOutReverseU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineConjointOutReverseU (pixman_implementation_t *imp, pixman_op_t op,
+			      comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     fbCombineConjointGeneralU (dest, src, mask, width, CombineBOut);
 }
 
 FASTCALL static void
-fbCombineConjointAtopU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineConjointAtopU (pixman_implementation_t *imp, pixman_op_t op,
+			comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     fbCombineConjointGeneralU (dest, src, mask, width, CombineAAtop);
 }
 
 FASTCALL static void
-fbCombineConjointAtopReverseU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineConjointAtopReverseU (pixman_implementation_t *imp, pixman_op_t op,
+			       comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     fbCombineConjointGeneralU (dest, src, mask, width, CombineBAtop);
 }
 
 FASTCALL static void
-fbCombineConjointXorU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineConjointXorU (pixman_implementation_t *imp, pixman_op_t op,
+		       comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     fbCombineConjointGeneralU (dest, src, mask, width, CombineXor);
 }
@@ -632,13 +662,15 @@ fbCombineMaskAlphaC (const comp4_t *src, comp4_t *mask)
 }
 
 FASTCALL static void
-fbCombineClearC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineClearC (pixman_implementation_t *imp, pixman_op_t op,
+		 comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     memset(dest, 0, width*sizeof(comp4_t));
 }
 
 FASTCALL static void
-fbCombineSrcC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineSrcC (pixman_implementation_t *imp, pixman_op_t op,
+	       comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
 
@@ -653,7 +685,8 @@ fbCombineSrcC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width
 }
 
 FASTCALL static void
-fbCombineOverC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineOverC (pixman_implementation_t *imp, pixman_op_t op,
+		comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
 
@@ -679,7 +712,8 @@ fbCombineOverC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int widt
 }
 
 FASTCALL static void
-fbCombineOverReverseC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineOverReverseC (pixman_implementation_t *imp, pixman_op_t op,
+		       comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
 
@@ -704,7 +738,8 @@ fbCombineOverReverseC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, i
 }
 
 FASTCALL static void
-fbCombineInC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineInC (pixman_implementation_t *imp, pixman_op_t op,
+	      comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
 
@@ -728,7 +763,8 @@ fbCombineInC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 }
 
 FASTCALL static void
-fbCombineInReverseC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineInReverseC (pixman_implementation_t *imp, pixman_op_t op,
+		     comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
 
@@ -754,7 +790,8 @@ fbCombineInReverseC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int
 }
 
 FASTCALL static void
-fbCombineOutC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineOutC (pixman_implementation_t *imp, pixman_op_t op,
+	       comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
 
@@ -779,7 +816,8 @@ fbCombineOutC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width
 }
 
 FASTCALL static void
-fbCombineOutReverseC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineOutReverseC (pixman_implementation_t *imp, pixman_op_t op,
+		      comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
 
@@ -805,7 +843,8 @@ fbCombineOutReverseC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, in
 }
 
 FASTCALL static void
-fbCombineAtopC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineAtopC (pixman_implementation_t *imp, pixman_op_t op,
+		comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
 
@@ -826,7 +865,8 @@ fbCombineAtopC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int widt
 }
 
 FASTCALL static void
-fbCombineAtopReverseC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineAtopReverseC (pixman_implementation_t *imp, pixman_op_t op,
+		       comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
 
@@ -848,7 +888,8 @@ fbCombineAtopReverseC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, i
 }
 
 FASTCALL static void
-fbCombineXorC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineXorC (pixman_implementation_t *imp, pixman_op_t op,
+	       comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
 
@@ -869,7 +910,8 @@ fbCombineXorC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width
 }
 
 FASTCALL static void
-fbCombineAddC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineAddC (pixman_implementation_t *imp, pixman_op_t op,
+	       comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
 
@@ -886,7 +928,8 @@ fbCombineAddC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width
 }
 
 FASTCALL static void
-fbCombineSaturateC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineSaturateC (pixman_implementation_t *imp, pixman_op_t op,
+		    comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     int i;
 
@@ -1009,49 +1052,57 @@ fbCombineDisjointGeneralC (comp4_t *dest, const comp4_t *src, const comp4_t *mas
 }
 
 FASTCALL static void
-fbCombineDisjointOverC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineDisjointOverC (pixman_implementation_t *imp, pixman_op_t op,
+			comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     fbCombineDisjointGeneralC (dest, src, mask, width, CombineAOver);
 }
 
 FASTCALL static void
-fbCombineDisjointInC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineDisjointInC (pixman_implementation_t *imp, pixman_op_t op,
+		      comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     fbCombineDisjointGeneralC (dest, src, mask, width, CombineAIn);
 }
 
 FASTCALL static void
-fbCombineDisjointInReverseC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineDisjointInReverseC (pixman_implementation_t *imp, pixman_op_t op,
+			     comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     fbCombineDisjointGeneralC (dest, src, mask, width, CombineBIn);
 }
 
 FASTCALL static void
-fbCombineDisjointOutC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineDisjointOutC (pixman_implementation_t *imp, pixman_op_t op,
+		       comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     fbCombineDisjointGeneralC (dest, src, mask, width, CombineAOut);
 }
 
 FASTCALL static void
-fbCombineDisjointOutReverseC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineDisjointOutReverseC (pixman_implementation_t *imp, pixman_op_t op,
+			      comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     fbCombineDisjointGeneralC (dest, src, mask, width, CombineBOut);
 }
 
 FASTCALL static void
-fbCombineDisjointAtopC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineDisjointAtopC (pixman_implementation_t *imp, pixman_op_t op,
+			comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     fbCombineDisjointGeneralC (dest, src, mask, width, CombineAAtop);
 }
 
 FASTCALL static void
-fbCombineDisjointAtopReverseC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineDisjointAtopReverseC (pixman_implementation_t *imp, pixman_op_t op,
+			       comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     fbCombineDisjointGeneralC (dest, src, mask, width, CombineBAtop);
 }
 
 FASTCALL static void
-fbCombineDisjointXorC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineDisjointXorC (pixman_implementation_t *imp, pixman_op_t op,
+		       comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     fbCombineDisjointGeneralC (dest, src, mask, width, CombineXor);
 }
@@ -1133,154 +1184,156 @@ fbCombineConjointGeneralC (comp4_t *dest, const comp4_t *src, const comp4_t *mas
 }
 
 FASTCALL static void
-fbCombineConjointOverC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineConjointOverC (pixman_implementation_t *imp, pixman_op_t op,
+			comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     fbCombineConjointGeneralC (dest, src, mask, width, CombineAOver);
 }
 
 FASTCALL static void
-fbCombineConjointOverReverseC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineConjointOverReverseC (pixman_implementation_t *imp, pixman_op_t op,
+			       comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     fbCombineConjointGeneralC (dest, src, mask, width, CombineBOver);
 }
 
 FASTCALL static void
-fbCombineConjointInC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineConjointInC (pixman_implementation_t *imp, pixman_op_t op,
+		      comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     fbCombineConjointGeneralC (dest, src, mask, width, CombineAIn);
 }
 
 FASTCALL static void
-fbCombineConjointInReverseC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineConjointInReverseC (pixman_implementation_t *imp, pixman_op_t op,
+			     comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     fbCombineConjointGeneralC (dest, src, mask, width, CombineBIn);
 }
 
 FASTCALL static void
-fbCombineConjointOutC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineConjointOutC (pixman_implementation_t *imp, pixman_op_t op,
+		       comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     fbCombineConjointGeneralC (dest, src, mask, width, CombineAOut);
 }
 
 FASTCALL static void
-fbCombineConjointOutReverseC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineConjointOutReverseC (pixman_implementation_t *imp, pixman_op_t op,
+			      comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     fbCombineConjointGeneralC (dest, src, mask, width, CombineBOut);
 }
 
 FASTCALL static void
-fbCombineConjointAtopC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineConjointAtopC (pixman_implementation_t *imp, pixman_op_t op,
+			comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     fbCombineConjointGeneralC (dest, src, mask, width, CombineAAtop);
 }
 
 FASTCALL static void
-fbCombineConjointAtopReverseC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineConjointAtopReverseC (pixman_implementation_t *imp, pixman_op_t op,
+			       comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     fbCombineConjointGeneralC (dest, src, mask, width, CombineBAtop);
 }
 
 FASTCALL static void
-fbCombineConjointXorC (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
+fbCombineConjointXorC (pixman_implementation_t *imp, pixman_op_t op,
+		       comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
 {
     fbCombineConjointGeneralC (dest, src, mask, width, CombineXor);
 }
 
-static CombineFunc pixman_fbCombineFuncU[] = {
-    fbCombineClear,
-    fbCombineSrcU,
-    NULL, /* CombineDst */
-    fbCombineOverU,
-    fbCombineOverReverseU,
-    fbCombineInU,
-    fbCombineInReverseU,
-    fbCombineOutU,
-    fbCombineOutReverseU,
-    fbCombineAtopU,
-    fbCombineAtopReverseU,
-    fbCombineXorU,
-    fbCombineAddU,
-    fbCombineSaturateU,
-    NULL,
-    NULL,
-    fbCombineClear,
-    fbCombineSrcU,
-    NULL, /* CombineDst */
-    fbCombineDisjointOverU,
-    fbCombineSaturateU, /* DisjointOverReverse */
-    fbCombineDisjointInU,
-    fbCombineDisjointInReverseU,
-    fbCombineDisjointOutU,
-    fbCombineDisjointOutReverseU,
-    fbCombineDisjointAtopU,
-    fbCombineDisjointAtopReverseU,
-    fbCombineDisjointXorU,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    fbCombineClear,
-    fbCombineSrcU,
-    NULL, /* CombineDst */
-    fbCombineConjointOverU,
-    fbCombineConjointOverReverseU,
-    fbCombineConjointInU,
-    fbCombineConjointInReverseU,
-    fbCombineConjointOutU,
-    fbCombineConjointOutReverseU,
-    fbCombineConjointAtopU,
-    fbCombineConjointAtopReverseU,
-    fbCombineConjointXorU,
-};
+void
+_pixman_setup_combiner_functions_width (pixman_implementation_t *imp)
+{
+    /* Unified alpha */
+    imp->combine_width[PIXMAN_OP_CLEAR] = fbCombineClear;
+    imp->combine_width[PIXMAN_OP_SRC] = fbCombineSrcU;
+    /* dest */
+    imp->combine_width[PIXMAN_OP_OVER] = fbCombineOverU;
+    imp->combine_width[PIXMAN_OP_OVER_REVERSE] = fbCombineOverReverseU;
+    imp->combine_width[PIXMAN_OP_IN] = fbCombineInU;
+    imp->combine_width[PIXMAN_OP_IN_REVERSE] = fbCombineInReverseU;
+    imp->combine_width[PIXMAN_OP_OUT] = fbCombineOutU;
+    imp->combine_width[PIXMAN_OP_OUT_REVERSE] = fbCombineOutReverseU;
+    imp->combine_width[PIXMAN_OP_ATOP] = fbCombineAtopU;
+    imp->combine_width[PIXMAN_OP_ATOP_REVERSE] = fbCombineAtopReverseU;
+    imp->combine_width[PIXMAN_OP_XOR] = fbCombineXorU;
+    imp->combine_width[PIXMAN_OP_ADD] = fbCombineAddU;
+    imp->combine_width[PIXMAN_OP_SATURATE] = fbCombineSaturateU;
 
-static CombineFunc pixman_fbCombineFuncC[] = {
-    fbCombineClearC,
-    fbCombineSrcC,
-    NULL, /* Dest */
-    fbCombineOverC,
-    fbCombineOverReverseC,
-    fbCombineInC,
-    fbCombineInReverseC,
-    fbCombineOutC,
-    fbCombineOutReverseC,
-    fbCombineAtopC,
-    fbCombineAtopReverseC,
-    fbCombineXorC,
-    fbCombineAddC,
-    fbCombineSaturateC,
-    NULL,
-    NULL,
-    fbCombineClearC,	    /* 0x10 */
-    fbCombineSrcC,
-    NULL, /* Dest */
-    fbCombineDisjointOverC,
-    fbCombineSaturateC, /* DisjointOverReverse */
-    fbCombineDisjointInC,
-    fbCombineDisjointInReverseC,
-    fbCombineDisjointOutC,
-    fbCombineDisjointOutReverseC,
-    fbCombineDisjointAtopC,
-    fbCombineDisjointAtopReverseC,
-    fbCombineDisjointXorC,  /* 0x1b */
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    fbCombineClearC,
-    fbCombineSrcC,
-    NULL, /* Dest */
-    fbCombineConjointOverC,
-    fbCombineConjointOverReverseC,
-    fbCombineConjointInC,
-    fbCombineConjointInReverseC,
-    fbCombineConjointOutC,
-    fbCombineConjointOutReverseC,
-    fbCombineConjointAtopC,
-    fbCombineConjointAtopReverseC,
-    fbCombineConjointXorC,
-};
+    /* Disjoint, unified */
+    imp->combine_width[PIXMAN_OP_DISJOINT_CLEAR] = fbCombineClear;
+    imp->combine_width[PIXMAN_OP_DISJOINT_SRC] = fbCombineSrcU;
+    /* dest */
+    imp->combine_width[PIXMAN_OP_DISJOINT_OVER] = fbCombineDisjointOverU;
+    imp->combine_width[PIXMAN_OP_DISJOINT_OVER_REVERSE] = fbCombineSaturateU;
+    imp->combine_width[PIXMAN_OP_DISJOINT_IN] = fbCombineDisjointInU;
+    imp->combine_width[PIXMAN_OP_DISJOINT_IN_REVERSE] = fbCombineDisjointInReverseU;
+    imp->combine_width[PIXMAN_OP_DISJOINT_OUT] = fbCombineDisjointOutU;
+    imp->combine_width[PIXMAN_OP_DISJOINT_OUT_REVERSE] = fbCombineDisjointOutReverseU;
+    imp->combine_width[PIXMAN_OP_DISJOINT_ATOP] = fbCombineDisjointAtopU;
+    imp->combine_width[PIXMAN_OP_DISJOINT_ATOP_REVERSE] = fbCombineDisjointAtopReverseU;
+    imp->combine_width[PIXMAN_OP_DISJOINT_XOR] = fbCombineDisjointXorU;
 
-FbComposeFunctions pixman_composeFunctions = {
-    pixman_fbCombineFuncU,
-    pixman_fbCombineFuncC, 
-};
+    /* Conjoint, unified */
+    imp->combine_width[PIXMAN_OP_CONJOINT_CLEAR] = fbCombineClear;
+    imp->combine_width[PIXMAN_OP_CONJOINT_SRC] = fbCombineSrcU;
+    /* dest */
+    imp->combine_width[PIXMAN_OP_CONJOINT_OVER] = fbCombineConjointOverU;
+    imp->combine_width[PIXMAN_OP_CONJOINT_OVER_REVERSE] = fbCombineConjointOverReverseU;
+    imp->combine_width[PIXMAN_OP_CONJOINT_IN] = fbCombineConjointInU;
+    imp->combine_width[PIXMAN_OP_CONJOINT_IN_REVERSE] = fbCombineConjointInReverseU;
+    imp->combine_width[PIXMAN_OP_CONJOINT_OUT] = fbCombineConjointOutU;
+    imp->combine_width[PIXMAN_OP_CONJOINT_OUT_REVERSE] = fbCombineConjointOutReverseU;
+    imp->combine_width[PIXMAN_OP_CONJOINT_ATOP] = fbCombineConjointAtopU;
+    imp->combine_width[PIXMAN_OP_CONJOINT_ATOP_REVERSE] = fbCombineConjointAtopReverseU;
+    imp->combine_width[PIXMAN_OP_CONJOINT_XOR] = fbCombineConjointXorU;
+
+    /* Component alpha combiners */
+    imp->combine_width_ca[PIXMAN_OP_CLEAR] = fbCombineClearC;
+    imp->combine_width_ca[PIXMAN_OP_SRC] = fbCombineSrcC;
+    /* dest */
+    imp->combine_width_ca[PIXMAN_OP_OVER] = fbCombineOverC;
+    imp->combine_width_ca[PIXMAN_OP_OVER_REVERSE] = fbCombineOverReverseC;
+    imp->combine_width_ca[PIXMAN_OP_IN] = fbCombineInC;
+    imp->combine_width_ca[PIXMAN_OP_IN_REVERSE] = fbCombineInReverseC;
+    imp->combine_width_ca[PIXMAN_OP_OUT] = fbCombineOutC;
+    imp->combine_width_ca[PIXMAN_OP_OUT_REVERSE] = fbCombineOutReverseC;
+    imp->combine_width_ca[PIXMAN_OP_ATOP] = fbCombineAtopC;
+    imp->combine_width_ca[PIXMAN_OP_ATOP_REVERSE] = fbCombineAtopReverseC;
+    imp->combine_width_ca[PIXMAN_OP_XOR] = fbCombineXorC;
+    imp->combine_width_ca[PIXMAN_OP_ADD] = fbCombineAddC;
+    imp->combine_width_ca[PIXMAN_OP_SATURATE] = fbCombineSaturateC;
+
+    /* Disjoint CA */
+    imp->combine_width_ca[PIXMAN_OP_DISJOINT_CLEAR] = fbCombineClearC;
+    imp->combine_width_ca[PIXMAN_OP_DISJOINT_SRC] = fbCombineSrcC;
+    /* dest */
+    imp->combine_width_ca[PIXMAN_OP_DISJOINT_OVER] = fbCombineDisjointOverC;
+    imp->combine_width_ca[PIXMAN_OP_DISJOINT_OVER_REVERSE] = fbCombineSaturateC,
+    imp->combine_width_ca[PIXMAN_OP_DISJOINT_IN] = fbCombineDisjointInC;
+    imp->combine_width_ca[PIXMAN_OP_DISJOINT_IN_REVERSE] = fbCombineDisjointInReverseC;
+    imp->combine_width_ca[PIXMAN_OP_DISJOINT_OUT] = fbCombineDisjointOutC;
+    imp->combine_width_ca[PIXMAN_OP_DISJOINT_OUT_REVERSE] = fbCombineDisjointOutReverseC;
+    imp->combine_width_ca[PIXMAN_OP_DISJOINT_ATOP] = fbCombineDisjointAtopC;
+    imp->combine_width_ca[PIXMAN_OP_DISJOINT_ATOP_REVERSE] = fbCombineDisjointAtopReverseC;
+    imp->combine_width_ca[PIXMAN_OP_DISJOINT_XOR] = fbCombineDisjointXorC;
+
+    /* Conjoint CA */
+    imp->combine_width_ca[PIXMAN_OP_CONJOINT_CLEAR] = fbCombineClearC;
+    imp->combine_width_ca[PIXMAN_OP_CONJOINT_SRC] = fbCombineSrcC;
+    /* dest */
+    imp->combine_width_ca[PIXMAN_OP_CONJOINT_OVER] = fbCombineConjointOverC;
+    imp->combine_width_ca[PIXMAN_OP_CONJOINT_OVER_REVERSE] = fbCombineConjointOverReverseC;
+    imp->combine_width_ca[PIXMAN_OP_CONJOINT_IN] = fbCombineConjointInC;
+    imp->combine_width_ca[PIXMAN_OP_CONJOINT_IN_REVERSE] = fbCombineConjointInReverseC;
+    imp->combine_width_ca[PIXMAN_OP_CONJOINT_OUT] = fbCombineConjointOutC;
+    imp->combine_width_ca[PIXMAN_OP_CONJOINT_OUT_REVERSE] = fbCombineConjointOutReverseC;
+    imp->combine_width_ca[PIXMAN_OP_CONJOINT_ATOP] = fbCombineConjointAtopC;
+    imp->combine_width_ca[PIXMAN_OP_CONJOINT_ATOP_REVERSE] = fbCombineConjointAtopReverseC;
+    imp->combine_width_ca[PIXMAN_OP_CONJOINT_XOR] = fbCombineConjointXorC;
+}

@@ -40,47 +40,6 @@
 #include "pixman-combine32.h"
 #include "pixman-private.h"
 
-
-static void
-general_combine_32 (pixman_implementation_t *imp, pixman_op_t op,
-		    uint32_t *dest, const uint32_t *src, const uint32_t *mask,
-		    int width)
-{
-    CombineFunc32 f = pixman_composeFunctions.combineU[op];
-    
-    f (dest, src, mask, width);
-}
-
-static void
-general_combine_32_ca (pixman_implementation_t *imp, pixman_op_t op,
-		       uint32_t *dest, const uint32_t *src, const uint32_t *mask,
-		       int width)
-{
-    CombineFunc32 f = pixman_composeFunctions.combineC[op];
-    
-    f (dest, src, mask, width);
-}
-
-static void
-general_combine_64 (pixman_implementation_t *imp, pixman_op_t op,
-		    uint64_t *dest, const uint64_t *src, const uint64_t *mask,
-		    int width)
-{
-    CombineFunc64 f = pixman_composeFunctions64.combineU[op];
-    
-    f (dest, src, mask, width);
-}
-
-static void
-general_combine_64_ca (pixman_implementation_t *imp, pixman_op_t op,
-		       uint64_t *dest, const uint64_t *src, const uint64_t *mask,
-		       int width)
-{
-    CombineFunc64 f = pixman_composeFunctions64.combineC[op];
-    
-    f (dest, src, mask, width);
-}
-
 #define SCANLINE_BUFFER_LENGTH 8192
 
 static void
@@ -197,11 +156,11 @@ general_composite_rect  (pixman_implementation_t *imp,
     }
     
     component_alpha =
-	fetchSrc		   &&
-	fetchMask		   &&
-	mask		   &&
-	mask->common.type == BITS &&
-	mask->common.component_alpha &&
+	fetchSrc			&&
+	fetchMask			&&
+	mask				&&
+	mask->common.type == BITS	&&
+	mask->common.component_alpha	&&
 	PIXMAN_FORMAT_RGB (mask->bits.format);
     
     if (wide)
@@ -424,15 +383,10 @@ pixman_implementation_t *
 _pixman_implementation_create_general (pixman_implementation_t *toplevel)
 {
     pixman_implementation_t *imp = _pixman_implementation_create (toplevel, NULL);
-    int i;
+
+    _pixman_setup_combiner_functions_32 (imp);
+    _pixman_setup_combiner_functions_64 (imp);
     
-    for (i = 0; i < PIXMAN_OP_LAST; ++i)
-    {
-	imp->combine_32[i] = general_combine_32;
-	imp->combine_32_ca[i] = general_combine_32_ca;
-	imp->combine_64[i] = general_combine_64;
-	imp->combine_64_ca[i] = general_combine_64_ca;
-    }
     imp->composite = general_composite;
     imp->blt = general_blt;
     imp->fill = general_fill;

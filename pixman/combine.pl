@@ -62,6 +62,8 @@ while (<STDIN>) {
     # Add 32/64 suffix to combining function types.
     s/\bCombineFunc\b/CombineFunc$pixel_size/;
     s/\bFbComposeFunctions\b/FbComposeFunctions$pixel_size/;
+    s/combine_width/combine_$pixel_size/;
+    s/_pixman_setup_combiner_functions_width/_pixman_setup_combiner_functions_$pixel_size/;
 
     # Convert comp*_t values into the appropriate real types.
     s/comp1_t/uint${size}_t/g;

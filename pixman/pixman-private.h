@@ -184,19 +184,6 @@ typedef struct _FbComposeData {
     uint16_t	 height;
 } FbComposeData;
 
-typedef struct _FbComposeFunctions32 {
-    CombineFunc32 *combineU;
-    CombineFunc32 *combineC;
-} FbComposeFunctions32;
-
-typedef struct _FbComposeFunctions64 {
-    CombineFunc64 *combineU;
-    CombineFunc64 *combineC;
-} FbComposeFunctions64;
-
-extern FbComposeFunctions32 pixman_composeFunctions;
-extern FbComposeFunctions64 pixman_composeFunctions64;
-
 void pixman_composite_rect_general_accessors (const FbComposeData *data,
                                               void *src_buffer,
                                               void *mask_buffer,
@@ -935,6 +922,9 @@ _pixman_walk_composite_region (pixman_implementation_t *imp,
 			      pixman_bool_t srcRepeat,
 			      pixman_bool_t maskRepeat,
 			       pixman_composite_func_t compositeRect);
+
+void _pixman_setup_combiner_functions_32 (pixman_implementation_t *imp);
+void _pixman_setup_combiner_functions_64 (pixman_implementation_t *imp);
 
 /* These "formats" both have depth 0, so they
  * will never clash with any real ones
