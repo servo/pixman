@@ -47,7 +47,7 @@ general_combine_32 (pixman_implementation_t *imp, pixman_op_t op,
 		    int width)
 {
     CombineFunc32 f = pixman_composeFunctions.combineU[op];
-
+    
     f (dest, src, mask, width);
 }
 
@@ -57,7 +57,7 @@ general_combine_32_ca (pixman_implementation_t *imp, pixman_op_t op,
 		       int width)
 {
     CombineFunc32 f = pixman_composeFunctions.combineC[op];
-
+    
     f (dest, src, mask, width);
 }
 
@@ -67,7 +67,7 @@ general_combine_64 (pixman_implementation_t *imp, pixman_op_t op,
 		    int width)
 {
     CombineFunc64 f = pixman_composeFunctions64.combineU[op];
-
+    
     f (dest, src, mask, width);
 }
 
@@ -77,51 +77,89 @@ general_combine_64_ca (pixman_implementation_t *imp, pixman_op_t op,
 		       int width)
 {
     CombineFunc64 f = pixman_composeFunctions64.combineC[op];
-
+    
     f (dest, src, mask, width);
 }
 
+#define SCANLINE_BUFFER_LENGTH 8192
+
 static void
-pixman_composite_rect_general_internal (pixman_implementation_t *imp,
-					const FbComposeData *data,
-					void *src_buffer, void *mask_buffer, 
-					void *dest_buffer, const int wide)
+general_composite_rect  (pixman_implementation_t *imp,
+			 pixman_op_t              op,
+			 pixman_image_t          *src,
+			 pixman_image_t          *mask,
+			 pixman_image_t          *dest,
+			 int32_t                  src_x,
+			 int32_t                  src_y,
+			 int32_t                  mask_x,
+			 int32_t                  mask_y,
+			 int32_t                  dest_x,
+			 int32_t                  dest_y,
+			 int32_t                  width,
+			 int32_t                  height)
 {
-    int i;
-    scanStoreProc store;
+    return_if_fail (src != NULL);
+    return_if_fail (dest != NULL);
+    
+    uint8_t stack_scanline_buffer[SCANLINE_BUFFER_LENGTH * 3];
+    const pixman_format_code_t srcFormat = src->type == BITS ? src->bits.format : 0;
+    const pixman_format_code_t maskFormat = mask && mask->type == BITS ? mask->bits.format : 0;
+    const pixman_format_code_t destFormat = dest->type == BITS ? dest->bits.format : 0;
+    const int srcWide = PIXMAN_FORMAT_16BPC(srcFormat);
+    const int maskWide = mask && PIXMAN_FORMAT_16BPC(maskFormat);
+    const int destWide = PIXMAN_FORMAT_16BPC(destFormat);
+    const int wide = srcWide || maskWide || destWide;
+    const int Bpp = wide ? 8 : 4;
+    uint8_t *scanline_buffer = stack_scanline_buffer;
+    uint8_t *src_buffer, *mask_buffer, *dest_buffer;
     scanFetchProc fetchSrc = NULL, fetchMask = NULL, fetchDest = NULL;
-    uint32_t *bits;
-    int32_t stride;
+    pixman_combine_32_func_t compose;
+    scanStoreProc store;
     source_pict_class_t srcClass, maskClass;
     pixman_bool_t component_alpha;
-
-    srcClass = _pixman_image_classify (data->src,
-				       data->xSrc, data->ySrc,
-				       data->width, data->height);
-
-    maskClass = SOURCE_IMAGE_CLASS_UNKNOWN;
-    if (data->mask)
+    uint32_t *bits;
+    int32_t stride;
+    int i;
+    
+    if (width * Bpp > SCANLINE_BUFFER_LENGTH)
     {
-	maskClass = _pixman_image_classify (data->mask,
-					    data->xSrc, data->ySrc,
-					    data->width, data->height);
+	scanline_buffer = pixman_malloc_abc (width, 3, Bpp);
+	
+	if (!scanline_buffer)
+	    return;
     }
     
-    if (data->op == PIXMAN_OP_CLEAR)
+    src_buffer = scanline_buffer;
+    mask_buffer = src_buffer + width * Bpp;
+    dest_buffer = mask_buffer + width * Bpp;
+    
+    srcClass = _pixman_image_classify (src,
+				       src_x, src_y,
+				       width, height);
+    
+    maskClass = SOURCE_IMAGE_CLASS_UNKNOWN;
+    if (mask)
+    {
+	maskClass = _pixman_image_classify (mask,
+					    src_x, src_y,
+					    width, height);
+    }
+    
+    if (op == PIXMAN_OP_CLEAR)
         fetchSrc = NULL;
     else if (wide)
 	fetchSrc = _pixman_image_get_scanline_64;
     else
 	fetchSrc = _pixman_image_get_scanline_32;
-
-    if (!data->mask || data->op == PIXMAN_OP_CLEAR)
+    
+    if (!mask || op == PIXMAN_OP_CLEAR)
 	fetchMask = NULL;
     else if (wide)
 	fetchMask = _pixman_image_get_scanline_64;
     else
 	fetchMask = _pixman_image_get_scanline_32;
-
-    if (data->op == PIXMAN_OP_CLEAR || data->op == PIXMAN_OP_SRC)
+    
+    if (op == PIXMAN_OP_CLEAR || op == PIXMAN_OP_SRC)
 	fetchDest = NULL;
     else if (wide)
 	fetchDest = _pixman_image_get_scanline_64;
@@ -133,188 +171,118 @@ pixman_composite_rect_general_internal (pixman_implementation_t *imp,
     else
 	store = _pixman_image_store_scanline_32;
 
-    // Skip the store step and composite directly into the
-    // destination if the output format of the compose func matches
-    // the destination format.
+    /* Skip the store step and composite directly into the
+     * destination if the output format of the compose func matches
+     * the destination format.
+     */
     if (!wide &&
-	!data->dest->common.alpha_map &&
-	!data->dest->common.write_func && 
-	(data->op == PIXMAN_OP_ADD || data->op == PIXMAN_OP_OVER) &&
-	(data->dest->bits.format == PIXMAN_a8r8g8b8 ||
-	 data->dest->bits.format == PIXMAN_x8r8g8b8))
+	!dest->common.alpha_map &&
+	!dest->common.write_func && 
+	(op == PIXMAN_OP_ADD || op == PIXMAN_OP_OVER) &&
+	(dest->bits.format == PIXMAN_a8r8g8b8 ||
+	 dest->bits.format == PIXMAN_x8r8g8b8))
     {
 	store = NULL;
     }
-
+    
     if (!store)
     {
-	bits = data->dest->bits.bits;
-	stride = data->dest->bits.rowstride;
+	bits = dest->bits.bits;
+	stride = dest->bits.rowstride;
     }
     else
     {
 	bits = NULL;
 	stride = 0;
     }
-
+    
     component_alpha =
 	fetchSrc		   &&
 	fetchMask		   &&
-	data->mask		   &&
-	data->mask->common.type == BITS &&
-	data->mask->common.component_alpha &&
-	PIXMAN_FORMAT_RGB (data->mask->bits.format);
-
+	mask		   &&
+	mask->common.type == BITS &&
+	mask->common.component_alpha &&
+	PIXMAN_FORMAT_RGB (mask->bits.format);
+    
+    if (wide)
     {
-	pixman_combine_32_func_t compose;
-
-	if (wide)
+	if (component_alpha)
+	    compose = (pixman_combine_32_func_t)_pixman_implementation_combine_64_ca;
+	else
+	    compose = (pixman_combine_32_func_t)_pixman_implementation_combine_64;
+    }
+    else
+    {
+	if (component_alpha)
+	    compose = _pixman_implementation_combine_32_ca;
+	else
+	    compose = _pixman_implementation_combine_32;
+    }
+    
+    if (!compose)
+	return;
+    
+    if (!fetchMask)
+	mask_buffer = NULL;
+    
+    for (i = 0; i < height; ++i)
+    {
+	/* fill first half of scanline with source */
+	if (fetchSrc)
 	{
-	    if (component_alpha)
-		compose = (pixman_combine_32_func_t)_pixman_implementation_combine_64_ca;
+	    if (fetchMask)
+	    {
+		/* fetch mask before source so that fetching of
+		   source can be optimized */
+		fetchMask (mask, mask_x, mask_y + i,
+			   width, (void *)mask_buffer, 0, 0);
+		
+		if (maskClass == SOURCE_IMAGE_CLASS_HORIZONTAL)
+		    fetchMask = NULL;
+	    }
+	    
+	    if (srcClass == SOURCE_IMAGE_CLASS_HORIZONTAL)
+	    {
+		fetchSrc (src, src_x, src_y + i,
+			  width, (void *)src_buffer, 0, 0);
+		fetchSrc = NULL;
+	    }
 	    else
-		compose = (pixman_combine_32_func_t)_pixman_implementation_combine_64;
+	    {
+		fetchSrc (src, src_x, src_y + i,
+			  width, (void *)src_buffer, (void *)mask_buffer,
+			  0xffffffff);
+	    }
+	}
+	else if (fetchMask)
+	{
+	    fetchMask (mask, mask_x, mask_y + i,
+		       width, (void *)mask_buffer, 0, 0);
+	}
+	
+	if (store)
+	{
+	    /* fill dest into second half of scanline */
+	    if (fetchDest)
+		fetchDest (dest, dest_x, dest_y + i,
+			   width, (void *)dest_buffer, 0, 0);
+	    
+	    /* blend */
+	    compose (imp, op, (void *)dest_buffer, (void *)src_buffer, (void *)mask_buffer, width);
+	    
+	    /* write back */
+	    store (&(dest->bits), dest_x, dest_y + i, width,
+		   (void *)dest_buffer);
 	}
 	else
 	{
-	    if (component_alpha)
-		compose = _pixman_implementation_combine_32_ca;
-	    else
-		compose = _pixman_implementation_combine_32;
-	}
-
-	if (!compose)
-	    return;
-
-	if (!fetchMask)
-	    mask_buffer = NULL;
-	
-	for (i = 0; i < data->height; ++i)
-	{
-	    /* fill first half of scanline with source */
-	    if (fetchSrc)
-	    {
-		if (fetchMask)
-		{
-		    /* fetch mask before source so that fetching of
-		       source can be optimized */
-		    fetchMask (data->mask, data->xMask, data->yMask + i,
-			       data->width, mask_buffer, 0, 0);
-
-		    if (maskClass == SOURCE_IMAGE_CLASS_HORIZONTAL)
-			fetchMask = NULL;
-		}
-
-		if (srcClass == SOURCE_IMAGE_CLASS_HORIZONTAL)
-		{
-		    fetchSrc (data->src, data->xSrc, data->ySrc + i,
-			      data->width, src_buffer, 0, 0);
-		    fetchSrc = NULL;
-		}
-		else
-		{
-		    fetchSrc (data->src, data->xSrc, data->ySrc + i,
-			      data->width, src_buffer, mask_buffer,
-			      0xffffffff);
-		}
-	    }
-	    else if (fetchMask)
-	    {
-		fetchMask (data->mask, data->xMask, data->yMask + i,
-			   data->width, mask_buffer, 0, 0);
-	    }
-
-	    if (store)
-	    {
-		/* fill dest into second half of scanline */
-		if (fetchDest)
-		    fetchDest (data->dest, data->xDest, data->yDest + i,
-			       data->width, dest_buffer, 0, 0);
-
-		/* blend */
-		compose (imp, data->op, dest_buffer, src_buffer, mask_buffer, data->width);
-
-		/* write back */
-		store (&(data->dest->bits), data->xDest, data->yDest + i, data->width,
-		       dest_buffer);
-	    }
-	    else
-	    {
-		/* blend */
-		compose (imp, data->op, bits + (data->yDest + i) * stride +
-			 data->xDest,
-			 src_buffer, mask_buffer, data->width);
-	    }
+	    /* blend */
+	    compose (imp, op, bits + (dest_y + i) * stride +
+		     dest_x,
+		     (void *)src_buffer, (void *)mask_buffer, width);
 	}
     }
-}
-
-#define SCANLINE_BUFFER_LENGTH 8192
-
-static void
-pixman_image_composite_rect  (pixman_implementation_t *imp,
-			      pixman_op_t                   op,
-			      pixman_image_t               *src,
-			      pixman_image_t               *mask,
-			      pixman_image_t               *dest,
-			      int32_t                       src_x,
-			      int32_t                       src_y,
-			      int32_t                       mask_x,
-			      int32_t                       mask_y,
-			      int32_t                       dest_x,
-			      int32_t                       dest_y,
-			      int32_t                      width,
-			      int32_t                      height)
-{
-    FbComposeData compose_data;
-    FbComposeData *data = &compose_data;
-
-    return_if_fail (src != NULL);
-    return_if_fail (dest != NULL);
-
-    compose_data.op = op;
-    compose_data.src = src;
-    compose_data.mask = mask;
-    compose_data.dest = dest;
-    compose_data.xSrc = src_x;
-    compose_data.ySrc = src_y;
-    compose_data.xMask = mask_x;
-    compose_data.yMask = mask_y;
-    compose_data.xDest = dest_x;
-    compose_data.yDest = dest_y;
-    compose_data.width = width;
-    compose_data.height = height;
-
-    uint8_t stack_scanline_buffer[SCANLINE_BUFFER_LENGTH * 3];
-    const pixman_format_code_t srcFormat =
-	data->src->type == BITS ? data->src->bits.format : 0;
-    const pixman_format_code_t maskFormat =
-	data->mask && data->mask->type == BITS ? data->mask->bits.format : 0;
-    const pixman_format_code_t destFormat = data->dest->type == BITS ? data->dest->bits.format : 0;
-    const int srcWide = PIXMAN_FORMAT_16BPC(srcFormat);
-    const int maskWide = data->mask && PIXMAN_FORMAT_16BPC(maskFormat);
-    const int destWide = PIXMAN_FORMAT_16BPC(destFormat);
-    const int wide = srcWide || maskWide || destWide;
-    const int Bpp = wide ? 8 : 4;
-    uint8_t *scanline_buffer = stack_scanline_buffer;
-    uint8_t *src_buffer, *mask_buffer, *dest_buffer;
     
-    if (data->width * Bpp > SCANLINE_BUFFER_LENGTH)
-    {
-	scanline_buffer = pixman_malloc_abc (data->width, 3, Bpp);
-
-	if (!scanline_buffer)
-	    return;
-    }
-
-    src_buffer = scanline_buffer;
-    mask_buffer = src_buffer + data->width * Bpp;
-    dest_buffer = mask_buffer + data->width * Bpp;
-
-    pixman_composite_rect_general_internal (imp, data, src_buffer,
-					    mask_buffer, dest_buffer,
-					    wide);
-
     if (scanline_buffer != stack_scanline_buffer)
 	free (scanline_buffer);
 }
@@ -338,26 +306,26 @@ general_composite (pixman_implementation_t *	imp,
     pixman_bool_t maskRepeat = FALSE;
     pixman_bool_t srcTransform = src->common.transform != NULL;
     pixman_bool_t maskTransform = FALSE;
-
+    
 #ifdef USE_VMX
     fbComposeSetupVMX();
 #endif
-
+    
     if (srcRepeat && srcTransform &&
 	src->bits.width == 1 &&
 	src->bits.height == 1)
     {
 	srcTransform = FALSE;
     }
-
+    
     if (mask && mask->type == BITS)
     {
 	maskRepeat = mask->common.repeat == PIXMAN_REPEAT_NORMAL;
-
+	
 	maskTransform = mask->common.transform != 0;
 	if (mask->common.filter == PIXMAN_FILTER_CONVOLUTION)
 	    maskTransform = TRUE;
-
+	
 	if (maskRepeat && maskTransform &&
 	    mask->bits.width == 1 &&
 	    mask->bits.height == 1)
@@ -375,7 +343,7 @@ general_composite (pixman_implementation_t *	imp,
 			       width, height))
 	return;
 #endif
-
+    
 #ifdef USE_ARM_NEON
     if (pixman_have_arm_neon() && _pixman_run_fast_path (arm_neon_fast_paths, imp,
 							 op, src, mask, dest,
@@ -385,7 +353,7 @@ general_composite (pixman_implementation_t *	imp,
 							 width, height))
 	return;
 #endif
-
+    
 #ifdef USE_ARM_SIMD
     if (pixman_have_arm_simd() && _pixman_run_fast_path (arm_simd_fast_paths, imp,
 							 op, src, mask, dest,
@@ -395,7 +363,7 @@ general_composite (pixman_implementation_t *	imp,
 							 width, height))
 	return;
 #endif
-
+    
     /* CompositeGeneral optimizes 1x1 repeating images itself */
     if (src->type == BITS &&
 	src->bits.width == 1 && src->bits.height == 1)
@@ -415,10 +383,10 @@ general_composite (pixman_implementation_t *	imp,
     
     if (maskTransform)
 	maskRepeat = FALSE;
-
+    
     _pixman_walk_composite_region (imp, op, src, mask, dest, src_x, src_y,
 				   mask_x, mask_y, dest_x, dest_y, width, height,
-				   srcRepeat, maskRepeat, pixman_image_composite_rect);
+				   srcRepeat, maskRepeat, general_composite_rect);
 }
 
 static pixman_bool_t
@@ -457,7 +425,7 @@ _pixman_implementation_create_general (pixman_implementation_t *toplevel)
 {
     pixman_implementation_t *imp = _pixman_implementation_create (toplevel, NULL);
     int i;
-
+    
     for (i = 0; i < PIXMAN_OP_LAST; ++i)
     {
 	imp->combine_32[i] = general_combine_32;
