@@ -227,7 +227,7 @@ general_composite_rect  (pixman_implementation_t *imp,
 			   width, (void *)dest_buffer, 0, 0);
 	    
 	    /* blend */
-	    compose (imp, op, (void *)dest_buffer, (void *)src_buffer, (void *)mask_buffer, width);
+	    compose (imp->toplevel, op, (void *)dest_buffer, (void *)src_buffer, (void *)mask_buffer, width);
 	    
 	    /* write back */
 	    store (&(dest->bits), dest_x, dest_y + i, width,
@@ -236,7 +236,7 @@ general_composite_rect  (pixman_implementation_t *imp,
 	else
 	{
 	    /* blend */
-	    compose (imp, op, bits + (dest_y + i) * stride +
+	    compose (imp->toplevel, op, bits + (dest_y + i) * stride +
 		     dest_x,
 		     (void *)src_buffer, (void *)mask_buffer, width);
 	}
