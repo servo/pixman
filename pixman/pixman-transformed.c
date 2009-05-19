@@ -188,7 +188,7 @@ fetch_nearest_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
 {
     int i;
 
-    for (i = 0; i < n_pixels; ++i)
+    for (i = 0; i < 2 * n_pixels; ++i)
     {
 	int32_t *coords = (int32_t *)buffer;
 
@@ -802,8 +802,34 @@ ACCESS(fbFetchTransformed)(bits_image_t * pict, int x, int y, int width,
 	{
 	case PIXMAN_FILTER_NEAREST:
 	case PIXMAN_FILTER_FAST:
+	{
+#if 0
+	    int k;
+	    for (k = 0; k < n_pixels; ++k)
+	    {
+		int32_t x, y;
+		uint32_t r1;
+		pixman_vector_t vv;
+
+		x = tmp_buffer[2 * k];
+		y = tmp_buffer[2 * k + 1];
+
+		vv.vector[0] = x;
+		vv.vector[1] = y;
+		vv.vector[2] = 1 << 16;
+		
+		r1 = fetch_nearest (pict, affine, pict->common.repeat, FALSE, &vv);
+		
+		fetch_nearest_pixels (pict, (uint32_t *)&(vv.vector), 1);
+		
+		if (r1 != (uint32_t)vv.vector[0])
+		    assert (r1 == (uint32_t) (vv.vector[0]));
+	    }
+#endif
+
 	    fetch_nearest_pixels (pict, tmp_buffer, n_pixels);
 	    break;
+	}
 
 	case PIXMAN_FILTER_BILINEAR:
 	case PIXMAN_FILTER_GOOD:
