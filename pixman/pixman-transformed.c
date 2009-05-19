@@ -463,6 +463,119 @@ fetch_bilinear (bits_image_t		*pict,
 }
 
 static void
+fetch_convolution_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
+{
+#define N_TMP_PIXELS 8192
+    uint32_t tmp_pixels_stack[N_TMP_PIXELS * 2]; /* Two coordinates per pixel */
+    uint32_t *tmp_pixels = tmp_pixels_stack;
+    pixman_fixed_t *params = image->common.filter_params;
+    int x_off = (params[0] - pixman_fixed_1) >> 1;
+    int y_off = (params[0] - pixman_fixed_1) >> 1;
+    int n_tmp_pixels;
+    int32_t *coords;
+    int32_t *t;
+    uint32_t *u;
+    int i;
+    int max_n_kernels;
+
+    int32_t cwidth = pixman_fixed_to_int (params[0]);
+    int32_t cheight = pixman_fixed_to_int (params[1]);
+    int kernel_size = cwidth * cheight;
+
+    params += 2;
+
+    n_tmp_pixels = N_TMP_PIXELS;
+    if (kernel_size > n_tmp_pixels)
+    {
+	/* Two coordinates per pixel */
+	tmp_pixels = malloc (kernel_size * 2 * sizeof (uint32_t));
+	n_tmp_pixels = kernel_size;
+
+	if (!tmp_pixels)
+	{
+	    /* We ignore out-of-memory during rendering */
+	    return;
+	}
+    }
+
+    max_n_kernels = n_tmp_pixels / kernel_size;
+    
+    i = 0;
+    coords = (int32_t *)buffer;
+    while (i < n_pixels)
+    {
+	int n_kernels = MIN (max_n_kernels, (n_pixels - i));
+	int j;
+	
+	t = (int32_t *)tmp_pixels;
+	for (j = 0; j < n_kernels; ++j)
+	{
+	    int32_t x, y, x1, x2, y1, y2;
+	    
+	    x1 = pixman_fixed_to_int (coords[0]) - x_off;
+	    y1 = pixman_fixed_to_int (coords[1]) - y_off;
+	    x2 = x1 + cwidth;
+	    y2 = y1 + cheight;
+
+	    for (y = y1; y < y2; ++y)
+	    {
+		for (x = x1; x < x2; ++x)
+		{
+		    *t++ = x;
+		    *t++ = y;
+		}
+	    }
+
+	    coords += 2;
+	}
+
+	fetch_extended (image, tmp_pixels, n_kernels * kernel_size);
+
+	u = tmp_pixels;
+	for (j = 0; j < n_kernels; ++j)
+	{
+	    int32_t srtot, sgtot, sbtot, satot;
+	    pixman_fixed_t *p = params;
+	    int k;
+
+	    srtot = sgtot = sbtot = satot = 0;
+		
+	    for (k = 0; k < kernel_size; ++k)
+	    {
+		pixman_fixed_t f = *p++;
+		if (f)
+		{
+		    uint32_t c = *u++;
+
+		    srtot += Red(c) * f;
+		    sgtot += Green(c) * f;
+		    sbtot += Blue(c) * f;
+		    satot += Alpha(c) * f;
+		}
+	    }
+
+	    satot >>= 16;
+	    srtot >>= 16;
+	    sgtot >>= 16;
+	    sbtot >>= 16;
+	    
+	    if (satot < 0) satot = 0; else if (satot > 0xff) satot = 0xff;
+	    if (srtot < 0) srtot = 0; else if (srtot > 0xff) srtot = 0xff;
+	    if (sgtot < 0) sgtot = 0; else if (sgtot > 0xff) sgtot = 0xff;
+	    if (sbtot < 0) sbtot = 0; else if (sbtot > 0xff) sbtot = 0xff;
+
+	    buffer[i++] = ((satot << 24) |
+			   (srtot << 16) |
+			   (sgtot <<  8) |
+			   (sbtot       ));
+	}
+    }
+    
+    if (tmp_pixels != tmp_pixels_stack)
+	free (tmp_pixels);
+}
+
+static void
 fbFetchTransformed_Convolution(bits_image_t * pict, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits,
 			       pixman_bool_t affine, pixman_vector_t v, pixman_vector_t unit)
 {
