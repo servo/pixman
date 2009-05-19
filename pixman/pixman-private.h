@@ -270,6 +270,9 @@ _pixman_image_get_scanline_64 (pixman_image_t *image, int x, int y, int width,
 void
 _pixman_image_store_scanline_32 (bits_image_t *image, int x, int y, int width,
 				 uint32_t *buffer);
+void
+_pixman_image_fetch_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels);
+
 /* Even thought the type of buffer is uint32_t *, the function actually expects
  * a uint64_t *buffer.
  */
@@ -389,6 +392,8 @@ struct bits_image
     uint32_t *			free_me;
     int				rowstride; /* in number of uint32_t's */
 
+    fetchPixelProc32		fetch_pixel;
+    
     scanStoreProc		store_scanline_32;
     scanStoreProc		store_scanline_64;
 };

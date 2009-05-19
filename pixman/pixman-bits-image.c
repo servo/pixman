@@ -221,6 +221,8 @@ bits_image_property_changed (pixman_image_t *image)
 	    (scanFetchProc)READ_ACCESS(fbFetchTransformed);
     }
     
+    bits->fetch_pixel = READ_ACCESS(pixman_fetchPixelProcForPicture32)(bits);
+    
     if (bits->common.alpha_map)
     {
 	bits->store_scanline_64 = (scanStoreProc)fbStoreExternalAlpha64;
@@ -230,6 +232,29 @@ bits_image_property_changed (pixman_image_t *image)
     {
 	bits->store_scanline_64 = (scanStoreProc)fbStore64;
 	bits->store_scanline_32 = fbStore;
+    }
+}
+
+/* On entry, @buffer should contain @n_pixels (x, y) coordinate pairs, where
+ * x and y are both uint32_ts. On exit, buffer will contain the corresponding
+ * pixels.
+ */
+void
+_pixman_image_fetch_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
+{
+    uint32_t *coords;
+    int i;
+
+    coords = buffer;
+    
+    for (i = 0; i < n_pixels; ++i)
+    {
+	uint32_t x, y;
+
+	x = *coords++;
+	y = *coords++;
+
+	buffer[i] = image->fetch_pixel (image, x, y);
     }
 }
 
