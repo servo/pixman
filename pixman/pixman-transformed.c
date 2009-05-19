@@ -295,8 +295,8 @@ fetch_bilinear_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
 	    int32_t x1, y1, x2, y2;
 	    x1 = coords[0];
 	    y1 = coords[1];
-	    distx = x1 & 0xff;
-	    disty = y1 & 0xff;
+	    distx = (x1 >> 8) & 0xff;
+	    disty = (y1 >> 8) & 0xff;
 	    x1 >>= 16;
 	    y1 >>= 16;
 	    x2 = x1 + 1;
@@ -317,7 +317,7 @@ fetch_bilinear_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
 	    coords += 2;
 	}
 
-	fetch_extended (image, temps, tmp_n_pixels);
+	fetch_extended (image, temps, tmp_n_pixels * 4);
 
 	u = (uint32_t *)temps;
 	d = dists;
@@ -791,6 +791,8 @@ ACCESS(fbFetchTransformed)(bits_image_t * pict, int x, int y, int width,
 		    coords[1] = div >> 16;
 	    }
 
+	    coords += 2;
+
 	    v.vector[0] += unit.vector[0];
 	    v.vector[1] += unit.vector[1];
 	    v.vector[2] += unit.vector[2];
@@ -806,9 +808,34 @@ ACCESS(fbFetchTransformed)(bits_image_t * pict, int x, int y, int width,
 	case PIXMAN_FILTER_BILINEAR:
 	case PIXMAN_FILTER_GOOD:
 	case PIXMAN_FILTER_BEST:
+	{
+#if 0
+	    int k;
+	    for (k = 0; k < n_pixels; ++k)
+	    {
+		int32_t x, y;
+		uint32_t r1;
+		pixman_vector_t vv;
+
+		x = tmp_buffer[2 * k];
+		y = tmp_buffer[2 * k + 1];
+
+		vv.vector[0] = x;
+		vv.vector[1] = y;
+		vv.vector[2] = 1 << 16;
+		
+		r1 = fetch_bilinear (pict, affine, pict->common.repeat, FALSE, &vv);
+		
+		fetch_bilinear_pixels (pict, (uint32_t *)&(vv.vector), 1);
+
+		if (r1 != (uint32_t)vv.vector[0])
+		    assert (r1 == (uint32_t) (vv.vector[0]));
+	    }
+#endif
+		
 	    fetch_bilinear_pixels (pict, tmp_buffer, n_pixels);
 	    break;
-
+	}
 	case PIXMAN_FILTER_CONVOLUTION:
 	    fetch_convolution_pixels (pict, tmp_buffer, n_pixels);
 	    break;
