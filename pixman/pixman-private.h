@@ -557,10 +557,14 @@ _pixman_gradient_walker_pixel (GradientWalker       *walker,
 
 #define MOD(a,b) ((a) < 0 ? ((b) - ((-(a) - 1) % (b))) - 1 : (a) % (b))
 
+/* Divides two fixed-point numbers and returns an integer */
 #define DIV(a,b) ((((a) < 0) == ((b) < 0)) ? (a) / (b) :		\
 		  ((a) - (b) + 1 - (((b) < 0) << 1)) / (b))
 
 #define CLIP(a,b,c) ((a) < (b) ? (b) : ((a) > (c) ? (c) : (a)))
+
+#define MIN(a,b) ((a < b)? a : b)
+#define MAX(a,b) ((a > b)? a : b)
 
 #if 0
 /* FIXME: the MOD macro above is equivalent, but faster I think */

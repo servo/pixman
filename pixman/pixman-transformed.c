@@ -182,6 +182,22 @@ fetch_extended (bits_image_t *image, uint32_t *buffer, int n_pixels)
     fetch_pixels_src_clip (image, buffer, n_pixels);
 }
 
+/* Converts a list of fixed-point coordinates into a list of pixel values */
+static void
+fetch_nearest_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
+{
+    int i;
+
+    for (i = 0; i < n_pixels; ++i)
+    {
+	int32_t *coords = (int32_t *)buffer;
+
+	coords[i] >>= 16;
+    }
+
+    return fetch_extended (image, buffer, n_pixels);
+}
+
 /*
  * Fetching Algorithms
  */
@@ -246,6 +262,97 @@ fetch_nearest (bits_image_t		*pict,
 	}
 
 	return do_fetch (pict, x, y, fetch, has_src_clip, inside_bounds);
+    }
+}
+
+static void
+fetch_bilinear_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
+{
+/* (Four pixels * two coordinates) per pixel */
+#define TMP_N_PIXELS	(256)
+#define N_TEMPS		(TMP_N_PIXELS * 8)
+#define N_DISTS		(TMP_N_PIXELS * 2)
+    
+    uint32_t temps[N_TEMPS];
+    int32_t  dists[N_DISTS];
+    int32_t *coords;
+    int i;
+
+    i = 0;
+    coords = (int32_t *)buffer;
+    while (i < n_pixels)
+    {
+	int tmp_n_pixels = MIN(TMP_N_PIXELS, n_pixels - i);
+	int32_t distx, disty;
+	uint32_t *u;
+	int32_t *t, *d;
+	int j;
+	
+	t = (int32_t *)temps;
+	d = dists;
+	for (j = 0; j < tmp_n_pixels; ++j)
+	{
+	    int32_t x1, y1, x2, y2;
+	    x1 = coords[0];
+	    y1 = coords[1];
+	    distx = x1 & 0xff;
+	    disty = y1 & 0xff;
+	    x1 >>= 16;
+	    y1 >>= 16;
+	    x2 = x1 + 1;
+	    y2 = y1 + 1;
+
+	    *t++ = x1;
+	    *t++ = y1;
+	    *t++ = x2;
+	    *t++ = y1;
+	    *t++ = x1;
+	    *t++ = y2;
+	    *t++ = x2;
+	    *t++ = y2;
+
+	    *d++ = distx;
+	    *d++ = disty;
+
+	    coords += 2;
+	}
+
+	fetch_extended (image, temps, tmp_n_pixels);
+
+	u = (uint32_t *)temps;
+	d = dists;
+	for (j = 0; i < tmp_n_pixels; ++j)
+	{
+	    uint32_t tl, tr, bl, br, r;
+	    int32_t idistx, idisty;
+	    uint32_t ft, fb;
+	    
+	    tl = *u++;
+	    tr = *u++;
+	    bl = *u++;
+	    br = *u++;
+
+	    distx = *d++;
+	    disty = *d++;
+
+	    idistx = 256 - distx;
+	    idisty = 256 - disty;
+	    
+	    ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
+	    fb = FbGet8(bl,0) * idistx + FbGet8(br,0) * distx;
+	    r = (((ft * idisty + fb * disty) >> 16) & 0xff);
+	    ft = FbGet8(tl,8) * idistx + FbGet8(tr,8) * distx;
+	    fb = FbGet8(bl,8) * idistx + FbGet8(br,8) * distx;
+	    r |= (((ft * idisty + fb * disty) >> 8) & 0xff00);
+	    ft = FbGet8(tl,16) * idistx + FbGet8(tr,16) * distx;
+	    fb = FbGet8(bl,16) * idistx + FbGet8(br,16) * distx;
+	    r |= (((ft * idisty + fb * disty)) & 0xff0000);
+	    ft = FbGet8(tl,24) * idistx + FbGet8(tr,24) * distx;
+	    fb = FbGet8(bl,24) * idistx + FbGet8(br,24) * distx;
+	    r |= (((ft * idisty + fb * disty) << 8) & 0xff000000);
+
+	    buffer[i++] = r;
+	}
     }
 }
 
