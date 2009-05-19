@@ -702,11 +702,16 @@ void
 ACCESS(fbFetchTransformed)(bits_image_t * pict, int x, int y, int width,
                            uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
 {
+#define N_TMP_PIXELS 8192
+
     uint32_t     *bits;
     int32_t    stride;
     pixman_vector_t v;
     pixman_vector_t unit;
     pixman_bool_t affine = TRUE;
+    uint32_t tmp_buffer[2 * N_TMP_PIXELS];
+    int32_t *coords;
+    int i;
 
     bits = pict->bits;
     stride = pict->rowstride;
@@ -734,59 +739,83 @@ ACCESS(fbFetchTransformed)(bits_image_t * pict, int x, int y, int width,
         unit.vector[2] = 0;
     }
 
-    if (pict->common.filter == PIXMAN_FILTER_NEAREST || pict->common.filter == PIXMAN_FILTER_FAST)
+    /* These adjustments should probably be moved into the filter code */
+    if (pict->common.filter == PIXMAN_FILTER_NEAREST ||
+	pict->common.filter == PIXMAN_FILTER_FAST)
     {
-	fetchPixelProc32   fetch;
-	pixman_bool_t src_clip;
-	int i;
-
 	/* Round down to closest integer, ensuring that 0.5 rounds to 0, not 1 */
 	adjust (&v, &unit, - pixman_fixed_e);
-
-	fetch = ACCESS(pixman_fetchPixelProcForPicture32)(pict);
-	
-	src_clip = pict->common.src_clip != &(pict->common.full_region);
-	
-	for ( i = 0; i < width; ++i)
-	{
-	    if (!mask || mask[i] & maskBits)
-		*(buffer + i) = fetch_nearest (pict, fetch, affine, pict->common.repeat, src_clip, &v);
-	    
-	    v.vector[0] += unit.vector[0];
-	    v.vector[1] += unit.vector[1];
-	    v.vector[2] += unit.vector[2];
-	}
     }
     else if (pict->common.filter == PIXMAN_FILTER_BILINEAR	||
-	       pict->common.filter == PIXMAN_FILTER_GOOD	||
-	       pict->common.filter == PIXMAN_FILTER_BEST)
+	     pict->common.filter == PIXMAN_FILTER_GOOD	||
+	     pict->common.filter == PIXMAN_FILTER_BEST)
     {
-	pixman_bool_t src_clip;
-	fetchPixelProc32   fetch;
-	int i;
-
 	/* Let the bilinear code pretend that pixels fall on integer coordinaters */
 	adjust (&v, &unit, -(pixman_fixed_1 / 2));
-
-	fetch = ACCESS(pixman_fetchPixelProcForPicture32)(pict);
-	src_clip = pict->common.src_clip != &(pict->common.full_region);
-	
-	for (i = 0; i < width; ++i)
-	{
-	    if (!mask || mask[i] & maskBits)
-		*(buffer + i) = fetch_bilinear (pict, fetch, affine, pict->common.repeat, src_clip, &v);
-	    
-	    v.vector[0] += unit.vector[0];
-	    v.vector[1] += unit.vector[1];
-	    v.vector[2] += unit.vector[2];
-	}
     }
     else if (pict->common.filter == PIXMAN_FILTER_CONVOLUTION)
     {
 	/* Round to closest integer, ensuring that 0.5 rounds to 0, not 1 */
 	adjust (&v, &unit, - pixman_fixed_e);
+    }
+    
+    i = 0;
+    while (i < width)
+    {
+	int j;
+	int n_pixels = MIN (N_TMP_PIXELS, width - i);
 	
-        fbFetchTransformed_Convolution(pict, width, buffer, mask, maskBits, affine, v, unit);
+	coords = (int32_t *)tmp_buffer;
+
+	for (j = 0; j < n_pixels; ++j)
+	{
+	    if (affine)
+	    {
+		coords[0] = v.vector[0];
+		coords[1] = v.vector[1];
+	    }
+	    else
+	    {
+		pixman_fixed_48_16_t div;
+		
+		div = ((pixman_fixed_48_16_t)v.vector[0] << 16)/v.vector[2];
+		if ((div >> 16) >= 0xffff)
+		    coords[0] = 0xffffffff;
+		else
+		    coords[0] = div >> 16;
+
+		div = ((pixman_fixed_48_16_t)v.vector[1] << 16)/v.vector[2];
+		if ((div >> 16) >= 0xffff)
+		    coords[1] = 0xffffffff;
+		else
+		    coords[1] = div >> 16;
+	    }
+
+	    v.vector[0] += unit.vector[0];
+	    v.vector[1] += unit.vector[1];
+	    v.vector[2] += unit.vector[2];
+	}
+
+	switch (pict->common.filter)
+	{
+	case PIXMAN_FILTER_NEAREST:
+	case PIXMAN_FILTER_FAST:
+	    fetch_nearest_pixels (pict, tmp_buffer, n_pixels);
+	    break;
+
+	case PIXMAN_FILTER_BILINEAR:
+	case PIXMAN_FILTER_GOOD:
+	case PIXMAN_FILTER_BEST:
+	    fetch_bilinear_pixels (pict, tmp_buffer, n_pixels);
+	    break;
+
+	case PIXMAN_FILTER_CONVOLUTION:
+	    fetch_convolution_pixels (pict, tmp_buffer, n_pixels);
+	    break;
+	}
+
+	for (j = 0; j < n_pixels; ++j)
+	    buffer[i++] = tmp_buffer[j];
     }
 }
 
