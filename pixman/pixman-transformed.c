@@ -84,6 +84,104 @@ do_fetch (bits_image_t *pict, int x, int y, fetchPixelProc32 fetch,
     }
 }
 
+static void
+fetch_pixels_src_clip (bits_image_t *image, uint32_t *buffer, int n_pixels)
+{
+    if (image->common.src_clip != &(image->common.full_region))
+    {
+	int32_t *coords = (int32_t *)buffer;
+	int i;
+
+	for (i = 0; i < n_pixels; ++i)
+	{
+	    int32_t x = coords[0];
+	    int32_t y = coords[1];
+
+	    if (!pixman_region32_contains_point (image->common.src_clip, x, y, NULL))
+	    {
+		coords[0] = 0xffffffff;
+		coords[1] = 0xffffffff;
+	    }
+
+	    coords += 2;
+	}
+    }
+
+    _pixman_image_fetch_pixels (image, buffer, n_pixels);
+}
+
+static void
+fetch_extended (bits_image_t *image, uint32_t *buffer, int n_pixels)
+{
+    int32_t *coords, x, y, width, height;
+    int i;
+
+    width = image->width;
+    height = image->height;
+    
+    coords = (int32_t *)buffer;
+    
+    switch (image->common.repeat)
+    {
+    case PIXMAN_REPEAT_NORMAL:
+	for (i = 0; i < n_pixels; ++i)
+	{
+	    coords[0] = MOD (coords[0], width);
+	    coords[1] = MOD (coords[1], height);
+
+	    coords += 2;
+	}
+	break;
+
+    case PIXMAN_REPEAT_PAD:
+	for (i = 0; i < n_pixels; ++i)
+	{
+	    coords[0] = CLIP (coords[0], 0, width - 1);
+	    coords[1] = CLIP (coords[1], 0, height - 1);
+
+	    coords += 2;
+	}
+	break;
+	
+    case PIXMAN_REPEAT_REFLECT:
+	for (i = 0; i < n_pixels; ++i)
+	{
+	    x = MOD (coords[0], width * 2);
+	    y = MOD (coords[1], height * 2);
+
+	    if (x >= width)
+		x = width * 2 - x - 1;
+
+	    if (y >= height)
+		y = height * 2 - y - 1;
+
+	    coords[0] = x;
+	    coords[1] = y;
+
+	    coords += 2;
+	}
+	break;
+
+    case PIXMAN_REPEAT_NONE:
+	for (i = 0; i < n_pixels; ++i)
+	{
+	    x = coords[0];
+	    y = coords[1];
+
+	    if (x < 0 || x >= width)
+		coords[0] = 0xffffffff;
+	    
+	    if (y < 0 || y >= height)
+		coords[1] = 0xffffffff;
+
+	    coords += 2;
+	}
+	break;
+    }
+
+    fetch_pixels_src_clip (image, buffer, n_pixels);
+}
+
 /*
  * Fetching Algorithms
  */

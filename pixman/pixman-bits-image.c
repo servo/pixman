@@ -249,12 +249,13 @@ _pixman_image_fetch_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
     
     for (i = 0; i < n_pixels; ++i)
     {
-	uint32_t x, y;
+	uint32_t x = *coords++;
+	uint32_t y = *coords++;
 
-	x = *coords++;
-	y = *coords++;
-
-	buffer[i] = image->fetch_pixel (image, x, y);
+	if (x == 0xffffffff || y == 0xffffffff)
+	    buffer[i] = 0;
+	else
+	    buffer[i] = image->fetch_pixel (image, x, y);
     }
 }
 
