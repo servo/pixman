@@ -23,6 +23,7 @@ TESTPROGRAMS +=			\
 	clip-in			\
 	composite-test		\
 	gradient-test		\
+	alpha-test		\
 	trap-test
 
 noinst_PROGRAMS = $(TESTPROGRAMS)
@@ -31,6 +32,9 @@ INCLUDES += $(GTK_CFLAGS)
 
 gradient_test_LDADD = $(GTK_LDADD)
 gradient_test_SOURCES = gradient-test.c utils.c utils.h
+
+alpha_test_LDADD = $(GTK_LDADD)
+alpha_test_SOURCES = alpha-test.c utils.c utils.h
 
 composite_test_LDADD = $(GTK_LDADD)
 composite_test_SOURCES = composite-test.c utils.c utils.h
