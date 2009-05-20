@@ -264,5 +264,5 @@ _pixman_implementation_fill (pixman_implementation_t *imp,
 			     int height,
 			     uint32_t xor)
 {
-    return (* imp->fill) (imp->delegate, bits, stride, bpp, x, y, width, height, xor);
+    return (* imp->fill) (imp, bits, stride, bpp, x, y, width, height, xor);
 }
