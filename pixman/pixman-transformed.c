@@ -321,7 +321,7 @@ fetch_bilinear_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
 
 	u = (uint32_t *)temps;
 	d = dists;
-	for (j = 0; i < tmp_n_pixels; ++j)
+	for (j = 0; j < tmp_n_pixels; ++j)
 	{
 	    uint32_t tl, tr, bl, br, r;
 	    int32_t idistx, idisty;
@@ -702,7 +702,7 @@ void
 ACCESS(fbFetchTransformed)(bits_image_t * pict, int x, int y, int width,
                            uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
 {
-#define N_TMP_PIXELS 8192
+#define N_TMP_PIXELS 1024
 
     uint32_t     *bits;
     int32_t    stride;
