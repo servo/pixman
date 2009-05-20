@@ -111,6 +111,7 @@ fetch_pixels_src_clip (bits_image_t *image, uint32_t *buffer, int n_pixels)
     _pixman_image_fetch_pixels (image, buffer, n_pixels);
 }
 
+/* Buffer contains list of integers on input, list of pixels on output */
 static void
 fetch_extended (bits_image_t *image, uint32_t *buffer, int n_pixels)
 {
@@ -183,7 +184,9 @@ fetch_extended (bits_image_t *image, uint32_t *buffer, int n_pixels)
     fetch_pixels_src_clip (image, buffer, n_pixels);
 }
 
-/* Converts a list of fixed-point coordinates into a list of pixel values */
+/* Buffer contains list of fixed-point coordinates on input,
+ * a list of pixels on output
+ */
 static void
 fetch_nearest_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
 {
@@ -266,6 +269,9 @@ fetch_nearest (bits_image_t		*pict,
     }
 }
 
+/* Buffer contains list of fixed-point coordinates on input,
+ * a list of pixels on output
+ */
 static void
 fetch_bilinear_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
 {
@@ -463,6 +469,9 @@ fetch_bilinear (bits_image_t		*pict,
     }
 }
 
+/* Buffer contains list of fixed-point coordinates on input,
+ * a list of pixels on output
+ */
 static void
 fetch_convolution_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
 {
@@ -577,7 +586,8 @@ fetch_convolution_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
 }
 
 static void
-fbFetchTransformed_Convolution(bits_image_t * pict, int width, uint32_t *buffer, uint32_t *mask, uint32_t maskBits,
+fbFetchTransformed_Convolution(bits_image_t * pict, int width, uint32_t *buffer,
+			       uint32_t *mask, uint32_t maskBits,
 			       pixman_bool_t affine, pixman_vector_t v, pixman_vector_t unit)
 {
     fetchPixelProc32 fetch;

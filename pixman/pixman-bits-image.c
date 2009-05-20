@@ -22,6 +22,7 @@
 
 #include <config.h>
 #include <stdlib.h>
+#include <string.h>
 #include "pixman-private.h"
 
 
@@ -111,6 +112,103 @@ fbStore64 (bits_image_t * image, int x, int y, int width, uint64_t *buffer)
     store((pixman_image_t *)image, bits, buffer, x, width, indexed);
 }
 
+/* On entry, @buffer should contain @n_pixels (x, y) coordinate pairs, where
+ * x and y are both uint32_ts. On exit, buffer will contain the corresponding
+ * pixels.
+ */
+static void
+_pixman_image_fetch_raw_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
+{
+    uint32_t *coords;
+    int i;
+
+    coords = buffer;
+    
+    for (i = 0; i < n_pixels; ++i)
+    {
+	uint32_t x = *coords++;
+	uint32_t y = *coords++;
+
+	if (x == 0xffffffff || y == 0xffffffff)
+	    buffer[i] = 0;
+	else
+	    buffer[i] = image->fetch_pixel (image, x, y);
+    }
+}
+
+#define Alpha(x) ((x) >> 24)
+#define Red(x) (((x) >> 16) & 0xff)
+#define Green(x) (((x) >> 8) & 0xff)
+#define Blue(x) ((x) & 0xff)
+
+void
+_pixman_image_fetch_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
+{
+#define N_ALPHA_PIXELS 256
+    
+    uint32_t alpha_pixels[N_ALPHA_PIXELS * 2];
+    int i;
+    
+    if (!image->common.alpha_map)
+    {
+	_pixman_image_fetch_raw_pixels (image, buffer, n_pixels);
+	return;
+    }
+    
+    i = 0;
+    while (i < n_pixels)
+    {
+	int tmp_n_pixels = MIN (N_ALPHA_PIXELS, n_pixels - i);
+	int j;
+	int32_t *coords;
+	
+	memcpy (alpha_pixels, buffer + 2 * i, tmp_n_pixels * 2 * sizeof (int32_t));
+	coords = (int32_t *)alpha_pixels;
+	for (j = 0; j < tmp_n_pixels; ++j)
+	{
+	    int32_t x = coords[0];
+	    int32_t y = coords[1];
+	    
+	    if (x != 0xffffffff)
+	    {
+		x -= image->common.alpha_origin.x;
+		
+		if (x < 0 || x >= image->common.alpha_map->width)
+		    x = 0xffffffff;
+	    }
+	    
+	    if (y != 0xffffffff)
+	    {
+		y -= image->common.alpha_origin.y;
+		
+		if (y < 0 || y >= image->common.alpha_map->height)
+		    y = 0xffffffff;
+	    }
+	    
+	    coords[0] = x;
+	    coords[1] = y;
+	    
+	    coords += 2;
+	}
+	
+	_pixman_image_fetch_raw_pixels (image->common.alpha_map, alpha_pixels, tmp_n_pixels);
+	_pixman_image_fetch_raw_pixels (image, buffer + 2 * i, tmp_n_pixels);
+	
+	for (j = 0; j < tmp_n_pixels; ++j)
+	{
+	    int a = alpha_pixels[j] >> 24;
+	    
+	    buffer[i] =
+		(a << 24)					|
+		div_255 (Red (buffer[2 * i - j]) * a) << 16	|
+		div_255 (Green (buffer[2 * i - j]) * a) << 8	|
+		div_255 (Blue (buffer[2 * i - j]) * a);
+	    
+	    i++;
+	}
+    }
+}
+
 static void
 fbStoreExternalAlpha (bits_image_t * image, int x, int y, int width,
 		      uint32_t *buffer)
@@ -196,7 +294,7 @@ bits_image_property_changed (pixman_image_t *image)
 	image->common.get_scanline_64 =
 	    (scanFetchProc)_pixman_image_get_scanline_64_generic;
 	image->common.get_scanline_32 =
-	    (scanFetchProc)READ_ACCESS(fbFetchExternalAlpha);
+	    (scanFetchProc)READ_ACCESS(fbFetchTransformed);
     }
     else if ((bits->common.repeat != PIXMAN_REPEAT_NONE) &&
 	    bits->width == 1 &&
@@ -232,30 +330,6 @@ bits_image_property_changed (pixman_image_t *image)
     {
 	bits->store_scanline_64 = (scanStoreProc)fbStore64;
 	bits->store_scanline_32 = fbStore;
-    }
-}
-
-/* On entry, @buffer should contain @n_pixels (x, y) coordinate pairs, where
- * x and y are both uint32_ts. On exit, buffer will contain the corresponding
- * pixels.
- */
-void
-_pixman_image_fetch_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
-{
-    uint32_t *coords;
-    int i;
-
-    coords = buffer;
-    
-    for (i = 0; i < n_pixels; ++i)
-    {
-	uint32_t x = *coords++;
-	uint32_t y = *coords++;
-
-	if (x == 0xffffffff || y == 0xffffffff)
-	    buffer[i] = 0;
-	else
-	    buffer[i] = image->fetch_pixel (image, x, y);
     }
 }
 
