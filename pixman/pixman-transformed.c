@@ -87,7 +87,8 @@ do_fetch (bits_image_t *pict, int x, int y, fetchPixelProc32 fetch,
 static void
 fetch_pixels_src_clip (bits_image_t *image, uint32_t *buffer, int n_pixels)
 {
-    if (image->common.src_clip != &(image->common.full_region))
+    if (image->common.src_clip != &(image->common.full_region) &&
+	!pixman_region32_equal (image->common.src_clip, &(image->common.full_region)))
     {
 	int32_t *coords = (int32_t *)buffer;
 	int i;
