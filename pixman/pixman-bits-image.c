@@ -112,6 +112,81 @@ fbStore64 (bits_image_t * image, int x, int y, int width, uint64_t *buffer)
 }
 
 static void
+fbStoreExternalAlpha (bits_image_t * image, int x, int y, int width,
+		      uint32_t *buffer)
+{
+    uint32_t *bits, *alpha_bits;
+    int32_t stride, astride;
+    int ax, ay;
+    storeProc32 store;
+    storeProc32 astore;
+    const pixman_indexed_t * indexed = image->indexed;
+    const pixman_indexed_t * aindexed;
+
+    if (!image->common.alpha_map) {
+        // XXX[AGP]: This should never happen!
+        // fbStore(image, x, y, width, buffer);
+        abort();
+	return;
+    }
+
+    store = WRITE_ACCESS(pixman_storeProcForPicture32)(image);
+    astore = WRITE_ACCESS(pixman_storeProcForPicture32)(image->common.alpha_map);
+    aindexed = image->common.alpha_map->indexed;
+
+    ax = x;
+    ay = y;
+
+    bits = image->bits;
+    stride = image->rowstride;
+
+    alpha_bits = image->common.alpha_map->bits;
+    astride = image->common.alpha_map->rowstride;
+
+    bits       += y*stride;
+    alpha_bits += (ay - image->common.alpha_origin.y)*astride;
+
+
+    store((pixman_image_t *)image, bits, buffer, x, width, indexed);
+    astore((pixman_image_t *)image->common.alpha_map,
+	   alpha_bits, buffer, ax - image->common.alpha_origin.x, width, aindexed);
+}
+
+static void
+fbStoreExternalAlpha64 (bits_image_t * image, int x, int y, int width,
+			uint64_t *buffer)
+{
+    uint32_t *bits, *alpha_bits;
+    int32_t stride, astride;
+    int ax, ay;
+    storeProc64 store;
+    storeProc64 astore;
+    const pixman_indexed_t * indexed = image->indexed;
+    const pixman_indexed_t * aindexed;
+
+    store = ACCESS(pixman_storeProcForPicture64)(image);
+    astore = ACCESS(pixman_storeProcForPicture64)(image->common.alpha_map);
+    aindexed = image->common.alpha_map->indexed;
+
+    ax = x;
+    ay = y;
+
+    bits = image->bits;
+    stride = image->rowstride;
+
+    alpha_bits = image->common.alpha_map->bits;
+    astride = image->common.alpha_map->rowstride;
+
+    bits       += y*stride;
+    alpha_bits += (ay - image->common.alpha_origin.y)*astride;
+
+
+    store((pixman_image_t *)image, bits, buffer, x, width, indexed);
+    astore((pixman_image_t *)image->common.alpha_map,
+	   alpha_bits, buffer, ax - image->common.alpha_origin.x, width, aindexed);
+}
+
+static void
 bits_image_property_changed (pixman_image_t *image)
 {
     bits_image_t *bits = (bits_image_t *)image;
@@ -148,10 +223,8 @@ bits_image_property_changed (pixman_image_t *image)
     
     if (bits->common.alpha_map)
     {
-	bits->store_scanline_64 =
-	    (scanStoreProc)WRITE_ACCESS(fbStoreExternalAlpha64);
-	bits->store_scanline_32 =
-	    (scanStoreProc)WRITE_ACCESS(fbStoreExternalAlpha);
+	bits->store_scanline_64 = (scanStoreProc)fbStoreExternalAlpha64;
+	bits->store_scanline_32 = fbStoreExternalAlpha;
     }
     else
     {
@@ -173,7 +246,6 @@ _pixman_image_store_scanline_64 (bits_image_t *image, int x, int y, int width,
 {
     image->store_scanline_64 (image, x, y, width, buffer);
 }
-
 
 static uint32_t *
 create_bits (pixman_format_code_t format,
