@@ -42,48 +42,6 @@
 #define Green64(x) (((x) >> 16) & 0xffff)
 #define Blue64(x) ((x) & 0xffff)
 
-/*
- * Fetch from region strategies
- */
-typedef FASTCALL uint32_t (*fetchFromRegionProc)(bits_image_t *pict, int x, int y, uint32_t *buffer, fetchPixelProc32 fetch, pixman_box32_t *box);
-
-/*
- * There are two properties we can make use of when fetching pixels
- *
- * (a) Is the source clip just the image itself?
- *
- * (b) Do we know the coordinates of the pixel to fetch are
- *     within the image boundaries;
- *
- * Source clips are almost never used, so the important case to optimize
- * for is when src_clip is false. Since inside_bounds is statically known,
- * the last part of the if statement will normally be optimized away.
- */
-static force_inline uint32_t
-do_fetch (bits_image_t *pict, int x, int y, fetchPixelProc32 fetch,
-	  pixman_bool_t src_clip,
-	  pixman_bool_t inside_bounds)
-{
-    if (src_clip)
-    {
-	if (pixman_region32_contains_point (pict->common.src_clip, x, y,NULL))
-	    return fetch (pict, x, y);
-	else
-	    return 0;
-    }
-    else if (inside_bounds)
-    {
-	return fetch (pict, x, y);
-    }
-    else
-    {
-	if (x >= 0 && x < pict->width && y >= 0 && y < pict->height)
-	    return fetch (pict, x, y);
-	else
-	    return 0;
-    }
-}
-
 static void
 fetch_pixels_src_clip (bits_image_t *image, uint32_t *buffer, int n_pixels)
 {
@@ -426,8 +384,8 @@ adjust (pixman_vector_t *v, pixman_vector_t *u, pixman_fixed_t adjustment)
 }
 
 void
-ACCESS(fbFetchTransformed)(bits_image_t * pict, int x, int y, int width,
-                           uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
+fbFetchTransformed (bits_image_t * pict, int x, int y, int width,
+		    uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
 {
 #define N_TMP_PIXELS 1024
 
@@ -507,13 +465,13 @@ ACCESS(fbFetchTransformed)(bits_image_t * pict, int x, int y, int width,
 		
 		div = ((pixman_fixed_48_16_t)v.vector[0] << 16)/v.vector[2];
 		if ((div >> 16) >= 0xffff)
-		    coords[0] = 0xffffffff;
+		    coords[0] = 0xffffffff; /* FIXME: the intention is that this should be fetched as 0 */
 		else
 		    coords[0] = div >> 16;
 
 		div = ((pixman_fixed_48_16_t)v.vector[1] << 16)/v.vector[2];
 		if ((div >> 16) >= 0xffff)
-		    coords[1] = 0xffffffff;
+		    coords[1] = 0xffffffff; /* FIXME: the intention is that this should be fetched as 0 */
 		else
 		    coords[1] = div >> 16;
 	    }

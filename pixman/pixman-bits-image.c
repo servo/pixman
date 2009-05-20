@@ -294,7 +294,7 @@ bits_image_property_changed (pixman_image_t *image)
 	image->common.get_scanline_64 =
 	    (scanFetchProc)_pixman_image_get_scanline_64_generic;
 	image->common.get_scanline_32 =
-	    (scanFetchProc)READ_ACCESS(fbFetchTransformed);
+	    (scanFetchProc)fbFetchTransformed;
     }
     else if ((bits->common.repeat != PIXMAN_REPEAT_NONE) &&
 	    bits->width == 1 &&
@@ -316,7 +316,7 @@ bits_image_property_changed (pixman_image_t *image)
 	image->common.get_scanline_64 =
 	    (scanFetchProc)_pixman_image_get_scanline_64_generic;
 	image->common.get_scanline_32 =
-	    (scanFetchProc)READ_ACCESS(fbFetchTransformed);
+	    (scanFetchProc)fbFetchTransformed;
     }
     
     bits->fetch_pixel = READ_ACCESS(pixman_fetchPixelProcForPicture32)(bits);

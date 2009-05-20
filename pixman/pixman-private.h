@@ -214,9 +214,6 @@ void _pixman_image_get_scanline_64_generic (pixman_image_t * pict, int x, int y,
 					    uint64_t *buffer, uint64_t *mask, uint32_t maskBits);
 void fbFetchTransformed(bits_image_t *, int x, int y, int width,
                         uint32_t *buffer, uint32_t *mask, uint32_t maskBits);
-void fbFetchTransformed_accessors(bits_image_t *, int x, int y, int width,
-                                  uint32_t *buffer, uint32_t *mask,
-                                  uint32_t maskBits);
 
 /* end */
 
