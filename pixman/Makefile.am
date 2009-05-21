@@ -25,7 +25,6 @@ libpixman_1_la_SOURCES =			\
 	pixman-linear-gradient.c		\
 	pixman-radial-gradient.c		\
 	pixman-bits-image.c			\
-	pixman-transformed.c			\
 	pixman-utils.c				\
 	pixman-edge.c				\
 	pixman-edge-accessors.c			\
