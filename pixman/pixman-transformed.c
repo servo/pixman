@@ -464,16 +464,20 @@ fbFetchTransformed (bits_image_t * pict, int x, int y, int width,
 		pixman_fixed_48_16_t div;
 		
 		div = ((pixman_fixed_48_16_t)v.vector[0] << 16)/v.vector[2];
-		if ((div >> 16) >= 0xffff)
-		    coords[0] = 0xffffffff; /* FIXME: the intention is that this should be fetched as 0 */
+		if ((div >> 16) > 0x7fff)
+		    coords[0] = 0x7fffffff; 
+		else if ((div >> 16) < 0x8000)
+		    coords[0] = 0x80000000;
 		else
-		    coords[0] = div >> 16;
-
+		    coords[0] = div;
+		
 		div = ((pixman_fixed_48_16_t)v.vector[1] << 16)/v.vector[2];
-		if ((div >> 16) >= 0xffff)
-		    coords[1] = 0xffffffff; /* FIXME: the intention is that this should be fetched as 0 */
+		if ((div >> 16) > 0x7fff)
+		    coords[1] = 0x7fffffff;
+		else if ((div >> 16) < 0x8000)
+		    coords[1] = 0x8000000;
 		else
-		    coords[1] = div >> 16;
+		    coords[1] = div;
 	    }
 
 	    coords += 2;
