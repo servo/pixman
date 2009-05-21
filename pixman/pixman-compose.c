@@ -82,8 +82,11 @@ pixman_composite_rect_general_internal (const FbComposeData *data,
     else
 	fetchDest = _pixman_image_get_scanline_32;
 
-    store = _pixman_image_get_storer (data->dest, wide);
-
+    if (wide)
+	store = _pixman_image_store_scanline_64;
+    else
+	store = _pixman_image_store_scanline_32;
+ 
     // Skip the store step and composite directly into the
     // destination if the output format of the compose func matches
     // the destination format.
@@ -186,7 +189,7 @@ pixman_composite_rect_general_internal (const FbComposeData *data,
 		compose (dest_buffer, src_buffer, mask_buffer, data->width);
 
 		/* write back */
-		store (data->dest, data->xDest, data->yDest + i, data->width,
+		store (&(data->dest->bits), data->xDest, data->yDest + i, data->width,
 		       dest_buffer);
 	    }
 	    else

@@ -295,7 +295,7 @@ typedef enum
     SOURCE_IMAGE_CLASS_VERTICAL,
 } source_pict_class_t;
 
-typedef void (*scanStoreProc)(pixman_image_t *, int, int, int, uint32_t *);
+typedef void (*scanStoreProc)(bits_image_t *img, int x, int y, int width, uint32_t *buffer);
 typedef void (*scanFetchProc)(pixman_image_t *, int, int, int, uint32_t *,
 			      uint32_t *, uint32_t);
 
@@ -316,9 +316,15 @@ void
 _pixman_image_get_scanline_64 (pixman_image_t *image, int x, int y, int width,
 			       uint32_t *buffer, uint32_t *unused, uint32_t unused2);
 
-scanStoreProc
-_pixman_image_get_storer (pixman_image_t *image,
-			  int             wide);
+void
+_pixman_image_store_scanline_32 (bits_image_t *image, int x, int y, int width,
+				 uint32_t *buffer);
+/* Even thought the type of buffer is uint32_t *, the function actually expects
+ * a uint64_t *buffer.
+ */
+void
+_pixman_image_store_scanline_64 (bits_image_t *image, int x, int y, int width,
+				 uint32_t *buffer);
 
 pixman_image_t *
 _pixman_image_allocate (void);
@@ -431,6 +437,9 @@ struct bits_image
     uint32_t *			bits;
     uint32_t *			free_me;
     int				rowstride; /* in number of uint32_t's */
+
+    scanStoreProc		store_scanline_32;
+    scanStoreProc		store_scanline_64;
 };
 
 union pixman_image

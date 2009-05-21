@@ -26,6 +26,7 @@
 
 
 #define READ_ACCESS(f) ((image->common.read_func)? f##_accessors : f)
+#define WRITE_ACCESS(f) ((image->common.write_func)? f##_accessors : f)
 
 static void
 fbFetchSolid(bits_image_t * image,
@@ -83,6 +84,34 @@ fbFetch64(bits_image_t * image,
 }
 
 static void
+fbStore(bits_image_t * image, int x, int y, int width, uint32_t *buffer)
+{
+    uint32_t *bits;
+    int32_t stride;
+    storeProc32 store = WRITE_ACCESS(pixman_storeProcForPicture32)(image);
+    const pixman_indexed_t * indexed = image->indexed;
+
+    bits = image->bits;
+    stride = image->rowstride;
+    bits += y*stride;
+    store((pixman_image_t *)image, bits, buffer, x, width, indexed);
+}
+
+static void
+fbStore64 (bits_image_t * image, int x, int y, int width, uint64_t *buffer)
+{
+    uint32_t *bits;
+    int32_t stride;
+    storeProc64 store = WRITE_ACCESS(pixman_storeProcForPicture64)(image);
+    const pixman_indexed_t * indexed = image->indexed;
+
+    bits = image->bits;
+    stride = image->rowstride;
+    bits += y*stride;
+    store((pixman_image_t *)image, bits, buffer, x, width, indexed);
+}
+
+static void
 bits_image_property_changed (pixman_image_t *image)
 {
     bits_image_t *bits = (bits_image_t *)image;
@@ -95,8 +124,8 @@ bits_image_property_changed (pixman_image_t *image)
 	    (scanFetchProc)READ_ACCESS(fbFetchExternalAlpha);
     }
     else if ((bits->common.repeat != PIXMAN_REPEAT_NONE) &&
-	     bits->width == 1 &&
-	     bits->height == 1)
+	    bits->width == 1 &&
+	    bits->height == 1)
     {
 	image->common.get_scanline_64 = (scanFetchProc)fbFetchSolid64;
 	image->common.get_scanline_32 = (scanFetchProc)fbFetchSolid;
@@ -116,7 +145,35 @@ bits_image_property_changed (pixman_image_t *image)
 	image->common.get_scanline_32 =
 	    (scanFetchProc)READ_ACCESS(fbFetchTransformed);
     }
+    
+    if (bits->common.alpha_map)
+    {
+	bits->store_scanline_64 =
+	    (scanStoreProc)WRITE_ACCESS(fbStoreExternalAlpha64);
+	bits->store_scanline_32 =
+	    (scanStoreProc)WRITE_ACCESS(fbStoreExternalAlpha);
+    }
+    else
+    {
+	bits->store_scanline_64 = (scanStoreProc)fbStore64;
+	bits->store_scanline_32 = fbStore;
+    }
 }
+
+void
+_pixman_image_store_scanline_32 (bits_image_t *image, int x, int y, int width,
+				 uint32_t *buffer)
+{
+    image->store_scanline_32 (image, x, y, width, buffer);
+}
+
+void
+_pixman_image_store_scanline_64 (bits_image_t *image, int x, int y, int width,
+				 uint32_t *buffer)
+{
+    image->store_scanline_64 (image, x, y, width, buffer);
+}
+
 
 static uint32_t *
 create_bits (pixman_format_code_t format,
