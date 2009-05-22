@@ -266,8 +266,8 @@ fbStoreExternalAlpha64 (bits_image_t * image, int x, int y, int width,
     const pixman_indexed_t * indexed = image->indexed;
     const pixman_indexed_t * aindexed;
 
-    store = ACCESS(pixman_storeProcForPicture64)(image);
-    astore = ACCESS(pixman_storeProcForPicture64)(image->common.alpha_map);
+    store = WRITE_ACCESS(pixman_storeProcForPicture64)(image);
+    astore = WRITE_ACCESS(pixman_storeProcForPicture64)(image->common.alpha_map);
     aindexed = image->common.alpha_map->indexed;
 
     ax = x;
@@ -791,8 +791,6 @@ bits_image_property_changed (pixman_image_t *image)
 	    (scanFetchProc)fbFetchTransformed;
     }
     
-    bits->fetch_pixel = READ_ACCESS(pixman_fetchPixelProcForPicture32)(bits);
-    
     if (bits->common.alpha_map)
     {
 	bits->store_scanline_64 = (scanStoreProc)fbStoreExternalAlpha64;
@@ -803,6 +801,13 @@ bits_image_property_changed (pixman_image_t *image)
 	bits->store_scanline_64 = (scanStoreProc)fbStore64;
 	bits->store_scanline_32 = fbStore;
     }
+
+    bits->store_scanline_raw_32 =
+	WRITE_ACCESS(pixman_storeProcForPicture32)(bits);
+    bits->store_scanline_raw_64 =
+	WRITE_ACCESS(pixman_storeProcForPicture64)(bits);
+    
+    bits->fetch_pixel = READ_ACCESS(pixman_fetchPixelProcForPicture32)(bits);
 }
 
 void

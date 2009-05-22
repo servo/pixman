@@ -383,6 +383,9 @@ struct bits_image
     
     scanStoreProc		store_scanline_32;
     scanStoreProc		store_scanline_64;
+
+    storeProc32			store_scanline_raw_32;
+    storeProc64			store_scanline_raw_64;
 };
 
 union pixman_image
