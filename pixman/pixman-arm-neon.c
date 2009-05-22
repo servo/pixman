@@ -245,14 +245,14 @@ fbCompositeSrcAdd_8000x8000neon (pixman_op_t op,
             }
             if (w&1)
             {
-                sval = vld1_lane_u8((void*)src,sval,1);
-                dval = vld1_lane_u8((void*)dst,dval,1);
+                sval = vld1_lane_u8(src,sval,1);
+                dval = vld1_lane_u8(dst,dval,1);
             }
 
             dval = vqadd_u8(dval,sval);
 
             if (w&1)
-                vst1_lane_u8((void*)dst,dval,1);
+                vst1_lane_u8(dst,dval,1);
             if (w&2)
                 vst1_lane_u16((void*)dst2,vreinterpret_u16_u8(dval),1);
             if (w&4)
@@ -1360,14 +1360,14 @@ fbCompositeSrcAdd_8888x8x8neon (pixman_op_t op,
             }
             if (w&1)
             {
-                mval = vld1_lane_u8((void *)mask, mval, 1);
-                dval = vld1_lane_u8((void *)dst, dval, 1);
+                mval = vld1_lane_u8(mask, mval, 1);
+                dval = vld1_lane_u8(dst, dval, 1);
             }
 
             res = vqadd_u8(neon2mul(mval,sa),dval);
 
             if (w&1)
-                vst1_lane_u8((void *)dst, res, 1);
+                vst1_lane_u8(dst, res, 1);
             if (w&2)
                 vst1_lane_u16((void *)dst2, vreinterpret_u16_u8(res), 1);
             if (w&4)
