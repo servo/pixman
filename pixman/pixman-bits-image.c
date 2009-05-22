@@ -146,9 +146,6 @@ fbFetch64(bits_image_t * image,
     image->fetch_scanline_raw_64(image, x, y, width, buffer);
 }
 
-
-
-
 /* On entry, @buffer should contain @n_pixels (x, y) coordinate pairs, where
  * x and y are both uint32_ts. On exit, buffer will contain the corresponding
  * pixels.
@@ -243,7 +240,7 @@ bits_image_fetch_alpha_pixels (bits_image_t *image, uint32_t *buffer, int n_pixe
 }
 
 static void
-fetch_pixels_src_clip (bits_image_t *image, uint32_t *buffer, int n_pixels)
+bits_image_fetch_pixels_src_clip (bits_image_t *image, uint32_t *buffer, int n_pixels)
 {
     if (image->common.src_clip != &(image->common.full_region) &&
 	!pixman_region32_equal (image->common.src_clip, &(image->common.full_region)))
@@ -271,7 +268,7 @@ fetch_pixels_src_clip (bits_image_t *image, uint32_t *buffer, int n_pixels)
 
 /* Buffer contains list of integers on input, list of pixels on output */
 static void
-fetch_extended (bits_image_t *image, uint32_t *buffer, int n_pixels)
+bits_image_fetch_extended (bits_image_t *image, uint32_t *buffer, int n_pixels)
 {
     int32_t *coords, x, y, width, height;
     int i;
@@ -339,14 +336,14 @@ fetch_extended (bits_image_t *image, uint32_t *buffer, int n_pixels)
 	break;
     }
 
-    fetch_pixels_src_clip (image, buffer, n_pixels);
+    bits_image_fetch_pixels_src_clip (image, buffer, n_pixels);
 }
 
 /* Buffer contains list of fixed-point coordinates on input,
  * a list of pixels on output
  */
 static void
-fetch_nearest_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
+bits_image_fetch_nearest_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
 {
     int i;
 
@@ -357,14 +354,14 @@ fetch_nearest_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
 	coords[i] >>= 16;
     }
 
-    return fetch_extended (image, buffer, n_pixels);
+    return bits_image_fetch_extended (image, buffer, n_pixels);
 }
 
 /* Buffer contains list of fixed-point coordinates on input,
  * a list of pixels on output
  */
 static void
-fetch_bilinear_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
+bits_image_fetch_bilinear_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
 {
 /* (Four pixels * two coordinates) per pixel */
 #define TMP_N_PIXELS	(256)
@@ -415,7 +412,7 @@ fetch_bilinear_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
 	    coords += 2;
 	}
 
-	fetch_extended (image, temps, tmp_n_pixels * 4);
+	bits_image_fetch_extended (image, temps, tmp_n_pixels * 4);
 
 	u = (uint32_t *)temps;
 	d = dists;
@@ -458,7 +455,7 @@ fetch_bilinear_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
  * a list of pixels on output
  */
 static void
-fetch_convolution_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
+bits_image_fetch_convolution_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
 {
 #define N_TMP_PIXELS 8192
     uint32_t tmp_pixels_stack[N_TMP_PIXELS * 2]; /* Two coordinates per pixel */
@@ -524,7 +521,7 @@ fetch_convolution_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
 	    coords += 2;
 	}
 
-	fetch_extended (image, tmp_pixels, n_kernels * kernel_size);
+	bits_image_fetch_extended (image, tmp_pixels, n_kernels * kernel_size);
 
 	u = tmp_pixels;
 	for (j = 0; j < n_kernels; ++j)
@@ -692,16 +689,16 @@ fbFetchTransformed (bits_image_t * pict, int x, int y, int width,
 	{
 	case PIXMAN_FILTER_NEAREST:
 	case PIXMAN_FILTER_FAST:
-	    fetch_nearest_pixels (pict, tmp_buffer, n_pixels);
+	    bits_image_fetch_nearest_pixels (pict, tmp_buffer, n_pixels);
 	    break;
 
 	case PIXMAN_FILTER_BILINEAR:
 	case PIXMAN_FILTER_GOOD:
 	case PIXMAN_FILTER_BEST:
-	    fetch_bilinear_pixels (pict, tmp_buffer, n_pixels);
+	    bits_image_fetch_bilinear_pixels (pict, tmp_buffer, n_pixels);
 	    break;
 	case PIXMAN_FILTER_CONVOLUTION:
-	    fetch_convolution_pixels (pict, tmp_buffer, n_pixels);
+	    bits_image_fetch_convolution_pixels (pict, tmp_buffer, n_pixels);
 	    break;
 	}
 
