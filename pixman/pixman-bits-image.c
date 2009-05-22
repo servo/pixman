@@ -138,7 +138,7 @@ bits_image_store_scanline_64 (bits_image_t *image, int x, int y, int width, uint
  * pixels.
  */
 static void
-_pixman_image_fetch_raw_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
+bits_image_fetch_raw_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
 {
     uint32_t *coords;
     int i;
@@ -157,8 +157,8 @@ _pixman_image_fetch_raw_pixels (bits_image_t *image, uint32_t *buffer, int n_pix
     }
 }
 
-void
-_pixman_image_fetch_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
+static void
+bits_image_fetch_alpha_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
 {
 #define N_ALPHA_PIXELS 256
     
@@ -167,10 +167,11 @@ _pixman_image_fetch_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
     
     if (!image->common.alpha_map)
     {
-	_pixman_image_fetch_raw_pixels (image, buffer, n_pixels);
+	bits_image_fetch_raw_pixels (image, buffer, n_pixels);
 	return;
     }
-    
+
+    /* Alpha map */
     i = 0;
     while (i < n_pixels)
     {
@@ -207,8 +208,8 @@ _pixman_image_fetch_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
 	    coords += 2;
 	}
 	
-	_pixman_image_fetch_raw_pixels (image->common.alpha_map, alpha_pixels, tmp_n_pixels);
-	_pixman_image_fetch_raw_pixels (image, buffer + 2 * i, tmp_n_pixels);
+	bits_image_fetch_raw_pixels (image->common.alpha_map, alpha_pixels, tmp_n_pixels);
+	bits_image_fetch_raw_pixels (image, buffer + 2 * i, tmp_n_pixels);
 	
 	for (j = 0; j < tmp_n_pixels; ++j)
 	{
@@ -249,7 +250,7 @@ fetch_pixels_src_clip (bits_image_t *image, uint32_t *buffer, int n_pixels)
 	}
     }
 
-    _pixman_image_fetch_pixels (image, buffer, n_pixels);
+    bits_image_fetch_alpha_pixels (image, buffer, n_pixels);
 }
 
 /* Buffer contains list of integers on input, list of pixels on output */
