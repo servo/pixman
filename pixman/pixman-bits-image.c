@@ -78,9 +78,7 @@ fbFetch(bits_image_t * image,
 	int x, int y, int width,
 	uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
 {
-    fetchProc32 fetch = READ_ACCESS(pixman_fetchProcForPicture32)(image);
-    
-    fetch(image, x, y, width, buffer);
+    image->fetch_scanline_raw_32(image, x, y, width, buffer);
 }
 
 static void
@@ -88,9 +86,7 @@ fbFetch64(bits_image_t * image,
 	  int x, int y, int width,
 	  uint64_t *buffer, void *unused, uint32_t unused2)
 {
-    fetchProc64 fetch = READ_ACCESS(pixman_fetchProcForPicture64)(image);
-    
-    fetch(image, x, y, width, buffer);
+    image->fetch_scanline_raw_64(image, x, y, width, buffer);
 }
 
 static void
@@ -98,13 +94,13 @@ fbStore(bits_image_t * image, int x, int y, int width, uint32_t *buffer)
 {
     uint32_t *bits;
     int32_t stride;
-    storeProc32 store = WRITE_ACCESS(pixman_storeProcForPicture32)(image);
     const pixman_indexed_t * indexed = image->indexed;
 
     bits = image->bits;
     stride = image->rowstride;
     bits += y*stride;
-    store((pixman_image_t *)image, bits, buffer, x, width, indexed);
+
+    image->store_scanline_raw_32 ((pixman_image_t *)image, bits, buffer, x, width, indexed);
 }
 
 static void
@@ -112,13 +108,12 @@ fbStore64 (bits_image_t * image, int x, int y, int width, uint64_t *buffer)
 {
     uint32_t *bits;
     int32_t stride;
-    storeProc64 store = WRITE_ACCESS(pixman_storeProcForPicture64)(image);
     const pixman_indexed_t * indexed = image->indexed;
 
     bits = image->bits;
     stride = image->rowstride;
     bits += y*stride;
-    store((pixman_image_t *)image, bits, buffer, x, width, indexed);
+    image->store_scanline_raw_64 ((pixman_image_t *)image, bits, buffer, x, width, indexed);
 }
 
 /* On entry, @buffer should contain @n_pixels (x, y) coordinate pairs, where
@@ -220,8 +215,6 @@ fbStoreExternalAlpha (bits_image_t * image, int x, int y, int width,
     uint32_t *bits, *alpha_bits;
     int32_t stride, astride;
     int ax, ay;
-    storeProc32 store;
-    storeProc32 astore;
     const pixman_indexed_t * indexed = image->indexed;
     const pixman_indexed_t * aindexed;
 
@@ -232,8 +225,6 @@ fbStoreExternalAlpha (bits_image_t * image, int x, int y, int width,
 	return;
     }
 
-    store = WRITE_ACCESS(pixman_storeProcForPicture32)(image);
-    astore = WRITE_ACCESS(pixman_storeProcForPicture32)(image->common.alpha_map);
     aindexed = image->common.alpha_map->indexed;
 
     ax = x;
@@ -249,9 +240,9 @@ fbStoreExternalAlpha (bits_image_t * image, int x, int y, int width,
     alpha_bits += (ay - image->common.alpha_origin.y)*astride;
 
 
-    store((pixman_image_t *)image, bits, buffer, x, width, indexed);
-    astore((pixman_image_t *)image->common.alpha_map,
-	   alpha_bits, buffer, ax - image->common.alpha_origin.x, width, aindexed);
+    image->store_scanline_raw_32((pixman_image_t *)image, bits, buffer, x, width, indexed);
+    image->common.alpha_map->store_scanline_raw_32 ((pixman_image_t *)image->common.alpha_map,
+						    alpha_bits, buffer, ax - image->common.alpha_origin.x, width, aindexed);
 }
 
 static void
@@ -261,13 +252,9 @@ fbStoreExternalAlpha64 (bits_image_t * image, int x, int y, int width,
     uint32_t *bits, *alpha_bits;
     int32_t stride, astride;
     int ax, ay;
-    storeProc64 store;
-    storeProc64 astore;
     const pixman_indexed_t * indexed = image->indexed;
     const pixman_indexed_t * aindexed;
 
-    store = WRITE_ACCESS(pixman_storeProcForPicture64)(image);
-    astore = WRITE_ACCESS(pixman_storeProcForPicture64)(image->common.alpha_map);
     aindexed = image->common.alpha_map->indexed;
 
     ax = x;
@@ -283,8 +270,8 @@ fbStoreExternalAlpha64 (bits_image_t * image, int x, int y, int width,
     alpha_bits += (ay - image->common.alpha_origin.y)*astride;
 
 
-    store((pixman_image_t *)image, bits, buffer, x, width, indexed);
-    astore((pixman_image_t *)image->common.alpha_map,
+    image->store_scanline_raw_64((pixman_image_t *)image, bits, buffer, x, width, indexed);
+    image->common.alpha_map->store_scanline_raw_64((pixman_image_t *)image->common.alpha_map,
 	   alpha_bits, buffer, ax - image->common.alpha_origin.x, width, aindexed);
 }
 
@@ -806,6 +793,11 @@ bits_image_property_changed (pixman_image_t *image)
 	WRITE_ACCESS(pixman_storeProcForPicture32)(bits);
     bits->store_scanline_raw_64 =
 	WRITE_ACCESS(pixman_storeProcForPicture64)(bits);
+
+    bits->fetch_scanline_raw_32 =
+	READ_ACCESS(pixman_fetchProcForPicture32)(bits);
+    bits->fetch_scanline_raw_64 =
+	READ_ACCESS(pixman_fetchProcForPicture64)(bits);
     
     bits->fetch_pixel = READ_ACCESS(pixman_fetchPixelProcForPicture32)(bits);
 }
