@@ -36,7 +36,7 @@ pixman_bool_t pixman_have_arm_neon(void);
 
 #ifdef USE_ARM_NEON
 
-extern const FastPathInfo *const arm_fast_paths;
+extern const FastPathInfo *const arm_neon_fast_paths;
 
 void
 fbCompositeSrcAdd_8000x8000neon (pixman_op_t op,
