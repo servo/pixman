@@ -99,16 +99,18 @@ _pixman_image_store_scanline_64 (bits_image_t *image, int x, int y, int width,
 }
 
 /* Fetch functions */
+
+
 static void
-fbFetchSolid(bits_image_t * image,
-	     int x, int y, int width,
-	     uint32_t *buffer,
-	     uint32_t *mask, uint32_t maskBits)
+bits_image_fetch_solid_32 (bits_image_t * image,
+			   int x, int y, int width,
+			   uint32_t *buffer,
+			   uint32_t *mask, uint32_t maskBits)
 {
     uint32_t color;
     uint32_t *end;
     
-    color = image->fetch_pixel(image, 0, 0);
+    color = image->fetch_pixel (image, 0, 0);
     
     end = buffer + width;
     while (buffer < end)
@@ -116,14 +118,14 @@ fbFetchSolid(bits_image_t * image,
 }
 
 static void
-fbFetchSolid64(bits_image_t * image,
-	       int x, int y, int width,
-	       uint64_t *buffer, void *unused, uint32_t unused2)
+bits_image_fetch_solid_64 (bits_image_t * image,
+			   int x, int y, int width,
+			   uint64_t *buffer, void *unused, uint32_t unused2)
 {
     uint64_t color;
     uint64_t *end;
     
-    color = image->fetch_pixel(image, 0, 0);
+    color = image->fetch_pixel (image, 0, 0);
     
     end = buffer + width;
     while (buffer < end)
@@ -131,19 +133,19 @@ fbFetchSolid64(bits_image_t * image,
 }
 
 static void
-fbFetch(bits_image_t * image,
-	int x, int y, int width,
-	uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
+bits_image_fetch_untransformed_32 (bits_image_t * image,
+				   int x, int y, int width,
+				   uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
 {
-    image->fetch_scanline_raw_32(image, x, y, width, buffer);
+    image->fetch_scanline_raw_32 (image, x, y, width, buffer);
 }
 
 static void
-fbFetch64(bits_image_t * image,
-	  int x, int y, int width,
-	  uint64_t *buffer, void *unused, uint32_t unused2)
+bits_image_fetch_untransformed_64 (bits_image_t * image,
+				   int x, int y, int width,
+				   uint64_t *buffer, void *unused, uint32_t unused2)
 {
-    image->fetch_scanline_raw_64(image, x, y, width, buffer);
+    image->fetch_scanline_raw_64 (image, x, y, width, buffer);
 }
 
 /* On entry, @buffer should contain @n_pixels (x, y) coordinate pairs, where
@@ -594,8 +596,8 @@ bits_image_fetch_filtered (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 }
 
 static void
-fbFetchTransformed (bits_image_t * pict, int x, int y, int width,
-		    uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
+bits_image_fetch_transformed (bits_image_t * pict, int x, int y, int width,
+			      uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
 {
 #define N_TMP_PIXELS 1024
 
@@ -639,8 +641,8 @@ fbFetchTransformed (bits_image_t * pict, int x, int y, int width,
     i = 0;
     while (i < width)
     {
-	int j;
 	int n_pixels = MIN (N_TMP_PIXELS, width - i);
+	int j;
 	
 	coords = (int32_t *)tmp_buffer;
 
@@ -696,29 +698,29 @@ bits_image_property_changed (pixman_image_t *image)
 	image->common.get_scanline_64 =
 	    (scanFetchProc)_pixman_image_get_scanline_64_generic;
 	image->common.get_scanline_32 =
-	    (scanFetchProc)fbFetchTransformed;
+	    (scanFetchProc)bits_image_fetch_transformed;
     }
     else if ((bits->common.repeat != PIXMAN_REPEAT_NONE) &&
 	    bits->width == 1 &&
 	    bits->height == 1)
     {
-	image->common.get_scanline_64 = (scanFetchProc)fbFetchSolid64;
-	image->common.get_scanline_32 = (scanFetchProc)fbFetchSolid;
+	image->common.get_scanline_64 = (scanFetchProc)bits_image_fetch_solid_64;
+	image->common.get_scanline_32 = (scanFetchProc)bits_image_fetch_solid_32;
     }
     else if (!bits->common.transform &&
 	     bits->common.filter != PIXMAN_FILTER_CONVOLUTION &&
 	     bits->common.repeat != PIXMAN_REPEAT_PAD &&
 	     bits->common.repeat != PIXMAN_REPEAT_REFLECT)
     {
-	image->common.get_scanline_64 = (scanFetchProc)fbFetch64;
-	image->common.get_scanline_32 = (scanFetchProc)fbFetch;
+	image->common.get_scanline_64 = (scanFetchProc)bits_image_fetch_untransformed_64;
+	image->common.get_scanline_32 = (scanFetchProc)bits_image_fetch_untransformed_32;
     }
     else
     {
 	image->common.get_scanline_64 =
 	    (scanFetchProc)_pixman_image_get_scanline_64_generic;
 	image->common.get_scanline_32 =
-	    (scanFetchProc)fbFetchTransformed;
+	    (scanFetchProc)bits_image_fetch_transformed;
     }
     
     bits->store_scanline_64 = bits_image_store_scanline_64;
