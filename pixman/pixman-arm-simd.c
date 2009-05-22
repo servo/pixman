@@ -427,4 +427,4 @@ static const FastPathInfo arm_simd_fast_path_array[] =
     { PIXMAN_OP_NONE },
 };
 
-const FastPathInfo *const arm_simd_fast_paths;
+const FastPathInfo *const arm_simd_fast_paths = arm_simd_fast_path_array;
