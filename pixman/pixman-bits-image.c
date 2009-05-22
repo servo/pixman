@@ -38,56 +38,7 @@
 #define READ_ACCESS(f) ((image->common.read_func)? f##_accessors : f)
 #define WRITE_ACCESS(f) ((image->common.write_func)? f##_accessors : f)
 
-static void
-fbFetchSolid(bits_image_t * image,
-	     int x, int y, int width,
-	     uint32_t *buffer,
-	     uint32_t *mask, uint32_t maskBits)
-{
-    uint32_t color;
-    uint32_t *end;
-    fetchPixelProc32 fetch =
-	READ_ACCESS(pixman_fetchPixelProcForPicture32)(image);
-    
-    color = fetch(image, 0, 0);
-    
-    end = buffer + width;
-    while (buffer < end)
-	*(buffer++) = color;
-}
-
-static void
-fbFetchSolid64(bits_image_t * image,
-	       int x, int y, int width,
-	       uint64_t *buffer, void *unused, uint32_t unused2)
-{
-    uint64_t color;
-    uint64_t *end;
-    fetchPixelProc64 fetch =
-	READ_ACCESS(pixman_fetchPixelProcForPicture64)(image);
-    
-    color = fetch(image, 0, 0);
-    
-    end = buffer + width;
-    while (buffer < end)
-	*(buffer++) = color;
-}
-
-static void
-fbFetch(bits_image_t * image,
-	int x, int y, int width,
-	uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
-{
-    image->fetch_scanline_raw_32(image, x, y, width, buffer);
-}
-
-static void
-fbFetch64(bits_image_t * image,
-	  int x, int y, int width,
-	  uint64_t *buffer, void *unused, uint32_t unused2)
-{
-    image->fetch_scanline_raw_64(image, x, y, width, buffer);
-}
+/* Store functions */
 
 static void
 bits_image_store_scanline_32 (bits_image_t *image, int x, int y, int width, uint32_t *buffer)
@@ -132,6 +83,71 @@ bits_image_store_scanline_64 (bits_image_t *image, int x, int y, int width, uint
 	bits_image_store_scanline_64 (image->common.alpha_map, x, y, width, buffer);
     }
 }
+
+void
+_pixman_image_store_scanline_32 (bits_image_t *image, int x, int y, int width,
+				 uint32_t *buffer)
+{
+    image->store_scanline_32 (image, x, y, width, buffer);
+}
+
+void
+_pixman_image_store_scanline_64 (bits_image_t *image, int x, int y, int width,
+				 uint32_t *buffer)
+{
+    image->store_scanline_64 (image, x, y, width, buffer);
+}
+
+/* Fetch functions */
+static void
+fbFetchSolid(bits_image_t * image,
+	     int x, int y, int width,
+	     uint32_t *buffer,
+	     uint32_t *mask, uint32_t maskBits)
+{
+    uint32_t color;
+    uint32_t *end;
+    
+    color = image->fetch_pixel(image, 0, 0);
+    
+    end = buffer + width;
+    while (buffer < end)
+	*(buffer++) = color;
+}
+
+static void
+fbFetchSolid64(bits_image_t * image,
+	       int x, int y, int width,
+	       uint64_t *buffer, void *unused, uint32_t unused2)
+{
+    uint64_t color;
+    uint64_t *end;
+    
+    color = image->fetch_pixel(image, 0, 0);
+    
+    end = buffer + width;
+    while (buffer < end)
+	*(buffer++) = color;
+}
+
+static void
+fbFetch(bits_image_t * image,
+	int x, int y, int width,
+	uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
+{
+    image->fetch_scanline_raw_32(image, x, y, width, buffer);
+}
+
+static void
+fbFetch64(bits_image_t * image,
+	  int x, int y, int width,
+	  uint64_t *buffer, void *unused, uint32_t unused2)
+{
+    image->fetch_scanline_raw_64(image, x, y, width, buffer);
+}
+
+
+
 
 /* On entry, @buffer should contain @n_pixels (x, y) coordinate pairs, where
  * x and y are both uint32_ts. On exit, buffer will contain the corresponding
@@ -743,21 +759,6 @@ bits_image_property_changed (pixman_image_t *image)
 	READ_ACCESS(pixman_fetchProcForPicture64)(bits);
     
     bits->fetch_pixel = READ_ACCESS(pixman_fetchPixelProcForPicture32)(bits);
-}
-
-
-void
-_pixman_image_store_scanline_32 (bits_image_t *image, int x, int y, int width,
-				 uint32_t *buffer)
-{
-    image->store_scanline_32 (image, x, y, width, buffer);
-}
-
-void
-_pixman_image_store_scanline_64 (bits_image_t *image, int x, int y, int width,
-				 uint32_t *buffer)
-{
-    image->store_scanline_64 (image, x, y, width, buffer);
 }
 
 static uint32_t *
