@@ -570,40 +570,6 @@ _pixman_gradient_walker_pixel (GradientWalker       *walker,
  * where Fetch4 doesn't have a READ
  */
 
-#if 0
-/* Framebuffer access support macros */
-#define ACCESS_MEM(code)						\
-    do {								\
-	const image_common_t *const com__ =				\
-	    (image_common_t *)image;					\
-									\
-	if (!com__->read_func && !com__->write_func)			\
-	{								\
-	    const int do_access__ = 0;					\
-	    const pixman_read_memory_func_t read_func__ = NULL;		\
-	    const pixman_write_memory_func_t write_func__ = NULL;	\
-	    (void)read_func__;						\
-	    (void)write_func__;						\
-	    (void)do_access__;						\
-									\
-	    {code}							\
-	}								\
-	else								\
-	{								\
-	    const int do_access__ = 1;					\
-	    const pixman_read_memory_func_t read_func__ =		\
-		com__->read_func;					\
-	    const pixman_write_memory_func_t write_func__ =		\
-		com__->write_func;					\
-	    (void)read_func__;						\
-	    (void)write_func__;						\
-	    (void)do_access__;						\
-	    								\
-	    {code}							\
-	}								\
-    } while (0)
-#endif
-
 #ifdef PIXMAN_FB_ACCESSORS
 
 #define ACCESS(sym) sym##_accessors
