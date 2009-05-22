@@ -351,7 +351,8 @@ bits_image_fetch_nearest_pixels (bits_image_t *image, uint32_t *buffer, int n_pi
     {
 	int32_t *coords = (int32_t *)buffer;
 
-	coords[i] >>= 16;
+	/* Subtract pixman_fixed_e to ensure that 0.5 rounds to 0, not 1 */
+	coords[i] = pixman_fixed_to_int (coords[i] - pixman_fixed_e);
     }
 
     return bits_image_fetch_extended (image, buffer, n_pixels);
@@ -388,10 +389,13 @@ bits_image_fetch_bilinear_pixels (bits_image_t *image, uint32_t *buffer, int n_p
 	for (j = 0; j < tmp_n_pixels; ++j)
 	{
 	    int32_t x1, y1, x2, y2;
-	    x1 = coords[0];
-	    y1 = coords[1];
+	    
+	    x1 = coords[0] - pixman_fixed_1 / 2;
+	    y1 = coords[1] - pixman_fixed_1 / 2;
+	    
 	    distx = (x1 >> 8) & 0xff;
 	    disty = (y1 >> 8) & 0xff;
+	    
 	    x1 >>= 16;
 	    y1 >>= 16;
 	    x2 = x1 + 1;
@@ -503,9 +507,10 @@ bits_image_fetch_convolution_pixels (bits_image_t *image, uint32_t *buffer, int 
 	for (j = 0; j < n_kernels; ++j)
 	{
 	    int32_t x, y, x1, x2, y1, y2;
-	    
-	    x1 = pixman_fixed_to_int (coords[0]) - x_off;
-	    y1 = pixman_fixed_to_int (coords[1]) - y_off;
+
+	    /* Subtract pixman_fixed_e to ensure that 0.5 rounds to 0, not 1 */
+	    x1 = pixman_fixed_to_int (coords[0] - pixman_fixed_e) - x_off;
+	    y1 = pixman_fixed_to_int (coords[1] - pixman_fixed_e) - y_off;
 	    x2 = x1 + cwidth;
 	    y2 = y1 + cheight;
 
@@ -568,19 +573,6 @@ bits_image_fetch_convolution_pixels (bits_image_t *image, uint32_t *buffer, int 
 }
 
 static void
-adjust (pixman_vector_t *v, pixman_vector_t *u, pixman_fixed_t adjustment)
-{
-    int delta_v = (adjustment * v->vector[2]) >> 16;
-    int delta_u = (adjustment * u->vector[2]) >> 16;
-    
-    v->vector[0] += delta_v;
-    v->vector[1] += delta_v;
-    
-    u->vector[0] += delta_u;
-    u->vector[1] += delta_u;
-}
-
-static void
 fbFetchTransformed (bits_image_t * pict, int x, int y, int width,
 		    uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
 {
@@ -622,26 +614,6 @@ fbFetchTransformed (bits_image_t * pict, int x, int y, int width,
         unit.vector[2] = 0;
     }
 
-    /* These adjustments should probably be moved into the filter code */
-    if (pict->common.filter == PIXMAN_FILTER_NEAREST ||
-	pict->common.filter == PIXMAN_FILTER_FAST)
-    {
-	/* Round down to closest integer, ensuring that 0.5 rounds to 0, not 1 */
-	adjust (&v, &unit, - pixman_fixed_e);
-    }
-    else if (pict->common.filter == PIXMAN_FILTER_BILINEAR	||
-	     pict->common.filter == PIXMAN_FILTER_GOOD	||
-	     pict->common.filter == PIXMAN_FILTER_BEST)
-    {
-	/* Let the bilinear code pretend that pixels fall on integer coordinaters */
-	adjust (&v, &unit, -(pixman_fixed_1 / 2));
-    }
-    else if (pict->common.filter == PIXMAN_FILTER_CONVOLUTION)
-    {
-	/* Round to closest integer, ensuring that 0.5 rounds to 0, not 1 */
-	adjust (&v, &unit, - pixman_fixed_e);
-    }
-    
     i = 0;
     while (i < width)
     {
