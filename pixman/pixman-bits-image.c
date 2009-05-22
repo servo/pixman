@@ -45,7 +45,7 @@ bits_image_store_scanline_32 (bits_image_t *image, int x, int y, int width, uint
 {
     uint32_t *bits;
     int32_t stride;
-    const pixman_indexed_t * indexed = image->indexed;
+    const pixman_indexed_t *indexed = image->indexed;
 
     bits = image->bits;
     stride = image->rowstride;
@@ -67,7 +67,7 @@ bits_image_store_scanline_64 (bits_image_t *image, int x, int y, int width, uint
 {
     uint32_t *bits;
     int32_t stride;
-    const pixman_indexed_t * indexed = image->indexed;
+    const pixman_indexed_t *indexed = image->indexed;
 
     bits = image->bits;
     stride = image->rowstride;
@@ -99,54 +99,6 @@ _pixman_image_store_scanline_64 (bits_image_t *image, int x, int y, int width,
 }
 
 /* Fetch functions */
-
-
-static void
-bits_image_fetch_solid_32 (bits_image_t * image,
-			   int x, int y, int width,
-			   uint32_t *buffer,
-			   uint32_t *mask, uint32_t maskBits)
-{
-    uint32_t color;
-    uint32_t *end;
-    
-    color = image->fetch_pixel (image, 0, 0);
-    
-    end = buffer + width;
-    while (buffer < end)
-	*(buffer++) = color;
-}
-
-static void
-bits_image_fetch_solid_64 (bits_image_t * image,
-			   int x, int y, int width,
-			   uint64_t *buffer, void *unused, uint32_t unused2)
-{
-    uint64_t color;
-    uint64_t *end;
-    
-    color = image->fetch_pixel (image, 0, 0);
-    
-    end = buffer + width;
-    while (buffer < end)
-	*(buffer++) = color;
-}
-
-static void
-bits_image_fetch_untransformed_32 (bits_image_t * image,
-				   int x, int y, int width,
-				   uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
-{
-    image->fetch_scanline_raw_32 (image, x, y, width, buffer);
-}
-
-static void
-bits_image_fetch_untransformed_64 (bits_image_t * image,
-				   int x, int y, int width,
-				   uint64_t *buffer, void *unused, uint32_t unused2)
-{
-    image->fetch_scanline_raw_64 (image, x, y, width, buffer);
-}
 
 /* On entry, @buffer should contain @n_pixels (x, y) coordinate pairs, where
  * x and y are both uint32_ts. On exit, buffer will contain the corresponding
@@ -657,7 +609,8 @@ bits_image_fetch_transformed (bits_image_t * pict, int x, int y, int width,
 	    {
 		pixman_fixed_48_16_t div;
 		
-		div = ((pixman_fixed_48_16_t)v.vector[0] << 16)/v.vector[2];
+		div = ((pixman_fixed_48_16_t)v.vector[0] << 16) / v.vector[2];
+
 		if ((div >> 16) > 0x7fff)
 		    coords[0] = 0x7fffffff; 
 		else if ((div >> 16) < 0x8000)
@@ -665,7 +618,8 @@ bits_image_fetch_transformed (bits_image_t * pict, int x, int y, int width,
 		else
 		    coords[0] = div;
 		
-		div = ((pixman_fixed_48_16_t)v.vector[1] << 16)/v.vector[2];
+		div = ((pixman_fixed_48_16_t)v.vector[1] << 16) / v.vector[2];
+
 		if ((div >> 16) > 0x7fff)
 		    coords[1] = 0x7fffffff;
 		else if ((div >> 16) < 0x8000)
@@ -686,6 +640,53 @@ bits_image_fetch_transformed (bits_image_t * pict, int x, int y, int width,
 	for (j = 0; j < n_pixels; ++j)
 	    buffer[i++] = tmp_buffer[j];
     }
+}
+
+static void
+bits_image_fetch_solid_32 (bits_image_t * image,
+			   int x, int y, int width,
+			   uint32_t *buffer,
+			   uint32_t *mask, uint32_t maskBits)
+{
+    uint32_t color;
+    uint32_t *end;
+    
+    color = image->fetch_pixel (image, 0, 0);
+    
+    end = buffer + width;
+    while (buffer < end)
+	*(buffer++) = color;
+}
+
+static void
+bits_image_fetch_solid_64 (bits_image_t * image,
+			   int x, int y, int width,
+			   uint64_t *buffer, void *unused, uint32_t unused2)
+{
+    uint64_t color;
+    uint64_t *end;
+    
+    color = image->fetch_pixel (image, 0, 0);
+    
+    end = buffer + width;
+    while (buffer < end)
+	*(buffer++) = color;
+}
+
+static void
+bits_image_fetch_untransformed_32 (bits_image_t * image,
+				   int x, int y, int width,
+				   uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
+{
+    image->fetch_scanline_raw_32 (image, x, y, width, buffer);
+}
+
+static void
+bits_image_fetch_untransformed_64 (bits_image_t * image,
+				   int x, int y, int width,
+				   uint64_t *buffer, void *unused, uint32_t unused2)
+{
+    image->fetch_scanline_raw_64 (image, x, y, width, buffer);
 }
 
 static void
