@@ -379,8 +379,9 @@ struct bits_image
     uint32_t *			free_me;
     int				rowstride; /* in number of uint32_t's */
 
-    fetchPixelProc32		fetch_pixel;
-    
+    fetchPixelProc32		fetch_pixel_32;
+    fetchPixelProc64		fetch_pixel_64;
+
     scanStoreProc		store_scanline_32;
     scanStoreProc		store_scanline_64;
 

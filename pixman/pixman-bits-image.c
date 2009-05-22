@@ -120,7 +120,7 @@ bits_image_fetch_raw_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels
 	if (x == 0xffffffff || y == 0xffffffff)
 	    buffer[i] = 0;
 	else
-	    buffer[i] = image->fetch_pixel (image, x, y);
+	    buffer[i] = image->fetch_pixel_32 (image, x, y);
     }
 }
 
@@ -651,7 +651,7 @@ bits_image_fetch_solid_32 (bits_image_t * image,
     uint32_t color;
     uint32_t *end;
     
-    color = image->fetch_pixel (image, 0, 0);
+    color = image->fetch_pixel_32 (image, 0, 0);
     
     end = buffer + width;
     while (buffer < end)
@@ -666,7 +666,7 @@ bits_image_fetch_solid_64 (bits_image_t * image,
     uint64_t color;
     uint64_t *end;
     
-    color = image->fetch_pixel (image, 0, 0);
+    color = image->fetch_pixel_64 (image, 0, 0);
     
     end = buffer + width;
     while (buffer < end)
@@ -737,7 +737,8 @@ bits_image_property_changed (pixman_image_t *image)
     bits->fetch_scanline_raw_64 =
 	READ_ACCESS(pixman_fetchProcForPicture64)(bits);
     
-    bits->fetch_pixel = READ_ACCESS(pixman_fetchPixelProcForPicture32)(bits);
+    bits->fetch_pixel_32 = READ_ACCESS(pixman_fetchPixelProcForPicture32)(bits);
+    bits->fetch_pixel_64 = READ_ACCESS(pixman_fetchPixelProcForPicture64)(bits);
 }
 
 static uint32_t *
