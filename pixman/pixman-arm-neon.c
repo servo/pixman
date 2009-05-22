@@ -207,7 +207,7 @@ fbCompositeSrcAdd_8000x8000neon (pixman_op_t op,
                         "1:\n\t"
                         "vst1.8  {d20}, [%[keep_dst]]\n\t"
 
-                        : [w] "+r" (w), [src] "+r" (src), [dst] "+r" (dst), [keep_dst] "+r" (keep_dst)
+                        : [w] "+r" (w), [src] "+r" (src), [dst] "+r" (dst), [keep_dst] "=r" (keep_dst)
                         :
                         : "ip", "cc", "memory", "d0","d4",
                           "d20"
@@ -371,7 +371,7 @@ fbCompositeSrc_8888x8888neon (pixman_op_t op,
                         "1:\n\t"
                         "vst4.8  {d20-d23}, [%[keep_dst]]\n\t"
 
-                        : [w] "+r" (w), [src] "+r" (src), [dst] "+r" (dst), [keep_dst] "+r" (keep_dst)
+                        : [w] "+r" (w), [src] "+r" (src), [dst] "+r" (dst), [keep_dst] "=r" (keep_dst)
                         : 
                         : "ip", "cc", "memory", "d0","d1","d2","d3","d4","d5","d6","d7",
                           "d16","d17","d18","d19","d20","d21","d22","d23"
@@ -661,7 +661,7 @@ fbCompositeSrc_8888x8x8888neon (pixman_op_t op,
                         "1:\n\t"
                         "vst4.8       {d20-d23}, [%[keep_dst]]\n\t"
 
-                        : [w] "+r" (w), [src] "+r" (src), [dst] "+r" (dst), [keep_dst] "+r" (keep_dst)
+                        : [w] "+r" (w), [src] "+r" (src), [dst] "+r" (dst), [keep_dst] "=r" (keep_dst)
                         : [mask] "r" (mask)
                         : "ip", "cc", "memory", "d0","d1","d2","d3","d4","d5","d6","d7",
                           "d16","d17","d18","d19","d20","d21","d22","d23","d24","d25","d26","d27",
@@ -889,7 +889,7 @@ fbCompositeSolidMask_nx8x0565neon (pixman_op_t op,
                         "1:\n\t"
                         "vst1.16      {q10}, [%[keep_dst]]\n\t"
 
-                        : [w] "+r" (w), [dst] "+r" (dst), [mask] "+r" (mask), [keep_dst] "+r" (keep_dst)
+                        : [w] "+r" (w), [dst] "+r" (dst), [mask] "+r" (mask), [keep_dst] "=r" (keep_dst)
                         : [src] "r" (src)
                         : "ip", "cc", "memory", "d0","d1","d2","d3","d4","d5","d6","d7",
                           "d16","d17","d18","d19","d20","d21","d22","d23","d24","d25","d26","d27","d28","d29",
@@ -1207,7 +1207,7 @@ fbCompositeSolidMask_nx8x8888neon (pixman_op_t      op,
                         "1:\n\t"
                         "vst4.8       {d20-d23}, [%[keep_dst]]\n\t"
 
-                        : [w] "+r" (w), [dst] "+r" (dst), [mask] "+r" (mask), [keep_dst] "+r" (keep_dst)
+                        : [w] "+r" (w), [dst] "+r" (dst), [mask] "+r" (mask), [keep_dst] "=r" (keep_dst)
                         : [src] "r" (src) 
                         : "ip", "cc", "memory", "d0","d1","d2","d3","d4","d5","d6","d7",
                           "d16","d17","d18","d19","d20","d21","d22","d23","d24","d25","d26","d27","d28","d29",
