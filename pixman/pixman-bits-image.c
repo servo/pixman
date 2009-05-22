@@ -573,6 +573,27 @@ bits_image_fetch_convolution_pixels (bits_image_t *image, uint32_t *buffer, int 
 }
 
 static void
+bits_image_fetch_filtered (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+{
+    switch (pict->common.filter)
+    {
+    case PIXMAN_FILTER_NEAREST:
+    case PIXMAN_FILTER_FAST:
+	bits_image_fetch_nearest_pixels (pict, buffer, n_pixels);
+	break;
+	
+    case PIXMAN_FILTER_BILINEAR:
+    case PIXMAN_FILTER_GOOD:
+    case PIXMAN_FILTER_BEST:
+	bits_image_fetch_bilinear_pixels (pict, buffer, n_pixels);
+	break;
+    case PIXMAN_FILTER_CONVOLUTION:
+	bits_image_fetch_convolution_pixels (pict, buffer, n_pixels);
+	break;
+    }
+}
+
+static void
 fbFetchTransformed (bits_image_t * pict, int x, int y, int width,
 		    uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
 {
@@ -601,6 +622,7 @@ fbFetchTransformed (bits_image_t * pict, int x, int y, int width,
     {
         if (!pixman_transform_point_3d (pict->common.transform, &v))
             return;
+	
         unit.vector[0] = pict->common.transform->matrix[0][0];
         unit.vector[1] = pict->common.transform->matrix[1][0];
         unit.vector[2] = pict->common.transform->matrix[2][0];
@@ -657,23 +679,8 @@ fbFetchTransformed (bits_image_t * pict, int x, int y, int width,
 	    v.vector[2] += unit.vector[2];
 	}
 
-	switch (pict->common.filter)
-	{
-	case PIXMAN_FILTER_NEAREST:
-	case PIXMAN_FILTER_FAST:
-	    bits_image_fetch_nearest_pixels (pict, tmp_buffer, n_pixels);
-	    break;
-
-	case PIXMAN_FILTER_BILINEAR:
-	case PIXMAN_FILTER_GOOD:
-	case PIXMAN_FILTER_BEST:
-	    bits_image_fetch_bilinear_pixels (pict, tmp_buffer, n_pixels);
-	    break;
-	case PIXMAN_FILTER_CONVOLUTION:
-	    bits_image_fetch_convolution_pixels (pict, tmp_buffer, n_pixels);
-	    break;
-	}
-
+	bits_image_fetch_filtered (pict, tmp_buffer, n_pixels);
+	
 	for (j = 0; j < n_pixels; ++j)
 	    buffer[i++] = tmp_buffer[j];
     }
