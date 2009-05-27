@@ -7,7 +7,7 @@ if not ARGV[0] or not ARGV[1] then
     exit(0)
 end
 
-$MAX = 10000
+$MAX = 3000000
 $MIN = 1
 $AVG = 0
 

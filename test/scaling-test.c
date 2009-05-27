@@ -1,3 +1,25 @@
+/*
+ * Test program, which can detect problems with nearest neighbout scaling
+ * implementation. Also SRC and OVER opetations tested for 16bpp and 32bpp
+ * images.
+ *
+ * Just run it without any command line arguments, and it will report either
+ *   "scaling test passed" - everything is ok
+ *   "scaling test failed!" - there is some problem
+ *
+ * In the case of failure, finding the problem involves the following steps:
+ * 1. Get the reference 'scaling-test' binary. It makes sense to disable all
+ *    the cpu specific optimizations in pixman and also configure it with
+ *    '--disable-shared' option. Those who are paranoid can also tweak the
+ *    sources to disable all fastpath functions. The resulting binary
+ *    can be renamed to something like 'scaling-test.ref'.
+ * 2. Compile the buggy binary (also with the '--disable-shared' option).
+ * 3. Run 'ruby scaling-test-bisect.rb ./scaling-test.ref ./scaling-test'
+ * 4. Look at the information about failed case (destination buffer content
+ *    will be shown) and try to figure out what is wrong. It is possible
+ *    to use debugging print to stderr in pixman to get more information,
+ *    this does not interfere with the testing script.
+ */
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -117,11 +139,11 @@ static uint32_t Crc32_ComputeBuf( uint32_t inCrc32, const void *buf,
 }
 
 
-#define MAX_SRC_WIDTH  100
-#define MAX_SRC_HEIGHT 100
-#define MAX_DST_WIDTH  100
-#define MAX_DST_HEIGHT 100
-#define MAX_STRIDE     16
+#define MAX_SRC_WIDTH  10
+#define MAX_SRC_HEIGHT 10
+#define MAX_DST_WIDTH  10
+#define MAX_DST_HEIGHT 10
+#define MAX_STRIDE     4
 
 /*
  * Composite operation with pseudorandom images
@@ -164,10 +186,12 @@ uint32_t test_composite(uint32_t initcrc, int testnum, int verbose)
     if (src_stride & 3) src_stride += 2;
     if (dst_stride & 3) dst_stride += 2;
 
-    src_x = -src_width + lcg_rand_n(src_width * 3);
-    src_y = -src_height + lcg_rand_n(src_height * 3);
-    dst_x = -dst_width + lcg_rand_n(dst_width * 2);
-    dst_y = -dst_height + lcg_rand_n(dst_height * 3);
+    src_x = -(src_width / 4) + lcg_rand_n(src_width * 3 / 2);
+    src_y = -(src_height / 4) + lcg_rand_n(src_height * 3 / 2);
+    dst_x = -(dst_width / 4) + lcg_rand_n(dst_width * 3 / 2);
+    dst_y = -(dst_height / 4) + lcg_rand_n(dst_height * 3 / 2);
+    w = lcg_rand_n(dst_width * 3 / 2 - dst_x);
+    h = lcg_rand_n(dst_height * 3 / 2 - dst_y);
 
     srcbuf = (uint32_t *)malloc(src_stride * src_height);
     dstbuf = (uint32_t *)malloc(dst_stride * dst_height);
@@ -188,7 +212,7 @@ uint32_t test_composite(uint32_t initcrc, int testnum, int verbose)
     dst_img = pixman_image_create_bits(
         dst_fmt, dst_width, dst_height, dstbuf, dst_stride);
 
-    if (lcg_rand_n(2) == 0) {
+    if (lcg_rand_n(8) > 0) {
         scale_x = 32768 + lcg_rand_n(65536);
         scale_y = 32768 + lcg_rand_n(65536);
         pixman_transform_init_scale(&transform, scale_x, scale_y);
@@ -203,9 +227,6 @@ uint32_t test_composite(uint32_t initcrc, int testnum, int verbose)
     }
     pixman_image_set_repeat(src_img, repeat);
 
-    w = lcg_rand_n(MAX_DST_WIDTH * 2);
-    h = lcg_rand_n(MAX_DST_HEIGHT * 2);
-
     if (verbose) {
         printf("src_fmt=%08X, dst_fmt=%08X\n", src_fmt, dst_fmt);
         printf("op=%d, scale_x=%d, scale_y=%d, repeat=%d\n",
@@ -217,7 +238,7 @@ uint32_t test_composite(uint32_t initcrc, int testnum, int verbose)
         printf("w=%d, h=%d\n", w, h);
     }
 
-    if (lcg_rand_n(2) == 0) {
+    if (lcg_rand_n(8) == 0) {
         pixman_box16_t clip_boxes[2];
         int n = lcg_rand_n(2) + 1;
         for (i = 0; i < n; i++) {
@@ -237,8 +258,33 @@ uint32_t test_composite(uint32_t initcrc, int testnum, int verbose)
         pixman_region_fini(&clip);
     }
 
+    if (lcg_rand_n(8) == 0) {
+        pixman_box16_t clip_boxes[2];
+        int n = lcg_rand_n(2) + 1;
+        for (i = 0; i < n; i++) {
+            clip_boxes[i].x1 = lcg_rand_n(dst_width);
+            clip_boxes[i].y1 = lcg_rand_n(dst_height);
+            clip_boxes[i].x2 = clip_boxes[i].x1 + lcg_rand_n(dst_width - clip_boxes[i].x1);
+            clip_boxes[i].y2 = clip_boxes[i].y1 + lcg_rand_n(dst_height - clip_boxes[i].y1);
+            if (verbose) {
+                printf("destination clip box: [%d,%d-%d,%d]\n",
+                    clip_boxes[i].x1, clip_boxes[i].y1,
+                    clip_boxes[i].x2, clip_boxes[i].y2);
+            }
+        }
+        pixman_region_init_rects(&clip, clip_boxes, n);
+        pixman_image_set_clip_region(dst_img, &clip);
+        pixman_region_fini(&clip);
+    }
+
     pixman_image_composite (op, src_img, NULL, dst_img,
                             src_x, src_y, 0, 0, dst_x, dst_y, w, h);
+
+    if (dst_fmt == PIXMAN_x8r8g8b8) {
+        /* ignore unused part */
+        for (i = 0; i < dst_stride * dst_height / 4; i++)
+            dstbuf[i] &= 0xFFFFFF;
+    }
 
     if (verbose) {
         int j;
@@ -252,12 +298,6 @@ uint32_t test_composite(uint32_t initcrc, int testnum, int verbose)
 
     pixman_image_unref (src_img);
     pixman_image_unref (dst_img);
-
-    if (dst_fmt == PIXMAN_x8r8g8b8) {
-        /* ignore unused part */
-        for (i = 0; i < dst_stride * dst_height / 4; i++)
-            dstbuf[i] &= 0xFFFFFF;
-    }
 
     crc32 = Crc32_ComputeBuf(initcrc, dstbuf, dst_stride * dst_height);
     free(srcbuf);
@@ -273,7 +313,7 @@ int main(int argc, char *argv[])
     if (argc >= 2)
         n = atoi(argv[1]);
 
-    if (n == 0) n = 10000;
+    if (n == 0) n = 3000000;
 
     if (n < 0) {
         crc = test_composite(0, -n, 1);
@@ -285,15 +325,17 @@ int main(int argc, char *argv[])
             crc = test_composite(crc, i, 0);
         }
         printf("crc32=%08X\n", crc);
-        if (n == 10000) {
+#ifdef LITTLE_ENDIAN
+        if (n == 3000000) {
             /* predefined value for running with all the fastpath functions disabled  */
             /* it needs to be updated every time changes are introduced to this program! */
-            if (crc == 0xF2EC6250) {
+            if (crc == 0xC950E5BB) {
                 printf("scaling test passed\n");
             } else {
                 printf("scaling test failed!\n");
             }
         }
+#endif
     }
     return 0;
 }
