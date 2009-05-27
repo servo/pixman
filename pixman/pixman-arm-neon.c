@@ -159,7 +159,7 @@ fbCompositeSrcAdd_8000x8000neon (
             srcLine += srcStride;
             w = width;
 
-            uint8_t *keep_dst;
+            uint8_t *keep_dst=0;
 
 #ifndef USE_GCC_INLINE_ASM
             uint8x8_t sval,dval,temp;
@@ -226,6 +226,9 @@ fbCompositeSrcAdd_8000x8000neon (
     }
     else
     {
+        const uint8_t nil = 0;
+        const uint8x8_t vnil = vld1_dup_u8(&nil);
+
         while (height--)
         {
             dst = dstLine;
@@ -233,8 +236,8 @@ fbCompositeSrcAdd_8000x8000neon (
             src = srcLine;
             srcLine += srcStride;
             w = width;
-            uint8x8_t sval, dval;
-            uint8_t *dst4, *dst2;
+            uint8x8_t sval=vnil, dval=vnil;
+            uint8_t *dst4=0, *dst2=0;
 
             if (w&4)
             {
@@ -306,7 +309,7 @@ fbCompositeSrc_8888x8888neon (
 	    srcLine += srcStride;
 	    w = width;
 
-            uint32_t *keep_dst;
+            uint32_t *keep_dst=0;
 
 #ifndef USE_GCC_INLINE_ASM
             uint8x8x4_t sval,dval,temp;
@@ -472,7 +475,7 @@ fbCompositeSrc_8888x8x8888neon (
             srcLine += srcStride;
             w = width;
 
-            uint32_t *keep_dst;
+            uint32_t *keep_dst=0;
 
 #ifndef USE_GCC_INLINE_ASM
             uint8x8x4_t sval,dval,temp;
@@ -674,7 +677,7 @@ fbCompositeSolidMask_nx8x0565neon (
         // Use overlapping 8-pixel method, modified to avoid rewritten dest being reused
         while (height--)
         {
-            uint16_t *keep_dst;
+            uint16_t *keep_dst=0;
 
             dst = dstLine;
             dstLine += dstStride;
@@ -810,7 +813,7 @@ fbCompositeSolidMask_nx8x0565neon (
     {
         while (height--)
         {
-            void *dst4, *dst2;
+            void *dst4=0, *dst2=0;
 
             dst = dstLine;
             dstLine += dstStride;
@@ -1012,7 +1015,7 @@ fbCompositeSolidMask_nx8x8888neon (
         // Use overlapping 8-pixel method, modified to avoid rewritten dest being reused
         while (height--)
         {
-            uint32_t *keep_dst;
+            uint32_t *keep_dst=0;
 
             dst = dstLine;
             dstLine += dstStride;
@@ -1251,8 +1254,8 @@ fbCompositeSrcAdd_8888x8x8neon (
             maskLine += maskStride;
             w = width;
 
-            uint8x8_t mval, dval, res;
-            uint8_t *dst4, *dst2;
+            uint8x8_t mval=sa, dval=sa, res;
+            uint8_t *dst4=0, *dst2=0;
 
             if (w&4)
             {
