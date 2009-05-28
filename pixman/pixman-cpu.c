@@ -494,6 +494,13 @@ pixman_have_sse2 (void)
 }
 #endif
 
+#else /* __amd64__ */
+#ifdef USE_MMX
+#define pixman_have_mmx() TRUE
+#endif
+#ifdef USE_SSE2
+#define pixman_have_sse2() TRUE
+#endif
 #endif /* __amd64__ */
 #endif
 
