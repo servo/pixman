@@ -184,19 +184,6 @@ typedef struct _FbComposeData {
     uint16_t	 height;
 } FbComposeData;
 
-typedef struct _FbComposeFunctions32 {
-    CombineFunc32 *combineU;
-    CombineFunc32 *combineC;
-} FbComposeFunctions32;
-
-typedef struct _FbComposeFunctions64 {
-    CombineFunc64 *combineU;
-    CombineFunc64 *combineC;
-} FbComposeFunctions64;
-
-extern FbComposeFunctions32 pixman_composeFunctions;
-extern FbComposeFunctions64 pixman_composeFunctions64;
-
 void pixman_composite_rect_general_accessors (const FbComposeData *data,
                                               void *src_buffer,
                                               void *mask_buffer,

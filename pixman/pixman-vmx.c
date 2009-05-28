@@ -30,6 +30,13 @@
 #include "pixman-combine32.h"
 #include <altivec.h>
 
+typedef struct _FbComposeFunctions32 {
+    CombineFunc32 combineU[PIXMAN_OP_LAST];
+    CombineFunc32 combineC[PIXMAN_OP_LAST];
+} FbComposeFunctions32;
+
+static FbComposeFunctions32 pixman_composeFunctions;
+
 static force_inline vector unsigned int
 splat_alpha (vector unsigned int pix) {
     return vec_perm (pix, pix,
