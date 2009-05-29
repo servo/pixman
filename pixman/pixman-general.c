@@ -36,7 +36,6 @@
 #include <string.h>
 #include "pixman-private.h"
 #include "pixman-vmx.h"
-#include "pixman-arm-simd.h"
 #include "pixman-combine32.h"
 #include "pixman-private.h"
 
@@ -300,26 +299,6 @@ general_composite (pixman_implementation_t *	imp,
 			       mask_x, mask_y,
 			       dest_x, dest_y,
 			       width, height))
-	return;
-#endif
-    
-#ifdef USE_ARM_NEON
-    if (pixman_have_arm_neon() && _pixman_run_fast_path (arm_neon_fast_paths, imp,
-							 op, src, mask, dest,
-							 src_x, src_y,
-							 mask_x, mask_y,
-							 dest_x, dest_y,
-							 width, height))
-	return;
-#endif
-    
-#ifdef USE_ARM_SIMD
-    if (pixman_have_arm_simd() && _pixman_run_fast_path (arm_simd_fast_paths, imp,
-							 op, src, mask, dest,
-							 src_x, src_y,
-							 mask_x, mask_y,
-							 dest_x, dest_y,
-							 width, height))
 	return;
 #endif
     

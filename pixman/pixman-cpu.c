@@ -515,6 +515,16 @@ _pixman_choose_implementation (void)
     if (pixman_have_mmx())
 	return _pixman_implementation_create_mmx (NULL);
 #endif
+
+#ifdef USE_ARM_NEON
+    if (pixman_have_arm_neon())
+	return _pixman_implementation_create_arm_neon (NULL);
+#endif
+#ifdef USE_ARM_SIMD
+    if (pixman_have_arm_simd())
+	return _pixman_implementation_create_arm_simd (NULL);
+#endif
+
     return _pixman_implementation_create_fast_path (NULL);
 }
 

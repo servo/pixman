@@ -118,18 +118,20 @@ static force_inline uint8x8x4_t neon8qadd(uint8x8x4_t x, uint8x8x4_t y)
 
 
 void
-fbCompositeSrcAdd_8000x8000neon (pixman_op_t op,
+fbCompositeSrcAdd_8000x8000neon (
+                            pixman_implementation_t * impl,
+                            pixman_op_t op,
                                 pixman_image_t * pSrc,
                                 pixman_image_t * pMask,
                                 pixman_image_t * pDst,
-                                int16_t      xSrc,
-                                int16_t      ySrc,
-                                int16_t      xMask,
-                                int16_t      yMask,
-                                int16_t      xDst,
-                                int16_t      yDst,
-                                uint16_t     width,
-                                uint16_t     height)
+                                int32_t      xSrc,
+                                int32_t      ySrc,
+                                int32_t      xMask,
+                                int32_t      yMask,
+                                int32_t      xDst,
+                                int32_t      yDst,
+                                int32_t      width,
+                                int32_t      height)
 {
     uint8_t     *dstLine, *dst;
     uint8_t     *srcLine, *src;
@@ -263,18 +265,20 @@ fbCompositeSrcAdd_8000x8000neon (pixman_op_t op,
 
 
 void
-fbCompositeSrc_8888x8888neon (pixman_op_t op,
+fbCompositeSrc_8888x8888neon (
+                            pixman_implementation_t * impl,
+                            pixman_op_t op,
 			 pixman_image_t * pSrc,
 			 pixman_image_t * pMask,
 			 pixman_image_t * pDst,
-			 int16_t      xSrc,
-			 int16_t      ySrc,
-			 int16_t      xMask,
-			 int16_t      yMask,
-			 int16_t      xDst,
-			 int16_t      yDst,
-			 uint16_t     width,
-			 uint16_t     height)
+			 int32_t      xSrc,
+			 int32_t      ySrc,
+			 int32_t      xMask,
+			 int32_t      yMask,
+			 int32_t      xDst,
+			 int32_t      yDst,
+			 int32_t      width,
+			 int32_t      height)
 {
     uint32_t	*dstLine, *dst;
     uint32_t	*srcLine, *src;
@@ -424,18 +428,20 @@ fbCompositeSrc_8888x8888neon (pixman_op_t op,
 
 
 void
-fbCompositeSrc_x888x0565neon (pixman_op_t op,
+fbCompositeSrc_x888x0565neon (
+                          pixman_implementation_t * impl,
+                          pixman_op_t op,
                           pixman_image_t * pSrc,
                           pixman_image_t * pMask,
                           pixman_image_t * pDst,
-                          int16_t      xSrc,
-                          int16_t      ySrc,
-                          int16_t      xMask,
-                          int16_t      yMask,
-                          int16_t      xDst,
-                          int16_t      yDst,
-                          uint16_t     width,
-                          uint16_t     height)
+                          int32_t      xSrc,
+                          int32_t      ySrc,
+                          int32_t      xMask,
+                          int32_t      yMask,
+                          int32_t      xDst,
+                          int32_t      yDst,
+                          int32_t     width,
+                          int32_t     height)
 {
     uint16_t    *dstLine, *dst;
     uint32_t    *srcLine, *src;
@@ -529,18 +535,20 @@ fbCompositeSrc_x888x0565neon (pixman_op_t op,
 
 
 void
-fbCompositeSrc_8888x8x8888neon (pixman_op_t op,
+fbCompositeSrc_8888x8x8888neon (
+                               pixman_implementation_t * impl,
+                               pixman_op_t op,
 			       pixman_image_t * pSrc,
 			       pixman_image_t * pMask,
 			       pixman_image_t * pDst,
-			       int16_t	xSrc,
-			       int16_t	ySrc,
-			       int16_t      xMask,
-			       int16_t      yMask,
-			       int16_t      xDst,
-			       int16_t      yDst,
-			       uint16_t     width,
-			       uint16_t     height)
+			       int32_t	xSrc,
+			       int32_t	ySrc,
+			       int32_t      xMask,
+			       int32_t      yMask,
+			       int32_t      xDst,
+			       int32_t      yDst,
+			       int32_t      width,
+			       int32_t      height)
 {
     uint32_t	*dstLine, *dst;
     uint32_t	*srcLine, *src;
@@ -725,18 +733,20 @@ fbCompositeSrc_8888x8x8888neon (pixman_op_t op,
 
 
 void
-fbCompositeSolidMask_nx8x0565neon (pixman_op_t op,
+fbCompositeSolidMask_nx8x0565neon (
+                               pixman_implementation_t * impl,
+                               pixman_op_t op,
                                pixman_image_t * pSrc,
                                pixman_image_t * pMask,
                                pixman_image_t * pDst,
-                               int16_t      xSrc,
-                               int16_t      ySrc,
-                               int16_t      xMask,
-                               int16_t      yMask,
-                               int16_t      xDst,
-                               int16_t      yDst,
-                               uint16_t     width,
-                               uint16_t     height)
+                               int32_t      xSrc,
+                               int32_t      ySrc,
+                               int32_t      xMask,
+                               int32_t      yMask,
+                               int32_t      xDst,
+                               int32_t      yDst,
+                               int32_t      width,
+                               int32_t      height)
 {
     uint32_t     src, srca;
     uint16_t    *dstLine, *dst;
@@ -1057,19 +1067,22 @@ fbCompositeSolidMask_nx8x0565neon (pixman_op_t op,
 }
 
 
+
 void
-fbCompositeSolidMask_nx8x8888neon (pixman_op_t      op,
+fbCompositeSolidMask_nx8x8888neon (
+                            pixman_implementation_t * impl,
+                            pixman_op_t      op,
 			       pixman_image_t * pSrc,
 			       pixman_image_t * pMask,
 			       pixman_image_t * pDst,
-			       int16_t      xSrc,
-			       int16_t      ySrc,
-			       int16_t      xMask,
-			       int16_t      yMask,
-			       int16_t      xDst,
-			       int16_t      yDst,
-			       uint16_t     width,
-			       uint16_t     height)
+			       int32_t      xSrc,
+			       int32_t      ySrc,
+			       int32_t      xMask,
+			       int32_t      yMask,
+			       int32_t      xDst,
+			       int32_t      yDst,
+			       int32_t      width,
+			       int32_t      height)
 {
     uint32_t	 src, srca;
     uint32_t	*dstLine, *dst;
@@ -1262,18 +1275,20 @@ fbCompositeSolidMask_nx8x8888neon (pixman_op_t      op,
 
 
 void
-fbCompositeSrcAdd_8888x8x8neon (pixman_op_t op,
+fbCompositeSrcAdd_8888x8x8neon (
+                            pixman_implementation_t * impl,
+                            pixman_op_t op,
                             pixman_image_t * pSrc,
                             pixman_image_t * pMask,
                             pixman_image_t * pDst,
-                            int16_t      xSrc,
-                            int16_t      ySrc,
-                            int16_t      xMask,
-                            int16_t      yMask,
-                            int16_t      xDst,
-                            int16_t      yDst,
-                            uint16_t     width,
-                            uint16_t     height)
+                            int32_t      xSrc,
+                            int32_t      ySrc,
+                            int32_t      xMask,
+                            int32_t      yMask,
+                            int32_t      xDst,
+                            int32_t      yDst,
+                            int32_t      width,
+                            int32_t      height)
 {
     uint8_t     *dstLine, *dst;
     uint8_t     *maskLine, *mask;
@@ -1400,3 +1415,136 @@ static const FastPathInfo arm_neon_fast_path_array[] =
 };
 
 const FastPathInfo *const arm_neon_fast_paths = arm_neon_fast_path_array;
+
+static void
+arm_neon_composite (pixman_implementation_t *imp,
+		pixman_op_t     op,
+		pixman_image_t *src,
+		pixman_image_t *mask,
+		pixman_image_t *dest,
+		int32_t         src_x,
+		int32_t         src_y,
+		int32_t         mask_x,
+		int32_t         mask_y,
+		int32_t         dest_x,
+		int32_t         dest_y,
+		int32_t        width,
+		int32_t        height)
+{
+	if (_pixman_run_fast_path (arm_neon_fast_paths, imp,
+			       op, src, mask, dest,
+			       src_x, src_y,
+			       mask_x, mask_y,
+			       dest_x, dest_y,
+			       width, height))
+	{
+		return;
+	}
+
+	_pixman_implementation_composite (imp->delegate, op,
+				      src, mask, dest,
+				      src_x, src_y,
+				      mask_x, mask_y,
+				      dest_x, dest_y,
+				      width, height);
+}
+
+pixman_bool_t
+pixman_blt_neon (
+	void *src_bits,
+	void *dst_bits,
+	int src_stride,
+	int dst_stride,
+	int src_bpp,
+	int dst_bpp,
+	int src_x, int src_y,
+	int dst_x, int dst_y,
+	int width, int height)
+{
+
+#if 0  // Relies on code which isn't upstreamed yet
+
+	// accelerate only straight copies
+	if(src_bpp != dst_bpp || (src_bpp & 7) || !width || !height)
+		return FALSE;
+
+	{
+		uint32_t bytes_per_pixel = src_bpp >> 3;
+		uint32_t byte_width = width * bytes_per_pixel;
+		int32_t src_stride_bytes = src_stride * 4; // parameter is in words for some reason
+		int32_t dst_stride_bytes = dst_stride * 4;
+		uint8_t *src_bytes = ((uint8_t*) src_bits) + src_y * src_stride_bytes + src_x * bytes_per_pixel;
+		uint8_t *dst_bytes = ((uint8_t*) dst_bits) + dst_y * dst_stride_bytes + dst_x * bytes_per_pixel;
+		uint32_t quadword_count = byte_width / 16;
+		uint32_t offset         = byte_width % 16;
+
+		while(height--) {
+			QuadwordCopy_neon(dst_bytes, src_bytes, quadword_count, offset);
+			src_bytes += src_stride_bytes;
+			dst_bytes += dst_stride_bytes;
+		}
+	}
+
+	return TRUE;
+
+#else /* USE_GCC_INLINE_ASM */
+
+	// TODO: intrinsic version for armcc
+	return FALSE;
+
+#endif
+}
+
+static pixman_bool_t
+arm_neon_blt (pixman_implementation_t *imp,
+	  uint32_t *src_bits,
+	  uint32_t *dst_bits,
+	  int src_stride,
+	  int dst_stride,
+	  int src_bpp,
+	  int dst_bpp,
+	  int src_x, int src_y,
+	  int dst_x, int dst_y,
+	  int width, int height)
+{
+	if (pixman_blt_neon (
+			src_bits, dst_bits, src_stride, dst_stride, src_bpp, dst_bpp,
+			src_x, src_y, dst_x, dst_y, width, height))
+		return TRUE;
+
+	return _pixman_implementation_blt (
+			imp->delegate,
+			src_bits, dst_bits, src_stride, dst_stride, src_bpp, dst_bpp,
+			src_x, src_y, dst_x, dst_y, width, height);
+}
+
+static pixman_bool_t
+arm_neon_fill (pixman_implementation_t *imp,
+	   uint32_t *bits,
+	   int stride,
+	   int bpp,
+	   int x,
+	   int y,
+	   int width,
+	   int height,
+	   uint32_t xor)
+{
+	if (pixman_fill_neon (bits, stride, bpp, x, y, width, height, xor))
+		return TRUE;
+
+	return _pixman_implementation_fill (
+			imp->delegate, bits, stride, bpp, x, y, width, height, xor);
+}
+
+pixman_implementation_t *
+_pixman_implementation_create_arm_neon (pixman_implementation_t *toplevel)
+{
+	pixman_implementation_t *simd = _pixman_implementation_create_arm_simd (NULL);
+	pixman_implementation_t *imp  = _pixman_implementation_create (toplevel, simd);
+
+	imp->composite = arm_neon_composite;
+//	imp->blt = arm_neon_blt;
+//	imp->fill = arm_neon_fill;  --  Relies on code which is not upstreamed yet
+
+	return imp;
+}

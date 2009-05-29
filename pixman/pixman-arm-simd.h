@@ -39,58 +39,68 @@ pixman_bool_t pixman_have_arm_simd(void);
 extern const FastPathInfo *const arm_simd_fast_paths;
 
 void
-fbCompositeSrcAdd_8000x8000arm (pixman_op_t op,
+fbCompositeSrcAdd_8000x8000arm (
+                            pixman_implementation_t * impl,
+                            pixman_op_t op,
 				pixman_image_t * pSrc,
 				pixman_image_t * pMask,
 				pixman_image_t * pDst,
-				int16_t      xSrc,
-				int16_t      ySrc,
-				int16_t      xMask,
-				int16_t      yMask,
-				int16_t      xDst,
-				int16_t      yDst,
-				uint16_t     width,
-				uint16_t     height);
-void
-fbCompositeSrc_8888x8888arm (pixman_op_t op,
-			 pixman_image_t * pSrc,
-			 pixman_image_t * pMask,
-			 pixman_image_t * pDst,
-			 int16_t      xSrc,
-			 int16_t      ySrc,
-			 int16_t      xMask,
-			 int16_t      yMask,
-			 int16_t      xDst,
-			 int16_t      yDst,
-			 uint16_t     width,
-			 uint16_t     height);
+				int32_t      xSrc,
+				int32_t      ySrc,
+				int32_t      xMask,
+				int32_t      yMask,
+				int32_t      xDst,
+				int32_t      yDst,
+				int32_t      width,
+				int32_t      height);
 
 void
-fbCompositeSrc_8888x8x8888arm (pixman_op_t op,
+fbCompositeSrc_8888x8888arm (
+                            pixman_implementation_t * impl,
+                            pixman_op_t op,
 			 pixman_image_t * pSrc,
 			 pixman_image_t * pMask,
 			 pixman_image_t * pDst,
-			 int16_t      xSrc,
-			 int16_t      ySrc,
-			 int16_t      xMask,
-			 int16_t      yMask,
-			 int16_t      xDst,
-			 int16_t      yDst,
-			 uint16_t     width,
-			 uint16_t     height);
+				int32_t      xSrc,
+				int32_t      ySrc,
+				int32_t      xMask,
+				int32_t      yMask,
+				int32_t      xDst,
+				int32_t      yDst,
+				int32_t      width,
+				int32_t      height);
+
 void
-fbCompositeSolidMask_nx8x8888arm (pixman_op_t op,
+fbCompositeSrc_8888x8x8888arm (
+                            pixman_implementation_t * impl,
+                            pixman_op_t op,
 			 pixman_image_t * pSrc,
 			 pixman_image_t * pMask,
 			 pixman_image_t * pDst,
-			 int16_t      xSrc,
-			 int16_t      ySrc,
-			 int16_t      xMask,
-			 int16_t      yMask,
-			 int16_t      xDst,
-			 int16_t      yDst,
-			 uint16_t     width,
-			 uint16_t     height);
+				int32_t      xSrc,
+				int32_t      ySrc,
+				int32_t      xMask,
+				int32_t      yMask,
+				int32_t      xDst,
+				int32_t      yDst,
+				int32_t      width,
+				int32_t      height);
+
+void
+fbCompositeSolidMask_nx8x8888arm (
+                            pixman_implementation_t * impl,
+                            pixman_op_t op,
+			 pixman_image_t * pSrc,
+			 pixman_image_t * pMask,
+			 pixman_image_t * pDst,
+				int32_t      xSrc,
+				int32_t      ySrc,
+				int32_t      xMask,
+				int32_t      yMask,
+				int32_t      xDst,
+				int32_t      yDst,
+				int32_t      width,
+				int32_t      height);
 
 
 #endif /* USE_ARM */

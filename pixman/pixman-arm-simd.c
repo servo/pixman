@@ -30,18 +30,20 @@
 #include "pixman-arm-simd.h"
 
 void
-fbCompositeSrcAdd_8000x8000arm (pixman_op_t op,
+fbCompositeSrcAdd_8000x8000arm (
+                            pixman_implementation_t * impl,
+                            pixman_op_t op,
 				pixman_image_t * pSrc,
 				pixman_image_t * pMask,
 				pixman_image_t * pDst,
-				int16_t      xSrc,
-				int16_t      ySrc,
-				int16_t      xMask,
-				int16_t      yMask,
-				int16_t      xDst,
-				int16_t      yDst,
-				uint16_t     width,
-				uint16_t     height)
+				int32_t      xSrc,
+				int32_t      ySrc,
+				int32_t      xMask,
+				int32_t      yMask,
+				int32_t      xDst,
+				int32_t      yDst,
+				int32_t      width,
+				int32_t      height)
 {
     uint8_t	*dstLine, *dst;
     uint8_t	*srcLine, *src;
@@ -98,18 +100,20 @@ fbCompositeSrcAdd_8000x8000arm (pixman_op_t op,
 }
 
 void
-fbCompositeSrc_8888x8888arm (pixman_op_t op,
+fbCompositeSrc_8888x8888arm (
+                            pixman_implementation_t * impl,
+                            pixman_op_t op,
 			 pixman_image_t * pSrc,
 			 pixman_image_t * pMask,
 			 pixman_image_t * pDst,
-			 int16_t      xSrc,
-			 int16_t      ySrc,
-			 int16_t      xMask,
-			 int16_t      yMask,
-			 int16_t      xDst,
-			 int16_t      yDst,
-			 uint16_t     width,
-			 uint16_t     height)
+			 int32_t      xSrc,
+			 int32_t      ySrc,
+			 int32_t      xMask,
+			 int32_t      yMask,
+			 int32_t      xDst,
+			 int32_t      yDst,
+			 int32_t      width,
+			 int32_t      height)
 {
     uint32_t	*dstLine, *dst;
     uint32_t	*srcLine, *src;
@@ -189,18 +193,20 @@ fbCompositeSrc_8888x8888arm (pixman_op_t op,
 }
 
 void
-fbCompositeSrc_8888x8x8888arm (pixman_op_t op,
+fbCompositeSrc_8888x8x8888arm (
+                            pixman_implementation_t * impl,
+                            pixman_op_t op,
 			       pixman_image_t * pSrc,
 			       pixman_image_t * pMask,
 			       pixman_image_t * pDst,
-			       int16_t	xSrc,
-			       int16_t	ySrc,
-			       int16_t      xMask,
-			       int16_t      yMask,
-			       int16_t      xDst,
-			       int16_t      yDst,
-			       uint16_t     width,
-			       uint16_t     height)
+			       int32_t	xSrc,
+			       int32_t	ySrc,
+			       int32_t      xMask,
+			       int32_t      yMask,
+			       int32_t      xDst,
+			       int32_t      yDst,
+			       int32_t      width,
+			       int32_t      height)
 {
     uint32_t	*dstLine, *dst;
     uint32_t	*srcLine, *src;
@@ -296,18 +302,20 @@ fbCompositeSrc_8888x8x8888arm (pixman_op_t op,
 }
 
 void
-fbCompositeSolidMask_nx8x8888arm (pixman_op_t      op,
+fbCompositeSolidMask_nx8x8888arm (
+                            pixman_implementation_t * impl,
+                            pixman_op_t      op,
 			       pixman_image_t * pSrc,
 			       pixman_image_t * pMask,
 			       pixman_image_t * pDst,
-			       int16_t      xSrc,
-			       int16_t      ySrc,
-			       int16_t      xMask,
-			       int16_t      yMask,
-			       int16_t      xDst,
-			       int16_t      yDst,
-			       uint16_t     width,
-			       uint16_t     height)
+			       int32_t      xSrc,
+			       int32_t      ySrc,
+			       int32_t      xMask,
+			       int32_t      yMask,
+			       int32_t      xDst,
+			       int32_t      yDst,
+			       int32_t      width,
+			       int32_t      height)
 {
     uint32_t	 src, srca;
     uint32_t	*dstLine, *dst;
@@ -428,3 +436,47 @@ static const FastPathInfo arm_simd_fast_path_array[] =
 };
 
 const FastPathInfo *const arm_simd_fast_paths = arm_simd_fast_path_array;
+
+static void
+arm_simd_composite (pixman_implementation_t *imp,
+		pixman_op_t     op,
+		pixman_image_t *src,
+		pixman_image_t *mask,
+		pixman_image_t *dest,
+		int32_t         src_x,
+		int32_t         src_y,
+		int32_t         mask_x,
+		int32_t         mask_y,
+		int32_t         dest_x,
+		int32_t         dest_y,
+		int32_t        width,
+		int32_t        height)
+{
+    if (_pixman_run_fast_path (arm_simd_fast_paths, imp,
+			       op, src, mask, dest,
+			       src_x, src_y,
+			       mask_x, mask_y,
+			       dest_x, dest_y,
+			       width, height))
+    {
+	return;
+    }
+
+    _pixman_implementation_composite (imp->delegate, op,
+				      src, mask, dest,
+				      src_x, src_y,
+				      mask_x, mask_y,
+				      dest_x, dest_y,
+				      width, height);
+}
+
+pixman_implementation_t *
+_pixman_implementation_create_arm_simd (pixman_implementation_t *toplevel)
+{
+    pixman_implementation_t *general = _pixman_implementation_create_fast_path (NULL);
+    pixman_implementation_t *imp = _pixman_implementation_create (toplevel, general);
+
+    imp->composite = arm_simd_composite;
+
+    return imp;
+}
