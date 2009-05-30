@@ -152,12 +152,23 @@ pack565_4x128_128 (__m128i* xmm0, __m128i* xmm1, __m128i* xmm2, __m128i* xmm3)
     return _mm_packus_epi16 (pack565_2x128_128 (*xmm0, *xmm1), pack565_2x128_128 (*xmm2, *xmm3));
 }
 
-static force_inline uint32_t
-packAlpha (__m128i x)
+static force_inline int
+isOpaque (__m128i x)
 {
-    return _mm_cvtsi128_si32 (_mm_packus_epi16 (_mm_packus_epi16 (_mm_srli_epi32 (x, 24),
-                                                                  _mm_setzero_si128 ()),
-                                                _mm_setzero_si128 ()));
+    __m128i ffs = _mm_cmpeq_epi8 (x, x);
+    return (_mm_movemask_epi8 (_mm_cmpeq_epi8 (x, ffs)) & 0x8888) == 0x8888;
+}
+
+static force_inline int
+isZero (__m128i x)
+{
+    return _mm_movemask_epi8 (_mm_cmpeq_epi8 (x, _mm_setzero_si128())) == 0xffff;
+}
+
+static force_inline int
+isTransparent (__m128i x)
+{
+    return (_mm_movemask_epi8 (_mm_cmpeq_epi8 (x, _mm_setzero_si128())) & 0x8888) == 0x8888;
 }
 
 static force_inline __m128i
@@ -472,7 +483,7 @@ coreCombineOverUPixelsse2 (uint32_t src, uint32_t dst)
     {
         return src;
     }
-    else if (a)
+    else if (src)
     {
         ms = unpack_32_1x64 (src);
         return pack_1x64_32 (over_1x64 (ms, expandAlpha_1x64 (ms), unpack_32_1x64 (dst)));
@@ -513,7 +524,7 @@ combine4 (const __m128i *ps, const __m128i *pm)
     {
 	xmmMskLo = load128Unaligned (pm);
 
-        if (!packAlpha (xmmMskLo))
+	if (isTransparent (xmmMskLo))
 	    return _mm_setzero_si128 ();
     }
     
@@ -537,7 +548,6 @@ combine4 (const __m128i *ps, const __m128i *pm)
 static force_inline void
 coreCombineOverUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm, int w)
 {
-    uint32_t pa;
     uint32_t s, d;
 
     __m128i xmmDstLo, xmmDstHi;
@@ -578,14 +588,11 @@ coreCombineOverUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm, int 
         /* I'm loading unaligned because I'm not sure about the address alignment. */
         xmmSrcHi = combine4 ((__m128i*)ps, (__m128i*)pm);
 
-        /* Check the alpha channel */
-        pa = packAlpha (xmmSrcHi);
-
-        if (pa == 0xffffffff)
+        if (isOpaque (xmmSrcHi))
         {
             save128Aligned ((__m128i*)pd, xmmSrcHi);
         }
-        else if (pa)
+        else if (!isZero (xmmSrcHi))
         {
             xmmDstHi = load128Aligned ((__m128i*) pd);
 
@@ -2512,7 +2519,7 @@ fbCompositeSolid_nx8888sse2 (pixman_implementation_t *imp,
 
     fbComposeGetSolid(pSrc, src, pDst->bits.format);
 
-    if (src >> 24 == 0)
+    if (src == 0)
 	return;
 
     fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
@@ -2599,7 +2606,7 @@ fbCompositeSolid_nx0565sse2 (pixman_implementation_t *imp,
 
     fbComposeGetSolid(pSrc, src, pDst->bits.format);
 
-    if (src >> 24 == 0)
+    if (src == 0)
         return;
 
     fbComposeGetStart (pDst, xDst, yDst, uint16_t, dstStride, dstLine, 1);
@@ -2680,7 +2687,7 @@ fbCompositeSolidMask_nx8888x8888Csse2 (pixman_implementation_t *imp,
 				      int32_t	width,
 				      int32_t	height)
 {
-    uint32_t	src, srca;
+    uint32_t	src;
     uint32_t	*dstLine, d;
     uint32_t	*maskLine, m;
     uint32_t    packCmp;
@@ -2694,8 +2701,7 @@ fbCompositeSolidMask_nx8888x8888Csse2 (pixman_implementation_t *imp,
 
     fbComposeGetSolid(pSrc, src, pDst->bits.format);
 
-    srca = src >> 24;
-    if (srca == 0)
+    if (src == 0)
 	return;
 
     fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
@@ -3220,7 +3226,7 @@ fbCompositeSolidMask_nx8x8888sse2 (pixman_implementation_t *imp,
     fbComposeGetSolid(pSrc, src, pDst->bits.format);
 
     srca = src >> 24;
-    if (srca == 0)
+    if (src == 0)
 	return;
 
     fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
@@ -3495,7 +3501,7 @@ fbCompositeSolidMaskSrc_nx8x8888sse2 (pixman_implementation_t *imp,
     fbComposeGetSolid(pSrc, src, pDst->bits.format);
 
     srca = src >> 24;
-    if (srca == 0)
+    if (src == 0)
     {
         pixmanFillsse2 (pDst->bits.bits, pDst->bits.rowstride,
                         PIXMAN_FORMAT_BPP (pDst->bits.format),
@@ -3633,7 +3639,7 @@ fbCompositeSolidMask_nx8x0565sse2 (pixman_implementation_t *imp,
     fbComposeGetSolid(pSrc, src, pDst->bits.format);
 
     srca = src >> 24;
-    if (srca == 0)
+    if (src == 0)
 	return;
 
     fbComposeGetStart (pDst, xDst, yDst, uint16_t, dstStride, dstLine, 1);
@@ -3770,9 +3776,9 @@ fbCompositeSrc_8888RevNPx0565sse2 (pixman_implementation_t *imp,
 {
     uint16_t	*dstLine, *dst, d;
     uint32_t	*srcLine, *src, s;
-    int	dstStride, srcStride;
+    int		dstStride, srcStride;
     uint16_t	w;
-    uint32_t    packCmp;
+    uint32_t    opaque, zero;
 
     __m64 ms;
     __m128i xmmSrc, xmmSrcLo, xmmSrcHi;
@@ -3827,34 +3833,35 @@ fbCompositeSrc_8888RevNPx0565sse2 (pixman_implementation_t *imp,
             xmmSrc = load128Unaligned((__m128i*)src);
             xmmDst = load128Aligned  ((__m128i*)dst);
 
-            packCmp = packAlpha (xmmSrc);
+            opaque = isOpaque (xmmSrc);
+	    zero = isZero (xmmSrc);
 
-            unpack565_128_4x128 (xmmDst, &xmmDst0, &xmmDst1, &xmmDst2, &xmmDst3);
+	    unpack565_128_4x128 (xmmDst, &xmmDst0, &xmmDst1, &xmmDst2, &xmmDst3);
             unpack_128_2x128 (xmmSrc, &xmmSrcLo, &xmmSrcHi);
 
             /* preload next round*/
             xmmSrc = load128Unaligned((__m128i*)(src+4));
-            /* preload next round*/
-
-            if (packCmp == 0xffffffff)
+	    
+            if (opaque)
             {
                 invertColors_2x128 (xmmSrcLo, xmmSrcHi, &xmmDst0, &xmmDst1);
             }
-            else if (packCmp)
+            else if (!zero)
             {
                 overRevNonPre_2x128 (xmmSrcLo, xmmSrcHi, &xmmDst0, &xmmDst1);
             }
 
             /* Second round */
-            packCmp = packAlpha (xmmSrc);
+	    opaque = isOpaque (xmmSrc);
+	    zero = isZero (xmmSrc);
 
             unpack_128_2x128 (xmmSrc, &xmmSrcLo, &xmmSrcHi);
 
-            if (packCmp == 0xffffffff)
+            if (opaque)
             {
                 invertColors_2x128 (xmmSrcLo, xmmSrcHi, &xmmDst2, &xmmDst3);
             }
-            else if (packCmp)
+            else if (zero)
             {
                 overRevNonPre_2x128 (xmmSrcLo, xmmSrcHi, &xmmDst2, &xmmDst3);
             }
@@ -3906,7 +3913,7 @@ fbCompositeSrc_8888RevNPx8888sse2 (pixman_implementation_t *imp,
     uint32_t	*srcLine, *src, s;
     int	dstStride, srcStride;
     uint16_t	w;
-    uint32_t    packCmp;
+    uint32_t    opaque, zero;
 
     __m128i xmmSrcLo, xmmSrcHi;
     __m128i xmmDstLo, xmmDstHi;
@@ -3957,17 +3964,18 @@ fbCompositeSrc_8888RevNPx8888sse2 (pixman_implementation_t *imp,
 
             xmmSrcHi = load128Unaligned((__m128i*)src);
 
-            packCmp = packAlpha (xmmSrcHi);
+            opaque = isOpaque (xmmSrcHi);
+	    zero = isZero (xmmSrcHi);
 
             unpack_128_2x128 (xmmSrcHi, &xmmSrcLo, &xmmSrcHi);
 
-            if (packCmp == 0xffffffff)
+            if (opaque)
             {
                 invertColors_2x128( xmmSrcLo, xmmSrcHi, &xmmDstLo, &xmmDstHi);
 
                 save128Aligned ((__m128i*)dst, pack_2x128_128 (xmmDstLo, xmmDstHi));
             }
-            else if (packCmp)
+            else if (!zero)
             {
                 xmmDstHi = load128Aligned  ((__m128i*)dst);
 
@@ -4016,7 +4024,7 @@ fbCompositeSolidMask_nx8888x0565Csse2 (pixman_implementation_t *imp,
 				      int32_t     width,
 				      int32_t     height)
 {
-    uint32_t	src, srca;
+    uint32_t	src;
     uint16_t	*dstLine, *dst, d;
     uint32_t	*maskLine, *mask, m;
     int	dstStride, maskStride;
@@ -4031,8 +4039,7 @@ fbCompositeSolidMask_nx8888x0565Csse2 (pixman_implementation_t *imp,
 
     fbComposeGetSolid(pSrc, src, pDst->bits.format);
 
-    srca = src >> 24;
-    if (srca == 0)
+    if (src == 0)
         return;
 
     fbComposeGetStart (pDst, xDst, yDst, uint16_t, dstStride, dstLine, 1);
