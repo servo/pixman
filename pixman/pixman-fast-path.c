@@ -1403,30 +1403,64 @@ static const pixman_fast_path_t c_fast_paths[] =
     { PIXMAN_OP_NONE },
 };
 
+static force_inline pixman_bool_t
+repeat (pixman_repeat_t repeat, int *c, int size)
+{
+    if (repeat == PIXMAN_REPEAT_NONE)
+    {
+	if (*c < 0 || *c >= size)
+	    return FALSE;
+    }
+    else if (repeat == PIXMAN_REPEAT_NORMAL)
+    {
+	while (*c >= size)
+	    *c -= size;
+	while (*c < 0)
+	    *c += size;
+    }
+    else if (repeat == PIXMAN_REPEAT_PAD)
+    {
+	*c = CLIP (*c, 0, size - 1);
+    }
+    else /* REFLECT */
+    {
+	*c = MOD (*c, size * 2);
+	if (*c >= size)
+	    *c = size * 2 - *c - 1;
+    }
+    return TRUE;
+}
+
 static void
-fast_composite_src_scale_nearest (pixman_implementation_t *imp,
-                                  pixman_op_t              op,
-                                  pixman_image_t *         src_image,
-                                  pixman_image_t *         mask_image,
-                                  pixman_image_t *         dst_image,
-                                  int32_t                  src_x,
-                                  int32_t                  src_y,
-                                  int32_t                  mask_x,
-                                  int32_t                  mask_y,
-                                  int32_t                  dest_x,
-                                  int32_t                  dest_y,
-                                  int32_t                  width,
-                                  int32_t                  height)
+fast_composite_scaled_nearest (pixman_implementation_t *imp,
+			       pixman_op_t              op,
+			       pixman_image_t *         src_image,
+			       pixman_image_t *         mask_image,
+			       pixman_image_t *         dst_image,
+			       int32_t                  src_x,
+			       int32_t                  src_y,
+			       int32_t                  mask_x,
+			       int32_t                  mask_y,
+			       int32_t                  dest_x,
+			       int32_t                  dest_y,
+			       int32_t                  width,
+			       int32_t                  height)
 {
     uint32_t       *dst;
     uint32_t       *src;
     int dst_stride, src_stride;
-    int i, j;
+    int             i;
+    int		    src_width, src_height;
+    pixman_repeat_t src_repeat;
+    pixman_fixed_t unit_x, unit_y;
+    pixman_format_code_t src_format;
     pixman_vector_t v;
+    pixman_fixed_t vy;
 
     PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint32_t, dst_stride, dst, 1);
     /* pass in 0 instead of src_x and src_y because src_x and src_y need to be
-     * transformed from destination space to source space */
+     * transformed from destination space to source space
+     */
     PIXMAN_IMAGE_GET_LINE (src_image, 0, 0, uint32_t, src_stride, src, 1);
 
     /* reference point is the center of the pixel */
@@ -1437,81 +1471,82 @@ fast_composite_src_scale_nearest (pixman_implementation_t *imp,
     if (!pixman_transform_point_3d (src_image->common.transform, &v))
 	return;
 
+    unit_x = src_image->common.transform->matrix[0][0];
+    unit_y = src_image->common.transform->matrix[1][1];
+
     /* Round down to closest integer, ensuring that 0.5 rounds to 0, not 1 */
     v.vector[0] -= pixman_fixed_e;
     v.vector[1] -= pixman_fixed_e;
 
-    for (j = 0; j < height; j++)
+    src_height = src_image->bits.height;
+    src_width = src_image->bits.width;
+    src_repeat = src_image->common.repeat;
+    src_format = src_image->bits.format;
+
+    vy = v.vector[1];
+    while (height--)
     {
-	pixman_fixed_t vx = v.vector[0];
-	pixman_fixed_t vy = v.vector[1];
+        pixman_fixed_t vx = v.vector[0];
+	uint32_t *src_line;
+	int y = pixman_fixed_to_int (vy);
 
-	for (i = 0; i < width; ++i)
+	if (!repeat (src_repeat, &y, src_height))
 	{
-	    pixman_bool_t inside_bounds;
-	    uint32_t result;
-	    int x, y;
-	    x = vx >> 16;
-	    y = vy >> 16;
-
-	    /* apply the repeat function */
-	    switch (src_image->common.repeat)
-	    {
-	    case PIXMAN_REPEAT_NORMAL:
-		x = MOD (x, src_image->bits.width);
-		y = MOD (y, src_image->bits.height);
-		inside_bounds = TRUE;
-		break;
-
-	    case PIXMAN_REPEAT_PAD:
-		x = CLIP (x, 0, src_image->bits.width - 1);
-		y = CLIP (y, 0, src_image->bits.height - 1);
-		inside_bounds = TRUE;
-		break;
-
-	    case PIXMAN_REPEAT_REFLECT:
-		x = MOD (x, src_image->bits.width * 2);
-		if (x >= src_image->bits.width)
-		    x = src_image->bits.width * 2 - x - 1;
-		y = MOD (y, src_image->bits.height * 2);
-		if (y >= src_image->bits.height)
-		    y = src_image->bits.height * 2 - y - 1;
-		inside_bounds = TRUE;
-		break;
-
-	    case PIXMAN_REPEAT_NONE:
-	    default:
-		inside_bounds =
-		    (x >= 0				&&
-		     x < src_image->bits.width		&&
-		     y >= 0				&&
-		     y < src_image->bits.height);
-		break;
-	    }
-
-	    if (inside_bounds)
-	    {
-		/* XXX: we should move this multiplication out of the loop */
-		result = *(src + y * src_stride + x);
-	    }
-	    else
-	    {
-		result = 0;
-	    }
-	    *(dst + i) = result;
-
-	    /* adjust the x location by a unit vector in the x direction:
-	     * this is equivalent to transforming x+1 of the destination
-	     * point to source space
-	     */
-	    vx += src_image->common.transform->matrix[0][0];
+	    if (op == PIXMAN_OP_SRC)
+		memset (dst, 0, sizeof (*dst) * width);
 	}
-	/* adjust the y location by a unit vector in the y direction
-	 * this is equivalent to transforming y+1 of the destination point
-	 * to source space
-	 */
-	v.vector[1] += src_image->common.transform->matrix[1][1];
-	dst += dst_stride;
+	else
+	{
+	    src_line = src + y * src_stride;
+
+	    for (i = 0; i < width; ++i)
+	    {
+		uint32_t s, d;
+		int x;
+		x = pixman_fixed_to_int (vx);
+
+		if (!repeat (src_repeat, &x, src_width))
+		{
+		    s = 0;
+		}
+		else
+		{
+		    s = *(src_line + x);
+
+		    if (src_format == PIXMAN_x8r8g8b8)
+			s |= 0xff000000;
+		}
+
+		d = s;
+		if (op == PIXMAN_OP_OVER)
+		{
+		    uint8_t ia;
+
+		    if (!s)
+			goto skip_write;
+
+		    ia = 0xff - (s >> 24);
+
+		    if (ia)
+		    {
+			d = *(dst + i);
+
+			UN8x4_MUL_UN8_ADD_UN8x4 (d, ia, s);
+		    }
+		}
+		*(dst + i) = d;
+
+	    skip_write:
+		/* adjust the x location by a unit vector in the x direction:
+		 * this is equivalent to transforming x+1 of the destination point to source space */
+		vx += unit_x;
+	    }
+	}
+
+        /* adjust the y location by a unit vector in the y direction
+         * this is equivalent to transforming y+1 of the destination point to source space */
+        vy += unit_y;
+        dst += dst_stride;
     }
 }
 
@@ -1533,11 +1568,11 @@ fast_path_composite (pixman_implementation_t *imp,
     if (src->type == BITS
         && src->common.transform
         && !mask
-        && op == PIXMAN_OP_SRC
+        && (op == PIXMAN_OP_SRC || op == PIXMAN_OP_OVER)
         && !src->common.alpha_map && !dest->common.alpha_map
         && (src->common.filter == PIXMAN_FILTER_NEAREST)
-        && PIXMAN_FORMAT_BPP (dest->bits.format) == 32
-        && src->bits.format == dest->bits.format
+	&& (dest->bits.format == PIXMAN_a8r8g8b8 || dest->bits.format == PIXMAN_x8r8g8b8)
+	&& (src->bits.format == PIXMAN_a8r8g8b8 || src->bits.format == PIXMAN_x8r8g8b8)
         && !src->bits.read_func && !src->bits.write_func
         && !dest->bits.read_func && !dest->bits.write_func)
     {
@@ -1554,7 +1589,7 @@ fast_path_composite (pixman_implementation_t *imp,
 	                                   mask_x, mask_y,
 	                                   dest_x, dest_y,
 	                                   width, height,
-	                                   fast_composite_src_scale_nearest);
+	                                   fast_composite_scaled_nearest);
 	    return;
 	}
     }
