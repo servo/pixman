@@ -446,7 +446,7 @@ mmxCombineOverU (pixman_implementation_t *imp, pixman_op_t op,
 	uint32_t a = ssrc >> 24;
 	if (a == 0xff) {
 	    *dest = ssrc;
-	} else if (a) {
+	} else if (ssrc) {
 	    __m64 s, sa;
 	    s = load8888(ssrc);
 	    sa = expand_alpha(s);
@@ -1447,7 +1447,7 @@ fbCompositeSrc_8888x8888mmx (pixman_implementation_t *imp,
 	    a = s >> 24;
 	    if (a == 0xff)
 		*dst = s;
-	    else if (a) {
+	    else if (s) {
 		__m64 ms, sa;
 		ms = load8888(s);
 		sa = expand_alpha(ms);
@@ -2180,7 +2180,7 @@ fbCompositeSrc_8888RevNPx0565mmx (pixman_implementation_t *imp,
 
 		*(__m64 *)dst = vdest;
 	    }
-	    else if (a0 | a1 | a2 | a3)
+	    else if (s0 | s1 | s2 | s3)
 	    {
 		__m64 vdest = *(__m64 *)dst;
 
@@ -2289,7 +2289,7 @@ fbCompositeSrc_8888RevNPx8888mmx (pixman_implementation_t *imp,
 
 		*(__m64 *)dst = pack8888 (d0, d1);
 	    }
-	    else if (a0 | a1)
+	    else if (s0 | s1)
 	    {
 		__m64 vdest = *(__m64 *)dst;
 
@@ -3064,6 +3064,7 @@ static const FastPathInfo mmx_fast_paths[] =
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_null,     PIXMAN_r5g6b5,   fbCompositeSolid_nx0565mmx,	   0 },
     { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_null,     PIXMAN_x8r8g8b8, fbCompositeCopyAreammx,	   0 },
     { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_null,     PIXMAN_x8b8g8r8, fbCompositeCopyAreammx,	   0 },
+
     { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,     PIXMAN_a8r8g8b8, fbCompositeSrc_8888x8888mmx,	   0 },
     { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,	PIXMAN_x8r8g8b8, fbCompositeSrc_8888x8888mmx,	   0 },
     { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,	PIXMAN_r5g6b5,	 fbCompositeSrc_8888x0565mmx,	   0 },
