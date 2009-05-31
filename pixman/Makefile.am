@@ -58,8 +58,7 @@ CLEANFILES = pixman-combine32.c pixman-combine64.c pixman-combine32.h pixman-com
 if USE_MMX
 noinst_LTLIBRARIES += libpixman-mmx.la
 libpixman_mmx_la_SOURCES = \
-	pixman-mmx.c \
-	pixman-mmx.h
+	pixman-mmx.c
 libpixman_mmx_la_CFLAGS = $(DEP_CFLAGS) $(MMX_CFLAGS)
 libpixman_mmx_la_LIBADD = $(DEP_LIBS)
 libpixman_1_la_LDFLAGS += $(MMX_LDFLAGS)
@@ -71,7 +70,6 @@ if USE_VMX
 noinst_LTLIBRARIES += libpixman-vmx.la
 libpixman_vmx_la_SOURCES = \
 	pixman-vmx.c \
-	pixman-vmx.h \
 	pixman-combine32.h
 libpixman_vmx_la_CFLAGS = $(DEP_CFLAGS) $(VMX_CFLAGS)
 libpixman_vmx_la_LIBADD = $(DEP_LIBS)
@@ -82,8 +80,7 @@ endif
 if USE_SSE2
 noinst_LTLIBRARIES += libpixman-sse2.la
 libpixman_sse2_la_SOURCES = \
-	pixman-sse2.c \
-	pixman-sse2.h
+	pixman-sse2.c
 libpixman_sse2_la_CFLAGS = $(DEP_CFLAGS) $(SSE2_CFLAGS)
 libpixman_sse2_la_LIBADD = $(DEP_LIBS)
 libpixman_1_la_LDFLAGS += $(SSE2_LDFLAGS)
