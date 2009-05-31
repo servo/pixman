@@ -1054,6 +1054,10 @@ _pixman_implementation_create_arm_simd (pixman_implementation_t *toplevel);
 pixman_implementation_t *
 _pixman_implementation_create_arm_neon (pixman_implementation_t *toplevel);
 #endif
+#ifdef USE_VMX
+pixman_implementation_t *
+_pixman_implementation_create_vmx (pixman_implementation_t *toplevel);
+#endif
 
 pixman_bool_t
 _pixman_run_fast_path (const FastPathInfo *paths,

@@ -35,7 +35,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "pixman-private.h"
-#include "pixman-vmx.h"
 #include "pixman-combine32.h"
 #include "pixman-private.h"
 
@@ -265,10 +264,6 @@ general_composite (pixman_implementation_t *	imp,
     pixman_bool_t srcTransform = src->common.transform != NULL;
     pixman_bool_t maskTransform = FALSE;
     
-#ifdef USE_VMX
-    fbComposeSetupVMX();
-#endif
-    
     if (srcRepeat && srcTransform &&
 	src->bits.width == 1 &&
 	src->bits.height == 1)
@@ -291,16 +286,6 @@ general_composite (pixman_implementation_t *	imp,
 	    maskTransform = FALSE;
 	}
     }
-    
-#ifdef USE_VMX
-    if (_pixman_run_fast_path (vmx_fast_paths, imp,
-			       op, src, mask, dest,
-			       src_x, src_y,
-			       mask_x, mask_y,
-			       dest_x, dest_y,
-			       width, height))
-	return;
-#endif
     
     /* CompositeGeneral optimizes 1x1 repeating images itself */
     if (src->type == BITS &&

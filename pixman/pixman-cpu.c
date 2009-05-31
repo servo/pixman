@@ -44,7 +44,7 @@ static volatile pixman_bool_t have_vmx = TRUE;
 #ifdef __APPLE__
 #include <sys/sysctl.h>
 
-pixman_bool_t
+static pixman_bool_t
 pixman_have_vmx (void)
 {
     if(!initialized) {
@@ -66,7 +66,7 @@ pixman_have_vmx (void)
 #include <linux/auxvec.h>
 #include <asm/cputable.h>
 
-pixman_bool_t
+static pixman_bool_t
 pixman_have_vmx (void)
 {
     if (!initialized) {
@@ -120,7 +120,8 @@ static void vmx_test(int sig, siginfo_t *si, void *unused) {
     longjmp (jump_env, 1);
 }
 
-pixman_bool_t pixman_have_vmx (void) {
+static pixman_bool_t
+pixman_have_vmx (void) {
     struct sigaction sa, osa;
     int jmp_result;
     if (!initialized) {
@@ -524,8 +525,10 @@ _pixman_choose_implementation (void)
     if (pixman_have_arm_simd())
 	return _pixman_implementation_create_arm_simd (NULL);
 #endif
-
+#ifdef USE_VMX
+    if (pixman_have_vmx())
+	return _pixman_implementation_create_vmx (NULL);
+#endif
+    
     return _pixman_implementation_create_fast_path (NULL);
 }
-
-
