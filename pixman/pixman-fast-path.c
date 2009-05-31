@@ -1431,6 +1431,44 @@ repeat (pixman_repeat_t repeat, int *c, int size)
     return TRUE;
 }
 
+static force_inline uint32_t
+fetch_nearest (pixman_repeat_t src_repeat,
+	       pixman_format_code_t format,
+	       uint32_t *src, int x, int src_width)
+{
+    if (repeat (src_repeat, &x, src_width))
+    {
+	if (format == PIXMAN_x8r8g8b8)
+	    return *(src + x) | 0xff000000;
+	else
+	    return *(src + x);
+    }
+    else
+    {
+	return 0;
+    }
+}
+
+static force_inline void
+combine_over (uint32_t s, uint32_t *dst)
+{
+    if (s)
+    {
+	uint8_t ia = 0xff - (s >> 24);
+
+	if (ia)
+	    UN8x4_MUL_UN8_ADD_UN8x4 (*dst, ia, s);
+	else
+	    *dst = s;
+    }
+}
+
+static force_inline void
+combine_src (uint32_t s, uint32_t *dst)
+{
+    *dst = s;
+}
+
 static void
 fast_composite_scaled_nearest (pixman_implementation_t *imp,
 			       pixman_op_t              op,
@@ -1446,10 +1484,9 @@ fast_composite_scaled_nearest (pixman_implementation_t *imp,
 			       int32_t                  width,
 			       int32_t                  height)
 {
-    uint32_t       *dst;
-    uint32_t       *src;
-    int dst_stride, src_stride;
-    int             i;
+    uint32_t       *dst_line;
+    uint32_t       *src_line;
+    int             dst_stride, src_stride;
     int		    src_width, src_height;
     pixman_repeat_t src_repeat;
     pixman_fixed_t unit_x, unit_y;
@@ -1457,11 +1494,11 @@ fast_composite_scaled_nearest (pixman_implementation_t *imp,
     pixman_vector_t v;
     pixman_fixed_t vy;
 
-    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint32_t, dst_stride, dst, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint32_t, dst_stride, dst_line, 1);
     /* pass in 0 instead of src_x and src_y because src_x and src_y need to be
      * transformed from destination space to source space
      */
-    PIXMAN_IMAGE_GET_LINE (src_image, 0, 0, uint32_t, src_stride, src, 1);
+    PIXMAN_IMAGE_GET_LINE (src_image, 0, 0, uint32_t, src_stride, src_line, 1);
 
     /* reference point is the center of the pixel */
     v.vector[0] = pixman_int_to_fixed (src_x) + pixman_fixed_1 / 2;
@@ -1487,8 +1524,14 @@ fast_composite_scaled_nearest (pixman_implementation_t *imp,
     while (height--)
     {
         pixman_fixed_t vx = v.vector[0];
-	uint32_t *src_line;
 	int y = pixman_fixed_to_int (vy);
+	uint32_t *dst = dst_line;
+
+	dst_line += dst_stride;
+
+        /* adjust the y location by a unit vector in the y direction
+         * this is equivalent to transforming y+1 of the destination point to source space */
+        vy += unit_y;
 
 	if (!repeat (src_repeat, &y, src_height))
 	{
@@ -1497,56 +1540,54 @@ fast_composite_scaled_nearest (pixman_implementation_t *imp,
 	}
 	else
 	{
-	    src_line = src + y * src_stride;
+	    int w = width;
 
-	    for (i = 0; i < width; ++i)
+	    uint32_t *src = src_line + y * src_stride;
+
+	    while (w >= 2)
 	    {
-		uint32_t s, d;
-		int x;
-		x = pixman_fixed_to_int (vx);
+		uint32_t s1, s2;
+		int x1, x2;
 
-		if (!repeat (src_repeat, &x, src_width))
+		x1 = pixman_fixed_to_int (vx);
+		vx += unit_x;
+
+		x2 = pixman_fixed_to_int (vx);
+		vx += unit_x;
+
+		w -= 2;
+
+		s1 = fetch_nearest (src_repeat, src_format, src, x1, src_width);
+		s2 = fetch_nearest (src_repeat, src_format, src, x2, src_width);
+
+		if (op == PIXMAN_OP_OVER)
 		{
-		    s = 0;
+		    combine_over (s1, dst++);
+		    combine_over (s2, dst++);
 		}
 		else
 		{
-		    s = *(src_line + x);
-
-		    if (src_format == PIXMAN_x8r8g8b8)
-			s |= 0xff000000;
+		    combine_src (s1, dst++);
+		    combine_src (s2, dst++);
 		}
+	    }
 
-		d = s;
-		if (op == PIXMAN_OP_OVER)
-		{
-		    uint8_t ia;
+	    while (w--)
+	    {
+		uint32_t s;
+		int x;
 
-		    if (!s)
-			goto skip_write;
-
-		    ia = 0xff - (s >> 24);
-
-		    if (ia)
-		    {
-			d = *(dst + i);
-
-			UN8x4_MUL_UN8_ADD_UN8x4 (d, ia, s);
-		    }
-		}
-		*(dst + i) = d;
-
-	    skip_write:
-		/* adjust the x location by a unit vector in the x direction:
-		 * this is equivalent to transforming x+1 of the destination point to source space */
+		x = pixman_fixed_to_int (vx);
 		vx += unit_x;
+
+		s = fetch_nearest (src_repeat, src_format, src, x, src_width);
+
+		if (op == PIXMAN_OP_OVER)
+		    combine_over (s, dst++);
+		else
+		    combine_src (s, dst++);
 	    }
 	}
-
-        /* adjust the y location by a unit vector in the y direction
-         * this is equivalent to transforming y+1 of the destination point to source space */
-        vy += unit_y;
-        dst += dst_stride;
     }
 }
 
