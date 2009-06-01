@@ -104,6 +104,9 @@ _pixman_image_store_scanline_64 (bits_image_t *image, int x, int y, int width,
 /* On entry, @buffer should contain @n_pixels (x, y) coordinate pairs, where
  * x and y are both uint32_ts. On exit, buffer will contain the corresponding
  * pixels.
+ *
+ * The coordinates must be within the sample grid. If either x or y is 0xffffffff,
+ * the pixel returned will be 0.
  */
 static void
 bits_image_fetch_raw_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
@@ -207,77 +210,40 @@ bits_image_fetch_pixels_src_clip (bits_image_t *image, uint32_t *buffer, int n_p
     bits_image_fetch_alpha_pixels (image, buffer, n_pixels);
 }
 
-/* Buffer contains list of integers on input, list of pixels on output */
-static void
-bits_image_fetch_extended (bits_image_t *image, uint32_t *buffer, int n_pixels)
+static force_inline void
+repeat (pixman_repeat_t repeat, int width, int height, int *x, int *y)
 {
-    int32_t *coords, x, y, width, height;
-    int i;
-
-    width = image->width;
-    height = image->height;
-    
-    coords = (int32_t *)buffer;
-    
-    switch (image->common.repeat)
+    switch (repeat)
     {
     case PIXMAN_REPEAT_NORMAL:
-	for (i = 0; i < n_pixels; ++i)
-	{
-	    coords[0] = MOD (coords[0], width);
-	    coords[1] = MOD (coords[1], height);
-
-	    coords += 2;
-	}
+	*x = MOD (*x, width);
+	*y = MOD (*y, height);
 	break;
 
     case PIXMAN_REPEAT_PAD:
-	for (i = 0; i < n_pixels; ++i)
-	{
-	    coords[0] = CLIP (coords[0], 0, width - 1);
-	    coords[1] = CLIP (coords[1], 0, height - 1);
-
-	    coords += 2;
-	}
+	*x = CLIP (*x, 0, width - 1);
+	*y = CLIP (*y, 0, height - 1);
 	break;
 	
     case PIXMAN_REPEAT_REFLECT:
-	for (i = 0; i < n_pixels; ++i)
-	{
-	    x = MOD (coords[0], width * 2);
-	    y = MOD (coords[1], height * 2);
+	*x = MOD (*x, width * 2);
+	*y = MOD (*y, height * 2);
 
-	    if (x >= width)
-		x = width * 2 - x - 1;
-
-	    if (y >= height)
-		y = height * 2 - y - 1;
-
-	    coords[0] = x;
-	    coords[1] = y;
-
-	    coords += 2;
-	}
+	if (*x >= width)
+	    *x = width * 2 - *x - 1;
+	
+	if (*y >= height)
+	    *y = height * 2 - *y - 1;
 	break;
 
     case PIXMAN_REPEAT_NONE:
-	for (i = 0; i < n_pixels; ++i)
-	{
-	    x = coords[0];
-	    y = coords[1];
+	if (*x < 0 || *x >= width)
+	    *x = 0xffffffff;
 
-	    if (x < 0 || x >= width)
-		coords[0] = 0xffffffff;
-	    
-	    if (y < 0 || y >= height)
-		coords[1] = 0xffffffff;
-
-	    coords += 2;
-	}
+	if (*y < 0 || *y >= height)
+	    *y = 0xffffffff;
 	break;
     }
-
-    bits_image_fetch_pixels_src_clip (image, buffer, n_pixels);
 }
 
 /* Buffer contains list of fixed-point coordinates on input,
@@ -286,17 +252,27 @@ bits_image_fetch_extended (bits_image_t *image, uint32_t *buffer, int n_pixels)
 static void
 bits_image_fetch_nearest_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
 {
+    pixman_repeat_t repeat_mode = image->common.repeat;
+    int width = image->width;
+    int height = image->height;
     int i;
 
-    for (i = 0; i < 2 * n_pixels; ++i)
+    for (i = 0; i < 2 * n_pixels; i += 2)
     {
 	int32_t *coords = (int32_t *)buffer;
+	int32_t x, y;
 
 	/* Subtract pixman_fixed_e to ensure that 0.5 rounds to 0, not 1 */
-	coords[i] = pixman_fixed_to_int (coords[i] - pixman_fixed_e);
+	x = pixman_fixed_to_int (coords[i] - pixman_fixed_e);
+	y = pixman_fixed_to_int (coords[i + 1] - pixman_fixed_e);
+
+	repeat (repeat_mode, width, height, &x, &y);
+
+	coords[i] = x;
+	coords[i + 1] = y;
     }
 
-    return bits_image_fetch_extended (image, buffer, n_pixels);
+    return bits_image_fetch_pixels_src_clip (image, buffer, n_pixels);
 }
 
 /* Buffer contains list of fixed-point coordinates on input,
@@ -312,6 +288,9 @@ bits_image_fetch_bilinear_pixels (bits_image_t *image, uint32_t *buffer, int n_p
     
     uint32_t temps[N_TEMPS];
     int32_t  dists[N_DISTS];
+    pixman_repeat_t repeat_mode = image->common.repeat;
+    int width = image->width;
+    int height = image->height;
     int32_t *coords;
     int i;
 
@@ -342,6 +321,9 @@ bits_image_fetch_bilinear_pixels (bits_image_t *image, uint32_t *buffer, int n_p
 	    x2 = x1 + 1;
 	    y2 = y1 + 1;
 
+	    repeat (repeat_mode, width, height, &x1, &y1);
+	    repeat (repeat_mode, width, height, &x2, &y2);
+	    
 	    *t++ = x1;
 	    *t++ = y1;
 	    *t++ = x2;
@@ -357,7 +339,7 @@ bits_image_fetch_bilinear_pixels (bits_image_t *image, uint32_t *buffer, int n_p
 	    coords += 2;
 	}
 
-	bits_image_fetch_extended (image, temps, tmp_n_pixels * 4);
+	bits_image_fetch_pixels_src_clip (image, temps, tmp_n_pixels * 4);
 
 	u = (uint32_t *)temps;
 	d = dists;
@@ -407,7 +389,7 @@ bits_image_fetch_convolution_pixels (bits_image_t *image, uint32_t *buffer, int 
     uint32_t *tmp_pixels = tmp_pixels_stack;
     pixman_fixed_t *params = image->common.filter_params;
     int x_off = (params[0] - pixman_fixed_1) >> 1;
-    int y_off = (params[0] - pixman_fixed_1) >> 1;
+    int y_off = (params[1] - pixman_fixed_1) >> 1;
     int n_tmp_pixels;
     int32_t *coords;
     int32_t *t;
@@ -442,6 +424,9 @@ bits_image_fetch_convolution_pixels (bits_image_t *image, uint32_t *buffer, int 
     while (i < n_pixels)
     {
 	int n_kernels = MIN (max_n_kernels, (n_pixels - i));
+	pixman_repeat_t repeat_mode = image->common.repeat;
+	int width = image->width;
+	int height = image->height;
 	int j;
 	
 	t = (int32_t *)tmp_pixels;
@@ -459,15 +444,20 @@ bits_image_fetch_convolution_pixels (bits_image_t *image, uint32_t *buffer, int 
 	    {
 		for (x = x1; x < x2; ++x)
 		{
-		    *t++ = x;
-		    *t++ = y;
+		    int rx = x;
+		    int ry = y;
+		    
+		    repeat (repeat_mode, width, height, &rx, &ry);
+		    
+		    *t++ = rx;
+		    *t++ = ry;
 		}
 	    }
 
 	    coords += 2;
 	}
 
-	bits_image_fetch_extended (image, tmp_pixels, n_kernels * kernel_size);
+	bits_image_fetch_pixels_src_clip (image, tmp_pixels, n_kernels * kernel_size);
 
 	u = tmp_pixels;
 	for (j = 0; j < n_kernels; ++j)
@@ -528,6 +518,7 @@ bits_image_fetch_filtered (bits_image_t *pict, uint32_t *buffer, int n_pixels)
     case PIXMAN_FILTER_BEST:
 	bits_image_fetch_bilinear_pixels (pict, buffer, n_pixels);
 	break;
+	
     case PIXMAN_FILTER_CONVOLUTION:
 	bits_image_fetch_convolution_pixels (pict, buffer, n_pixels);
 	break;
@@ -653,14 +644,14 @@ bits_image_fetch_solid_64 (bits_image_t * image,
 			   int x, int y, int width,
 			   uint64_t *buffer, void *unused, uint32_t unused2)
 {
-    uint64_t color[1];
+    uint32_t color[2];
     uint64_t *end;
     uint32_t *coords = (uint32_t *)color;
 
     coords[0] = 0;
-    coords[1] = 0;
+    coords[1] = 1;
     
-    image->fetch_pixels_64 (image, color, 1);
+    image->fetch_pixels_64 (image, (uint64_t *)color, 1);
     
     end = buffer + width;
     while (buffer < end)
@@ -718,14 +709,6 @@ bits_image_property_changed (pixman_image_t *image)
 	    (scanFetchProc)bits_image_fetch_transformed;
     }
     
-    bits->store_scanline_64 = bits_image_store_scanline_64;
-    bits->store_scanline_32 = bits_image_store_scanline_32;
-
-    bits->store_scanline_raw_32 =
-	WRITE_ACCESS(pixman_storeProcForPicture32)(bits);
-    bits->store_scanline_raw_64 =
-	WRITE_ACCESS(pixman_storeProcForPicture64)(bits);
-
     bits->fetch_scanline_raw_32 =
 	READ_ACCESS(pixman_fetchProcForPicture32)(bits);
     bits->fetch_scanline_raw_64 =
@@ -733,6 +716,14 @@ bits_image_property_changed (pixman_image_t *image)
     
     bits->fetch_pixels_32 = READ_ACCESS(pixman_fetchPixelProcForPicture32)(bits);
     bits->fetch_pixels_64 = READ_ACCESS(pixman_fetchPixelProcForPicture64)(bits);
+
+    bits->store_scanline_64 = bits_image_store_scanline_64;
+    bits->store_scanline_32 = bits_image_store_scanline_32;
+
+    bits->store_scanline_raw_32 =
+	WRITE_ACCESS(pixman_storeProcForPicture32)(bits);
+    bits->store_scanline_raw_64 =
+	WRITE_ACCESS(pixman_storeProcForPicture64)(bits);
 }
 
 static uint32_t *
