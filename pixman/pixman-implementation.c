@@ -136,6 +136,7 @@ _pixman_implementation_create (pixman_implementation_t *toplevel,
 			       pixman_implementation_t *delegate)
 {
     pixman_implementation_t *imp = malloc (sizeof (pixman_implementation_t));
+    pixman_implementation_t *d;
     int i;
     
     if (!imp)
@@ -145,9 +146,10 @@ _pixman_implementation_create (pixman_implementation_t *toplevel,
 	imp->toplevel = toplevel;
     else
 	imp->toplevel = imp;
-    
-    if (delegate)
-	delegate->toplevel = imp->toplevel;
+
+    /* Make sure the whole delegate chain has the right toplevel */
+    for (d = delegate; d != NULL; d = d->delegate)
+	d->toplevel = imp->toplevel;
     
     imp->delegate = delegate;
     
