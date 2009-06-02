@@ -471,10 +471,10 @@ arm_simd_composite (pixman_implementation_t *imp,
 }
 
 pixman_implementation_t *
-_pixman_implementation_create_arm_simd (pixman_implementation_t *toplevel)
+_pixman_implementation_create_arm_simd (void)
 {
-    pixman_implementation_t *general = _pixman_implementation_create_fast_path (NULL);
-    pixman_implementation_t *imp = _pixman_implementation_create (toplevel, general);
+    pixman_implementation_t *general = _pixman_implementation_create_fast_path ();
+    pixman_implementation_t *imp = _pixman_implementation_create (general);
 
     imp->composite = arm_simd_composite;
 

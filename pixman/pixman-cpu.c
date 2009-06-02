@@ -510,25 +510,25 @@ _pixman_choose_implementation (void)
 {
 #ifdef USE_SSE2
     if (pixman_have_sse2 ())
-	return _pixman_implementation_create_sse2 (NULL);
+	return _pixman_implementation_create_sse2 ();
 #endif
 #ifdef USE_MMX
     if (pixman_have_mmx())
-	return _pixman_implementation_create_mmx (NULL);
+	return _pixman_implementation_create_mmx ();
 #endif
 
 #ifdef USE_ARM_NEON
     if (pixman_have_arm_neon())
-	return _pixman_implementation_create_arm_neon (NULL);
+	return _pixman_implementation_create_arm_neon ();
 #endif
 #ifdef USE_ARM_SIMD
     if (pixman_have_arm_simd())
-	return _pixman_implementation_create_arm_simd (NULL);
+	return _pixman_implementation_create_arm_simd ();
 #endif
 #ifdef USE_VMX
     if (pixman_have_vmx())
-	return _pixman_implementation_create_vmx (NULL);
+	return _pixman_implementation_create_vmx ();
 #endif
     
-    return _pixman_implementation_create_fast_path (NULL);
+    return _pixman_implementation_create_fast_path ();
 }

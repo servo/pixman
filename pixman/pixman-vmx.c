@@ -1558,10 +1558,10 @@ const FastPathInfo *const vmx_fast_paths = vmx_fast_path_array;
 #endif
 
 pixman_implementation_t *
-_pixman_implementation_create_vmx (pixman_implementation_t *toplevel)
+_pixman_implementation_create_vmx (void)
 {
-    pixman_implementation_t *fast = _pixman_implementation_create_fast_path (NULL);
-    pixman_implementation_t *imp = _pixman_implementation_create (toplevel, fast);
+    pixman_implementation_t *fast = _pixman_implementation_create_fast_path ();
+    pixman_implementation_t *imp = _pixman_implementation_create (fast);
 
     /* Set up function pointers */
     

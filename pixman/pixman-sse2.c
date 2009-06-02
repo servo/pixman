@@ -5044,10 +5044,10 @@ sse2_fill (pixman_implementation_t *imp,
 }
 
 pixman_implementation_t *
-_pixman_implementation_create_sse2 (pixman_implementation_t *toplevel)
+_pixman_implementation_create_sse2 (void)
 {
-    pixman_implementation_t *mmx = _pixman_implementation_create_mmx (NULL);
-    pixman_implementation_t *imp = _pixman_implementation_create (toplevel, mmx);
+    pixman_implementation_t *mmx = _pixman_implementation_create_mmx ();
+    pixman_implementation_t *imp = _pixman_implementation_create (mmx);
 
     /* SSE2 constants */
     Mask565r  = createMask_2x32_128 (0x00f80000, 0x00f80000);

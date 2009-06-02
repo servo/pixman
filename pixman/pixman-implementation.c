@@ -132,8 +132,7 @@ delegate_fill (pixman_implementation_t *imp,
 }
 
 pixman_implementation_t *
-_pixman_implementation_create (pixman_implementation_t *toplevel,
-			       pixman_implementation_t *delegate)
+_pixman_implementation_create (pixman_implementation_t *delegate)
 {
     pixman_implementation_t *imp = malloc (sizeof (pixman_implementation_t));
     pixman_implementation_t *d;
@@ -141,18 +140,12 @@ _pixman_implementation_create (pixman_implementation_t *toplevel,
     
     if (!imp)
 	return NULL;
-    
-    if (toplevel)
-	imp->toplevel = toplevel;
-    else
-	imp->toplevel = imp;
 
     /* Make sure the whole delegate chain has the right toplevel */
-    for (d = delegate; d != NULL; d = d->delegate)
-	d->toplevel = imp->toplevel;
-    
     imp->delegate = delegate;
-    
+    for (d = imp; d != NULL; d = d->delegate)
+	d->toplevel = imp;
+
     /* Fill out function pointers with ones that just delegate
      */
     imp->composite = delegate_composite;

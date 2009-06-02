@@ -1537,10 +1537,10 @@ arm_neon_fill (pixman_implementation_t *imp,
 }
 
 pixman_implementation_t *
-_pixman_implementation_create_arm_neon (pixman_implementation_t *toplevel)
+_pixman_implementation_create_arm_neon (void)
 {
-	pixman_implementation_t *simd = _pixman_implementation_create_arm_simd (NULL);
-	pixman_implementation_t *imp  = _pixman_implementation_create (toplevel, simd);
+	pixman_implementation_t *simd = _pixman_implementation_create_arm_simd();
+	pixman_implementation_t *imp  = _pixman_implementation_create (simd);
 
 	imp->composite = arm_neon_composite;
 //	imp->blt = arm_neon_blt;

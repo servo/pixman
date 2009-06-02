@@ -962,8 +962,7 @@ struct pixman_implementation_t
 };
 
 pixman_implementation_t *
-_pixman_implementation_create (pixman_implementation_t *toplevel,
-			       pixman_implementation_t *delegate);
+_pixman_implementation_create (pixman_implementation_t *delegate);
 
 void
 _pixman_implementation_combine_32 (pixman_implementation_t *	imp,
@@ -1035,28 +1034,28 @@ _pixman_implementation_fill (pixman_implementation_t *   imp,
     
 /* Specific implementations */
 pixman_implementation_t *
-_pixman_implementation_create_general (pixman_implementation_t *toplevel);
+_pixman_implementation_create_general (void);
 pixman_implementation_t *
-_pixman_implementation_create_fast_path (pixman_implementation_t *toplevel);
+_pixman_implementation_create_fast_path (void);
 #ifdef USE_MMX
 pixman_implementation_t *
-_pixman_implementation_create_mmx (pixman_implementation_t *toplevel);
+_pixman_implementation_create_mmx (void);
 #endif
 #ifdef USE_SSE2
 pixman_implementation_t *
-_pixman_implementation_create_sse2 (pixman_implementation_t *toplevel);
+_pixman_implementation_create_sse2 (void);
 #endif
 #ifdef USE_ARM_SIMD
 pixman_implementation_t *
-_pixman_implementation_create_arm_simd (pixman_implementation_t *toplevel);
+_pixman_implementation_create_arm_simd (void);
 #endif
 #ifdef USE_ARM_NEON
 pixman_implementation_t *
-_pixman_implementation_create_arm_neon (pixman_implementation_t *toplevel);
+_pixman_implementation_create_arm_neon (void);
 #endif
 #ifdef USE_VMX
 pixman_implementation_t *
-_pixman_implementation_create_vmx (pixman_implementation_t *toplevel);
+_pixman_implementation_create_vmx (void);
 #endif
 
 pixman_bool_t

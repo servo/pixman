@@ -344,9 +344,9 @@ general_fill (pixman_implementation_t *imp,
 }
 
 pixman_implementation_t *
-_pixman_implementation_create_general (pixman_implementation_t *toplevel)
+_pixman_implementation_create_general (void)
 {
-    pixman_implementation_t *imp = _pixman_implementation_create (toplevel, NULL);
+    pixman_implementation_t *imp = _pixman_implementation_create (NULL);
 
     _pixman_setup_combiner_functions_32 (imp);
     _pixman_setup_combiner_functions_64 (imp);

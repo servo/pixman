@@ -3172,10 +3172,10 @@ mmx_fill (pixman_implementation_t *imp,
 }
 
 pixman_implementation_t *
-_pixman_implementation_create_mmx (pixman_implementation_t *toplevel)
+_pixman_implementation_create_mmx (void)
 {
-    pixman_implementation_t *general = _pixman_implementation_create_fast_path (NULL);
-    pixman_implementation_t *imp = _pixman_implementation_create (toplevel, general);
+    pixman_implementation_t *general = _pixman_implementation_create_fast_path ();
+    pixman_implementation_t *imp = _pixman_implementation_create (general);
 
     imp->combine_32[PIXMAN_OP_OVER] = mmxCombineOverU;
     imp->combine_32[PIXMAN_OP_OVER_REVERSE] = mmxCombineOverReverseU;
