@@ -602,13 +602,14 @@ bits_image_fetch_transformed (bits_image_t * pict, int x, int y, int width,
 		    coords[1] = 0x8000000;
 		else
 		    coords[1] = div;
+
+		v.vector[2] += unit.vector[2];
 	    }
 
 	    coords += 2;
 
 	    v.vector[0] += unit.vector[0];
 	    v.vector[1] += unit.vector[1];
-	    v.vector[2] += unit.vector[2];
 	}
 
 	bits_image_fetch_filtered (pict, tmp_buffer, n_pixels);
