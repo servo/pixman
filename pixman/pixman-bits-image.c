@@ -275,6 +275,8 @@ bits_image_fetch_nearest_pixels (bits_image_t *image, uint32_t *buffer, int n_pi
     return bits_image_fetch_pixels_src_clip (image, buffer, n_pixels);
 }
 
+#define N_TMP_PIXELS	(256)
+
 /* Buffer contains list of fixed-point coordinates on input,
  * a list of pixels on output
  */
@@ -282,9 +284,8 @@ static void
 bits_image_fetch_bilinear_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
 {
 /* (Four pixels * two coordinates) per pixel */
-#define TMP_N_PIXELS	(256)
-#define N_TEMPS		(TMP_N_PIXELS * 8)
-#define N_DISTS		(TMP_N_PIXELS * 2)
+#define N_TEMPS		(N_TMP_PIXELS * 8)
+#define N_DISTS		(N_TMP_PIXELS * 2)
     
     uint32_t temps[N_TEMPS];
     int32_t  dists[N_DISTS];
@@ -298,7 +299,7 @@ bits_image_fetch_bilinear_pixels (bits_image_t *image, uint32_t *buffer, int n_p
     coords = (int32_t *)buffer;
     while (i < n_pixels)
     {
-	int tmp_n_pixels = MIN(TMP_N_PIXELS, n_pixels - i);
+	int tmp_n_pixels = MIN(N_TMP_PIXELS, n_pixels - i);
 	int32_t distx, disty;
 	uint32_t *u;
 	int32_t *t, *d;
@@ -384,7 +385,6 @@ bits_image_fetch_bilinear_pixels (bits_image_t *image, uint32_t *buffer, int n_p
 static void
 bits_image_fetch_convolution_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
 {
-#define N_TMP_PIXELS 8192
     uint32_t tmp_pixels_stack[N_TMP_PIXELS * 2]; /* Two coordinates per pixel */
     uint32_t *tmp_pixels = tmp_pixels_stack;
     pixman_fixed_t *params = image->common.filter_params;
@@ -529,8 +529,6 @@ static void
 bits_image_fetch_transformed (bits_image_t * pict, int x, int y, int width,
 			      uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
 {
-#define N_TMP_PIXELS 1024
-
     uint32_t     *bits;
     int32_t    stride;
     pixman_vector_t v;
