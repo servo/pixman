@@ -692,57 +692,51 @@ pixman_image_can_get_solid (pixman_image_t *image)
 }
 
 pixman_bool_t
-pixman_image_is_opaque(pixman_image_t *image)
+pixman_image_is_opaque (pixman_image_t *image)
 {
-    int i = 0;
-    int gradientNumberOfColors = 0;
+    int i;
 
-    if(image->common.alpha_map)
+    if (image->common.alpha_map)
         return FALSE;
 
-    switch(image->type)
+    switch (image->type)
     {
     case BITS:
-        if(PIXMAN_FORMAT_A(image->bits.format))
+	if (image->common.repeat == PIXMAN_REPEAT_NONE)
+	    return FALSE;
+	
+        if (PIXMAN_FORMAT_A (image->bits.format))
             return FALSE;
         break;
 
     case LINEAR:
-    case CONICAL:
     case RADIAL:
-        gradientNumberOfColors = image->gradient.n_stops;
-        i=0;
-        while(i<gradientNumberOfColors)
-        {
-            if(image->gradient.stops[i].color.alpha != 0xffff)
+	if (image->common.repeat == PIXMAN_REPEAT_NONE)
+	    return FALSE;
+	
+	for (i = 0; i < image->gradient.n_stops; ++i)
+	{
+            if (image->gradient.stops[i].color.alpha != 0xffff)
                 return FALSE;
-            i++;
         }
         break;
 
+    case CONICAL:
+	/* Conical gradients always have a transparent border */
+	return FALSE;
+	break;
+	
     case SOLID:
-         if(Alpha(image->solid.color) != 0xff)
+         if (Alpha (image->solid.color) != 0xff)
             return FALSE;
         break;
     }
 
-    /* Convolution filters can introduce translucency if the sum of the weights
-       is lower than 1. */
+    /* Convolution filters can introduce translucency if the sum of the
+     * weights is lower than 1.
+     */
     if (image->common.filter == PIXMAN_FILTER_CONVOLUTION)
          return FALSE;
-
-    if (image->common.repeat == PIXMAN_REPEAT_NONE)
-    {
-        if (image->common.filter != PIXMAN_FILTER_NEAREST)
-            return FALSE;
-
-        if (image->common.transform)
-            return FALSE;
-
-	/* Gradients do not necessarily cover the entire compositing area */
-	if (image->type == LINEAR || image->type == CONICAL || image->type == RADIAL)
-	    return FALSE;
-    }
 
      return TRUE;
 }
