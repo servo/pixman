@@ -296,10 +296,12 @@ struct image_common
 {
     image_type_t		type;
     int32_t			ref_count;
-    pixman_region32_t		full_region;
     pixman_region32_t		clip_region;
-    pixman_region32_t	       *src_clip;
-    pixman_bool_t               has_client_clip;
+    pixman_bool_t		have_clip_region;	/* FALSE if there is no clip */
+    pixman_bool_t		client_clip;	/* Whether the source clip was set by a client */
+    pixman_bool_t		clip_sources;		/* Whether the clip applies when
+							 * the image is used as a source
+							 */
     pixman_transform_t	       *transform;
     pixman_repeat_t		repeat;
     pixman_filter_t		filter;

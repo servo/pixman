@@ -1190,7 +1190,6 @@ fast_path_composite (pixman_implementation_t *imp,
         && (src->common.filter == PIXMAN_FILTER_NEAREST)
         && PIXMAN_FORMAT_BPP(dest->bits.format) == 32
         && src->bits.format == dest->bits.format
-        && src->common.src_clip == &(src->common.full_region)
         && !src->common.read_func && !src->common.write_func
         && !dest->common.read_func && !dest->common.write_func)
     {

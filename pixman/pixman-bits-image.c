@@ -186,27 +186,6 @@ bits_image_fetch_alpha_pixels (bits_image_t *image, uint32_t *buffer, int n_pixe
 static void
 bits_image_fetch_pixels_src_clip (bits_image_t *image, uint32_t *buffer, int n_pixels)
 {
-    if (image->common.src_clip != &(image->common.full_region) &&
-	!pixman_region32_equal (image->common.src_clip, &(image->common.full_region)))
-    {
-	int32_t *coords = (int32_t *)buffer;
-	int i;
-
-	for (i = 0; i < n_pixels; ++i)
-	{
-	    int32_t x = coords[0];
-	    int32_t y = coords[1];
-
-	    if (!pixman_region32_contains_point (image->common.src_clip, x, y, NULL))
-	    {
-		coords[0] = 0xffffffff;
-		coords[1] = 0xffffffff;
-	    }
-
-	    coords += 2;
-	}
-    }
-
     bits_image_fetch_alpha_pixels (image, buffer, n_pixels);
 }
 
@@ -663,7 +642,7 @@ bits_image_fetch_untransformed_repeat_none (bits_image_t *image, pixman_bool_t w
 					    uint32_t *buffer)
 {
     uint32_t w;
-    
+
     if (y < 0 || y >= image->height)
     {
 	memset (buffer, 0, width * sizeof (uint32_t));
@@ -690,11 +669,11 @@ bits_image_fetch_untransformed_repeat_none (bits_image_t *image, pixman_bool_t w
 	else
 	    image->fetch_scanline_raw_32 (image, x, y, w, buffer);
 	
+	width -= w;
 	buffer += w;
 	x += w;
-	width -= w;
     }
-    
+
     memset (buffer, 0, width * (wide? 8 : 4));
 }
 
@@ -888,10 +867,6 @@ pixman_image_create_bits (pixman_format_code_t  format,
 									* of uint32_t's
 									*/
     image->bits.indexed = NULL;
-    
-    pixman_region32_fini (&image->common.full_region);
-    pixman_region32_init_rect (&image->common.full_region, 0, 0,
-			       image->bits.width, image->bits.height);
     
     image->common.property_changed = bits_image_property_changed;
     

@@ -565,6 +565,7 @@ walk_region_internal (pixman_implementation_t *imp,
 	    x_src = pbox->x1 - xDst + xSrc;
 	    x_msk = pbox->x1 - xDst + xMask;
 	    x_dst = pbox->x1;
+	    
 	    if (maskRepeat)
 	    {
 		y_msk = MOD (y_msk, pMask->bits.height);
@@ -629,7 +630,7 @@ _pixman_walk_composite_region (pixman_implementation_t *imp,
     pixman_region32_t region;
     
     pixman_region32_init (&region);
-    
+
     if (pixman_compute_composite_region32 (
 	    &region, pSrc, pMask, pDst, xSrc, ySrc, xMask, yMask, xDst, yDst, width, height))
     {

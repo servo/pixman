@@ -79,49 +79,37 @@ miClipPictureSrc (pixman_region32_t *	pRegion,
 		  int		dx,
 		  int		dy)
 {
-    /* XXX what to do with clipping from transformed pictures? */
-    if (pPicture->common.transform || pPicture->type != BITS)
+    /* Source clips are ignored, unless they are explicitly turned on
+     * and the clip in question was set by an X client
+     */
+    if (!pPicture->common.clip_sources || !pPicture->common.client_clip)
 	return TRUE;
 
-    if (pPicture->common.repeat)
-    {
-	/* If the clip region was set by a client, then it should be intersected
-	 * with the composite region since it's interpreted as happening
-	 * after the repeat algorithm.
-	 *
-	 * If the clip region was not set by a client, then it was imposed by
-	 * boundaries of the pixmap, or by sibling or child windows, which means
-	 * it should in theory be repeated along. FIXME: we ignore that case.
-	 * It is only relevant for windows that are (a) clipped by siblings/children
-	 * and (b) used as source. However this case is not useful anyway due
-	 * to lack of GraphicsExpose events.
-	 */
-	if (pPicture->common.has_client_clip)
-	{
-	    pixman_region32_translate (pRegion, dx, dy);
-	    
-	    if (!pixman_region32_intersect (pRegion, pRegion, 
-					    pPicture->common.src_clip))
-		return FALSE;
-	    
-	    pixman_region32_translate ( pRegion, -dx, -dy);
-	}
-	    
-	return TRUE;
-    }
-    else
-    {
-	return miClipPictureReg (pRegion,
-				 pPicture->common.src_clip,
-				 dx,
-				 dy);
-    }
+    return miClipPictureReg (pRegion,
+			     &pPicture->common.clip_region,
+			     dx, dy);
 }
 
 /*
  * returns FALSE if the final region is empty.  Indistinguishable from
  * an allocation failure, but rendering ignores those anyways.
  */
+
+static void
+print_region (pixman_region32_t *region, const char *header)
+{
+    int n_boxes;
+    pixman_box32_t *boxes = pixman_region32_rectangles (region, &n_boxes);
+    int i;
+
+    printf ("%s\n", header);
+    for (i = 0; i < n_boxes; ++i)
+    {
+	pixman_box32_t *box = &(boxes[i]);
+
+	printf ("   %d %d %d %d\n", box->x1, box->y1, box->x2, box->y2);
+    }
+}
 
 pixman_bool_t
 pixman_compute_composite_region32 (pixman_region32_t *	pRegion,
@@ -145,7 +133,14 @@ pixman_compute_composite_region32 (pixman_region32_t *	pRegion,
     pRegion->extents.y1 = yDst;
     v = yDst + height;
     pRegion->extents.y2 = BOUND(v);
+
+    pRegion->extents.x1 = MAX (pRegion->extents.x1, 0);
+    pRegion->extents.y1 = MAX (pRegion->extents.y1, 0);
+    pRegion->extents.x2 = MIN (pRegion->extents.x2, pDst->bits.width);
+    pRegion->extents.y2 = MIN (pRegion->extents.y2, pDst->bits.height);
+    
     pRegion->data = 0;
+    
     /* Check for empty operation */
     if (pRegion->extents.x1 >= pRegion->extents.x2 ||
 	pRegion->extents.y1 >= pRegion->extents.y2)
@@ -153,13 +148,17 @@ pixman_compute_composite_region32 (pixman_region32_t *	pRegion,
 	pixman_region32_init (pRegion);
 	return FALSE;
     }
-    /* clip against dst */
-    if (!miClipPictureReg (pRegion, &pDst->common.clip_region, 0, 0))
+    
+    if (pDst->common.have_clip_region)
     {
-	pixman_region32_fini (pRegion);
-	return FALSE;
+	if (!miClipPictureReg (pRegion, &pDst->common.clip_region, 0, 0))
+	{
+	    pixman_region32_fini (pRegion);
+	    return FALSE;
+	}
     }
-    if (pDst->common.alpha_map)
+    
+    if (pDst->common.alpha_map && pDst->common.alpha_map->common.have_clip_region)
     {
 	if (!miClipPictureReg (pRegion, &pDst->common.alpha_map->common.clip_region,
 			       -pDst->common.alpha_origin.x,
@@ -169,13 +168,17 @@ pixman_compute_composite_region32 (pixman_region32_t *	pRegion,
 	    return FALSE;
 	}
     }
+    
     /* clip against src */
-    if (!miClipPictureSrc (pRegion, pSrc, xDst - xSrc, yDst - ySrc))
+    if (pSrc->common.have_clip_region)
     {
-	pixman_region32_fini (pRegion);
-	return FALSE;
+	if (!miClipPictureSrc (pRegion, pSrc, xDst - xSrc, yDst - ySrc))
+	{
+	    pixman_region32_fini (pRegion);
+	    return FALSE;
+	}
     }
-    if (pSrc->common.alpha_map)
+    if (pSrc->common.alpha_map && pSrc->common.alpha_map->common.have_clip_region)
     {
 	if (!miClipPictureSrc (pRegion, (pixman_image_t *)pSrc->common.alpha_map,
 			       xDst - (xSrc - pSrc->common.alpha_origin.x),
@@ -186,14 +189,14 @@ pixman_compute_composite_region32 (pixman_region32_t *	pRegion,
 	}
     }
     /* clip against mask */
-    if (pMask)
+    if (pMask && pMask->common.have_clip_region)
     {
 	if (!miClipPictureSrc (pRegion, pMask, xDst - xMask, yDst - yMask))
 	{
 	    pixman_region32_fini (pRegion);
 	    return FALSE;
 	}	
-	if (pMask->common.alpha_map)
+	if (pMask->common.alpha_map && pMask->common.alpha_map->common.have_clip_region)
 	{
 	    if (!miClipPictureSrc (pRegion, (pixman_image_t *)pMask->common.alpha_map,
 				   xDst - (xMask - pMask->common.alpha_origin.x),
@@ -204,6 +207,10 @@ pixman_compute_composite_region32 (pixman_region32_t *	pRegion,
 	    }
 	}
     }
+
+#if 0
+    print_region (pRegion, "composite region");
+#endif
     
     return TRUE;
 }

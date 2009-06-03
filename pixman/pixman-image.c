@@ -97,10 +97,10 @@ _pixman_image_allocate (void)
     {
 	image_common_t *common = &image->common;
 
-	pixman_region32_init (&common->full_region);
 	pixman_region32_init (&common->clip_region);
-	common->src_clip = &common->full_region;
-	common->has_client_clip = FALSE;
+
+	common->have_clip_region = FALSE;
+	common->clip_sources = FALSE;
 	common->transform = NULL;
 	common->repeat = PIXMAN_REPEAT_NONE;
 	common->filter = PIXMAN_FILTER_NEAREST;
@@ -112,6 +112,7 @@ _pixman_image_allocate (void)
 	common->read_func = NULL;
 	common->write_func = NULL;
 	common->classify = NULL;
+	common->client_clip = FALSE;
     }
 
     return image;
@@ -191,7 +192,6 @@ pixman_image_unref (pixman_image_t *image)
     if (common->ref_count == 0)
     {
 	pixman_region32_fini (&common->clip_region);
-	pixman_region32_fini (&common->full_region);
 
 	if (common->transform)
 	    free (common->transform);
@@ -233,17 +233,7 @@ pixman_image_unref (pixman_image_t *image)
 void
 _pixman_image_reset_clip_region (pixman_image_t *image)
 {
-    pixman_region32_fini (&image->common.clip_region);
-
-    if (image->type == BITS)
-    {
-	pixman_region32_init_rect (&image->common.clip_region, 0, 0,
-				   image->bits.width, image->bits.height);
-    }
-    else
-    {
-	pixman_region32_init (&image->common.clip_region);
-    }
+    image->common.have_clip_region = FALSE;
 }
 
 PIXMAN_EXPORT pixman_bool_t
@@ -255,7 +245,8 @@ pixman_image_set_clip_region32 (pixman_image_t *image,
 
     if (region)
     {
-	result = pixman_region32_copy (&common->clip_region, region);
+	if ((result = pixman_region32_copy (&common->clip_region, region)))
+	    image->common.have_clip_region = TRUE;
     }
     else
     {
@@ -279,7 +270,8 @@ pixman_image_set_clip_region (pixman_image_t    *image,
 
     if (region)
     {
-	result = pixman_region32_copy_from_region16 (&common->clip_region, region);
+	if ((result = pixman_region32_copy_from_region16 (&common->clip_region, region)))
+	    image->common.have_clip_region = TRUE;
     }
     else
     {
@@ -293,15 +285,11 @@ pixman_image_set_clip_region (pixman_image_t    *image,
     return result;
 }
 
-/* Sets whether the clip region includes a clip region set by the client
- */
 PIXMAN_EXPORT void
 pixman_image_set_has_client_clip (pixman_image_t *image,
 				  pixman_bool_t	  client_clip)
 {
-    image->common.has_client_clip = client_clip;
-
-    image_property_changed (image);
+    image->common.client_clip = client_clip;
 }
 
 PIXMAN_EXPORT pixman_bool_t
@@ -393,16 +381,9 @@ pixman_image_set_filter (pixman_image_t       *image,
 
 PIXMAN_EXPORT void
 pixman_image_set_source_clipping (pixman_image_t  *image,
-				  pixman_bool_t    source_clipping)
+				  pixman_bool_t    clip_sources)
 {
-    image_common_t *common = &image->common;
-
-    if (source_clipping)
-	common->src_clip = &common->clip_region;
-    else
-	common->src_clip = &common->full_region;
-
-    image_property_changed (image);
+    image->common.clip_sources = clip_sources;
 }
 
 /* Unlike all the other property setters, this function does not
@@ -617,11 +598,14 @@ pixman_image_fill_rectangles (pixman_op_t		    op,
 		pixman_box32_t *boxes;
 
 		pixman_region32_init_rect (&fill_region, rects[i].x, rects[i].y, rects[i].width, rects[i].height);
-		if (!pixman_region32_intersect (&fill_region,
-						&fill_region,
-						&dest->common.clip_region))
-		    return FALSE;
 
+		if (dest->common.have_clip_region)
+		{
+		    if (!pixman_region32_intersect (&fill_region,
+						    &fill_region,
+						    &dest->common.clip_region))
+			return FALSE;
+		}
 
 		boxes = pixman_region32_rectangles (&fill_region, &n_boxes);
 		for (j = 0; j < n_boxes; ++j)
