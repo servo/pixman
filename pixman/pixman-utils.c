@@ -527,23 +527,23 @@ pixman_format_supported_source (pixman_format_code_t format)
     }
 }
 
-void
-_pixman_walk_composite_region (pixman_implementation_t *imp,
-			      pixman_op_t op,
-			      pixman_image_t * pSrc,
-			      pixman_image_t * pMask,
-			      pixman_image_t * pDst,
-			      int16_t xSrc,
-			      int16_t ySrc,
-			      int16_t xMask,
-			      int16_t yMask,
-			      int16_t xDst,
-			      int16_t yDst,
-			      uint16_t width,
-			      uint16_t height,
-			      pixman_bool_t srcRepeat,
-			      pixman_bool_t maskRepeat,
-			      pixman_composite_func_t compositeRect)
+static void
+walk_region_internal (pixman_implementation_t *imp,
+		      pixman_op_t op,
+		      pixman_image_t * pSrc,
+		      pixman_image_t * pMask,
+		      pixman_image_t * pDst,
+		      int16_t xSrc,
+		      int16_t ySrc,
+		      int16_t xMask,
+		      int16_t yMask,
+		      int16_t xDst,
+		      int16_t yDst,
+		      uint16_t width,
+		      uint16_t height,
+		      pixman_bool_t srcRepeat,
+		      pixman_bool_t maskRepeat,
+		      pixman_composite_func_t compositeRect)
 {
     int		    n;
     const pixman_box32_t *pbox;
@@ -621,6 +621,33 @@ _pixman_walk_composite_region (pixman_implementation_t *imp,
     pixman_region32_fini (&reg);
 }
 
+void
+_pixman_walk_composite_region (pixman_implementation_t *imp,
+			       pixman_op_t op,
+			       pixman_image_t * pSrc,
+			       pixman_image_t * pMask,
+			       pixman_image_t * pDst,
+			       int16_t xSrc,
+			       int16_t ySrc,
+			       int16_t xMask,
+			       int16_t yMask,
+			       int16_t xDst,
+			       int16_t yDst,
+			       uint16_t width,
+			       uint16_t height,
+			       pixman_bool_t srcRepeat,
+			       pixman_bool_t maskRepeat,
+			       pixman_composite_func_t compositeRect)
+{
+    walk_region_internal (imp, op,
+			  pSrc, pMask, pDst,
+			  xSrc, ySrc, xMask, yMask, xDst, yDst,
+			  width, height,
+			  srcRepeat, maskRepeat,
+			  compositeRect);
+}
+
+    
 static pixman_bool_t
 mask_is_solid (pixman_image_t *mask)
 {
@@ -650,8 +677,8 @@ get_fast_path (const FastPathInfo *fast_paths,
 
     for (info = fast_paths; info->op != PIXMAN_OP_NONE; info++)
     {
-	pixman_bool_t valid_src		= FALSE;
-	pixman_bool_t valid_mask	= FALSE;
+	pixman_bool_t valid_src = FALSE;
+	pixman_bool_t valid_mask = FALSE;
 
 	if (info->op != op)
 	    continue;
