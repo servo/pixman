@@ -1207,7 +1207,6 @@ fast_path_composite (pixman_implementation_t *imp,
 					   mask_x, mask_y,
 					   dest_x, dest_y,
 					   width, height,
-					   FALSE, FALSE, 
 					   fbCompositeSrcScaleNearest);
 	    return;
 	}

@@ -635,15 +635,12 @@ _pixman_walk_composite_region (pixman_implementation_t *imp,
 			       int16_t yDst,
 			       uint16_t width,
 			       uint16_t height,
-			       pixman_bool_t srcRepeat,
-			       pixman_bool_t maskRepeat,
 			       pixman_composite_func_t compositeRect)
 {
     walk_region_internal (imp, op,
 			  pSrc, pMask, pDst,
 			  xSrc, ySrc, xMask, yMask, xDst, yDst,
-			  width, height,
-			  srcRepeat, maskRepeat,
+			  width, height, FALSE, FALSE,
 			  compositeRect);
 }
 
@@ -807,13 +804,13 @@ _pixman_run_fast_path (const FastPathInfo *paths,
 
     if (func)
     {
-	_pixman_walk_composite_region (imp, op,
-				       src, mask, dest,
-				       src_x, src_y, mask_x, mask_y,
-				       dest_x, dest_y,
-				       width, height,
-				       src_repeat, mask_repeat,
-				       func);
+	walk_region_internal (imp, op,
+			      src, mask, dest,
+			      src_x, src_y, mask_x, mask_y,
+			      dest_x, dest_y,
+			      width, height,
+			      src_repeat, mask_repeat,
+			      func);
 	return TRUE;
     }
     

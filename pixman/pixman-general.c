@@ -261,7 +261,7 @@ general_composite (pixman_implementation_t *	imp,
 {
     _pixman_walk_composite_region (imp, op, src, mask, dest, src_x, src_y,
 				   mask_x, mask_y, dest_x, dest_y, width, height,
-				   FALSE, FALSE, general_composite_rect);
+				   general_composite_rect);
 }
 
 static pixman_bool_t
