@@ -722,6 +722,22 @@ get_fast_path (const FastPathInfo *fast_paths,
     return NULL;
 }
 
+static inline pixman_bool_t
+image_covers (pixman_image_t *image, pixman_box32_t *extents)
+{
+    if (image->common.type == BITS && image->common.repeat == PIXMAN_REPEAT_NONE)
+    {
+	if (extents->x1 < 0 || extents->y1 < 0 ||
+	    extents->x2 >= image->bits.width ||
+	    extents->y2 >= image->bits.height)
+	{
+	    return FALSE;
+	}
+    }
+
+    return TRUE;
+}
+
 pixman_bool_t
 _pixman_run_fast_path (const FastPathInfo *paths,
 		       pixman_implementation_t *imp,
@@ -741,15 +757,28 @@ _pixman_run_fast_path (const FastPathInfo *paths,
     pixman_composite_func_t func = NULL;
     pixman_bool_t src_repeat = src->common.repeat == PIXMAN_REPEAT_NORMAL;
     pixman_bool_t mask_repeat = mask && mask->common.repeat == PIXMAN_REPEAT_NORMAL;
-    
+    pixman_region32_t region;
+    pixman_bool_t result;
+    pixman_box32_t extents;
+
+    pixman_region32_init (&region);
+
+    if (!pixman_compute_composite_region32 (
+	    &region, src, mask, dest, src_x, src_y, mask_x, mask_y, dest_x, dest_y, width, height))
+    {
+	result = TRUE;
+
+	goto out;
+    }
+
     if ((src->type == BITS || pixman_image_can_get_solid (src)) &&
 	(!mask || mask->type == BITS)
-        && !src->common.transform && !(mask && mask->common.transform)
-        && !(mask && mask->common.alpha_map) && !src->common.alpha_map && !dest->common.alpha_map
-        && (src->common.filter != PIXMAN_FILTER_CONVOLUTION)
-        && (src->common.repeat != PIXMAN_REPEAT_PAD)
-        && (src->common.repeat != PIXMAN_REPEAT_REFLECT)
-        && (!mask || (mask->common.filter != PIXMAN_FILTER_CONVOLUTION &&
+	&& !src->common.transform && !(mask && mask->common.transform)
+	&& !(mask && mask->common.alpha_map) && !src->common.alpha_map && !dest->common.alpha_map
+	&& (src->common.filter != PIXMAN_FILTER_CONVOLUTION)
+	&& (src->common.repeat != PIXMAN_REPEAT_PAD)
+	&& (src->common.repeat != PIXMAN_REPEAT_REFLECT)
+	&& (!mask || (mask->common.filter != PIXMAN_FILTER_CONVOLUTION &&
 		      mask->common.repeat != PIXMAN_REPEAT_PAD &&
 		      mask->common.repeat != PIXMAN_REPEAT_REFLECT))
 	&& !src->common.read_func && !src->common.write_func
@@ -761,6 +790,16 @@ _pixman_run_fast_path (const FastPathInfo *paths,
 	const FastPathInfo *info;	
 	pixman_bool_t pixbuf;
 
+	extents = *pixman_region32_extents (&region);
+	
+	if (!image_covers (src, &extents)		||
+	    (mask && !image_covers (mask, &extents)))
+	{
+	    result = FALSE;
+	    
+	    goto out;
+	}
+    
 	pixbuf =
 	    src && src->type == BITS		&&
 	    mask && mask->type == BITS		&&
@@ -771,17 +810,17 @@ _pixman_run_fast_path (const FastPathInfo *paths,
 	    !mask_repeat;
 	
 	info = get_fast_path (paths, op, src, mask, dest, pixbuf);
-
+	
 	if (info)
 	{
 	    func = info->func;
-		
+	    
 	    if (info->src_format == PIXMAN_solid)
 		src_repeat = FALSE;
-
+	    
 	    if (info->mask_format == PIXMAN_solid || info->flags & NEED_SOLID_MASK)
 		mask_repeat = FALSE;
-
+	    
 	    if ((src_repeat			&&
 		 src->bits.width == 1		&&
 		 src->bits.height == 1)	||
@@ -801,30 +840,26 @@ _pixman_run_fast_path (const FastPathInfo *paths,
 	    }
 	}
     }
-
+    
     if (func)
     {
-	pixman_region32_t region;
+	walk_region_internal (imp, op,
+			      src, mask, dest,
+			      src_x, src_y, mask_x, mask_y,
+			      dest_x, dest_y,
+			      width, height,
+			      src_repeat, mask_repeat,
+			      &region,
+			      func);
 	
-	pixman_region32_init (&region);
-	
-	if (pixman_compute_composite_region32 (
-		&region, src, mask, dest, src_x, src_y, mask_x, mask_y, dest_x, dest_y, width, height))
-	{
-	    walk_region_internal (imp, op,
-				  src, mask, dest,
-				  src_x, src_y, mask_x, mask_y,
-				  dest_x, dest_y,
-				  width, height,
-				  src_repeat, mask_repeat,
-				  &region,
-				  func);
-	}
-
-	pixman_region32_fini (&region);
-	
-	return TRUE;
+	result = TRUE;
+    }
+    else
+    {
+	result = FALSE;
     }
     
-    return FALSE;
+out:
+    pixman_region32_fini (&region);
+    return result;
 }
