@@ -259,57 +259,9 @@ general_composite (pixman_implementation_t *	imp,
 		   int32_t			width,
 		   int32_t			height)
 {
-    pixman_bool_t srcRepeat = src->type == BITS && src->common.repeat == PIXMAN_REPEAT_NORMAL;
-    pixman_bool_t maskRepeat = FALSE;
-    pixman_bool_t srcTransform = src->common.transform != NULL;
-    pixman_bool_t maskTransform = FALSE;
-    
-    if (srcRepeat && srcTransform &&
-	src->bits.width == 1 &&
-	src->bits.height == 1)
-    {
-	srcTransform = FALSE;
-    }
-    
-    if (mask && mask->type == BITS)
-    {
-	maskRepeat = mask->common.repeat == PIXMAN_REPEAT_NORMAL;
-	
-	maskTransform = mask->common.transform != 0;
-	if (mask->common.filter == PIXMAN_FILTER_CONVOLUTION)
-	    maskTransform = TRUE;
-	
-	if (maskRepeat && maskTransform &&
-	    mask->bits.width == 1 &&
-	    mask->bits.height == 1)
-	{
-	    maskTransform = FALSE;
-	}
-    }
-    
-    /* CompositeGeneral optimizes 1x1 repeating images itself */
-    if (src->type == BITS &&
-	src->bits.width == 1 && src->bits.height == 1)
-    {
-	srcRepeat = FALSE;
-    }
-    
-    if (mask && mask->type == BITS &&
-	mask->bits.width == 1 && mask->bits.height == 1)
-    {
-	maskRepeat = FALSE;
-    }
-    
-    /* if we are transforming, repeats are handled in fbFetchTransformed */
-    if (srcTransform)
-	srcRepeat = FALSE;
-    
-    if (maskTransform)
-	maskRepeat = FALSE;
-    
     _pixman_walk_composite_region (imp, op, src, mask, dest, src_x, src_y,
 				   mask_x, mask_y, dest_x, dest_y, width, height,
-				   srcRepeat, maskRepeat, general_composite_rect);
+				   FALSE, FALSE, general_composite_rect);
 }
 
 static pixman_bool_t
