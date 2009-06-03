@@ -543,23 +543,13 @@ walk_region_internal (pixman_implementation_t *imp,
 		      uint16_t height,
 		      pixman_bool_t srcRepeat,
 		      pixman_bool_t maskRepeat,
+		      pixman_region32_t *region,
 		      pixman_composite_func_t compositeRect)
 {
-    int		    n;
+    int n;
     const pixman_box32_t *pbox;
-    int		    w, h, w_this, h_this;
-    int		    x_msk, y_msk, x_src, y_src, x_dst, y_dst;
-    pixman_region32_t reg;
-    pixman_region32_t *region;
-
-    pixman_region32_init (&reg);
-    if (!pixman_compute_composite_region32 (&reg, pSrc, pMask, pDst,
-					    xSrc, ySrc, xMask, yMask, xDst, yDst, width, height))
-    {
-	return;
-    }
-
-    region = &reg;
+    int w, h, w_this, h_this;
+    int x_msk, y_msk, x_src, y_src, x_dst, y_dst;
 
     pbox = pixman_region32_rectangles (region, &n);
     while (n--)
@@ -618,7 +608,6 @@ walk_region_internal (pixman_implementation_t *imp,
 	}
 	pbox++;
     }
-    pixman_region32_fini (&reg);
 }
 
 void
@@ -637,11 +626,22 @@ _pixman_walk_composite_region (pixman_implementation_t *imp,
 			       uint16_t height,
 			       pixman_composite_func_t compositeRect)
 {
-    walk_region_internal (imp, op,
-			  pSrc, pMask, pDst,
-			  xSrc, ySrc, xMask, yMask, xDst, yDst,
-			  width, height, FALSE, FALSE,
-			  compositeRect);
+    pixman_region32_t region;
+    
+    pixman_region32_init (&region);
+    
+    if (pixman_compute_composite_region32 (
+	    &region, pSrc, pMask, pDst, xSrc, ySrc, xMask, yMask, xDst, yDst, width, height))
+    {
+	walk_region_internal (imp, op,
+			      pSrc, pMask, pDst,
+			      xSrc, ySrc, xMask, yMask, xDst, yDst,
+			      width, height, FALSE, FALSE,
+			      &region,
+			      compositeRect);
+    }
+
+    pixman_region32_fini (&region);
 }
 
     
@@ -680,7 +680,7 @@ get_fast_path (const FastPathInfo *fast_paths,
 	if (info->op != op)
 	    continue;
 
-	if ((info->src_format == PIXMAN_solid && pixman_image_can_get_solid (pSrc))		||
+	if ((info->src_format == PIXMAN_solid && pixman_image_can_get_solid (pSrc)) ||
 	    (pSrc->type == BITS && info->src_format == pSrc->bits.format))
 	{
 	    valid_src = TRUE;
@@ -689,7 +689,7 @@ get_fast_path (const FastPathInfo *fast_paths,
 	if (!valid_src)
 	    continue;
 
-	if ((info->mask_format == PIXMAN_null && !pMask)			||
+	if ((info->mask_format == PIXMAN_null && !pMask) ||
 	    (pMask && pMask->type == BITS && info->mask_format == pMask->bits.format))
 	{
 	    valid_mask = TRUE;
@@ -804,13 +804,25 @@ _pixman_run_fast_path (const FastPathInfo *paths,
 
     if (func)
     {
-	walk_region_internal (imp, op,
-			      src, mask, dest,
-			      src_x, src_y, mask_x, mask_y,
-			      dest_x, dest_y,
-			      width, height,
-			      src_repeat, mask_repeat,
-			      func);
+	pixman_region32_t region;
+	
+	pixman_region32_init (&region);
+	
+	if (pixman_compute_composite_region32 (
+		&region, src, mask, dest, src_x, src_y, mask_x, mask_y, dest_x, dest_y, width, height))
+	{
+	    walk_region_internal (imp, op,
+				  src, mask, dest,
+				  src_x, src_y, mask_x, mask_y,
+				  dest_x, dest_y,
+				  width, height,
+				  src_repeat, mask_repeat,
+				  &region,
+				  func);
+	}
+
+	pixman_region32_fini (&region);
+	
 	return TRUE;
     }
     
