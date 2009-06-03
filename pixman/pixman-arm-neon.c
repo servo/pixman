@@ -2191,7 +2191,7 @@ _pixman_implementation_create_arm_neon (void)
 
 	imp->composite = arm_neon_composite;
 //	imp->blt = arm_neon_blt;
-//	imp->fill = arm_neon_fill;  --  Relies on code which is not upstreamed yet
+	imp->fill = arm_neon_fill;
 
 	return imp;
 }
