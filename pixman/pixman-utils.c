@@ -758,19 +758,7 @@ _pixman_run_fast_path (const FastPathInfo *paths,
     pixman_composite_func_t func = NULL;
     pixman_bool_t src_repeat = src->common.repeat == PIXMAN_REPEAT_NORMAL;
     pixman_bool_t mask_repeat = mask && mask->common.repeat == PIXMAN_REPEAT_NORMAL;
-    pixman_region32_t region;
     pixman_bool_t result;
-    pixman_box32_t extents;
-
-    pixman_region32_init (&region);
-
-    if (!pixman_compute_composite_region32 (
-	    &region, src, mask, dest, src_x, src_y, mask_x, mask_y, dest_x, dest_y, width, height))
-    {
-	result = TRUE;
-
-	goto out;
-    }
 
     if ((src->type == BITS || pixman_image_can_get_solid (src)) &&
 	(!mask || mask->type == BITS)
@@ -791,16 +779,6 @@ _pixman_run_fast_path (const FastPathInfo *paths,
 	const FastPathInfo *info;	
 	pixman_bool_t pixbuf;
 
-	extents = *pixman_region32_extents (&region);
-	
-	if (!image_covers (src, &extents)		||
-	    (mask && !image_covers (mask, &extents)))
-	{
-	    result = FALSE;
-	    
-	    goto out;
-	}
-    
 	pixbuf =
 	    src && src->type == BITS		&&
 	    mask && mask->type == BITS		&&
@@ -842,25 +820,36 @@ _pixman_run_fast_path (const FastPathInfo *paths,
 	}
     }
     
+    result = FALSE;
+    
     if (func)
     {
-	walk_region_internal (imp, op,
-			      src, mask, dest,
-			      src_x, src_y, mask_x, mask_y,
-			      dest_x, dest_y,
-			      width, height,
-			      src_repeat, mask_repeat,
-			      &region,
-			      func);
+	pixman_region32_t region;
+	pixman_region32_init (&region);
+
+	if (pixman_compute_composite_region32 (
+		&region, src, mask, dest, src_x, src_y, mask_x, mask_y, dest_x, dest_y, width, height))
+	{
+	    pixman_box32_t *extents = pixman_region32_extents (&region);
 	
-	result = TRUE;
-    }
-    else
-    {
-	result = FALSE;
+	    if (image_covers (src, extents)		   &&
+		(!mask || image_covers (mask, extents)))
+	    {
+		walk_region_internal (imp, op,
+				      src, mask, dest,
+				      src_x, src_y, mask_x, mask_y,
+				      dest_x, dest_y,
+				      width, height,
+				      src_repeat, mask_repeat,
+				      &region,
+				      func);
+	    
+		result = TRUE;
+	    }
+	}
+	    
+	pixman_region32_fini (&region);
     }
     
-out:
-    pixman_region32_fini (&region);
     return result;
 }
