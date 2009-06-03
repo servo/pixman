@@ -2190,7 +2190,7 @@ _pixman_implementation_create_arm_neon (void)
 	pixman_implementation_t *imp  = _pixman_implementation_create (simd);
 
 	imp->composite = arm_neon_composite;
-//	imp->blt = arm_neon_blt;
+	imp->blt = arm_neon_blt;
 	imp->fill = arm_neon_fill;
 
 	return imp;
