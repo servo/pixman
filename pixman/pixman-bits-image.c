@@ -662,7 +662,65 @@ bits_image_fetch_untransformed_32 (bits_image_t * image,
 				   int x, int y, int width,
 				   uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
 {
-    image->fetch_scanline_raw_32 (image, x, y, width, buffer);
+    if (image->common.repeat == PIXMAN_REPEAT_NONE)
+    {
+	if (y < 0 || y >= image->height)
+	{
+	    memset (buffer, 0, width * sizeof (uint32_t));
+	}
+	else
+	{
+	    uint32_t w;
+
+	    if (x < 0)
+	    {
+		w = MIN (width, -x);
+		
+		memset (buffer, 0, w * sizeof (uint32_t));
+		
+		width -= w;
+		buffer += w;
+		x += w;
+	    }
+
+	    if (x < image->width)
+	    {
+		w = MIN (width, image->width - x);
+		image->fetch_scanline_raw_32 (image, x, y, w, buffer);
+
+		buffer += w;
+		x += w;
+		width -= w;
+	    }
+	    
+	    memset (buffer, 0, width * sizeof (uint32_t));
+	}
+    }
+    else if (image->common.repeat == PIXMAN_REPEAT_NORMAL)
+    {
+	uint32_t w;
+	
+	while (y < 0)
+	    y += image->height;
+	while (y >= image->height)
+	    y -= image->height;
+
+	while (width)
+	{
+	    while (x < 0)
+		x += image->width;
+	    while (x >= image->width)
+		x -= image->width;
+
+	    w = MIN (width, image->width - x);
+	    
+	    image->fetch_scanline_raw_32 (image, x, y, w, buffer);
+
+	    buffer += w;
+	    x += w;
+	    width -= w;
+	}
+    }
 }
 
 static void
@@ -694,8 +752,8 @@ bits_image_property_changed (pixman_image_t *image)
     }
     else if (!bits->common.transform &&
 	     bits->common.filter != PIXMAN_FILTER_CONVOLUTION &&
-	     bits->common.repeat != PIXMAN_REPEAT_PAD &&
-	     bits->common.repeat != PIXMAN_REPEAT_REFLECT)
+	     (bits->common.repeat == PIXMAN_REPEAT_NONE ||
+	      bits->common.repeat == PIXMAN_REPEAT_NORMAL))
     {
 	image->common.get_scanline_64 = (scanFetchProc)bits_image_fetch_untransformed_64;
 	image->common.get_scanline_32 = (scanFetchProc)bits_image_fetch_untransformed_32;
