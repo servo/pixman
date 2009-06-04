@@ -436,6 +436,17 @@ fi
 
 AM_CONDITIONAL(USE_GCC_INLINE_ASM, test $have_gcc_inline_asm = yes)
 
+dnl ==============================================
+dnl Timers
+
+AC_ARG_ENABLE(timers,
+   [AC_HELP_STRING([--enable-timers],
+		   [enable TIMER_BEGIN and TIMER_END macros [default=no]])],
+   [enable_timers=$enableval], [enable_timers=no])
+
+AC_DEFINE(PIXMAN_TIMERS, 1, [enable TIMER_BEGIN/TIMER_END macros])
+AC_SUBST(PIXMAN_TIMERS)
+
 dnl ===================================
 dnl GTK+
 

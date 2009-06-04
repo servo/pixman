@@ -778,7 +778,7 @@ void pixman_region_internal_set_static_pointers (pixman_box16_t *empty_box,
 						 pixman_region16_data_t *empty_data,
 						 pixman_region16_data_t *broken_data);
 
-#ifdef PIXMAN_TIMING
+#ifdef PIXMAN_TIMERS
 
 /* Timing */
 static inline uint64_t
@@ -823,7 +823,7 @@ void pixman_timer_register (PixmanTimer *timer);
         timer##tname.total += OIL_STAMP() - begin##tname;		\
     }
 
-#endif /* PIXMAN_TIMING */
+#endif /* PIXMAN_TIMERS */
 
 typedef struct pixman_implementation_t pixman_implementation_t;
 

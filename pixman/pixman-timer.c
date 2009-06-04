@@ -27,7 +27,7 @@
 #include <stdio.h>
 #include "pixman-private.h"
 
-#ifdef PIXMAN_TIMER
+#ifdef PIXMAN_TIMERS
 
 static PixmanTimer *timers;
 
