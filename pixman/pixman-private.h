@@ -118,15 +118,13 @@ typedef void (*fetchProc32)(bits_image_t *pict, int x, int y, int width,
                                      uint32_t *buffer);
 typedef uint32_t (*fetchPixelProc32)(bits_image_t *pict, int offset, int line);
 typedef void (*storeProc32)(pixman_image_t *, uint32_t *bits,
-                                     const uint32_t *values, int x, int width,
-                                     const pixman_indexed_t *);
+			    const uint32_t *values, int x, int width);
 
 typedef void (*fetchProc64)(bits_image_t *pict, int x, int y, int width,
                                      uint64_t *buffer);
 typedef uint64_t (*fetchPixelProc64)(bits_image_t *pict, int offset, int line);
 typedef void (*storeProc64)(pixman_image_t *, uint32_t *bits,
-                                     const uint64_t *values, int x, int width,
-                                     const pixman_indexed_t *);
+			    const uint64_t *values, int x, int width);
 
 typedef void (* fetch_pixels_32_t) (bits_image_t *image, uint32_t *buffer, int n_pixels);
 typedef void (* fetch_pixels_64_t) (bits_image_t *image, uint64_t *buffer, int n_pixels);

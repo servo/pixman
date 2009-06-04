@@ -45,13 +45,12 @@ bits_image_store_scanline_32 (bits_image_t *image, int x, int y, int width, uint
 {
     uint32_t *bits;
     int32_t stride;
-    const pixman_indexed_t *indexed = image->indexed;
 
     bits = image->bits;
     stride = image->rowstride;
     bits += y*stride;
 
-    image->store_scanline_raw_32 ((pixman_image_t *)image, bits, buffer, x, width, indexed);
+    image->store_scanline_raw_32 ((pixman_image_t *)image, bits, buffer, x, width);
 
     if (image->common.alpha_map)
     {
@@ -67,14 +66,13 @@ bits_image_store_scanline_64 (bits_image_t *image, int x, int y, int width, uint
 {
     uint32_t *bits;
     int32_t stride;
-    const pixman_indexed_t *indexed = image->indexed;
 
     bits = image->bits;
     stride = image->rowstride;
     bits += y*stride;
 
     image->store_scanline_raw_64 ((pixman_image_t *)image, bits,
-				  (uint64_t *)buffer, x, width, indexed);
+				  (uint64_t *)buffer, x, width);
 
     if (image->common.alpha_map)
     {

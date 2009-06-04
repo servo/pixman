@@ -1808,7 +1808,7 @@ fbFetchPixel_yv12 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 static void
 fbStore_a2b10g10r10 (pixman_image_t *image,
 		     uint32_t *bits, const uint64_t *values,
-		     int x, int width, const pixman_indexed_t * indexed)
+		     int x, int width)
 {
     int i;
     uint32_t *pixel = bits + x;
@@ -1823,7 +1823,7 @@ fbStore_a2b10g10r10 (pixman_image_t *image,
 
 static void
 fbStore_x2b10g10r10 (pixman_image_t *image,
-		     uint32_t *bits, const uint64_t *values, int x, int width, const pixman_indexed_t * indexed)
+		     uint32_t *bits, const uint64_t *values, int x, int width)
 {
     int i;
     uint32_t *pixel = bits + x;
@@ -1837,14 +1837,14 @@ fbStore_x2b10g10r10 (pixman_image_t *image,
 
 static void
 fbStore_a8r8g8b8 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
+		  uint32_t *bits, const uint32_t *values, int x, int width)
 {
     MEMCPY_WRAPPED(image, ((uint32_t *)bits) + x, values, width*sizeof(uint32_t));
 }
 
 static void
 fbStore_x8r8g8b8 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
+		  uint32_t *bits, const uint32_t *values, int x, int width)
 {
     int i;
     uint32_t *pixel = (uint32_t *)bits + x;
@@ -1854,7 +1854,7 @@ fbStore_x8r8g8b8 (pixman_image_t *image,
 
 static void
 fbStore_a8b8g8r8 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
+		  uint32_t *bits, const uint32_t *values, int x, int width)
 {
     int i;
     uint32_t *pixel = (uint32_t *)bits + x;
@@ -1864,7 +1864,7 @@ fbStore_a8b8g8r8 (pixman_image_t *image,
 
 static void
 fbStore_x8b8g8r8 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
+		  uint32_t *bits, const uint32_t *values, int x, int width)
 {
     int i;
     uint32_t *pixel = (uint32_t *)bits + x;
@@ -1874,7 +1874,7 @@ fbStore_x8b8g8r8 (pixman_image_t *image,
 
 static void
 fbStore_b8g8r8a8 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
+		  uint32_t *bits, const uint32_t *values, int x, int width)
 {
     int i;
     uint32_t *pixel = (uint32_t *)bits + x;
@@ -1888,7 +1888,7 @@ fbStore_b8g8r8a8 (pixman_image_t *image,
 
 static void
 fbStore_b8g8r8x8 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
+		  uint32_t *bits, const uint32_t *values, int x, int width)
 {
     int i;
     uint32_t *pixel = (uint32_t *)bits + x;
@@ -1901,8 +1901,7 @@ fbStore_b8g8r8x8 (pixman_image_t *image,
 
 static void
 fbStore_r8g8b8 (pixman_image_t *image,
-		uint32_t *bits, const uint32_t *values, int x, int width,
-		const pixman_indexed_t * indexed)
+		uint32_t *bits, const uint32_t *values, int x, int width)
 {
     int i;
     uint8_t *pixel = ((uint8_t *) bits) + 3*x;
@@ -1914,7 +1913,7 @@ fbStore_r8g8b8 (pixman_image_t *image,
 
 static void
 fbStore_b8g8r8 (pixman_image_t *image,
-		uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
+		uint32_t *bits, const uint32_t *values, int x, int width)
 {
     int i;
     uint8_t *pixel = ((uint8_t *) bits) + 3*x;
@@ -1934,7 +1933,7 @@ fbStore_b8g8r8 (pixman_image_t *image,
 
 static void
 fbStore_r5g6b5 (pixman_image_t *image,
-		uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
+		uint32_t *bits, const uint32_t *values, int x, int width)
 {
     int i;
     uint16_t *pixel = ((uint16_t *) bits) + x;
@@ -1948,7 +1947,7 @@ fbStore_r5g6b5 (pixman_image_t *image,
 
 static void
 fbStore_b5g6r5 (pixman_image_t *image,
-		uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
+		uint32_t *bits, const uint32_t *values, int x, int width)
 {
     int i;
     uint16_t  *pixel = ((uint16_t *) bits) + x;
@@ -1962,7 +1961,7 @@ fbStore_b5g6r5 (pixman_image_t *image,
 
 static void
 fbStore_a1r5g5b5 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
+		  uint32_t *bits, const uint32_t *values, int x, int width)
 {
     int i;
     uint16_t  *pixel = ((uint16_t *) bits) + x;
@@ -1977,7 +1976,7 @@ fbStore_a1r5g5b5 (pixman_image_t *image,
 
 static void
 fbStore_x1r5g5b5 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
+		  uint32_t *bits, const uint32_t *values, int x, int width)
 {
     int i;
     uint16_t  *pixel = ((uint16_t *) bits) + x;
@@ -1991,7 +1990,7 @@ fbStore_x1r5g5b5 (pixman_image_t *image,
 
 static void
 fbStore_a1b5g5r5 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
+		  uint32_t *bits, const uint32_t *values, int x, int width)
 {
     int i;
     uint16_t  *pixel = ((uint16_t *) bits) + x;
@@ -2006,7 +2005,7 @@ fbStore_a1b5g5r5 (pixman_image_t *image,
 
 static void
 fbStore_x1b5g5r5 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
+		  uint32_t *bits, const uint32_t *values, int x, int width)
 {
     int i;
     uint16_t  *pixel = ((uint16_t *) bits) + x;
@@ -2020,7 +2019,7 @@ fbStore_x1b5g5r5 (pixman_image_t *image,
 
 static void
 fbStore_a4r4g4b4 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
+		  uint32_t *bits, const uint32_t *values, int x, int width)
 {
     int i;
     uint16_t  *pixel = ((uint16_t *) bits) + x;
@@ -2035,7 +2034,7 @@ fbStore_a4r4g4b4 (pixman_image_t *image,
 
 static void
 fbStore_x4r4g4b4 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
+		  uint32_t *bits, const uint32_t *values, int x, int width)
 {
     int i;
     uint16_t  *pixel = ((uint16_t *) bits) + x;
@@ -2049,7 +2048,7 @@ fbStore_x4r4g4b4 (pixman_image_t *image,
 
 static void
 fbStore_a4b4g4r4 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
+		  uint32_t *bits, const uint32_t *values, int x, int width)
 {
     int i;
     uint16_t  *pixel = ((uint16_t *) bits) + x;
@@ -2064,7 +2063,7 @@ fbStore_a4b4g4r4 (pixman_image_t *image,
 
 static void
 fbStore_x4b4g4r4 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
+		  uint32_t *bits, const uint32_t *values, int x, int width)
 {
     int i;
     uint16_t  *pixel = ((uint16_t *) bits) + x;
@@ -2078,7 +2077,7 @@ fbStore_x4b4g4r4 (pixman_image_t *image,
 
 static void
 fbStore_a8 (pixman_image_t *image,
-	    uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
+	    uint32_t *bits, const uint32_t *values, int x, int width)
 {
     int i;
     uint8_t   *pixel = ((uint8_t *) bits) + x;
@@ -2089,7 +2088,7 @@ fbStore_a8 (pixman_image_t *image,
 
 static void
 fbStore_r3g3b2 (pixman_image_t *image,
-		uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
+		uint32_t *bits, const uint32_t *values, int x, int width)
 {
     int i;
     uint8_t   *pixel = ((uint8_t *) bits) + x;
@@ -2104,7 +2103,7 @@ fbStore_r3g3b2 (pixman_image_t *image,
 
 static void
 fbStore_b2g3r3 (pixman_image_t *image,
-		uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
+		uint32_t *bits, const uint32_t *values, int x, int width)
 {
     int i;
     uint8_t   *pixel = ((uint8_t *) bits) + x;
@@ -2119,7 +2118,7 @@ fbStore_b2g3r3 (pixman_image_t *image,
 
 static void
 fbStore_a2r2g2b2 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
+		  uint32_t *bits, const uint32_t *values, int x, int width)
 {
     int i;
     uint8_t   *pixel = ((uint8_t *) bits) + x;
@@ -2134,7 +2133,7 @@ fbStore_a2r2g2b2 (pixman_image_t *image,
 
 static void
 fbStore_a2b2g2r2 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
+		  uint32_t *bits, const uint32_t *values, int x, int width)
 {
     int i;
     uint8_t   *pixel = ((uint8_t *) bits) + x;
@@ -2149,8 +2148,9 @@ fbStore_a2b2g2r2 (pixman_image_t *image,
 
 static void
 fbStore_c8 (pixman_image_t *image,
-	    uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
+	    uint32_t *bits, const uint32_t *values, int x, int width)
 {
+    const pixman_indexed_t *indexed = image->bits.indexed;
     int i;
     uint8_t   *pixel = ((uint8_t *) bits) + x;
     for (i = 0; i < width; ++i) {
@@ -2160,7 +2160,7 @@ fbStore_c8 (pixman_image_t *image,
 
 static void
 fbStore_x4a4 (pixman_image_t *image,
-	      uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
+	      uint32_t *bits, const uint32_t *values, int x, int width)
 {
     int i;
     uint8_t   *pixel = ((uint8_t *) bits) + x;
@@ -2182,7 +2182,7 @@ fbStore_x4a4 (pixman_image_t *image,
 
 static void
 fbStore_a4 (pixman_image_t *image,
-	    uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
+	    uint32_t *bits, const uint32_t *values, int x, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
@@ -2192,7 +2192,7 @@ fbStore_a4 (pixman_image_t *image,
 
 static void
 fbStore_r1g2b1 (pixman_image_t *image,
-		uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
+		uint32_t *bits, const uint32_t *values, int x, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
@@ -2208,7 +2208,7 @@ fbStore_r1g2b1 (pixman_image_t *image,
 
 static void
 fbStore_b1g2r1 (pixman_image_t *image,
-		uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
+		uint32_t *bits, const uint32_t *values, int x, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
@@ -2224,7 +2224,7 @@ fbStore_b1g2r1 (pixman_image_t *image,
 
 static void
 fbStore_a1r1g1b1 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
+		  uint32_t *bits, const uint32_t *values, int x, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
@@ -2240,7 +2240,7 @@ fbStore_a1r1g1b1 (pixman_image_t *image,
 
 static void
 fbStore_a1b1g1r1 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
+		  uint32_t *bits, const uint32_t *values, int x, int width)
 {
     int i;
     for (i = 0; i < width; ++i) {
@@ -2256,8 +2256,9 @@ fbStore_a1b1g1r1 (pixman_image_t *image,
 
 static void
 fbStore_c4 (pixman_image_t *image,
-	    uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
+	    uint32_t *bits, const uint32_t *values, int x, int width)
 {
+    const pixman_indexed_t *indexed = image->bits.indexed;
     int i;
     for (i = 0; i < width; ++i) {
 	uint32_t  pixel;
@@ -2269,7 +2270,7 @@ fbStore_c4 (pixman_image_t *image,
 
 static void
 fbStore_a1 (pixman_image_t *image,
-	    uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
+	    uint32_t *bits, const uint32_t *values, int x, int width)
 {
     int i;
     for (i = 0; i < width; ++i)
@@ -2288,8 +2289,9 @@ fbStore_a1 (pixman_image_t *image,
 
 static void
 fbStore_g1 (pixman_image_t *image,
-	    uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
+	    uint32_t *bits, const uint32_t *values, int x, int width)
 {
+    const pixman_indexed_t *indexed = image->bits.indexed;
     int i;
     for (i = 0; i < width; ++i)
     {
@@ -2311,7 +2313,7 @@ fbStore_g1 (pixman_image_t *image,
  */
 static void
 fbStore64_generic (pixman_image_t *image,
-		   uint32_t *bits, const uint64_t *values, int x, int width, const pixman_indexed_t * indexed)
+		   uint32_t *bits, const uint64_t *values, int x, int width)
 {
     uint32_t *argb8Pixels;
 
@@ -2326,7 +2328,7 @@ fbStore64_generic (pixman_image_t *image,
      */
     pixman_contract(argb8Pixels, values, width);
     
-    image->bits.store_scanline_raw_32 (image, bits, argb8Pixels, x, width, indexed);
+    image->bits.store_scanline_raw_32 (image, bits, argb8Pixels, x, width);
 
     free(argb8Pixels);
 }
