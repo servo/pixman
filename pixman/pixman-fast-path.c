@@ -27,8 +27,6 @@
 #include <string.h>
 #include "pixman-private.h"
 #include "pixman-combine32.h"
-#define FbFullMask(n) \
-    ((n) == 32 ? (uint32_t)-1 : ((((uint32_t) 1) << n) - 1))
 
 static force_inline uint32_t
 fbOver (uint32_t src, uint32_t dest)
@@ -147,7 +145,7 @@ fbCompositeSolidMaskIn_nx8x8 (pixman_implementation_t *imp,
 			      int32_t     height)
 {
     uint32_t	src, srca;
-    uint8_t	*dstLine, *dst, dstMask;
+    uint8_t	*dstLine, *dst;
     uint8_t	*maskLine, *mask, m;
     int	dstStride, maskStride;
     uint16_t	w;
@@ -155,7 +153,6 @@ fbCompositeSolidMaskIn_nx8x8 (pixman_implementation_t *imp,
 
     fbComposeGetSolid(iSrc, src, iDst->bits.format);
 
-    dstMask = FbFullMask (PIXMAN_FORMAT_DEPTH (iDst->bits.format));
     srca = src >> 24;
 
     fbComposeGetStart (iDst, xDst, yDst, uint8_t, dstStride, dstLine, 1);
@@ -279,14 +276,13 @@ fbCompositeSolidMask_nx8x8888 (pixman_implementation_t *imp,
 			       int32_t     height)
 {
     uint32_t	 src, srca;
-    uint32_t	*dstLine, *dst, d, dstMask;
+    uint32_t	*dstLine, *dst, d;
     uint8_t	*maskLine, *mask, m;
     int		 dstStride, maskStride;
     uint16_t	 w;
 
     fbComposeGetSolid(pSrc, src, pDst->bits.format);
 
-    dstMask = FbFullMask (PIXMAN_FORMAT_DEPTH (pDst->bits.format));
     srca = src >> 24;
     if (src == 0)
 	return;
@@ -308,14 +304,14 @@ fbCompositeSolidMask_nx8x8888 (pixman_implementation_t *imp,
 	    if (m == 0xff)
 	    {
 		if (srca == 0xff)
-		    *dst = src & dstMask;
+		    *dst = src;
 		else
-		    *dst = fbOver (src, *dst) & dstMask;
+		    *dst = fbOver (src, *dst);
 	    }
 	    else if (m)
 	    {
 		d = fbIn (src, m);
-		*dst = fbOver (d, *dst) & dstMask;
+		*dst = fbOver (d, *dst);
 	    }
 	    dst++;
 	}
@@ -338,7 +334,7 @@ fbCompositeSolidMask_nx8888x8888C (pixman_implementation_t *imp,
 				   int32_t     height)
 {
     uint32_t	src, srca;
-    uint32_t	*dstLine, *dst, d, dstMask;
+    uint32_t	*dstLine, *dst, d;
     uint32_t	*maskLine, *mask, ma;
     int	dstStride, maskStride;
     uint16_t	w;
@@ -346,7 +342,6 @@ fbCompositeSolidMask_nx8888x8888C (pixman_implementation_t *imp,
 
     fbComposeGetSolid(pSrc, src, pDst->bits.format);
 
-    dstMask = FbFullMask (PIXMAN_FORMAT_DEPTH (pDst->bits.format));
     srca = src >> 24;
     if (src == 0)
 	return;
@@ -368,9 +363,9 @@ fbCompositeSolidMask_nx8888x8888C (pixman_implementation_t *imp,
 	    if (ma == 0xffffffff)
 	    {
 		if (srca == 0xff)
-		    *dst = src & dstMask;
+		    *dst = src;
 		else
-		    *dst = fbOver (src, *dst) & dstMask;
+		    *dst = fbOver (src, *dst);
 	    }
 	    else if (ma)
 	    {
@@ -612,7 +607,7 @@ fbCompositeSrc_8888x8888 (pixman_implementation_t *imp,
 			 int32_t     width,
 			 int32_t     height)
 {
-    uint32_t	*dstLine, *dst, dstMask;
+    uint32_t	*dstLine, *dst;
     uint32_t	*srcLine, *src, s;
     int	dstStride, srcStride;
     uint8_t	a;
@@ -620,8 +615,6 @@ fbCompositeSrc_8888x8888 (pixman_implementation_t *imp,
 
     fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
     fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
-
-    dstMask = FbFullMask (PIXMAN_FORMAT_DEPTH (pDst->bits.format));
 
     while (height--)
     {
@@ -636,9 +629,9 @@ fbCompositeSrc_8888x8888 (pixman_implementation_t *imp,
 	    s = *src++;
 	    a = s >> 24;
 	    if (a == 0xff)
-		*dst = s & dstMask;
+		*dst = s;
 	    else if (s)
-		*dst = fbOver (s, *dst) & dstMask;
+		*dst = fbOver (s, *dst);
 	    dst++;
 	}
     }
