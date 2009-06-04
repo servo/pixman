@@ -184,6 +184,9 @@ typedef struct _FbComposeData {
     uint16_t	 height;
 } FbComposeData;
 
+typedef void (* fetch_pixels_32_t) (bits_image_t *image, uint32_t *buffer, int n_pixels);
+typedef void (* fetch_pixels_64_t) (bits_image_t *image, uint64_t *buffer, int n_pixels);
+
 void pixman_composite_rect_general_accessors (const FbComposeData *data,
                                               void *src_buffer,
                                               void *mask_buffer,
@@ -192,17 +195,17 @@ void pixman_composite_rect_general_accessors (const FbComposeData *data,
 void pixman_composite_rect_general (const FbComposeData *data);
 
 fetchProc32 pixman_fetchProcForPicture32 (bits_image_t *);
-fetchPixelProc32 pixman_fetchPixelProcForPicture32 (bits_image_t *);
+fetch_pixels_32_t pixman_fetchPixelProcForPicture32 (bits_image_t *);
 storeProc32 pixman_storeProcForPicture32 (bits_image_t *);
 fetchProc32 pixman_fetchProcForPicture32_accessors (bits_image_t *);
-fetchPixelProc32 pixman_fetchPixelProcForPicture32_accessors (bits_image_t *);
+fetch_pixels_32_t pixman_fetchPixelProcForPicture32_accessors (bits_image_t *);
 storeProc32 pixman_storeProcForPicture32_accessors (bits_image_t *);
 
 fetchProc64 pixman_fetchProcForPicture64 (bits_image_t *);
-fetchPixelProc64 pixman_fetchPixelProcForPicture64 (bits_image_t *);
+fetch_pixels_64_t pixman_fetchPixelProcForPicture64 (bits_image_t *);
 storeProc64 pixman_storeProcForPicture64 (bits_image_t *);
 fetchProc64 pixman_fetchProcForPicture64_accessors (bits_image_t *);
-fetchPixelProc64 pixman_fetchPixelProcForPicture64_accessors (bits_image_t *);
+fetch_pixels_64_t pixman_fetchPixelProcForPicture64_accessors (bits_image_t *);
 storeProc64 pixman_storeProcForPicture64_accessors (bits_image_t *);
 
 void pixman_expand(uint64_t *dst, const uint32_t *src, pixman_format_code_t, int width);
@@ -212,19 +215,6 @@ void pixmanFetchGradient (gradient_t *, int x, int y, int width,
                            uint32_t *buffer, uint32_t *mask, uint32_t maskBits);
 void _pixman_image_get_scanline_64_generic (pixman_image_t * pict, int x, int y, int width,
 					    uint64_t *buffer, uint64_t *mask, uint32_t maskBits);
-void fbFetchTransformed(bits_image_t *, int x, int y, int width,
-                        uint32_t *buffer, uint32_t *mask, uint32_t maskBits);
-void fbFetchExternalAlpha(bits_image_t *, int x, int y, int width,
-                          uint32_t *buffer, uint32_t *mask, uint32_t maskBits);
-
-void fbFetchTransformed_accessors(bits_image_t *, int x, int y, int width,
-                                  uint32_t *buffer, uint32_t *mask,
-                                  uint32_t maskBits);
-void fbStoreExternalAlpha_accessors(bits_image_t *, int x, int y, int width,
-                                    uint32_t *buffer);
-void fbFetchExternalAlpha_accessors(bits_image_t *, int x, int y, int width,
-                                    uint32_t *buffer, uint32_t *mask,
-                                    uint32_t maskBits);
 
 /* end */
 
@@ -270,6 +260,9 @@ _pixman_image_get_scanline_64 (pixman_image_t *image, int x, int y, int width,
 void
 _pixman_image_store_scanline_32 (bits_image_t *image, int x, int y, int width,
 				 uint32_t *buffer);
+void
+_pixman_image_fetch_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels);
+
 /* Even thought the type of buffer is uint32_t *, the function actually expects
  * a uint64_t *buffer.
  */
@@ -389,8 +382,17 @@ struct bits_image
     uint32_t *			free_me;
     int				rowstride; /* in number of uint32_t's */
 
+    fetch_pixels_32_t		fetch_pixels_32;
+    fetch_pixels_64_t		fetch_pixels_64;
+
     scanStoreProc		store_scanline_32;
     scanStoreProc		store_scanline_64;
+
+    storeProc32			store_scanline_raw_32;
+    storeProc64			store_scanline_raw_64;
+
+    fetchProc32			fetch_scanline_raw_32;
+    fetchProc64			fetch_scanline_raw_64;
 };
 
 union pixman_image
@@ -552,10 +554,14 @@ _pixman_gradient_walker_pixel (GradientWalker       *walker,
 
 #define MOD(a,b) ((a) < 0 ? ((b) - ((-(a) - 1) % (b))) - 1 : (a) % (b))
 
+/* Divides two fixed-point numbers and returns an integer */
 #define DIV(a,b) ((((a) < 0) == ((b) < 0)) ? (a) / (b) :		\
 		  ((a) - (b) + 1 - (((b) < 0) << 1)) / (b))
 
 #define CLIP(a,b,c) ((a) < (b) ? (b) : ((a) > (c) ? (c) : (a)))
+
+#define MIN(a,b) ((a < b)? a : b)
+#define MAX(a,b) ((a > b)? a : b)
 
 #if 0
 /* FIXME: the MOD macro above is equivalent, but faster I think */
@@ -566,40 +572,6 @@ _pixman_gradient_walker_pixel (GradientWalker       *walker,
  * are supposed to do), but some of them are real. For example the one
  * where Fetch4 doesn't have a READ
  */
-
-#if 0
-/* Framebuffer access support macros */
-#define ACCESS_MEM(code)						\
-    do {								\
-	const image_common_t *const com__ =				\
-	    (image_common_t *)image;					\
-									\
-	if (!com__->read_func && !com__->write_func)			\
-	{								\
-	    const int do_access__ = 0;					\
-	    const pixman_read_memory_func_t read_func__ = NULL;		\
-	    const pixman_write_memory_func_t write_func__ = NULL;	\
-	    (void)read_func__;						\
-	    (void)write_func__;						\
-	    (void)do_access__;						\
-									\
-	    {code}							\
-	}								\
-	else								\
-	{								\
-	    const int do_access__ = 1;					\
-	    const pixman_read_memory_func_t read_func__ =		\
-		com__->read_func;					\
-	    const pixman_write_memory_func_t write_func__ =		\
-		com__->write_func;					\
-	    (void)read_func__;						\
-	    (void)write_func__;						\
-	    (void)do_access__;						\
-	    								\
-	    {code}							\
-	}								\
-    } while (0)
-#endif
 
 #ifdef PIXMAN_FB_ACCESSORS
 
