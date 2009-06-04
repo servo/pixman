@@ -325,6 +325,7 @@ AC_SUBST(VMX_CFLAGS)
 
 AM_CONDITIONAL(USE_VMX, test $have_vmx_intrinsics = yes)
 
+dnl ===========================================================================
 dnl Check for ARM SIMD instructions
 ARM_SIMD_CFLAGS=""
 
@@ -359,6 +360,11 @@ if test $enable_arm_simd = yes && test $have_arm_simd = no ; then
    AC_MSG_ERROR([ARM SIMD intrinsics not detected])
 fi
 
+AC_SUBST(ARM_SIMD_CFLAGS)
+
+AM_CONDITIONAL(USE_ARM_SIMD, test $have_arm_simd = yes)
+
+dnl ==========================================================================
 dnl Check for ARM NEON instructions
 ARM_NEON_CFLAGS="-mfpu=neon -mfloat-abi=softfp"
 
@@ -389,11 +395,16 @@ else
    ARM_NEON_CFLAGS=
 fi
 
+AC_SUBST(ARM_NEON_CFLAGS)
+
+AM_CONDITIONAL(USE_ARM_NEON, test $have_arm_neon = yes)
+
 AC_MSG_RESULT($have_arm_neon)
 if test $enable_arm_neon = yes && test $have_arm_neon = no ; then
    AC_MSG_ERROR([ARM NEON intrinsics not detected])
 fi
 
+dnl =========================================================================================
 dnl Check for GNU-style inline assembly support
 
 have_gcc_inline_asm=no
@@ -423,15 +434,10 @@ if test $enable_gcc_inline_asm = yes && test $have_gcc_inline_asm = no ; then
    AC_MSG_ERROR([GNU-style inline assembler not detected])
 fi
 
-
-AC_SUBST(ARM_SIMD_CFLAGS)
-AC_SUBST(ARM_NEON_CFLAGS)
-
-AM_CONDITIONAL(USE_ARM_SIMD, test $have_arm_simd = yes)
-AM_CONDITIONAL(USE_ARM_NEON, test $have_arm_neon = yes)
 AM_CONDITIONAL(USE_GCC_INLINE_ASM, test $have_gcc_inline_asm = yes)
 
-
+dnl ===================================
+dnl GTK+
 
 AC_ARG_ENABLE(gtk,
    [AC_HELP_STRING([--enable-gtk],
@@ -452,6 +458,8 @@ AC_SUBST(GTK_CFLAGS)
 AC_SUBST(GTK_LIBS)
 AC_SUBST(DEP_CFLAGS)
 AC_SUBST(DEP_LIBS)
+
+
 		  
 AC_OUTPUT([pixman-1.pc
            pixman-1-uninstalled.pc
