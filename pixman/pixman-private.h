@@ -414,19 +414,19 @@ typedef struct
     unsigned int             spread;
 
     int		  need_reset;
-} GradientWalker;
+} pixman_gradient_walker_t;
 
 void
-_pixman_gradient_walker_init (GradientWalker  *walker,
+_pixman_gradient_walker_init (pixman_gradient_walker_t  *walker,
 			      gradient_t      *gradient,
 			      unsigned int     spread);
 
 void
-_pixman_gradient_walker_reset (GradientWalker       *walker,
+_pixman_gradient_walker_reset (pixman_gradient_walker_t       *walker,
 			       pixman_fixed_32_32_t  pos);
 
 uint32_t
-_pixman_gradient_walker_pixel (GradientWalker       *walker,
+_pixman_gradient_walker_pixel (pixman_gradient_walker_t       *walker,
 			       pixman_fixed_32_32_t  x);
 
 

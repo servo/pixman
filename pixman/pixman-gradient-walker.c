@@ -27,7 +27,7 @@
 #include "pixman-private.h"
 
 void
-_pixman_gradient_walker_init (GradientWalker  *walker,
+_pixman_gradient_walker_init (pixman_gradient_walker_t  *walker,
 			      gradient_t      *gradient,
 			      unsigned int     spread)
 {
@@ -46,7 +46,7 @@ _pixman_gradient_walker_init (GradientWalker  *walker,
 }
 
 void
-_pixman_gradient_walker_reset (GradientWalker       *walker,
+_pixman_gradient_walker_reset (pixman_gradient_walker_t       *walker,
 			       pixman_fixed_32_32_t  pos)
 {
     int32_t                  x, left_x, right_x;
@@ -200,7 +200,7 @@ _pixman_gradient_walker_reset (GradientWalker       *walker,
 
 /* the following assumes that PIXMAN_GRADIENT_WALKER_NEED_RESET(w,x) is FALSE */
 uint32_t
-_pixman_gradient_walker_pixel (GradientWalker  *walker,
+_pixman_gradient_walker_pixel (pixman_gradient_walker_t  *walker,
 			       pixman_fixed_32_32_t     x)
 {
     int  dist, idist;

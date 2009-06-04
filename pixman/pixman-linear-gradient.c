@@ -98,7 +98,7 @@ linear_gradient_get_scanline_32 (pixman_image_t *image, int x, int y, int width,
     source_image_t *source = (source_image_t *)image;
     linear_gradient_t *linear = (linear_gradient_t *)image;
     uint32_t       *end = buffer + width;
-    GradientWalker  walker;
+    pixman_gradient_walker_t  walker;
     
     _pixman_gradient_walker_init (&walker, gradient, source->common.repeat);
     

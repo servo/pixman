@@ -154,7 +154,7 @@ radial_gradient_get_scanline_32 (pixman_image_t *image, int x, int y, int width,
     source_image_t *source = (source_image_t *)image;
     radial_gradient_t *radial = (radial_gradient_t *)image;
     uint32_t       *end = buffer + width;
-    GradientWalker  walker;
+    pixman_gradient_walker_t  walker;
     pixman_bool_t affine = TRUE;
     double cx = 1.;
     double cy = 0.;
