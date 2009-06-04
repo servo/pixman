@@ -1709,7 +1709,7 @@ pixman_fill_neon (uint32_t *bits,
 	"beq		2f\n"
 	"strh		%[color], [r4]!\n"
 	"2:\n"
-	"tst		r5, #1\n"
+	"tst		%[width], #1\n"
 	"beq		2f\n"
 	"strb		%[color], [r4]!\n"
 	"2:\n"
