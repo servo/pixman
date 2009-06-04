@@ -784,23 +784,23 @@ oil_profile_stamp_rdtsc (void)
 }
 #define OIL_STAMP oil_profile_stamp_rdtsc
 
-typedef struct PixmanTimer PixmanTimer;
+typedef struct pixman_timer_t pixman_timer_t;
 
-struct PixmanTimer
+struct pixman_timer_t
 {
     int initialized;
     const char *name;
     uint64_t n_times;
     uint64_t total;
-    PixmanTimer *next;
+    pixman_timer_t *next;
 };
 
 extern int timer_defined;
-void pixman_timer_register (PixmanTimer *timer);
+void pixman_timer_register (pixman_timer_t *timer);
 
 #define TIMER_BEGIN(tname)						\
     {									\
-	static PixmanTimer	timer##tname;				\
+	static pixman_timer_t	timer##tname;				\
 	uint64_t		begin##tname;				\
 									\
 	if (!timer##tname.initialized)					\
