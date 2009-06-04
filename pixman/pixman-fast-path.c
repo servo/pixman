@@ -27,12 +27,8 @@
 #include <string.h>
 #include "pixman-private.h"
 #include "pixman-combine32.h"
-#define FbFullMask(n)   ((n) == 32 ? (uint32_t)-1 : ((((uint32_t) 1) << n) - 1))
-
-#undef READ
-#undef WRITE
-#define READ(img,x) (*(x))
-#define WRITE(img,ptr,v) ((*(ptr)) = (v))
+#define FbFullMask(n) \
+    ((n) == 32 ? (uint32_t)-1 : ((((uint32_t) 1) << n) - 1))
 
 static force_inline uint32_t
 fbOver (uint32_t src, uint32_t dest)
@@ -116,17 +112,17 @@ fbCompositeOver_x888x8x8888 (pixman_implementation_t *imp,
 	w = width;
 	while (w--)
 	{
-	    m = READ(pMask, mask++);
+	    m = *mask++;
 	    if (m)
 	    {
-		s = READ(pSrc, src) | 0xff000000;
+		s = *src | 0xff000000;
 
 		if (m == 0xff)
-		    WRITE(pDst, dst, s);
+		    *dst = s;
 		else
 		{
 		    d = fbIn (s, m);
-		    WRITE(pDst, dst, fbOver (d, READ(pDst, dst)));
+		    *dst = fbOver (d, *dst);
 		}
 	    }
 	    src++;
@@ -308,18 +304,18 @@ fbCompositeSolidMask_nx8x8888 (pixman_implementation_t *imp,
 
 	while (w--)
 	{
-	    m = READ(pMask, mask++);
+	    m = *mask++;
 	    if (m == 0xff)
 	    {
 		if (srca == 0xff)
-		    WRITE(pDst, dst, src & dstMask);
+		    *dst = src & dstMask;
 		else
-		    WRITE(pDst, dst, fbOver (src, READ(pDst, dst)) & dstMask);
+		    *dst = fbOver (src, *dst) & dstMask;
 	    }
 	    else if (m)
 	    {
 		d = fbIn (src, m);
-		WRITE(pDst, dst, fbOver (d, READ(pDst, dst)) & dstMask);
+		*dst = fbOver (d, *dst) & dstMask;
 	    }
 	    dst++;
 	}
@@ -368,17 +364,17 @@ fbCompositeSolidMask_nx8888x8888C (pixman_implementation_t *imp,
 
 	while (w--)
 	{
-	    ma = READ(pMask, mask++);
+	    ma = *mask++;
 	    if (ma == 0xffffffff)
 	    {
 		if (srca == 0xff)
-		    WRITE(pDst, dst, src & dstMask);
+		    *dst = src & dstMask;
 		else
-		    WRITE(pDst, dst, fbOver (src, READ(pDst, dst)) & dstMask);
+		    *dst = fbOver (src, *dst) & dstMask;
 	    }
 	    else if (ma)
 	    {
-		d = READ(pDst, dst);
+		d = *dst;
 #define FbInOverC(src,srca,msk,dst,i,result) { \
     uint16_t  __a = FbGet8(msk,i); \
     uint32_t  __t, __ta; \
@@ -393,7 +389,7 @@ fbCompositeSolidMask_nx8888x8888C (pixman_implementation_t *imp,
 		FbInOverC (src, srca, ma, d, 8, n);
 		FbInOverC (src, srca, ma, d, 16, o);
 		FbInOverC (src, srca, ma, d, 24, p);
-		WRITE(pDst, dst, m|n|o|p);
+		*dst = m|n|o|p;
 	    }
 	    dst++;
 	}
@@ -441,7 +437,7 @@ fbCompositeSolidMask_nx8x0888 (pixman_implementation_t *imp,
 
 	while (w--)
 	{
-	    m = READ(pMask, mask++);
+	    m = *mask++;
 	    if (m == 0xff)
 	    {
 		if (srca == 0xff)
@@ -504,23 +500,23 @@ fbCompositeSolidMask_nx8x0565 (pixman_implementation_t *imp,
 
 	while (w--)
 	{
-	    m = READ(pMask, mask++);
+	    m = *mask++;
 	    if (m == 0xff)
 	    {
 		if (srca == 0xff)
 		    d = src;
 		else
 		{
-		    d = READ(pDst, dst);
+		    d = *dst;
 		    d = fbOver24 (src, cvt0565to0888(d));
 		}
-		WRITE(pDst, dst, cvt8888to0565(d));
+		*dst = cvt8888to0565(d);
 	    }
 	    else if (m)
 	    {
-		d = READ(pDst, dst);
+		d = *dst;
 		d = fbOver24 (fbIn(src,m), cvt0565to0888(d));
-		WRITE(pDst, dst, cvt8888to0565(d));
+		*dst = cvt8888to0565(d);
 	    }
 	    dst++;
 	}
@@ -572,29 +568,29 @@ fbCompositeSolidMask_nx8888x0565C (pixman_implementation_t *imp,
 
 	while (w--)
 	{
-	    ma = READ(pMask, mask++);
+	    ma = *mask++;
 	    if (ma == 0xffffffff)
 	    {
 		if (srca == 0xff)
 		{
-		    WRITE(pDst, dst, src16);
+		    *dst = src16;
 		}
 		else
 		{
-		    d = READ(pDst, dst);
+		    d = *dst;
 		    d = fbOver24 (src, cvt0565to0888(d));
-		    WRITE(pDst, dst, cvt8888to0565(d));
+		    *dst = cvt8888to0565(d);
 		}
 	    }
 	    else if (ma)
 	    {
-		d = READ(pDst, dst);
+		d = *dst;
 		d = cvt0565to0888(d);
 		FbInOverC (src, srca, ma, d, 0, m);
 		FbInOverC (src, srca, ma, d, 8, n);
 		FbInOverC (src, srca, ma, d, 16, o);
 		d = m|n|o;
-		WRITE(pDst, dst, cvt8888to0565(d));
+		*dst = cvt8888to0565(d);
 	    }
 	    dst++;
 	}
@@ -637,12 +633,12 @@ fbCompositeSrc_8888x8888 (pixman_implementation_t *imp,
 
 	while (w--)
 	{
-	    s = READ(pSrc, src++);
+	    s = *src++;
 	    a = s >> 24;
 	    if (a == 0xff)
-		WRITE(pDst, dst, s & dstMask);
+		*dst = s & dstMask;
 	    else if (s)
-		WRITE(pDst, dst, fbOver (s, READ(pDst, dst)) & dstMask);
+		*dst = fbOver (s, *dst) & dstMask;
 	    dst++;
 	}
     }
@@ -683,7 +679,7 @@ fbCompositeSrc_8888x0888 (pixman_implementation_t *imp,
 
 	while (w--)
 	{
-	    s = READ(pSrc, src++);
+	    s = *src++;
 	    a = s >> 24;
 	    if (a)
 	    {
@@ -733,7 +729,7 @@ fbCompositeSrc_8888x0565 (pixman_implementation_t *imp,
 
 	while (w--)
 	{
-	    s = READ(pSrc, src++);
+	    s = *src++;
 	    a = s >> 24;
 	    if (s)
 	    {
@@ -741,10 +737,10 @@ fbCompositeSrc_8888x0565 (pixman_implementation_t *imp,
 		    d = s;
 		else
 		{
-		    d = READ(pDst, dst);
+		    d = *dst;
 		    d = fbOver24 (s, cvt0565to0888(d));
 		}
-		WRITE(pDst, dst, cvt8888to0565(d));
+		*dst = cvt8888to0565(d);
 	    }
 	    dst++;
 	}
@@ -784,8 +780,8 @@ fbCompositeSrc_x888x0565 (pixman_implementation_t *imp,
 
 	while (w--)
 	{
-	    s = READ(pSrc, src++);
-	    WRITE(pDst, dst, cvt8888to0565(s));
+	    s = *src++;
+	    *dst = cvt8888to0565(s);
 	    dst++;
 	}
     }
@@ -826,16 +822,16 @@ fbCompositeSrcAdd_8000x8000 (pixman_implementation_t *imp,
 
 	while (w--)
 	{
-	    s = READ(pSrc, src++);
+	    s = *src++;
 	    if (s)
 	    {
 		if (s != 0xff)
 		{
-		    d = READ(pDst, dst);
+		    d = *dst;
 		    t = d + s;
 		    s = t | (0 - (t >> 8));
 		}
-		WRITE(pDst, dst, s);
+		*dst = s;
 	    }
 	    dst++;
 	}
@@ -878,12 +874,12 @@ fbCompositeSrcAdd_8888x8888 (pixman_implementation_t *imp,
 
 	while (w--)
 	{
-	    s = READ(pSrc, src++);
+	    s = *src++;
 	    if (s)
 	    {
 		if (s != 0xffffffff)
 		{
-		    d = READ(pDst, dst);
+		    d = *dst;
 		    if (d)
 		    {
 			m = FbAdd(s,d,0,t);
@@ -893,7 +889,7 @@ fbCompositeSrcAdd_8888x8888 (pixman_implementation_t *imp,
 			s = m|n|o|p;
 		    }
 		}
-		WRITE(pDst, dst, s);
+		*dst = s;
 	    }
 	    dst++;
 	}
@@ -942,13 +938,13 @@ fbCompositeSrcAdd_8888x8x8 (pixman_implementation_t *imp,
 	    uint32_t	m, d;
 	    uint32_t	r;
 
-	    a = READ(pMask, mask++);
-	    d = READ(pDst, dst);
+	    a = *mask++;
+	    d = *dst;
 
 	    m = FbInU (sa, 0, a, tmp);
 	    r = FbAdd (m, d, 0, tmp);
 
-	    WRITE(pDst, dst++, r);
+	    *dst++ = r;
 	}
     }
 }
@@ -1150,11 +1146,11 @@ fbCompositeSrcScaleNearest (pixman_implementation_t *imp,
 	    
             if (inside_bounds) {
                 //XXX: we should move this multiplication out of the loop
-                result = READ(pSrc, src + y * srcStride + x);
+                result = *(src + y * srcStride + x);
             } else {
                 result = 0;
             }
-            WRITE(pDst, dst + i, result);
+	    *(dst + i) = result;
 	    
             /* adjust the x location by a unit vector in the x direction:
              * this is equivalent to transforming x+1 of the destination point to source space */
