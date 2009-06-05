@@ -560,8 +560,13 @@ _pixman_gradient_walker_pixel (GradientWalker       *walker,
 
 #define CLIP(a,b,c) ((a) < (b) ? (b) : ((a) > (c) ? (c) : (a)))
 
-#define MIN(a,b) ((a < b)? a : b)
-#define MAX(a,b) ((a > b)? a : b)
+#ifndef MIN
+#  define MIN(a,b) ((a < b)? a : b)
+#endif
+
+#ifndef MAX
+#  define MAX(a,b) ((a > b)? a : b)
+#endif
 
 #if 0
 /* FIXME: the MOD macro above is equivalent, but faster I think */
