@@ -136,8 +136,17 @@ pixman_compute_composite_region32 (pixman_region32_t *	pRegion,
 
     pRegion->extents.x1 = MAX (pRegion->extents.x1, 0);
     pRegion->extents.y1 = MAX (pRegion->extents.y1, 0);
-    pRegion->extents.x2 = MIN (pRegion->extents.x2, pDst->bits.width);
-    pRegion->extents.y2 = MIN (pRegion->extents.y2, pDst->bits.height);
+    
+    /* Some X servers rely on an old bug, where pixman would just believe the
+     * set clip_region and not clip against the destination geometry. So, 
+     * since only X servers set "source clip", we only clip against destination
+     * geometry when that is set.
+     */
+    if (!pDst->common.clip_sources)
+    {
+	pRegion->extents.x2 = MIN (pRegion->extents.x2, pDst->bits.width);
+	pRegion->extents.y2 = MIN (pRegion->extents.y2, pDst->bits.height);
+    }
     
     pRegion->data = 0;
     
