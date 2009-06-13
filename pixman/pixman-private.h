@@ -316,6 +316,9 @@ struct image_common
     property_changed_func_t	property_changed;
     scanFetchProc		get_scanline_32;
     scanFetchProc		get_scanline_64;
+
+    pixman_image_destroy_func_t destroy_func;
+    void *			destroy_data;
 };
 
 struct source_image

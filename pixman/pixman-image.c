@@ -113,6 +113,8 @@ _pixman_image_allocate (void)
 	common->write_func = NULL;
 	common->classify = NULL;
 	common->client_clip = FALSE;
+	common->destroy_func = NULL;
+	common->destroy_data = NULL;
     }
 
     return image;
@@ -191,6 +193,9 @@ pixman_image_unref (pixman_image_t *image)
 
     if (common->ref_count == 0)
     {
+	if (image->common.destroy_func)
+	    image->common.destroy_func (image, image->common.destroy_data);
+	
 	pixman_region32_fini (&common->clip_region);
 
 	if (common->transform)
@@ -227,6 +232,16 @@ pixman_image_unref (pixman_image_t *image)
 
     return FALSE;
 }
+
+PIXMAN_EXPORT void
+pixman_image_set_destroy_function (pixman_image_t *image,
+				   pixman_image_destroy_func_t func,
+				   void *data)
+{
+    image->common.destroy_func = func;
+    image->common.destroy_data = data;
+}
+			       
 
 /* Constructors */
 

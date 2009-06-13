@@ -597,6 +597,8 @@ typedef struct pixman_gradient_stop	pixman_gradient_stop_t;
 typedef uint32_t (* pixman_read_memory_func_t) (const void *src, int size);
 typedef void     (* pixman_write_memory_func_t) (void *dst, uint32_t value, int size);
 
+typedef void     (* pixman_image_destroy_func_t) (pixman_image_t *image, void *data);
+
 struct pixman_gradient_stop {
     pixman_fixed_t x;
     pixman_color_t color;
@@ -748,6 +750,9 @@ pixman_image_t *pixman_image_create_bits             (pixman_format_code_t      
 pixman_image_t *pixman_image_ref                     (pixman_image_t               *image);
 pixman_bool_t   pixman_image_unref                   (pixman_image_t               *image);
 
+void		pixman_image_set_destroy_function    (pixman_image_t		   *image,
+						      pixman_image_destroy_func_t   function,
+						      void			   *data);
 
 /* Set properties */
 pixman_bool_t   pixman_image_set_clip_region         (pixman_image_t               *image,
