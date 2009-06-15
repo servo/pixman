@@ -1837,7 +1837,6 @@ pixman_fill_neon (uint32_t *bits,
 #endif
 }
 
-#ifdef USE_GCC_INLINE_ASM
 
 // TODO: is there a more generic way of doing this being introduced?
 #define NEON_SCANLINE_BUFFER_PIXELS (1024)
@@ -1849,11 +1848,16 @@ static inline void QuadwordCopy_neon(
 	uint32_t trailerCount // of bytes
 )
 {
+	uint8_t *tDst = dst, *tSrc = src;
+
 	// Uses aligned multi-register loads to maximise read bandwidth
 	// on uncached memory such as framebuffers
 	// The accesses do not have the aligned qualifiers, so that the copy
 	// may convert between aligned-uncached and unaligned-cached memory.
 	// It is assumed that the CPU can infer alignedness from the address.
+
+#ifdef USE_GCC_INLINE_ASM
+
 	asm volatile (
 	"	cmp       %[count], #8						\n"
 	"	blt 1f    @ skip oversized fragments		\n"
@@ -1889,7 +1893,7 @@ static inline void QuadwordCopy_neon(
 	"4: @ end										\n"
 
 	// Clobbered input registers marked as input/outputs
-	: [dst] "+r" (dst), [src] "+r" (src), [count] "+r" (count)
+	: [dst] "+r" (tDst), [src] "+r" (tSrc), [count] "+r" (count)
 
 	// No unclobbered inputs
 	:
@@ -1899,31 +1903,66 @@ static inline void QuadwordCopy_neon(
 	: "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15", "cc", "memory"
 	);
 
-	if(trailerCount) {
-		uint8_t *tDst = dst, *tSrc = src;
+#else
 
-		while(trailerCount >= 4) {
+	while(count >= 8) {
+		uint8x16x4_t t1 = vld4q_u8(tSrc);
+		uint8x16x4_t t2 = vld4q_u8(tSrc + sizeof(uint8x16x4_t));
+		tSrc += sizeof(uint8x16x4_t) * 2;
+		vst4q_u8(tDst, t1);
+		vst4q_u8(tDst + sizeof(uint8x16x4_t), t2);
+		tDst += sizeof(uint8x16x4_t) * 2;
+		count -= 8;
+	}
+
+	if(count & 4) {
+		uint8x16x4_t t1 = vld4q_u8(tSrc);
+		tSrc += sizeof(uint8x16x4_t);
+		vst4q_u8(tDst, t1);
+		tDst += sizeof(uint8x16x4_t);
+	}
+
+	if(count & 2) {
+		uint8x8x4_t t1 = vld4_u8(tSrc);
+		tSrc += sizeof(uint8x8x4_t);
+		vst4_u8(tDst, t1);
+		tDst += sizeof(uint8x8x4_t);
+	}
+
+	if(count & 1) {
+		uint8x16_t t1 = vld1q_u8(tSrc);
+		tSrc += sizeof(uint8x16_t);
+		vst1q_u8(tDst, t1);
+		tDst += sizeof(uint8x16_t);
+	}
+
+#endif  // !USE_GCC_INLINE_ASM
+
+	if(trailerCount) {
+		if(trailerCount & 8) {
+			uint8x8_t t1 = vld1_u8(tSrc);
+			tSrc += sizeof(uint8x8_t);
+			vst1_u8(tDst, t1);
+			tDst += sizeof(uint8x8_t);
+		}
+
+		if(trailerCount & 4) {
 			*((uint32_t*) tDst) = *((uint32_t*) tSrc);
 			tDst += 4;
 			tSrc += 4;
-			trailerCount -= 4;
 		}
 
-		if(trailerCount >= 2) {
+		if(trailerCount & 2) {
 			*((uint16_t*) tDst) = *((uint16_t*) tSrc);
 			tDst += 2;
 			tSrc += 2;
-			trailerCount -= 2;
 		}
 
-		if(trailerCount) {
+		if(trailerCount & 1) {
 			*tDst++ = *tSrc++;
-			trailerCount--;
 		}
 	}
 }
-
-#endif  // USE_GCC_INLINE_ASM
 
 static const FastPathInfo arm_neon_fast_path_array[] = 
 {
@@ -1999,11 +2038,8 @@ pixman_blt_neon (
 	int dst_x, int dst_y,
 	int width, int height)
 {
-
 	if(!width || !height)
 		return TRUE;
-
-#ifdef USE_GCC_INLINE_ASM
 
 	// accelerate only straight copies involving complete bytes
 	if(src_bpp != dst_bpp || (src_bpp & 7))
@@ -2027,13 +2063,6 @@ pixman_blt_neon (
 	}
 
 	return TRUE;
-
-#else /* USE_GCC_INLINE_ASM */
-
-	// TODO: intrinsic version for armcc
-	return FALSE;
-
-#endif
 }
 
 static pixman_bool_t
