@@ -327,7 +327,7 @@ AM_CONDITIONAL(USE_VMX, test $have_vmx_intrinsics = yes)
 
 dnl ===========================================================================
 dnl Check for ARM SIMD instructions
-ARM_SIMD_CFLAGS=""
+ARM_SIMD_CFLAGS="-march=armv6"
 
 have_arm_simd=no
 AC_MSG_CHECKING(whether to use ARM SIMD assembler)
@@ -366,7 +366,7 @@ AM_CONDITIONAL(USE_ARM_SIMD, test $have_arm_simd = yes)
 
 dnl ==========================================================================
 dnl Check for ARM NEON instructions
-ARM_NEON_CFLAGS="-mfpu=neon -mfloat-abi=softfp"
+ARM_NEON_CFLAGS="-mfpu=neon"
 
 have_arm_neon=no
 AC_MSG_CHECKING(whether to use ARM NEON)
@@ -470,8 +470,6 @@ AC_SUBST(GTK_LIBS)
 AC_SUBST(DEP_CFLAGS)
 AC_SUBST(DEP_LIBS)
 
-
-		  
 AC_OUTPUT([pixman-1.pc
            pixman-1-uninstalled.pc
            Makefile
