@@ -1941,6 +1941,155 @@ fbCompositeSolid_nx0565neon (
 	}
 }
 
+static inline void ARGB8_Over565_8pix_neon(
+	uint32_t *src,
+	uint16_t *dest,
+	uint32_t  srcStride,  // bytes, not elements
+	uint32_t  count        // 8-pixel groups
+)
+{
+	asm volatile (
+	"0:	@ loop\n"
+	"	pld   [%[src], %[srcStride]]         @ preload from next scanline	\n"
+	"	vld1.16   {d0,d1}, [%[dest]]         @ load pixels from framebuffer	\n"
+	"	vld4.8   {d20,d21,d22,d23},[%[src]]! @ load source image pixels		\n"
+	"	vsli.u16  q3, q0, #5                 @ duplicate framebuffer blue bits		\n"
+	"	vshrn.u16 d2, q0, #8                 @ unpack red from framebuffer pixels	\n"
+	"	vshrn.u16 d4, q0, #3                 @ unpack green				\n"
+	"	vmvn      d18, d23                   @ we need the inverse alpha for the background	\n"
+	"	vsri.u8   d2, d2, #5                 @ duplicate red bits (extend 5 to 8)	\n"
+	"	vshrn.u16 d6, q3, #2                 @ unpack extended blue (truncate 10 to 8)	\n"
+	"	vsri.u8   d4, d4, #6                 @ duplicate green bits (extend 6 to 8)	\n"
+	"	vmull.u8  q1, d2, d18                @ apply inverse alpha to background red...	\n"
+	"	vmull.u8  q2, d4, d18                @ ...green...				\n"
+	"	vmull.u8  q3, d6, d18                @ ...blue					\n"
+	"	subs      %[count], %[count], #1     @ decrement/test loop counter		\n"
+	"	vmlal.u8  q1, d23, d22               @ add blended foreground red...		\n"
+	"	vmlal.u8  q2, d23, d21               @ ...green...				\n"
+	"	vmlal.u8  q3, d23, d20               @ ...blue					\n"
+	"	vsri.16   q1, q2, #5                 @ pack green behind red			\n"
+	"	vsri.16   q1, q3, #11                @ pack blue into pixels			\n"
+	"	vst1.16   {d2,d3}, [%[dest]]!        @ store composited pixels			\n"
+	"	bne 0b                               @ next please				\n"
+
+	// Clobbered registers marked as input/outputs
+	: [dest] "+r" (dest), [src] "+r" (src), [count] "+r" (count)
+
+	// Inputs
+	: [srcStride] "r" (srcStride)
+
+	// Clobbers, including the inputs we modify, and potentially lots of memory
+	: "q0", "q1", "q2", "q3", "d17", "d18", "q10", "q11", "cc", "memory"
+	);
+}
+
+void
+fbCompositeOver_8888x0565neon (
+	pixman_implementation_t * impl,
+	pixman_op_t op,
+	pixman_image_t * pSrc,
+	pixman_image_t * pMask,
+	pixman_image_t * pDst,
+	int32_t      xSrc,
+	int32_t      ySrc,
+	int32_t      xMask,
+	int32_t      yMask,
+	int32_t      xDst,
+	int32_t      yDst,
+	int32_t      width,
+	int32_t      height)
+{
+	uint32_t    *srcLine;
+	uint16_t    *dstLine, *alignedLine;
+	uint32_t     dstStride, srcStride;
+	uint32_t     kernelCount, copyCount;
+	uint8_t      kernelOffset, copyOffset;
+
+	// we assume mask is opaque
+	// so the only alpha to deal with is embedded in src
+
+	if(width > NEON_SCANLINE_BUFFER_PIXELS) {
+		// split the blit, so we can use a fixed-size scanline buffer
+		int x;
+		for(x=0; x < width; x += NEON_SCANLINE_BUFFER_PIXELS) {
+			fbCompositeOver_8888x0565neon(impl, op, pSrc, pMask, pDst, xSrc+x, ySrc, xMask+x, yMask, xDst+x, yDst,
+										  (x+NEON_SCANLINE_BUFFER_PIXELS > width) ? width-x : NEON_SCANLINE_BUFFER_PIXELS, height);
+		}
+		return;
+	}
+
+	fbComposeGetStart (pDst, xDst, yDst, uint16_t, dstStride, dstLine, 1);
+	fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
+
+	// keep within minimum number of aligned quadwords on width
+	// while also keeping the minimum number of columns to process
+	{
+		unsigned long alignedLeft = (unsigned long)(dstLine) & ~0xF;
+		unsigned long alignedRight = (((unsigned long)(dstLine + width)) + 0xF) & ~0xF;
+		unsigned long ceilingLength = (((unsigned long) width) * sizeof(*dstLine) + 0xF) & ~0xF;
+
+		// the fast copy must always be quadword aligned
+		copyOffset = dstLine - ((uint16_t*) alignedLeft);
+		alignedLine = dstLine - copyOffset;
+		copyCount = (uint32_t) ((alignedRight - alignedLeft) >> 4);
+
+		if(alignedRight - alignedLeft > ceilingLength) {
+			// unaligned routine is tightest, and will not overrun
+			kernelCount = (uint32_t) (ceilingLength >> 4);
+			kernelOffset = copyOffset;
+		} else {
+			// aligned routine is equally tight, so it is safer to align
+			kernelCount = copyCount;
+			kernelOffset = 0;
+		}
+	}
+
+	/* Preload the first input scanline */
+	{
+		uint8_t *srcPtr = (uint8_t*) srcLine;
+		uint32_t count = (width + 15) / 16;
+
+#ifdef USE_GCC_INLINE_ASM
+		asm volatile (
+		"0: @ loop						\n"
+		"	subs    %[count], %[count], #1			\n"
+		"	pld     [%[src]]				\n"
+		"	add     %[src], %[src], #64			\n"
+		"	bgt 0b						\n"
+
+		// Clobbered input registers marked as input/outputs
+		: [src] "+r" (srcPtr), [count] "+r" (count)
+		: // no unclobbered inputs
+		: "cc"
+		);
+#else
+		do {
+			__pld(srcPtr);
+			srcPtr += 64;
+		} while(--count);
+#endif
+	}
+
+	{
+		uint16_t scanLine[NEON_SCANLINE_BUFFER_PIXELS + 8]; // deliberately not initialised
+
+		// row-major order
+		// left edge, middle block, right edge
+		for( ; height--; srcLine += srcStride, alignedLine += dstStride) {
+			// Uncached framebuffer access is really, really slow if we do it piecemeal.
+			// It should be much faster if we grab it all at once.
+			// One scanline should easily fit in L1 cache, so this should not waste RAM bandwidth.
+			QuadwordCopy_neon(scanLine, alignedLine, copyCount, 0);
+
+			// Apply the actual filter
+			ARGB8_Over565_8pix_neon(srcLine, scanLine + kernelOffset, srcStride * sizeof(*srcLine), kernelCount);
+
+			// Copy the modified scanline back
+			QuadwordCopy_neon(dstLine, scanLine + copyOffset, width >> 3, (width & 7) * 2);
+		}
+	}
+}
+
 #endif  // USE_GCC_INLINE_ASM
 
 static const FastPathInfo arm_neon_fast_path_array[] = 
@@ -1958,6 +2107,8 @@ static const FastPathInfo arm_neon_fast_path_array[] =
     { PIXMAN_OP_SRC,  PIXMAN_b5g6r5,   PIXMAN_null,     PIXMAN_b5g6r5,   fbCompositeSrc_16x16neon,              0 },
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_null,     PIXMAN_r5g6b5,   fbCompositeSolid_nx0565neon,           0 },
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_null,     PIXMAN_b5g6r5,   fbCompositeSolid_nx0565neon,           0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,     PIXMAN_r5g6b5,   fbCompositeOver_8888x0565neon,         0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,     PIXMAN_b5g6r5,   fbCompositeOver_8888x0565neon,         0 },
 #endif
     { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,     PIXMAN_a8r8g8b8, fbCompositeSrc_8888x8888neon,          0 },
     { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,     PIXMAN_x8r8g8b8, fbCompositeSrc_8888x8888neon,          0 },
