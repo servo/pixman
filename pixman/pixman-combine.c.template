@@ -1009,7 +1009,7 @@ BlendHSLLuminosity (comp4_t c[3], comp4_t dc[3], comp4_t da, comp4_t sc[3], comp
 
 PdfNonSeparableBlendMode (HSLLuminosity)
 
-#undef Set
+#undef Sat
 #undef Lum
 #undef Max
 #undef Min
