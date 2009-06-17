@@ -4,8 +4,8 @@
 #include "pixman.h"
 #include "utils.h"
 
-#define WIDTH	100
-#define HEIGHT	100
+#define WIDTH	60
+#define HEIGHT	60
 
 typedef struct {
     const char *name;
@@ -13,37 +13,37 @@ typedef struct {
 } Operator;
 
 static const Operator operators[] = {
-    { "PIXMAN_OP_CLEAR", PIXMAN_OP_CLEAR },
-    { "PIXMAN_OP_SRC", PIXMAN_OP_SRC },
-    { "PIXMAN_OP_DST", PIXMAN_OP_DST },
-    { "PIXMAN_OP_OVER", PIXMAN_OP_OVER },
-    { "PIXMAN_OP_OVER_REVERSE", PIXMAN_OP_OVER_REVERSE },
-    { "PIXMAN_OP_IN", PIXMAN_OP_IN },
-    { "PIXMAN_OP_IN_REVERSE", PIXMAN_OP_IN_REVERSE },
-    { "PIXMAN_OP_OUT", PIXMAN_OP_OUT },
-    { "PIXMAN_OP_OUT_REVERSE", PIXMAN_OP_OUT_REVERSE },
-    { "PIXMAN_OP_ATOP", PIXMAN_OP_ATOP },
-    { "PIXMAN_OP_ATOP_REVERSE", PIXMAN_OP_ATOP_REVERSE },
-    { "PIXMAN_OP_XOR", PIXMAN_OP_XOR },
-    { "PIXMAN_OP_ADD", PIXMAN_OP_ADD },
-    { "PIXMAN_OP_SATURATE", PIXMAN_OP_SATURATE },
+    { "CLEAR", PIXMAN_OP_CLEAR },
+    { "SRC", PIXMAN_OP_SRC },
+    { "DST", PIXMAN_OP_DST },
+    { "OVER", PIXMAN_OP_OVER },
+    { "OVER_REVERSE", PIXMAN_OP_OVER_REVERSE },
+    { "IN", PIXMAN_OP_IN },
+    { "IN_REVERSE", PIXMAN_OP_IN_REVERSE },
+    { "OUT", PIXMAN_OP_OUT },
+    { "OUT_REVERSE", PIXMAN_OP_OUT_REVERSE },
+    { "ATOP", PIXMAN_OP_ATOP },
+    { "ATOP_REVERSE", PIXMAN_OP_ATOP_REVERSE },
+    { "XOR", PIXMAN_OP_XOR },
+    { "ADD", PIXMAN_OP_ADD },
+    { "SATURATE", PIXMAN_OP_SATURATE },
 
-    { "PIXMAN_OP_MULTIPLY", PIXMAN_OP_MULTIPLY },
-    { "PIXMAN_OP_SCREEN", PIXMAN_OP_SCREEN },
-    { "PIXMAN_OP_OVERLAY", PIXMAN_OP_OVERLAY },
-    { "PIXMAN_OP_DARKEN", PIXMAN_OP_DARKEN },
-    { "PIXMAN_OP_LIGHTEN", PIXMAN_OP_LIGHTEN },
-    { "PIXMAN_OP_COLOR_DODGE", PIXMAN_OP_COLOR_DODGE },
-    { "PIXMAN_OP_COLOR_BURN", PIXMAN_OP_COLOR_BURN },
-    { "PIXMAN_OP_HARD_LIGHT", PIXMAN_OP_HARD_LIGHT },
-    { "PIXMAN_OP_SOFT_LIGHT", PIXMAN_OP_SOFT_LIGHT },
-    { "PIXMAN_OP_DIFFERENCE", PIXMAN_OP_DIFFERENCE },
-    { "PIXMAN_OP_EXCLUSION", PIXMAN_OP_EXCLUSION },
-    { "PIXMAN_OP_HSL_HUE", PIXMAN_OP_HSL_HUE },
-    { "PIXMAN_OP_HSL_SATURATION", PIXMAN_OP_HSL_SATURATION },
-    { "PIXMAN_OP_HSL_COLOR", PIXMAN_OP_HSL_COLOR },
-    { "PIXMAN_OP_HSL_LUMINOSITY", PIXMAN_OP_HSL_LUMINOSITY },
-    { "PIXMAN_OP_FLASH_SUBTRACT", PIXMAN_OP_FLASH_SUBTRACT }
+    { "MULTIPLY", PIXMAN_OP_MULTIPLY },
+    { "SCREEN", PIXMAN_OP_SCREEN },
+    { "OVERLAY", PIXMAN_OP_OVERLAY },
+    { "DARKEN", PIXMAN_OP_DARKEN },
+    { "LIGHTEN", PIXMAN_OP_LIGHTEN },
+    { "COLOR_DODGE", PIXMAN_OP_COLOR_DODGE },
+    { "COLOR_BURN", PIXMAN_OP_COLOR_BURN },
+    { "HARD_LIGHT", PIXMAN_OP_HARD_LIGHT },
+    { "SOFT_LIGHT", PIXMAN_OP_SOFT_LIGHT },
+    { "DIFFERENCE", PIXMAN_OP_DIFFERENCE },
+    { "EXCLUSION", PIXMAN_OP_EXCLUSION },
+    { "HSL_HUE", PIXMAN_OP_HSL_HUE },
+    { "HSL_SATURATION", PIXMAN_OP_HSL_SATURATION },
+    { "HSL_COLOR", PIXMAN_OP_HSL_COLOR },
+    { "HSL_LUMINOSITY", PIXMAN_OP_HSL_LUMINOSITY },
+    { "FLASH_SUBTRACT", PIXMAN_OP_FLASH_SUBTRACT }
 };
 
 static uint32_t
@@ -95,10 +95,13 @@ main (int argc, char **argv)
     gtk_init (&argc, &argv);
 
     window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+
+    gtk_window_set_default_size (window, 800, 600);
+    
     g_signal_connect (window, "delete-event",
 		      G_CALLBACK (gtk_main_quit),
 		      NULL);
-    table = gtk_table_new (G_N_ELEMENTS (operators) / 4, 4, TRUE);
+    table = gtk_table_new (G_N_ELEMENTS (operators) / 6, 6, TRUE);
 
     for (i = 0; i < WIDTH * HEIGHT; ++i)
         src[i] = 0x7f7f0000; /* red */
@@ -140,7 +143,7 @@ main (int argc, char **argv)
 	gtk_widget_show (image);
 
 	gtk_table_attach_defaults (GTK_TABLE (table), vbox,
-				   i % 4, (i % 4) + 1, i / 4, (i / 4) + 1);
+				   i % 6, (i % 6) + 1, i / 6, (i / 6) + 1);
 	gtk_widget_show (vbox);
 
 	g_object_unref (pixbuf);
