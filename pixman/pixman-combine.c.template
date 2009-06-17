@@ -390,7 +390,7 @@ fbCombineMultiplyC (pixman_implementation_t *imp, pixman_op_t op,
     int i;
     for (i = 0; i < width; ++i) {
         comp4_t m = *(mask + i);
-        comp4_t s = combineMask (src, mask, i);
+        comp4_t s = *(src + i);
 	comp4_t d = *(dest + i);
 	comp4_t r = d;
 	comp4_t dest_ia = Alpha (~d);
@@ -438,7 +438,7 @@ fbCombine ## name ## C (pixman_implementation_t *imp, pixman_op_t op, \
     int i;					    \
     for (i = 0; i < width; ++i) {		    \
 	comp4_t m = *(mask + i);		    \
-	comp4_t s = combineMask (src, mask, i);	    \
+	comp4_t s = *(src + i);                     \
 	comp4_t d = *(dest + i);		    \
 	comp1_t da = Alpha(d);  		    \
 	comp1_t ida = ~da;			    \
@@ -820,7 +820,7 @@ fbCombine ## name ## C (pixman_implementation_t *imp, pixman_op_t op, \
     int i;					    \
     for (i = 0; i < width; ++i) {		    \
 	comp4_t m = *(mask + i);		    \
-	comp4_t s = combineMask (src, mask, i);	    \
+	comp4_t s = *(src + i);                     \
 	comp4_t d = *(dest + i);		    \
 	comp1_t sa = Alpha(s);			    \
 	comp1_t da = Alpha(d);  		    \
@@ -1068,7 +1068,7 @@ fbCombineFlashSubtractC (pixman_implementation_t *imp, pixman_op_t op,
 	comp4_t r, g, b;
 
 	d = *(dest + i);
-	s = combineMask (src, mask, i);
+	s = *(src + i);
 	m = *(mask + i);
 
 	fbCombineMaskValueC (&s, &m);
