@@ -866,14 +866,14 @@ fbCombine ## name ## C (pixman_implementation_t *imp, pixman_op_t op, \
 static void
 SetLum (comp4_t dest[3], comp4_t src[3], comp4_t sa, comp4_t lum)
 {
-  int a, l, min, max;
-  int tmp[3];
+  double a, l, min, max;
+  double tmp[3];
   
-  a = sa;
-  l = lum;
-  tmp[0] = src[0];
-  tmp[1] = src[1];
-  tmp[2] = src[2];
+  a = sa * (1.0 / MASK);
+  l = lum * (1.0 / MASK);
+  tmp[0] = src[0] * (1.0 / MASK);
+  tmp[1] = src[1] * (1.0 / MASK);
+  tmp[2] = src[2] * (1.0 / MASK);
   l = l - Lum (tmp);
   tmp[0] += l;
   tmp[1] += l;
@@ -885,18 +885,18 @@ SetLum (comp4_t dest[3], comp4_t src[3], comp4_t sa, comp4_t lum)
   max = Max (tmp);
 
   if (min < 0) {
-    tmp[0] = l + (tmp[0] - l) / 4 * l / (l - min) * 4;
-    tmp[1] = l + (tmp[1] - l) / 4 * l / (l - min) * 4;
-    tmp[2] = l + (tmp[2] - l) / 4 * l / (l - min) * 4;
+    tmp[0] = l + (tmp[0] - l) * l / (l - min);
+    tmp[1] = l + (tmp[1] - l) * l / (l - min);
+    tmp[2] = l + (tmp[2] - l) * l / (l - min);
   }
   if (max > a) {
-    tmp[0] = l + (tmp[0] - l) / 4 * (a - l) / (max - l) * 4;
-    tmp[1] = l + (tmp[1] - l) / 4 * (a - l) / (max - l) * 4;
-    tmp[2] = l + (tmp[2] - l) / 4 * (a - l) / (max - l) * 4;
+    tmp[0] = l + (tmp[0] - l) * (a - l) / (max - l);
+    tmp[1] = l + (tmp[1] - l) * (a - l) / (max - l);
+    tmp[2] = l + (tmp[2] - l) * (a - l) / (max - l);
   }
-  dest[0] = tmp[0];
-  dest[1] = tmp[1];
-  dest[2] = tmp[2];
+  dest[0] = tmp[0] * MASK + 0.5;
+  dest[1] = tmp[1] * MASK + 0.5;
+  dest[2] = tmp[2] * MASK + 0.5;
 }
 
 static void
