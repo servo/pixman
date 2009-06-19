@@ -27,8 +27,6 @@
 #include <stdio.h>
 #include "pixman-private.h"
 
-typedef uint32_t FbBits;
-
 PIXMAN_EXPORT void
 pixman_add_traps (pixman_image_t *	image,
 		  int16_t	x_off,
