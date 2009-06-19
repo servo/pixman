@@ -200,8 +200,6 @@ typedef enum
     SOLID
 } image_type_t;
 
-#define IS_SOURCE_IMAGE(img)     (((image_common_t *)img)->type > BITS)
-
 typedef enum
 {
     SOURCE_IMAGE_CLASS_UNKNOWN,
