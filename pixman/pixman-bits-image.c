@@ -251,7 +251,7 @@ bits_image_fetch_nearest_pixels (bits_image_t *image, uint32_t *buffer, int n_pi
 	coords[i + 1] = y;
     }
 
-    return bits_image_fetch_pixels_src_clip (image, buffer, n_pixels);
+    bits_image_fetch_pixels_src_clip (image, buffer, n_pixels);
 }
 
 #define N_TMP_PIXELS	(256)
