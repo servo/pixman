@@ -169,30 +169,8 @@ typedef FASTCALL void (*storeProc64)(pixman_image_t *, uint32_t *bits,
                                      const uint64_t *values, int x, int width,
                                      const pixman_indexed_t *);
 
-typedef struct _FbComposeData {
-    uint8_t	 op;
-    pixman_image_t	*src;
-    pixman_image_t	*mask;
-    pixman_image_t	*dest;
-    int16_t	 xSrc;
-    int16_t	 ySrc;
-    int16_t	 xMask;
-    int16_t	 yMask;
-    int16_t	 xDest;
-    int16_t	 yDest;
-    uint16_t	 width;
-    uint16_t	 height;
-} FbComposeData;
-
 typedef void (* fetch_pixels_32_t) (bits_image_t *image, uint32_t *buffer, int n_pixels);
 typedef void (* fetch_pixels_64_t) (bits_image_t *image, uint64_t *buffer, int n_pixels);
-
-void pixman_composite_rect_general_accessors (const FbComposeData *data,
-                                              void *src_buffer,
-                                              void *mask_buffer,
-                                              void *dest_buffer,
-                                              const int wide);
-void pixman_composite_rect_general (const FbComposeData *data);
 
 fetchProc32 pixman_fetchProcForPicture32 (bits_image_t *);
 fetch_pixels_32_t pixman_fetchPixelProcForPicture32 (bits_image_t *);
