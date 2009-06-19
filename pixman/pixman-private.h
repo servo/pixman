@@ -362,17 +362,30 @@ struct bits_image
     uint32_t *			free_me;
     int				rowstride; /* in number of uint32_t's */
 
-    fetch_pixels_32_t		fetch_pixels_32;
-    fetch_pixels_64_t		fetch_pixels_64;
+    /* Fetch raw pixels, with no regard for transformations, alpha map etc. */
+    fetch_pixels_32_t		fetch_pixels_raw_32;
+    fetch_pixels_64_t		fetch_pixels_raw_64;
 
-    scanStoreProc		store_scanline_32;
-    scanStoreProc		store_scanline_64;
+    /* Fetch raw scanlines, with no regard for transformations, alpha maps etc. */
+    fetchProc32			fetch_scanline_raw_32;
+    fetchProc64			fetch_scanline_raw_64;
 
+    /* Store scanlines with no regard for alpha maps */
     storeProc32			store_scanline_raw_32;
     storeProc64			store_scanline_raw_64;
 
-    fetchProc32			fetch_scanline_raw_32;
-    fetchProc64			fetch_scanline_raw_64;
+    /* Store a scanline, taking alpha maps into account */
+    scanStoreProc		store_scanline_32;
+    scanStoreProc		store_scanline_64;
+
+    /* Used for indirect access to the bits */
+    pixman_read_memory_func_t	read_func;
+    pixman_write_memory_func_t	write_func;
+    
+    void *			orig_data;	/* Stores pointer to original
+						 * data, when the image is
+						 * being accessed.
+						 */
 };
 
 union pixman_image

@@ -111,7 +111,7 @@ _pixman_image_store_scanline_64 (bits_image_t *image, int x, int y, int width,
 static void
 bits_image_fetch_raw_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
 {
-    image->fetch_pixels_32 (image, buffer, n_pixels);
+    image->fetch_pixels_raw_32 (image, buffer, n_pixels);
 }
 
 static void
@@ -610,7 +610,7 @@ bits_image_fetch_solid_32 (bits_image_t * image,
     color[0] = 0;
     color[1] = 0;
     
-    image->fetch_pixels_32 (image, color, 1);
+    image->fetch_pixels_raw_32 (image, color, 1);
     
     end = buffer + width;
     while (buffer < end)
@@ -629,7 +629,7 @@ bits_image_fetch_solid_64 (bits_image_t * image,
     coords[0] = 0;
     coords[1] = 1;
     
-    image->fetch_pixels_64 (image, (uint64_t *)color, 1);
+    image->fetch_pixels_raw_64 (image, (uint64_t *)color, 1);
     
     end = buffer + width;
     while (buffer < end)
@@ -771,8 +771,8 @@ bits_image_property_changed (pixman_image_t *image)
     bits->fetch_scanline_raw_64 =
 	READ_ACCESS(pixman_fetchProcForPicture64)(bits);
     
-    bits->fetch_pixels_32 = READ_ACCESS(pixman_fetchPixelProcForPicture32)(bits);
-    bits->fetch_pixels_64 = READ_ACCESS(pixman_fetchPixelProcForPicture64)(bits);
+    bits->fetch_pixels_raw_32 = READ_ACCESS(pixman_fetchPixelProcForPicture32)(bits);
+    bits->fetch_pixels_raw_64 = READ_ACCESS(pixman_fetchPixelProcForPicture64)(bits);
 
     bits->store_scanline_64 = bits_image_store_scanline_64;
     bits->store_scanline_32 = bits_image_store_scanline_32;
