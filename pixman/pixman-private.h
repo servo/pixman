@@ -152,20 +152,19 @@ typedef struct point point_t;
 /* FIXME - the types and structures below should be give proper names
  */
 
-#define FASTCALL
-typedef FASTCALL void (*CombineFunc32) (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width);
-typedef FASTCALL void (*fetchProc32)(bits_image_t *pict, int x, int y, int width,
+typedef void (*CombineFunc32) (uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width);
+typedef void (*fetchProc32)(bits_image_t *pict, int x, int y, int width,
                                      uint32_t *buffer);
-typedef FASTCALL uint32_t (*fetchPixelProc32)(bits_image_t *pict, int offset, int line);
-typedef FASTCALL void (*storeProc32)(pixman_image_t *, uint32_t *bits,
+typedef uint32_t (*fetchPixelProc32)(bits_image_t *pict, int offset, int line);
+typedef void (*storeProc32)(pixman_image_t *, uint32_t *bits,
                                      const uint32_t *values, int x, int width,
                                      const pixman_indexed_t *);
 
-typedef FASTCALL void (*CombineFunc64) (uint64_t *dest, const uint64_t *src, const uint64_t *mask, int width);
-typedef FASTCALL void (*fetchProc64)(bits_image_t *pict, int x, int y, int width,
+typedef void (*CombineFunc64) (uint64_t *dest, const uint64_t *src, const uint64_t *mask, int width);
+typedef void (*fetchProc64)(bits_image_t *pict, int x, int y, int width,
                                      uint64_t *buffer);
-typedef FASTCALL uint64_t (*fetchPixelProc64)(bits_image_t *pict, int offset, int line);
-typedef FASTCALL void (*storeProc64)(pixman_image_t *, uint32_t *bits,
+typedef uint64_t (*fetchPixelProc64)(bits_image_t *pict, int offset, int line);
+typedef void (*storeProc64)(pixman_image_t *, uint32_t *bits,
                                      const uint64_t *values, int x, int width,
                                      const pixman_indexed_t *);
 

@@ -216,7 +216,7 @@ over (vector unsigned int src, vector unsigned int srca,
         vec_st ((vector unsigned int) tmp3, 15, dest ); \
         vec_st ((vector unsigned int) tmp1, 0, dest );
 
-static FASTCALL void
+static void
 vmxCombineOverUnomask (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
@@ -249,7 +249,7 @@ vmxCombineOverUnomask (uint32_t *dest, const uint32_t *src, int width)
     }
 }
 
-static FASTCALL void
+static void
 vmxCombineOverUmask (uint32_t *dest,
                      const uint32_t *src,
                      const uint32_t *mask,
@@ -291,7 +291,7 @@ vmxCombineOverUmask (uint32_t *dest,
     }
 }
 
-static FASTCALL void
+static void
 vmxCombineOverU(pixman_implementation_t *imp, pixman_op_t op,
 		uint32_t *dest, const uint32_t *src, const uint32_t *mask,
                 int width)
@@ -302,7 +302,7 @@ vmxCombineOverU(pixman_implementation_t *imp, pixman_op_t op,
         vmxCombineOverUnomask(dest, src, width);
 }
 
-static FASTCALL void
+static void
 vmxCombineOverReverseUnomask (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
@@ -335,7 +335,7 @@ vmxCombineOverReverseUnomask (uint32_t *dest, const uint32_t *src, int width)
     }
 }
 
-static FASTCALL void
+static void
 vmxCombineOverReverseUmask (uint32_t *dest,
                             const uint32_t *src,
                             const uint32_t *mask,
@@ -375,7 +375,7 @@ vmxCombineOverReverseUmask (uint32_t *dest,
     }
 }
 
-static FASTCALL void
+static void
 vmxCombineOverReverseU (pixman_implementation_t *imp, pixman_op_t op,
 			uint32_t *dest, const uint32_t *src,
                         const uint32_t *mask, int width)
@@ -386,7 +386,7 @@ vmxCombineOverReverseU (pixman_implementation_t *imp, pixman_op_t op,
         vmxCombineOverReverseUnomask(dest, src, width);
 }
 
-static FASTCALL void
+static void
 vmxCombineInUnomask (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
@@ -418,7 +418,7 @@ vmxCombineInUnomask (uint32_t *dest, const uint32_t *src, int width)
     }
 }
 
-static FASTCALL void
+static void
 vmxCombineInUmask (uint32_t *dest,
                    const uint32_t *src,
                    const uint32_t *mask,
@@ -457,7 +457,7 @@ vmxCombineInUmask (uint32_t *dest,
     }
 }
 
-static FASTCALL void
+static void
 vmxCombineInU (pixman_implementation_t *imp, pixman_op_t op,
 	       uint32_t *dest, const uint32_t *src, const uint32_t *mask,
                int width)
@@ -468,7 +468,7 @@ vmxCombineInU (pixman_implementation_t *imp, pixman_op_t op,
         vmxCombineInUnomask(dest, src, width);
 }
 
-static FASTCALL void
+static void
 vmxCombineInReverseUnomask (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
@@ -499,7 +499,7 @@ vmxCombineInReverseUnomask (uint32_t *dest, const uint32_t *src, int width)
     }
 }
 
-static FASTCALL void
+static void
 vmxCombineInReverseUmask (uint32_t *dest,
                           const uint32_t *src,
                           const uint32_t *mask,
@@ -539,7 +539,7 @@ vmxCombineInReverseUmask (uint32_t *dest,
     }
 }
 
-static FASTCALL void
+static void
 vmxCombineInReverseU (pixman_implementation_t *imp, pixman_op_t op,
 		      uint32_t *dest, const uint32_t *src,
                       const uint32_t *mask, int width)
@@ -550,7 +550,7 @@ vmxCombineInReverseU (pixman_implementation_t *imp, pixman_op_t op,
         vmxCombineInReverseUnomask(dest, src, width);
 }
 
-static FASTCALL void
+static void
 vmxCombineOutUnomask (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
@@ -581,7 +581,7 @@ vmxCombineOutUnomask (uint32_t *dest, const uint32_t *src, int width)
     }
 }
 
-static FASTCALL void
+static void
 vmxCombineOutUmask (uint32_t *dest,
                     const uint32_t *src,
                     const uint32_t *mask,
@@ -620,7 +620,7 @@ vmxCombineOutUmask (uint32_t *dest,
     }
 }
 
-static FASTCALL void
+static void
 vmxCombineOutU (pixman_implementation_t *imp, pixman_op_t op,
 		uint32_t *dest, const uint32_t *src, const uint32_t *mask,
                 int width)
@@ -631,7 +631,7 @@ vmxCombineOutU (pixman_implementation_t *imp, pixman_op_t op,
         vmxCombineOutUnomask(dest, src, width);
 }
 
-static FASTCALL void
+static void
 vmxCombineOutReverseUnomask (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
@@ -662,7 +662,7 @@ vmxCombineOutReverseUnomask (uint32_t *dest, const uint32_t *src, int width)
     }
 }
 
-static FASTCALL void
+static void
 vmxCombineOutReverseUmask (uint32_t *dest,
                            const uint32_t *src,
                            const uint32_t *mask,
@@ -702,7 +702,7 @@ vmxCombineOutReverseUmask (uint32_t *dest,
     }
 }
 
-static FASTCALL void
+static void
 vmxCombineOutReverseU (pixman_implementation_t *imp, pixman_op_t op,
 		       uint32_t *dest,
                        const uint32_t *src,
@@ -715,7 +715,7 @@ vmxCombineOutReverseU (pixman_implementation_t *imp, pixman_op_t op,
         vmxCombineOutReverseUnomask(dest, src, width);
 }
 
-static FASTCALL void
+static void
 vmxCombineAtopUnomask (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
@@ -750,7 +750,7 @@ vmxCombineAtopUnomask (uint32_t *dest, const uint32_t *src, int width)
     }
 }
 
-static FASTCALL void
+static void
 vmxCombineAtopUmask (uint32_t *dest,
                      const uint32_t *src,
                      const uint32_t *mask,
@@ -794,7 +794,7 @@ vmxCombineAtopUmask (uint32_t *dest,
     }
 }
 
-static FASTCALL void
+static void
 vmxCombineAtopU (pixman_implementation_t *imp, pixman_op_t op,
 		 uint32_t *dest,
                  const uint32_t *src,
@@ -807,7 +807,7 @@ vmxCombineAtopU (pixman_implementation_t *imp, pixman_op_t op,
         vmxCombineAtopUnomask(dest, src, width);
 }
 
-static FASTCALL void
+static void
 vmxCombineAtopReverseUnomask (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
@@ -842,7 +842,7 @@ vmxCombineAtopReverseUnomask (uint32_t *dest, const uint32_t *src, int width)
     }
 }
 
-static FASTCALL void
+static void
 vmxCombineAtopReverseUmask (uint32_t *dest,
                             const uint32_t *src,
                             const uint32_t *mask,
@@ -886,7 +886,7 @@ vmxCombineAtopReverseUmask (uint32_t *dest,
     }
 }
 
-static FASTCALL void
+static void
 vmxCombineAtopReverseU (pixman_implementation_t *imp, pixman_op_t op,
 			uint32_t *dest,
                         const uint32_t *src,
@@ -899,7 +899,7 @@ vmxCombineAtopReverseU (pixman_implementation_t *imp, pixman_op_t op,
         vmxCombineAtopReverseUnomask(dest, src, width);
 }
 
-static FASTCALL void
+static void
 vmxCombineXorUnomask (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
@@ -934,7 +934,7 @@ vmxCombineXorUnomask (uint32_t *dest, const uint32_t *src, int width)
     }
 }
 
-static FASTCALL void
+static void
 vmxCombineXorUmask (uint32_t *dest,
                     const uint32_t *src,
                     const uint32_t *mask,
@@ -978,7 +978,7 @@ vmxCombineXorUmask (uint32_t *dest,
     }
 }
 
-static FASTCALL void
+static void
 vmxCombineXorU (pixman_implementation_t *imp, pixman_op_t op,
 		uint32_t *dest,
                 const uint32_t *src,
@@ -991,7 +991,7 @@ vmxCombineXorU (pixman_implementation_t *imp, pixman_op_t op,
         vmxCombineXorUnomask(dest, src, width);
 }
 
-static FASTCALL void
+static void
 vmxCombineAddUnomask (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
@@ -1021,7 +1021,7 @@ vmxCombineAddUnomask (uint32_t *dest, const uint32_t *src, int width)
     }
 }
 
-static FASTCALL void
+static void
 vmxCombineAddUmask (uint32_t *dest,
                     const uint32_t *src,
                     const uint32_t *mask,
@@ -1060,7 +1060,7 @@ vmxCombineAddUmask (uint32_t *dest,
     }
 }
 
-static FASTCALL void
+static void
 vmxCombineAddU (pixman_implementation_t *imp, pixman_op_t op,
 		uint32_t *dest,
                 const uint32_t *src,
@@ -1073,7 +1073,7 @@ vmxCombineAddU (pixman_implementation_t *imp, pixman_op_t op,
         vmxCombineAddUnomask(dest, src, width);
 }
 
-static FASTCALL void
+static void
 vmxCombineSrcC (pixman_implementation_t *imp, pixman_op_t op,
 		uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -1105,7 +1105,7 @@ vmxCombineSrcC (pixman_implementation_t *imp, pixman_op_t op,
     }
 }
 
-static FASTCALL void
+static void
 vmxCombineOverC (pixman_implementation_t *imp, pixman_op_t op,
 		 uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -1139,7 +1139,7 @@ vmxCombineOverC (pixman_implementation_t *imp, pixman_op_t op,
     }
 }
 
-static FASTCALL void
+static void
 vmxCombineOverReverseC (pixman_implementation_t *imp, pixman_op_t op,
 			uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -1174,7 +1174,7 @@ vmxCombineOverReverseC (pixman_implementation_t *imp, pixman_op_t op,
     }
 }
 
-static FASTCALL void
+static void
 vmxCombineInC (pixman_implementation_t *imp, pixman_op_t op,
 	       uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -1209,7 +1209,7 @@ vmxCombineInC (pixman_implementation_t *imp, pixman_op_t op,
     }
 }
 
-static FASTCALL void
+static void
 vmxCombineInReverseC (pixman_implementation_t *imp, pixman_op_t op,
 		      uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -1244,7 +1244,7 @@ vmxCombineInReverseC (pixman_implementation_t *imp, pixman_op_t op,
     }
 }
 
-static FASTCALL void
+static void
 vmxCombineOutC (pixman_implementation_t *imp, pixman_op_t op,
 		uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -1280,7 +1280,7 @@ vmxCombineOutC (pixman_implementation_t *imp, pixman_op_t op,
     }
 }
 
-static FASTCALL void
+static void
 vmxCombineOutReverseC (pixman_implementation_t *imp, pixman_op_t op,
 		       uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -1317,7 +1317,7 @@ vmxCombineOutReverseC (pixman_implementation_t *imp, pixman_op_t op,
     }
 }
 
-static FASTCALL void
+static void
 vmxCombineAtopC (pixman_implementation_t *imp, pixman_op_t op,
 		 uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -1359,7 +1359,7 @@ vmxCombineAtopC (pixman_implementation_t *imp, pixman_op_t op,
     }
 }
 
-static FASTCALL void
+static void
 vmxCombineAtopReverseC (pixman_implementation_t *imp, pixman_op_t op,
 			uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -1401,7 +1401,7 @@ vmxCombineAtopReverseC (pixman_implementation_t *imp, pixman_op_t op,
     }
 }
 
-static FASTCALL void
+static void
 vmxCombineXorC (pixman_implementation_t *imp, pixman_op_t op,
 		uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -1443,7 +1443,7 @@ vmxCombineXorC (pixman_implementation_t *imp, pixman_op_t op,
     }
 }
 
-static FASTCALL void
+static void
 vmxCombineAddC (pixman_implementation_t *imp, pixman_op_t op,
 		uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {

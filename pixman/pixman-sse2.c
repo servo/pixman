@@ -2315,7 +2315,7 @@ createMask_2x32_128 (uint32_t mask0, uint32_t mask1)
 
 /* SSE2 code patch for fbcompose.c */
 
-static FASTCALL void
+static void
 sse2CombineOverU (pixman_implementation_t *imp, pixman_op_t op,
 		  uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -2323,7 +2323,7 @@ sse2CombineOverU (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 sse2CombineOverReverseU (pixman_implementation_t *imp, pixman_op_t op,
 			 uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -2331,7 +2331,7 @@ sse2CombineOverReverseU (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 sse2CombineInU (pixman_implementation_t *imp, pixman_op_t op,
 		uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -2339,7 +2339,7 @@ sse2CombineInU (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 sse2CombineInReverseU (pixman_implementation_t *imp, pixman_op_t op,
 		       uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -2347,7 +2347,7 @@ sse2CombineInReverseU (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 sse2CombineOutU (pixman_implementation_t *imp, pixman_op_t op,
 		 uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -2355,7 +2355,7 @@ sse2CombineOutU (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 sse2CombineOutReverseU (pixman_implementation_t *imp, pixman_op_t op,
 			uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -2363,7 +2363,7 @@ sse2CombineOutReverseU (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 sse2CombineAtopU (pixman_implementation_t *imp, pixman_op_t op,
 		  uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -2371,7 +2371,7 @@ sse2CombineAtopU (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 sse2CombineAtopReverseU (pixman_implementation_t *imp, pixman_op_t op,
 			 uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -2379,7 +2379,7 @@ sse2CombineAtopReverseU (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 sse2CombineXorU (pixman_implementation_t *imp, pixman_op_t op,
 		 uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -2387,7 +2387,7 @@ sse2CombineXorU (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 sse2CombineAddU (pixman_implementation_t *imp, pixman_op_t op,
 		 uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -2395,7 +2395,7 @@ sse2CombineAddU (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 sse2CombineSaturateU (pixman_implementation_t *imp, pixman_op_t op,
 		      uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -2403,7 +2403,7 @@ sse2CombineSaturateU (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 sse2CombineSrcC (pixman_implementation_t *imp, pixman_op_t op,
 		 uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -2411,7 +2411,7 @@ sse2CombineSrcC (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 sse2CombineOverC (pixman_implementation_t *imp, pixman_op_t op,
 		  uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -2419,7 +2419,7 @@ sse2CombineOverC (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 sse2CombineOverReverseC (pixman_implementation_t *imp, pixman_op_t op,
 			 uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -2427,7 +2427,7 @@ sse2CombineOverReverseC (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 sse2CombineInC (pixman_implementation_t *imp, pixman_op_t op,
 		uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -2435,7 +2435,7 @@ sse2CombineInC (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 sse2CombineInReverseC (pixman_implementation_t *imp, pixman_op_t op,
 		       uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -2443,7 +2443,7 @@ sse2CombineInReverseC (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 sse2CombineOutC (pixman_implementation_t *imp, pixman_op_t op,
 		 uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -2451,7 +2451,7 @@ sse2CombineOutC (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 sse2CombineOutReverseC (pixman_implementation_t *imp, pixman_op_t op,
 			uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -2459,7 +2459,7 @@ sse2CombineOutReverseC (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 sse2CombineAtopC (pixman_implementation_t *imp, pixman_op_t op,
 		  uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -2467,7 +2467,7 @@ sse2CombineAtopC (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 sse2CombineAtopReverseC (pixman_implementation_t *imp, pixman_op_t op,
 			 uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -2475,7 +2475,7 @@ sse2CombineAtopReverseC (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 sse2CombineXorC (pixman_implementation_t *imp, pixman_op_t op,
 		 uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -2483,7 +2483,7 @@ sse2CombineXorC (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 sse2CombineAddC (pixman_implementation_t *imp, pixman_op_t op,
 		 uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {

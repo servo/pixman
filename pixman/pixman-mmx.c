@@ -435,7 +435,7 @@ combine (const uint32_t *src, const uint32_t *mask)
     return ssrc;
 }
 
-static FASTCALL void
+static void
 mmxCombineOverU (pixman_implementation_t *imp, pixman_op_t op,
 		 uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -460,7 +460,7 @@ mmxCombineOverU (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 mmxCombineOverReverseU (pixman_implementation_t *imp, pixman_op_t op,
 			uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -480,7 +480,7 @@ mmxCombineOverReverseU (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 mmxCombineInU (pixman_implementation_t *imp, pixman_op_t op,
 	       uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -501,7 +501,7 @@ mmxCombineInU (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 mmxCombineInReverseU (pixman_implementation_t *imp, pixman_op_t op,
 		      uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -522,7 +522,7 @@ mmxCombineInReverseU (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 mmxCombineOutU (pixman_implementation_t *imp, pixman_op_t op,
 		uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -544,7 +544,7 @@ mmxCombineOutU (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 mmxCombineOutReverseU (pixman_implementation_t *imp, pixman_op_t op,
 		       uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -566,7 +566,7 @@ mmxCombineOutReverseU (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 mmxCombineAtopU (pixman_implementation_t *imp, pixman_op_t op,
 		 uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -589,7 +589,7 @@ mmxCombineAtopU (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 mmxCombineAtopReverseU (pixman_implementation_t *imp, pixman_op_t op,
 			uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -614,7 +614,7 @@ mmxCombineAtopReverseU (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 mmxCombineXorU (pixman_implementation_t *imp, pixman_op_t op,
 		uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -638,7 +638,7 @@ mmxCombineXorU (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 mmxCombineAddU (pixman_implementation_t *imp, pixman_op_t op,
 		uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -657,7 +657,7 @@ mmxCombineAddU (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 mmxCombineSaturateU (pixman_implementation_t *imp, pixman_op_t op,
 		     uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -686,7 +686,7 @@ mmxCombineSaturateU (pixman_implementation_t *imp, pixman_op_t op,
 }
 
 
-static FASTCALL void
+static void
 mmxCombineSrcC (pixman_implementation_t *imp, pixman_op_t op,
 		uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -703,7 +703,7 @@ mmxCombineSrcC (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 mmxCombineOverC (pixman_implementation_t *imp, pixman_op_t op,
 		 uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -723,7 +723,7 @@ mmxCombineOverC (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 mmxCombineOverReverseC (pixman_implementation_t *imp, pixman_op_t op,
 			uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -744,7 +744,7 @@ mmxCombineOverReverseC (pixman_implementation_t *imp, pixman_op_t op,
 }
 
 
-static FASTCALL void
+static void
 mmxCombineInC (pixman_implementation_t *imp, pixman_op_t op,
 	       uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -764,7 +764,7 @@ mmxCombineInC (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 mmxCombineInReverseC (pixman_implementation_t *imp, pixman_op_t op,
 		      uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -784,7 +784,7 @@ mmxCombineInReverseC (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 mmxCombineOutC (pixman_implementation_t *imp, pixman_op_t op,
 		uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -805,7 +805,7 @@ mmxCombineOutC (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 mmxCombineOutReverseC (pixman_implementation_t *imp, pixman_op_t op,
 		       uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -826,7 +826,7 @@ mmxCombineOutReverseC (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 mmxCombineAtopC (pixman_implementation_t *imp, pixman_op_t op,
 		 uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -849,7 +849,7 @@ mmxCombineAtopC (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 mmxCombineAtopReverseC (pixman_implementation_t *imp, pixman_op_t op,
 			uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -872,7 +872,7 @@ mmxCombineAtopReverseC (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 mmxCombineXorC (pixman_implementation_t *imp, pixman_op_t op,
 		uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
@@ -896,7 +896,7 @@ mmxCombineXorC (pixman_implementation_t *imp, pixman_op_t op,
     _mm_empty();
 }
 
-static FASTCALL void
+static void
 mmxCombineAddC (pixman_implementation_t *imp, pixman_op_t op,
 		uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
