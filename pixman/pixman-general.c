@@ -54,9 +54,6 @@ general_composite_rect  (pixman_implementation_t *imp,
 			 int32_t                  width,
 			 int32_t                  height)
 {
-    return_if_fail (src != NULL);
-    return_if_fail (dest != NULL);
-    
     uint8_t stack_scanline_buffer[SCANLINE_BUFFER_LENGTH * 3];
     const pixman_format_code_t srcFormat = src->type == BITS ? src->bits.format : 0;
     const pixman_format_code_t maskFormat = mask && mask->type == BITS ? mask->bits.format : 0;
