@@ -87,24 +87,6 @@ static box_type_t *pixman_region_emptyBox = (box_type_t *)&PREFIX(_emptyBox_);
 static region_data_type_t *pixman_region_emptyData = (region_data_type_t *)&PREFIX(_emptyData_);
 static region_data_type_t *pixman_brokendata = (region_data_type_t *)&PREFIX(_brokendata_);
 
-/* This function exists only to make it possible to preserve the X ABI - it should
- * go away at first opportunity.
- *
- * The problem is that the X ABI exports the three structs and has used
- * them through macros. So the X server calls this function with
- * the addresses of those structs which makes the existing code continue to
- * work.
- */
-void
-PREFIX(_internal_set_static_pointers) (box_type_t *empty_box,
-				       region_data_type_t *empty_data,
-				       region_data_type_t *broken_data)
-{
-    pixman_region_emptyBox = empty_box;
-    pixman_region_emptyData = empty_data;
-    pixman_brokendata = broken_data;
-}
-
 static pixman_bool_t
 pixman_break (region_type_t *pReg);
 

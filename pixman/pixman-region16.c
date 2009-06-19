@@ -42,14 +42,6 @@ typedef struct {
 
 #define PREFIX(x) pixman_region##x
 
-PIXMAN_EXPORT void
-pixman_region_set_static_pointers (pixman_box16_t *empty_box,
-				   pixman_region16_data_t *empty_data,
-				   pixman_region16_data_t *broken_data)
-{
-    pixman_region_internal_set_static_pointers (empty_box, empty_data, broken_data);
-}
-
 pixman_bool_t
 pixman_region16_copy_from_region32 (pixman_region16_t *dst,
 				    pixman_region32_t *src)
@@ -81,3 +73,21 @@ pixman_region16_copy_from_region32 (pixman_region16_t *dst,
 }
 
 #include "pixman-region.c"
+
+/* This function exists only to make it possible to preserve the X ABI - it should
+ * go away at first opportunity.
+ *
+ * The problem is that the X ABI exports the three structs and has used
+ * them through macros. So the X server calls this function with
+ * the addresses of those structs which makes the existing code continue to
+ * work.
+ */
+PIXMAN_EXPORT void
+pixman_region_set_static_pointers (pixman_box16_t *empty_box,
+				   pixman_region16_data_t *empty_data,
+				   pixman_region16_data_t *broken_data)
+{
+    pixman_region_emptyBox = empty_box;
+    pixman_region_emptyData = empty_data;
+    pixman_brokendata = broken_data;
+}
