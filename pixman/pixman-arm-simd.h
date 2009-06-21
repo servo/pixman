@@ -36,7 +36,7 @@ pixman_bool_t pixman_have_arm_simd(void);
 
 #ifdef USE_ARM_SIMD
 
-extern const FastPathInfo *const arm_simd_fast_paths;
+extern const pixman_fast_path_t *const arm_simd_fast_paths;
 
 void
 fbCompositeSrcAdd_8000x8000arm (

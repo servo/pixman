@@ -416,7 +416,7 @@ fbCompositeSolidMask_nx8x8888arm (
     }
 }
 
-static const FastPathInfo arm_simd_fast_path_array[] =
+static const pixman_fast_path_t arm_simd_fast_path_array[] =
 {
     { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,     PIXMAN_a8r8g8b8, fbCompositeSrc_8888x8888arm,      0 },
     { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,	PIXMAN_x8r8g8b8, fbCompositeSrc_8888x8888arm,	   0 },
@@ -435,7 +435,7 @@ static const FastPathInfo arm_simd_fast_path_array[] =
     { PIXMAN_OP_NONE },
 };
 
-const FastPathInfo *const arm_simd_fast_paths = arm_simd_fast_path_array;
+const pixman_fast_path_t *const arm_simd_fast_paths = arm_simd_fast_path_array;
 
 static void
 arm_simd_composite (pixman_implementation_t *imp,

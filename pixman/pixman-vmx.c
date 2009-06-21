@@ -1548,12 +1548,12 @@ fbCompositeSolid_nx0565vmx (pixman_operator_t	op,
     }
 }
 
-static const FastPathInfo vmx_fast_path_array[] =
+static const pixman_fast_path_t vmx_fast_path_array[] =
 {
     { PIXMAN_OP_NONE },
 };
 
-const FastPathInfo *const vmx_fast_paths = vmx_fast_path_array;
+const pixman_fast_path_t *const vmx_fast_paths = vmx_fast_path_array;
 
 #endif
 

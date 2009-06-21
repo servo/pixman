@@ -3018,7 +3018,7 @@ fbCompositeOver_x888x8x8888mmx (pixman_implementation_t *imp,
     _mm_empty();
 }
 
-static const FastPathInfo mmx_fast_paths[] =
+static const pixman_fast_path_t mmx_fast_paths[] =
 {
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_r5g6b5,   fbCompositeSolidMask_nx8x0565mmx,     0 },
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_b5g6r5,   fbCompositeSolidMask_nx8x0565mmx,     0 },

@@ -663,15 +663,15 @@ mask_is_solid (pixman_image_t *mask)
     return FALSE;
 }
 
-static const FastPathInfo *
-get_fast_path (const FastPathInfo *fast_paths,
+static const pixman_fast_path_t *
+get_fast_path (const pixman_fast_path_t *fast_paths,
 	       pixman_op_t         op,
 	       pixman_image_t     *pSrc,
 	       pixman_image_t     *pMask,
 	       pixman_image_t     *pDst,
 	       pixman_bool_t       is_pixbuf)
 {
-    const FastPathInfo *info;
+    const pixman_fast_path_t *info;
 
     for (info = fast_paths; info->op != PIXMAN_OP_NONE; info++)
     {
@@ -740,7 +740,7 @@ image_covers (pixman_image_t *image, pixman_box32_t *extents)
 }
 
 pixman_bool_t
-_pixman_run_fast_path (const FastPathInfo *paths,
+_pixman_run_fast_path (const pixman_fast_path_t *paths,
 		       pixman_implementation_t *imp,
 		       pixman_op_t op,
 		       pixman_image_t *src,
@@ -776,7 +776,7 @@ _pixman_run_fast_path (const FastPathInfo *paths,
 	&& !dest->common.read_func
 	&& !dest->common.write_func)
     {
-	const FastPathInfo *info;	
+	const pixman_fast_path_t *info;	
 	pixman_bool_t pixbuf;
 
 	pixbuf =

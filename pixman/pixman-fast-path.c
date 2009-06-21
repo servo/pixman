@@ -1010,7 +1010,7 @@ fbCompositeSrc_8888xx888 (pixman_implementation_t *imp,
     }
 }
 
-static const FastPathInfo c_fast_paths[] =
+static const pixman_fast_path_t c_fast_paths[] =
 {
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_r5g6b5,   fbCompositeSolidMask_nx8x0565, 0 },
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_b5g6r5,   fbCompositeSolidMask_nx8x0565, 0 },

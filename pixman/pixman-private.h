@@ -894,7 +894,7 @@ typedef struct
     pixman_format_code_t	dest_format;
     pixman_composite_func_t	func;
     uint32_t			flags;
-} FastPathInfo;
+} pixman_fast_path_t;
 
 struct pixman_implementation_t
 {
@@ -1009,7 +1009,7 @@ _pixman_implementation_create_vmx (void);
 #endif
 
 pixman_bool_t
-_pixman_run_fast_path (const FastPathInfo *paths,
+_pixman_run_fast_path (const pixman_fast_path_t *paths,
 		       pixman_implementation_t *imp,
 		       pixman_op_t op,
 		       pixman_image_t *src,

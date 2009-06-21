@@ -2092,7 +2092,7 @@ fbCompositeOver_8888x0565neon (
 
 #endif  // USE_GCC_INLINE_ASM
 
-static const FastPathInfo arm_neon_fast_path_array[] = 
+static const pixman_fast_path_t arm_neon_fast_path_array[] = 
 {
     { PIXMAN_OP_ADD,  PIXMAN_solid,    PIXMAN_a8,       PIXMAN_a8,       fbCompositeSrcAdd_8888x8x8neon,        0 },
     { PIXMAN_OP_ADD,  PIXMAN_a8,       PIXMAN_null,     PIXMAN_a8,       fbCompositeSrcAdd_8000x8000neon,       0 },
@@ -2123,7 +2123,7 @@ static const FastPathInfo arm_neon_fast_path_array[] =
     { PIXMAN_OP_NONE },
 };
 
-const FastPathInfo *const arm_neon_fast_paths = arm_neon_fast_path_array;
+const pixman_fast_path_t *const arm_neon_fast_paths = arm_neon_fast_path_array;
 
 static void
 arm_neon_composite (pixman_implementation_t *imp,
