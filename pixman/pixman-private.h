@@ -502,23 +502,6 @@ _pixman_gradient_walker_pixel (pixman_gradient_walker_t       *walker,
 
 #endif
 
-#define fbComposeGetSolid(img, res, fmt)				\
-    {									\
-	uint32_t __pixel;						\
-									\
-	_pixman_image_get_scanline_32 (img, 0, 0, 1, &__pixel, NULL, 0); \
-									\
-	/* If necessary, convert RGB <--> BGR. */			\
-	if (PIXMAN_FORMAT_TYPE(fmt) != PIXMAN_TYPE_ARGB)		\
-	{								\
-	    (__pixel) = ((((__pixel) & 0xff000000) >>  0) |		\
-			 (((__pixel) & 0x00ff0000) >> 16) |		\
-			 (((__pixel) & 0x0000ff00) >>  0) |		\
-			 (((__pixel) & 0x000000ff) << 16));		\
-	}								\
-	(res) = __pixel;						\
-    }
-
 #define fbComposeGetStart(pict,x,y,type,out_stride,line,mul) do {	\
 	uint32_t	*__bits__;					\
 	int		__stride__;					\
@@ -597,6 +580,10 @@ pixman_image_is_opaque(pixman_image_t *image);
 
 pixman_bool_t
 pixman_image_can_get_solid (pixman_image_t *image);
+
+uint32_t
+pixman_image_get_solid (pixman_image_t *image,
+			pixman_format_code_t format);
 
 pixman_bool_t
 pixman_compute_composite_region32 (pixman_region32_t *	pRegion,

@@ -167,8 +167,6 @@ _pixman_image_get_fetcher (pixman_image_t *image,
 static void
 image_property_changed (pixman_image_t *image)
 {
-    
-    
     image->common.property_changed (image);
 }
 
@@ -541,6 +539,25 @@ pixman_image_can_get_solid (pixman_image_t *image)
     default:
 	return FALSE;
     }
+}
+
+uint32_t
+pixman_image_get_solid (pixman_image_t *image, pixman_format_code_t format)
+{
+    uint32_t result;
+    
+    _pixman_image_get_scanline_32 (image, 0, 0, 1, &result, NULL, 0);
+    
+    /* If necessary, convert RGB <--> BGR. */
+    if (PIXMAN_FORMAT_TYPE (format) != PIXMAN_TYPE_ARGB)
+    {
+	result = (((result & 0xff000000) >>  0) |
+		  ((result & 0x00ff0000) >> 16) |
+		  ((result & 0x0000ff00) >>  0) |
+		  ((result & 0x000000ff) << 16));
+    }									
+    
+    return result;							
 }
 
 pixman_bool_t

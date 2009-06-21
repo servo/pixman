@@ -940,7 +940,7 @@ fbCompositeSolid_nx8888mmx (pixman_implementation_t *imp,
 
     CHECKPOINT();
 
-    fbComposeGetSolid(pSrc, src, pDst->bits.format);
+    src = pixman_image_get_solid(pSrc, pDst->bits.format);
 
     if (src >> 24 == 0)
 	return;
@@ -1019,7 +1019,7 @@ fbCompositeSolid_nx0565mmx (pixman_implementation_t *imp,
 
     CHECKPOINT();
 
-    fbComposeGetSolid(pSrc, src, pDst->bits.format);
+    src = pixman_image_get_solid(pSrc, pDst->bits.format);
 
     if (src >> 24 == 0)
 	return;
@@ -1105,7 +1105,7 @@ fbCompositeSolidMask_nx8888x8888Cmmx (pixman_implementation_t *imp,
 
     CHECKPOINT();
 
-    fbComposeGetSolid(pSrc, src, pDst->bits.format);
+    src = pixman_image_get_solid(pSrc, pDst->bits.format);
 
     srca = src >> 24;
     if (srca == 0)
@@ -1214,7 +1214,7 @@ fbCompositeSrc_8888x8x8888mmx (pixman_implementation_t *imp,
     fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
     fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
 
-    fbComposeGetSolid (pMask, mask, pDst->bits.format);
+    mask = pixman_image_get_solid (pMask, pDst->bits.format);
     mask = mask | mask >> 8 | mask >> 16 | mask >> 24;
     vmask = load8888 (mask);
     srca = MC(4x00ff);
@@ -1298,7 +1298,7 @@ fbCompositeSrc_x888xnx8888mmx (pixman_implementation_t *imp,
 
     fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
     fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
-    fbComposeGetSolid (pMask, mask, pDst->bits.format);
+    mask = pixman_image_get_solid (pMask, pDst->bits.format);
 
     mask = mask | mask >> 8 | mask >> 16 | mask >> 24;
     vmask = load8888 (mask);
@@ -1586,7 +1586,7 @@ fbCompositeSolidMask_nx8x8888mmx (pixman_implementation_t *imp,
 
     CHECKPOINT();
 
-    fbComposeGetSolid(pSrc, src, pDst->bits.format);
+    src = pixman_image_get_solid(pSrc, pDst->bits.format);
 
     srca = src >> 24;
     if (srca == 0)
@@ -1858,7 +1858,7 @@ fbCompositeSolidMaskSrc_nx8x8888mmx (pixman_implementation_t *imp,
 
     CHECKPOINT();
 
-    fbComposeGetSolid(pSrc, src, pDst->bits.format);
+    src = pixman_image_get_solid(pSrc, pDst->bits.format);
 
     srca = src >> 24;
     if (srca == 0)
@@ -1990,7 +1990,7 @@ fbCompositeSolidMask_nx8x0565mmx (pixman_implementation_t *imp,
 
     CHECKPOINT();
 
-    fbComposeGetSolid(pSrc, src, pDst->bits.format);
+    src = pixman_image_get_solid(pSrc, pDst->bits.format);
 
     srca = src >> 24;
     if (srca == 0)
@@ -2343,7 +2343,7 @@ fbCompositeSolidMask_nx8888x0565Cmmx (pixman_implementation_t *imp,
 
     CHECKPOINT();
 
-    fbComposeGetSolid(pSrc, src, pDst->bits.format);
+    src = pixman_image_get_solid(pSrc, pDst->bits.format);
 
     srca = src >> 24;
     if (srca == 0)
@@ -2454,7 +2454,7 @@ fbCompositeIn_nx8x8mmx (pixman_implementation_t *imp,
     fbComposeGetStart (pDst, xDst, yDst, uint8_t, dstStride, dstLine, 1);
     fbComposeGetStart (pMask, xMask, yMask, uint8_t, maskStride, maskLine, 1);
 
-    fbComposeGetSolid(pSrc, src, pDst->bits.format);
+    src = pixman_image_get_solid(pSrc, pDst->bits.format);
 
     sa = src >> 24;
     if (sa == 0)
@@ -2604,7 +2604,7 @@ fbCompositeSrcAdd_8888x8x8mmx (pixman_implementation_t *imp,
     fbComposeGetStart (pDst, xDst, yDst, uint8_t, dstStride, dstLine, 1);
     fbComposeGetStart (pMask, xMask, yMask, uint8_t, maskStride, maskLine, 1);
 
-    fbComposeGetSolid(pSrc, src, pDst->bits.format);
+    src = pixman_image_get_solid(pSrc, pDst->bits.format);
 
     sa = src >> 24;
     if (sa == 0)
