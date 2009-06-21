@@ -456,11 +456,6 @@ _pixman_gradient_walker_pixel (pixman_gradient_walker_t       *walker,
 #  define MAX(a,b) ((a > b)? a : b)
 #endif
 
-#if 0
-/* FIXME: the MOD macro above is equivalent, but faster I think */
-#define mod(a,b) ((b) == 1 ? 0 : (a) >= 0 ? (a) % (b) : (b) - (-a) % (b))
-#endif
-
 /* FIXME: the (void)__read_func hides lots of warnings (which is what they
  * are supposed to do), but some of them are real. For example the one
  * where Fetch4 doesn't have a READ
