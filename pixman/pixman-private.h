@@ -17,17 +17,6 @@
 #define TRUE 1
 #endif
 
-#define MSBFirst 0
-#define LSBFirst 1
-
-#ifdef WORDS_BIGENDIAN
-#  define IMAGE_BYTE_ORDER MSBFirst
-#  define BITMAP_BIT_ORDER MSBFirst
-#else
-#  define IMAGE_BYTE_ORDER LSBFirst
-#  define BITMAP_BIT_ORDER LSBFirst
-#endif
-
 #undef DEBUG
 #define DEBUG 0
 
@@ -437,14 +426,14 @@ _pixman_gradient_walker_pixel (pixman_gradient_walker_t       *walker,
 #define FB_STIP_MASK	(FB_STIP_UNIT - 1)
 #define FB_STIP_ALLONES	((uint32_t) -1)
 
-#if BITMAP_BIT_ORDER == LSBFirst
-#define FbScrLeft(x,n)	((x) >> (n))
-#define FbScrRight(x,n)	((x) << (n))
-#define FbLeftStipBits(x,n) ((x) & ((((uint32_t) 1) << (n)) - 1))
-#else
+#ifdef WORDS_BIGENDIAN
 #define FbScrLeft(x,n)	((x) << (n))
 #define FbScrRight(x,n)	((x) >> (n))
 #define FbLeftStipBits(x,n) ((x) >> (FB_STIP_UNIT - (n)))
+#else
+#define FbScrLeft(x,n)	((x) >> (n))
+#define FbScrRight(x,n)	((x) << (n))
+#define FbLeftStipBits(x,n) ((x) & ((((uint32_t) 1) << (n)) - 1))
 #endif
 
 #define FbStipLeft(x,n)	FbScrLeft(x,n)
@@ -472,7 +461,7 @@ _pixman_gradient_walker_pixel (pixman_gradient_walker_t       *walker,
 	n >>= FB_SHIFT; \
     }
 
-#if IMAGE_BYTE_ORDER == MSBFirst
+#ifdef WORDS_BIGENDIAN
 #define Fetch24(img, a)  ((unsigned long) (a) & 1 ?	      \
     ((READ(img, a) << 16) | READ(img, (uint16_t *) ((a)+1))) : \
     ((READ(img, (uint16_t *) (a)) << 8) | READ(img, (a)+2)))

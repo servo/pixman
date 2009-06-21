@@ -216,7 +216,7 @@ fbFetch_b8g8r8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
     const uint8_t *end = pixel + 3*width;
     while (pixel < end) {
 	uint32_t b = 0xff000000;
-#if IMAGE_BYTE_ORDER == MSBFirst
+#ifdef WORDS_BIGENDIAN
 	b |= (READ(pict, pixel++));
 	b |= (READ(pict, pixel++) << 8);
 	b |= (READ(pict, pixel++) << 16);
@@ -517,7 +517,7 @@ fbFetch_x4a4 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
 }
 
 #define Fetch8(img,l,o)    (READ(img, (uint8_t *)(l) + ((o) >> 2)))
-#if IMAGE_BYTE_ORDER == MSBFirst
+#ifdef WORDS_BIGENDIAN
 #define Fetch4(img,l,o)    ((o) & 2 ? Fetch8(img,l,o) & 0xf : Fetch8(img,l,o) >> 4)
 #else
 #define Fetch4(img,l,o)    ((o) & 2 ? Fetch8(img,l,o) >> 4 : Fetch8(img,l,o) & 0xf)
@@ -624,7 +624,7 @@ fbFetch_a1 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
     for (i = 0; i < width; ++i) {
 	uint32_t  p = READ(pict, bits + ((i + x) >> 5));
 	uint32_t  a;
-#if BITMAP_BIT_ORDER == MSBFirst
+#ifdef WORDS_BIGENDIAN
 	a = p >> (0x1f - ((i+x) & 0x1f));
 #else
 	a = p >> ((i+x) & 0x1f);
@@ -646,7 +646,7 @@ fbFetch_g1 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
     for (i = 0; i < width; ++i) {
 	uint32_t p = READ(pict, bits + ((i+x) >> 5));
 	uint32_t a;
-#if BITMAP_BIT_ORDER == MSBFirst
+#ifdef WORDS_BIGENDIAN
 	a = p >> (0x1f - ((i+x) & 0x1f));
 #else
 	a = p >> ((i+x) & 0x1f);
@@ -1037,7 +1037,7 @@ fbFetchPixel_r8g8b8 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 	{
 	    uint32_t *bits = pict->bits + line*pict->rowstride;
 	    uint8_t   *pixel = ((uint8_t *) bits) + (offset*3);
-#if IMAGE_BYTE_ORDER == MSBFirst
+#ifdef WORDS_BIGENDIAN
 	    buffer[i] = (0xff000000 |
 			 (READ(pict, pixel + 0) << 16) |
 			 (READ(pict, pixel + 1) << 8) |
@@ -1070,7 +1070,7 @@ fbFetchPixel_b8g8r8 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 	{
 	    uint32_t *bits = pict->bits + line*pict->rowstride;
 	    uint8_t   *pixel = ((uint8_t *) bits) + (offset*3);
-#if IMAGE_BYTE_ORDER == MSBFirst
+#ifdef WORDS_BIGENDIAN
 	    buffer[i] = (0xff000000 |
 			 (READ(pict, pixel + 2) << 16) |
 			 (READ(pict, pixel + 1) << 8) |
@@ -1747,7 +1747,7 @@ fbFetchPixel_a1 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 	    uint32_t *bits = pict->bits + line*pict->rowstride;
 	    uint32_t  pixel = READ(pict, bits + (offset >> 5));
 	    uint32_t  a;
-#if BITMAP_BIT_ORDER == MSBFirst
+#ifdef WORDS_BIGENDIAN
 	    a = pixel >> (0x1f - (offset & 0x1f));
 #else
 	    a = pixel >> (offset & 0x1f);
@@ -1781,7 +1781,7 @@ fbFetchPixel_g1 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 	    uint32_t pixel = READ(pict, bits + (offset >> 5));
 	    const pixman_indexed_t * indexed = pict->indexed;
 	    uint32_t a;
-#if BITMAP_BIT_ORDER == MSBFirst
+#ifdef WORDS_BIGENDIAN
 	    a = pixel >> (0x1f - (offset & 0x1f));
 #else
 	    a = pixel >> (offset & 0x1f);
@@ -2090,7 +2090,7 @@ fbStore_b8g8r8 (pixman_image_t *image,
     uint8_t *pixel = ((uint8_t *) bits) + 3*x;
     for (i = 0; i < width; ++i) {
 	uint32_t val = values[i];
-#if IMAGE_BYTE_ORDER == MSBFirst
+#ifdef WORDS_BIGENDIAN
 	WRITE(image, pixel++, Blue(val));
 	WRITE(image, pixel++, Green(val));
 	WRITE(image, pixel++, Red(val));
@@ -2325,7 +2325,7 @@ fbStore_x4a4 (pixman_image_t *image,
 }
 
 #define Store8(img,l,o,v)  (WRITE(img, (uint8_t *)(l) + ((o) >> 3), (v)))
-#if IMAGE_BYTE_ORDER == MSBFirst
+#ifdef WORDS_BIGENDIAN
 #define Store4(img,l,o,v)  Store8(img,l,o,((o) & 4 ?				\
 				   (Fetch8(img,l,o) & 0xf0) | (v) :		\
 				   (Fetch8(img,l,o) & 0x0f) | ((v) << 4)))
