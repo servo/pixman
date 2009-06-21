@@ -4949,9 +4949,10 @@ static const FastPathInfo sse2_fast_paths[] =
 /*
  * Work around GCC bug causing crashes in Mozilla with SSE2
  * 
- * When using SSE2 intrinsics, gcc assumes that the stack is 16 byte
- * aligned. Unfortunately some code, such as Mozilla and Mono contain
- * code that aligns the stack to 4 bytes.
+ * When using -msse, gcc generates movdqa instructions assuming that
+ * the stack is 16 byte aligned. Unfortunately some applications, such
+ * as Mozilla and Mono, end up aligning the stack to 4 bytes, which
+ * causes the movdqa instructions to fail.
  *
  * The __force_align_arg_pointer__ makes gcc generate a prologue that
  * realigns the stack pointer to 16 bytes.
@@ -4961,7 +4962,9 @@ static const FastPathInfo sse2_fast_paths[] =
  *
  * See https://bugs.freedesktop.org/show_bug.cgi?id=15693
  */
+#if defined(__GNUC__) && !defined(__x86_64__) && !defined(__amd64__)
 __attribute__((__force_align_arg_pointer__))
+#endif
 static void
 sse2_composite (pixman_implementation_t *imp,
 		pixman_op_t     op,
@@ -4995,7 +4998,9 @@ sse2_composite (pixman_implementation_t *imp,
 				      width, height);
 }
 
+#if defined(__GNUC__) && !defined(__x86_64__) && !defined(__amd64__)
 __attribute__((__force_align_arg_pointer__))
+#endif
 static pixman_bool_t
 sse2_blt (pixman_implementation_t *imp,
 	  uint32_t *src_bits,
@@ -5022,7 +5027,9 @@ sse2_blt (pixman_implementation_t *imp,
     return TRUE;
 }
 
+#if defined(__GNUC__) && !defined(__x86_64__) && !defined(__amd64__)
 __attribute__((__force_align_arg_pointer__))
+#endif
 static pixman_bool_t
 sse2_fill (pixman_implementation_t *imp,
 	   uint32_t *bits,
