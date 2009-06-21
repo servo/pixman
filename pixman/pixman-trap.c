@@ -27,6 +27,189 @@
 #include <stdio.h>
 #include "pixman-private.h"
 
+
+/*
+ * Compute the smallest value no less than y which is on a
+ * grid row
+ */
+
+PIXMAN_EXPORT pixman_fixed_t
+pixman_sample_ceil_y (pixman_fixed_t y, int n)
+{
+    pixman_fixed_t   f = pixman_fixed_frac(y);
+    pixman_fixed_t   i = pixman_fixed_floor(y);
+
+    f = ((f + Y_FRAC_FIRST(n)) / STEP_Y_SMALL(n)) * STEP_Y_SMALL(n) + Y_FRAC_FIRST(n);
+    if (f > Y_FRAC_LAST(n))
+    {
+	if (pixman_fixed_to_int(i) == 0x7fff)
+	{
+	    f = 0xffff; /* saturate */
+	} else {
+	    f = Y_FRAC_FIRST(n);
+	    i += pixman_fixed_1;
+	}
+    }
+    return (i | f);
+}
+
+#define _div(a,b)    ((a) >= 0 ? (a) / (b) : -((-(a) + (b) - 1) / (b)))
+
+/*
+ * Compute the largest value no greater than y which is on a
+ * grid row
+ */
+PIXMAN_EXPORT pixman_fixed_t
+pixman_sample_floor_y (pixman_fixed_t y, int n)
+{
+    pixman_fixed_t   f = pixman_fixed_frac(y);
+    pixman_fixed_t   i = pixman_fixed_floor (y);
+
+    f = _div(f - Y_FRAC_FIRST(n), STEP_Y_SMALL(n)) * STEP_Y_SMALL(n) + Y_FRAC_FIRST(n);
+    if (f < Y_FRAC_FIRST(n))
+    {
+	if (pixman_fixed_to_int(i) == 0x8000)
+	{
+	    f = 0; /* saturate */
+	} else {
+	    f = Y_FRAC_LAST(n);
+	    i -= pixman_fixed_1;
+	}
+    }
+    return (i | f);
+}
+
+/*
+ * Step an edge by any amount (including negative values)
+ */
+PIXMAN_EXPORT void
+pixman_edge_step (pixman_edge_t *e, int n)
+{
+    pixman_fixed_48_16_t	ne;
+
+    e->x += n * e->stepx;
+
+    ne = e->e + n * (pixman_fixed_48_16_t) e->dx;
+
+    if (n >= 0)
+    {
+	if (ne > 0)
+	{
+	    int nx = (ne + e->dy - 1) / e->dy;
+	    e->e = ne - nx * (pixman_fixed_48_16_t) e->dy;
+	    e->x += nx * e->signdx;
+	}
+    }
+    else
+    {
+	if (ne <= -e->dy)
+	{
+	    int nx = (-ne) / e->dy;
+	    e->e = ne + nx * (pixman_fixed_48_16_t) e->dy;
+	    e->x -= nx * e->signdx;
+	}
+    }
+}
+
+/*
+ * A private routine to initialize the multi-step
+ * elements of an edge structure
+ */
+static void
+_pixman_edge_multi_init (pixman_edge_t *e, int n, pixman_fixed_t *stepx_p, pixman_fixed_t *dx_p)
+{
+    pixman_fixed_t	stepx;
+    pixman_fixed_48_16_t	ne;
+
+    ne = n * (pixman_fixed_48_16_t) e->dx;
+    stepx = n * e->stepx;
+    if (ne > 0)
+    {
+	int nx = ne / e->dy;
+	ne -= nx * e->dy;
+	stepx += nx * e->signdx;
+    }
+    *dx_p = ne;
+    *stepx_p = stepx;
+}
+
+/*
+ * Initialize one edge structure given the line endpoints and a
+ * starting y value
+ */
+PIXMAN_EXPORT void
+pixman_edge_init (pixman_edge_t	*e,
+		  int		n,
+		  pixman_fixed_t		y_start,
+		  pixman_fixed_t		x_top,
+		  pixman_fixed_t		y_top,
+		  pixman_fixed_t		x_bot,
+		  pixman_fixed_t		y_bot)
+{
+    pixman_fixed_t	dx, dy;
+
+    e->x = x_top;
+    e->e = 0;
+    dx = x_bot - x_top;
+    dy = y_bot - y_top;
+    e->dy = dy;
+    e->dx = 0;
+    if (dy)
+    {
+	if (dx >= 0)
+	{
+	    e->signdx = 1;
+	    e->stepx = dx / dy;
+	    e->dx = dx % dy;
+	    e->e = -dy;
+	}
+	else
+	{
+	    e->signdx = -1;
+	    e->stepx = -(-dx / dy);
+	    e->dx = -dx % dy;
+	    e->e = 0;
+	}
+
+	_pixman_edge_multi_init (e, STEP_Y_SMALL(n), &e->stepx_small, &e->dx_small);
+	_pixman_edge_multi_init (e, STEP_Y_BIG(n), &e->stepx_big, &e->dx_big);
+    }
+    pixman_edge_step (e, y_start - y_top);
+}
+
+/*
+ * Initialize one edge structure given a line, starting y value
+ * and a pixel offset for the line
+ */
+PIXMAN_EXPORT void
+pixman_line_fixed_edge_init (pixman_edge_t *e,
+			     int	    n,
+			     pixman_fixed_t	    y,
+			     const pixman_line_fixed_t *line,
+			     int	    x_off,
+			     int	    y_off)
+{
+    pixman_fixed_t	x_off_fixed = pixman_int_to_fixed(x_off);
+    pixman_fixed_t	y_off_fixed = pixman_int_to_fixed(y_off);
+    const pixman_point_fixed_t *top, *bot;
+
+    if (line->p1.y <= line->p2.y)
+    {
+	top = &line->p1;
+	bot = &line->p2;
+    }
+    else
+    {
+	top = &line->p2;
+	bot = &line->p1;
+    }
+    pixman_edge_init (e, n, y,
+		    top->x + x_off_fixed,
+		    top->y + y_off_fixed,
+		    bot->x + x_off_fixed,
+		    bot->y + y_off_fixed);
+}
+
 PIXMAN_EXPORT void
 pixman_add_traps (pixman_image_t *	image,
 		  int16_t	x_off,
