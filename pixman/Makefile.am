@@ -38,18 +38,18 @@ libpixmanincludedir = $(includedir)/pixman-1/
 libpixmaninclude_HEADERS = pixman.h pixman-version.h
 noinst_LTLIBRARIES = 
 
-pixman-combine32.c : combine.inc pixman-combine32.h combine.pl
-	$(PERL) $(srcdir)/combine.pl 8 < $(srcdir)/combine.inc > $@ || ($(RM) $@; exit 1)
-pixman-combine32.h : combine.h.inc combine.pl
-	$(PERL) $(srcdir)/combine.pl 8 < $(srcdir)/combine.h.inc > $@ || ($(RM) $@; exit 1)
+pixman-combine32.c : pixman-combine.c.template pixman-combine32.h make-combine.pl
+	$(PERL) $(srcdir)/make-combine.pl 8 < $(srcdir)/pixman-combine.c.template > $@ || ($(RM) $@; exit 1)
+pixman-combine32.h : pixman-combine.h.template make-combine.pl
+	$(PERL) $(srcdir)/make-combine.pl 8 < $(srcdir)/pixman-combine.h.template > $@ || ($(RM) $@; exit 1)
 
-pixman-combine64.c : combine.inc pixman-combine64.h combine.pl
-	$(PERL) $(srcdir)/combine.pl 16 < $(srcdir)/combine.inc > $@ || ($(RM) $@; exit 1)
-pixman-combine64.h : combine.h.inc combine.pl
-	$(PERL) $(srcdir)/combine.pl 16 < $(srcdir)/combine.h.inc > $@ || ($(RM) $@; exit 1)
+pixman-combine64.c : pixman-combine.c.template pixman-combine64.h make-combine.pl
+	$(PERL) $(srcdir)/make-combine.pl 16 < $(srcdir)/pixman-combine.c.template > $@ || ($(RM) $@; exit 1)
+pixman-combine64.h : pixman-combine.h.template make-combine.pl
+	$(PERL) $(srcdir)/make-combine.pl 16 < $(srcdir)/pixman-combine.h.template > $@ || ($(RM) $@; exit 1)
 
-EXTRA_DIST = Makefile.win32 combine.inc combine.pl pixman-region.c \
-	combine.h.inc solaris-hwcap.mapfile
+EXTRA_DIST = Makefile.win32 pixman-combine.c.template make-combine.pl pixman-region.c \
+	pixman-combine.h.template solaris-hwcap.mapfile
 CLEANFILES = pixman-combine32.c pixman-combine64.c pixman-combine32.h pixman-combine64.h
 
 # mmx code
