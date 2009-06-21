@@ -78,25 +78,57 @@ rasterizeEdges (pixman_image_t  *image,
 
 #if N_BITS == 1
 	    {
+
+#ifdef WORDS_BIGENDIAN
+#   define FbScrLeft(x,n)	((x) << (n))
+#   define FbScrRight(x,n)	((x) >> (n))
+#else
+#   define FbScrLeft(x,n)	((x) >> (n))
+#   define FbScrRight(x,n)	((x) << (n))
+#endif
+
+#define FbLeftMask(x)							\
+		(((x) & 0x1f) ?						\
+		 FbScrRight (0xffffffff, (x) & 0x1f) : 0)
+#define FbRightMask(x)							\
+		(((32 - (x)) & 0x1f) ?					\
+		 FbScrLeft (0xffffffff, (32 - (x)) & 0x1f) : 0)
+		
+#define FbMaskBits(x,w,l,n,r) {						\
+		    n = (w);						\
+		    r = FbRightMask ((x) + n);				\
+		    l = FbLeftMask (x);					\
+		    if (l) {						\
+			n -= 32 - ((x) & 0x1f);				\
+			if (n < 0) {					\
+			    n = 0;					\
+			    l &= r;					\
+			    r = 0;					\
+			}						\
+		    }							\
+		    n >>= 5;						\
+		}
+		
 		uint32_t  *a = line;
 		uint32_t  startmask;
 		uint32_t  endmask;
 		int	    nmiddle;
 		int	    width = rxi - lxi;
 		int	    x = lxi;
-
-		a += x >> FB_SHIFT;
-		x &= FB_MASK;
-
+		
+		a += x >> 5;
+		x &= 0x1f;
+		
 		FbMaskBits (x, width, startmask, nmiddle, endmask);
-		    if (startmask) {
-			WRITE(image, a, READ(image, a) | startmask);
-			a++;
-		    }
-		    while (nmiddle--)
-			WRITE(image, a++, FB_ALLONES);
-		    if (endmask)
-			WRITE(image, a, READ(image, a) | endmask);
+
+		if (startmask) {
+		    WRITE(image, a, READ(image, a) | startmask);
+		    a++;
+		}
+		while (nmiddle--)
+		    WRITE(image, a++, FB_ALLONES);
+		if (endmask)
+		    WRITE(image, a, READ(image, a) | endmask);
 	    }
 #else
 	    {

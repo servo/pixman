@@ -795,7 +795,7 @@ create_bits (pixman_format_code_t format,
     
     /* what follows is a long-winded way, avoiding any possibility of integer
      * overflows, of saying:
-     * stride = ((width * bpp + FB_MASK) >> FB_SHIFT) * sizeof (uint32_t);
+     * stride = ((width * bpp + 0x1f) >> 5) * sizeof (uint32_t);
      */
     
     bpp = PIXMAN_FORMAT_BPP (format);
@@ -803,16 +803,12 @@ create_bits (pixman_format_code_t format,
 	return NULL;
     
     stride = width * bpp;
-    if (pixman_addition_overflows_int (stride, FB_MASK))
+    if (pixman_addition_overflows_int (stride, 0x1f))
 	return NULL;
     
-    stride += FB_MASK;
-    stride >>= FB_SHIFT;
+    stride += 0x1f;
+    stride >>= 5;
     
-#if FB_SHIFT < 2
-    if (pixman_multiply_overflows_int (stride, sizeof (uint32_t)))
-	return NULL;
-#endif
     stride *= sizeof (uint32_t);
     
     if (pixman_multiply_overflows_int (height, stride))

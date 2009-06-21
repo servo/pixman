@@ -23,10 +23,7 @@
 #undef DEBUG
 #define DEBUG 0
 
-#define FB_SHIFT    5
-#define FB_UNIT     (1 << FB_SHIFT)
-#define FB_HALFUNIT (1 << (FB_SHIFT-1))
-#define FB_MASK     (FB_UNIT - 1)
+#define FB_MASK     (0x1f)
 #define FB_ALLONES  ((uint32_t) -1)
 
 /* Memory allocation helpers */
@@ -373,44 +370,6 @@ _pixman_gradient_walker_pixel (pixman_gradient_walker_t       *walker,
 			       pixman_fixed_32_32_t  x);
 
 
-
-#define LOG2_BITMAP_PAD 5
-#define FB_STIP_SHIFT	LOG2_BITMAP_PAD
-#define FB_STIP_UNIT	(1 << FB_STIP_SHIFT)
-#define FB_STIP_MASK	(FB_STIP_UNIT - 1)
-#define FB_STIP_ALLONES	((uint32_t) -1)
-
-#ifdef WORDS_BIGENDIAN
-#define FbScrLeft(x,n)	((x) << (n))
-#define FbScrRight(x,n)	((x) >> (n))
-#define FbLeftStipBits(x,n) ((x) >> (FB_STIP_UNIT - (n)))
-#else
-#define FbScrLeft(x,n)	((x) >> (n))
-#define FbScrRight(x,n)	((x) << (n))
-#define FbLeftStipBits(x,n) ((x) & ((((uint32_t) 1) << (n)) - 1))
-#endif
-
-#define FbStipLeft(x,n)	FbScrLeft(x,n)
-#define FbStipRight(x,n) FbScrRight(x,n)
-#define FbLeftMask(x)       ( ((x) & FB_MASK) ?	\
-			      FbScrRight(FB_ALLONES,(x) & FB_MASK) : 0)
-#define FbRightMask(x)      ( ((FB_UNIT - (x)) & FB_MASK) ? \
-			      FbScrLeft(FB_ALLONES,(FB_UNIT - (x)) & FB_MASK) : 0)
-
-#define FbMaskBits(x,w,l,n,r) {						\
-	n = (w); \
-	r = FbRightMask((x)+n); \
-	l = FbLeftMask(x); \
-	if (l) { \
-	    n -= FB_UNIT - ((x) & FB_MASK); \
-	    if (n < 0) { \
-		n = 0; \
-		l &= r; \
-		r = 0; \
-	    } \
-	} \
-	n >>= FB_SHIFT; \
-    }
 
 #ifdef WORDS_BIGENDIAN
 #define Fetch24(img, a)  ((unsigned long) (a) & 1 ?	      \
