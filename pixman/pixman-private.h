@@ -109,19 +109,7 @@ typedef void (*storeProc64)(pixman_image_t *, uint32_t *bits,
 typedef void (* fetch_pixels_32_t) (bits_image_t *image, uint32_t *buffer, int n_pixels);
 typedef void (* fetch_pixels_64_t) (bits_image_t *image, uint64_t *buffer, int n_pixels);
 
-fetchProc32 pixman_fetchProcForPicture32 (bits_image_t *);
-fetch_pixels_32_t pixman_fetchPixelProcForPicture32 (bits_image_t *);
-storeProc32 pixman_storeProcForPicture32 (bits_image_t *);
-fetchProc32 pixman_fetchProcForPicture32_accessors (bits_image_t *);
-fetch_pixels_32_t pixman_fetchPixelProcForPicture32_accessors (bits_image_t *);
-storeProc32 pixman_storeProcForPicture32_accessors (bits_image_t *);
-
-fetchProc64 pixman_fetchProcForPicture64 (bits_image_t *);
-fetch_pixels_64_t pixman_fetchPixelProcForPicture64 (bits_image_t *);
-storeProc64 pixman_storeProcForPicture64 (bits_image_t *);
-fetchProc64 pixman_fetchProcForPicture64_accessors (bits_image_t *);
-fetch_pixels_64_t pixman_fetchPixelProcForPicture64_accessors (bits_image_t *);
-storeProc64 pixman_storeProcForPicture64_accessors (bits_image_t *);
+void _pixman_bits_image_setup_raw_accessors (bits_image_t *image);
 
 void pixman_expand(uint64_t *dst, const uint32_t *src, pixman_format_code_t, int width);
 void pixman_contract(uint32_t *dst, const uint64_t *src, int width);
@@ -151,11 +139,12 @@ typedef void (*scanStoreProc)(bits_image_t *img, int x, int y, int width, uint32
 typedef void (*scanFetchProc)(pixman_image_t *, int, int, int, uint32_t *,
 			      uint32_t *, uint32_t);
 
-source_pict_class_t _pixman_image_classify (pixman_image_t *image,
-					    int             x,
-					    int             y,
-					    int             width,
-					    int             height);
+source_pict_class_t
+_pixman_image_classify (pixman_image_t *image,
+			int             x,
+			int             y,
+			int             width,
+			int             height);
 
 void
 _pixman_image_get_scanline_32 (pixman_image_t *image, int x, int y, int width,
@@ -317,11 +306,6 @@ struct bits_image
     /* Used for indirect access to the bits */
     pixman_read_memory_func_t	read_func;
     pixman_write_memory_func_t	write_func;
-    
-    void *			orig_data;	/* Stores pointer to original
-						 * data, when the image is
-						 * being accessed.
-						 */
 };
 
 union pixman_image

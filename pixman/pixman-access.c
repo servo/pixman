@@ -716,87 +716,6 @@ fbFetch_yv12 (bits_image_t *pict, int x, int line, int width, uint32_t *buffer)
     }
 }
 
-fetchProc32 ACCESS(pixman_fetchProcForPicture32) (bits_image_t * pict)
-{
-    switch(pict->format) {
-    case PIXMAN_a8r8g8b8: return fbFetch_a8r8g8b8;
-    case PIXMAN_x8r8g8b8: return fbFetch_x8r8g8b8;
-    case PIXMAN_a8b8g8r8: return fbFetch_a8b8g8r8;
-    case PIXMAN_x8b8g8r8: return fbFetch_x8b8g8r8;
-    case PIXMAN_b8g8r8a8: return fbFetch_b8g8r8a8;
-    case PIXMAN_b8g8r8x8: return fbFetch_b8g8r8x8;
-    /* These two require wide compositing */
-    case PIXMAN_a2b10g10r10: return NULL;
-    case PIXMAN_x2b10g10r10: return NULL;
-
-        /* 24bpp formats */
-    case PIXMAN_r8g8b8: return fbFetch_r8g8b8;
-    case PIXMAN_b8g8r8: return fbFetch_b8g8r8;
-
-        /* 16bpp formats */
-    case PIXMAN_r5g6b5: return fbFetch_r5g6b5;
-    case PIXMAN_b5g6r5: return fbFetch_b5g6r5;
-
-    case PIXMAN_a1r5g5b5: return fbFetch_a1r5g5b5;
-    case PIXMAN_x1r5g5b5: return fbFetch_x1r5g5b5;
-    case PIXMAN_a1b5g5r5: return fbFetch_a1b5g5r5;
-    case PIXMAN_x1b5g5r5: return fbFetch_x1b5g5r5;
-    case PIXMAN_a4r4g4b4: return fbFetch_a4r4g4b4;
-    case PIXMAN_x4r4g4b4: return fbFetch_x4r4g4b4;
-    case PIXMAN_a4b4g4r4: return fbFetch_a4b4g4r4;
-    case PIXMAN_x4b4g4r4: return fbFetch_x4b4g4r4;
-
-        /* 8bpp formats */
-    case PIXMAN_a8: return  fbFetch_a8;
-    case PIXMAN_r3g3b2: return fbFetch_r3g3b2;
-    case PIXMAN_b2g3r3: return fbFetch_b2g3r3;
-    case PIXMAN_a2r2g2b2: return fbFetch_a2r2g2b2;
-    case PIXMAN_a2b2g2r2: return fbFetch_a2b2g2r2;
-    case PIXMAN_c8: return  fbFetch_c8;
-    case PIXMAN_g8: return  fbFetch_c8;
-    case PIXMAN_x4a4: return fbFetch_x4a4;
-
-        /* 4bpp formats */
-    case PIXMAN_a4: return  fbFetch_a4;
-    case PIXMAN_r1g2b1: return fbFetch_r1g2b1;
-    case PIXMAN_b1g2r1: return fbFetch_b1g2r1;
-    case PIXMAN_a1r1g1b1: return fbFetch_a1r1g1b1;
-    case PIXMAN_a1b1g1r1: return fbFetch_a1b1g1r1;
-    case PIXMAN_c4: return  fbFetch_c4;
-    case PIXMAN_g4: return  fbFetch_c4;
-
-        /* 1bpp formats */
-    case PIXMAN_a1: return  fbFetch_a1;
-    case PIXMAN_g1: return  fbFetch_g1;
-
-        /* YUV formats */
-    case PIXMAN_yuy2: return fbFetch_yuy2;
-    case PIXMAN_yv12: return fbFetch_yv12;
-    }
-
-    return NULL;
-}
-
-static void
-fbFetch64_generic (bits_image_t *pict, int x, int y, int width, uint64_t *buffer)
-{
-    fetchProc32 fetch32 = ACCESS(pixman_fetchProcForPicture32) (pict);
-
-    // Fetch the pixels into the first half of buffer and then expand them in
-    // place.
-    fetch32(pict, x, y, width, (uint32_t*)buffer);
-    pixman_expand(buffer, (uint32_t*)buffer, pict->format, width);
-}
-
-fetchProc64 ACCESS(pixman_fetchProcForPicture64) (bits_image_t * pict)
-{
-    switch(pict->format) {
-    case PIXMAN_a2b10g10r10: return fbFetch_a2b10g10r10;
-    case PIXMAN_x2b10g10r10: return fbFetch_x2b10g10r10;
-    default: return fbFetch64_generic;
-    }
-}
-
 /**************************** Pixel wise fetching *****************************/
 
 static void
@@ -1869,107 +1788,6 @@ fbFetchPixel_yv12 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
     }
 }
 
-/*
- * XXX: The transformed fetch path only works at 32-bpp so far.  When all paths
- * have wide versions, this can be removed.
- *
- * WARNING: This function loses precision!
- */
-static void
-fbFetchPixel32_generic_lossy (bits_image_t *pict, uint32_t *buffer, int n_pixels)
-{
-    fetch_pixels_64_t fetch_pixels_64 = ACCESS(pixman_fetchPixelProcForPicture64) (pict);
-
-    /* Since buffer contains n_pixels coordinate pairs, it also has enough room for
-     * n_pixels 64 bit pixels
-     */
-    fetch_pixels_64 (pict, (uint64_t *)buffer, n_pixels);
-
-    pixman_contract (buffer, (uint64_t *)buffer, n_pixels);
-}
-
-fetch_pixels_32_t
-ACCESS(pixman_fetchPixelProcForPicture32) (bits_image_t * pict)
-{
-    switch(pict->format) {
-    case PIXMAN_a8r8g8b8: return fbFetchPixel_a8r8g8b8;
-    case PIXMAN_x8r8g8b8: return fbFetchPixel_x8r8g8b8;
-    case PIXMAN_a8b8g8r8: return fbFetchPixel_a8b8g8r8;
-    case PIXMAN_x8b8g8r8: return fbFetchPixel_x8b8g8r8;
-    case PIXMAN_b8g8r8a8: return fbFetchPixel_b8g8r8a8;
-    case PIXMAN_b8g8r8x8: return fbFetchPixel_b8g8r8x8;
-    /* These two require wide compositing */
-    case PIXMAN_a2b10g10r10: return fbFetchPixel32_generic_lossy;
-    case PIXMAN_x2b10g10r10: return fbFetchPixel32_generic_lossy;
-
-        /* 24bpp formats */
-    case PIXMAN_r8g8b8: return fbFetchPixel_r8g8b8;
-    case PIXMAN_b8g8r8: return fbFetchPixel_b8g8r8;
-
-        /* 16bpp formats */
-    case PIXMAN_r5g6b5: return fbFetchPixel_r5g6b5;
-    case PIXMAN_b5g6r5: return fbFetchPixel_b5g6r5;
-
-    case PIXMAN_a1r5g5b5: return fbFetchPixel_a1r5g5b5;
-    case PIXMAN_x1r5g5b5: return fbFetchPixel_x1r5g5b5;
-    case PIXMAN_a1b5g5r5: return fbFetchPixel_a1b5g5r5;
-    case PIXMAN_x1b5g5r5: return fbFetchPixel_x1b5g5r5;
-    case PIXMAN_a4r4g4b4: return fbFetchPixel_a4r4g4b4;
-    case PIXMAN_x4r4g4b4: return fbFetchPixel_x4r4g4b4;
-    case PIXMAN_a4b4g4r4: return fbFetchPixel_a4b4g4r4;
-    case PIXMAN_x4b4g4r4: return fbFetchPixel_x4b4g4r4;
-
-        /* 8bpp formats */
-    case PIXMAN_a8: return  fbFetchPixel_a8;
-    case PIXMAN_r3g3b2: return fbFetchPixel_r3g3b2;
-    case PIXMAN_b2g3r3: return fbFetchPixel_b2g3r3;
-    case PIXMAN_a2r2g2b2: return fbFetchPixel_a2r2g2b2;
-    case PIXMAN_a2b2g2r2: return fbFetchPixel_a2b2g2r2;
-    case PIXMAN_c8: return  fbFetchPixel_c8;
-    case PIXMAN_g8: return  fbFetchPixel_c8;
-    case PIXMAN_x4a4: return fbFetchPixel_x4a4;
-
-        /* 4bpp formats */
-    case PIXMAN_a4: return  fbFetchPixel_a4;
-    case PIXMAN_r1g2b1: return fbFetchPixel_r1g2b1;
-    case PIXMAN_b1g2r1: return fbFetchPixel_b1g2r1;
-    case PIXMAN_a1r1g1b1: return fbFetchPixel_a1r1g1b1;
-    case PIXMAN_a1b1g1r1: return fbFetchPixel_a1b1g1r1;
-    case PIXMAN_c4: return  fbFetchPixel_c4;
-    case PIXMAN_g4: return  fbFetchPixel_c4;
-
-        /* 1bpp formats */
-    case PIXMAN_a1: return  fbFetchPixel_a1;
-    case PIXMAN_g1: return  fbFetchPixel_g1;
-
-        /* YUV formats */
-    case PIXMAN_yuy2: return fbFetchPixel_yuy2;
-    case PIXMAN_yv12: return fbFetchPixel_yv12;
-    }
-
-    return NULL;
-}
-
-static void
-fbFetchPixel64_generic (bits_image_t *pict, uint64_t *buffer, int n_pixels)
-{
-    fetch_pixels_32_t fetch_pixels_32 = ACCESS(pixman_fetchPixelProcForPicture32) (pict);
-
-    fetch_pixels_32 (pict, (uint32_t *)buffer, n_pixels);
-
-    pixman_expand (buffer, (uint32_t *)buffer, pict->format, n_pixels);
-}
-
-fetch_pixels_64_t
-ACCESS(pixman_fetchPixelProcForPicture64) (bits_image_t * pict)
-{
-    switch(pict->format) {
-    case PIXMAN_a2b10g10r10: return fbFetchPixel_a2b10g10r10;
-    case PIXMAN_x2b10g10r10: return fbFetchPixel_x2b10g10r10;
-    default: return fbFetchPixel64_generic;
-    }
-}
-
 /*********************************** Store ************************************/
 
 #define Splita(v)	uint32_t	a = ((v) >> 24), r = ((v) >> 16) & 0xff, g = ((v) >> 8) & 0xff, b = (v) & 0xff
@@ -2461,60 +2279,6 @@ fbStore_g1 (pixman_image_t *image,
     }
 }
 
-
-storeProc32 ACCESS(pixman_storeProcForPicture32) (bits_image_t * pict)
-{
-    switch(pict->format) {
-    case PIXMAN_a8r8g8b8: return fbStore_a8r8g8b8;
-    case PIXMAN_x8r8g8b8: return fbStore_x8r8g8b8;
-    case PIXMAN_a8b8g8r8: return fbStore_a8b8g8r8;
-    case PIXMAN_x8b8g8r8: return fbStore_x8b8g8r8;
-    case PIXMAN_b8g8r8a8: return fbStore_b8g8r8a8;
-    case PIXMAN_b8g8r8x8: return fbStore_b8g8r8x8;
-
-        /* 24bpp formats */
-    case PIXMAN_r8g8b8: return fbStore_r8g8b8;
-    case PIXMAN_b8g8r8: return fbStore_b8g8r8;
-
-        /* 16bpp formats */
-    case PIXMAN_r5g6b5: return fbStore_r5g6b5;
-    case PIXMAN_b5g6r5: return fbStore_b5g6r5;
-
-    case PIXMAN_a1r5g5b5: return fbStore_a1r5g5b5;
-    case PIXMAN_x1r5g5b5: return fbStore_x1r5g5b5;
-    case PIXMAN_a1b5g5r5: return fbStore_a1b5g5r5;
-    case PIXMAN_x1b5g5r5: return fbStore_x1b5g5r5;
-    case PIXMAN_a4r4g4b4: return fbStore_a4r4g4b4;
-    case PIXMAN_x4r4g4b4: return fbStore_x4r4g4b4;
-    case PIXMAN_a4b4g4r4: return fbStore_a4b4g4r4;
-    case PIXMAN_x4b4g4r4: return fbStore_x4b4g4r4;
-
-        /* 8bpp formats */
-    case PIXMAN_a8: return  fbStore_a8;
-    case PIXMAN_r3g3b2: return fbStore_r3g3b2;
-    case PIXMAN_b2g3r3: return fbStore_b2g3r3;
-    case PIXMAN_a2r2g2b2: return fbStore_a2r2g2b2;
-    case PIXMAN_c8: return  fbStore_c8;
-    case PIXMAN_g8: return  fbStore_c8;
-    case PIXMAN_x4a4: return fbStore_x4a4;
-
-        /* 4bpp formats */
-    case PIXMAN_a4: return  fbStore_a4;
-    case PIXMAN_r1g2b1: return fbStore_r1g2b1;
-    case PIXMAN_b1g2r1: return fbStore_b1g2r1;
-    case PIXMAN_a1r1g1b1: return fbStore_a1r1g1b1;
-    case PIXMAN_a1b1g1r1: return fbStore_a1b1g1r1;
-    case PIXMAN_c4: return  fbStore_c4;
-    case PIXMAN_g4: return  fbStore_c4;
-
-        /* 1bpp formats */
-    case PIXMAN_a1: return  fbStore_a1;
-    case PIXMAN_g1: return  fbStore_g1;
-    default:
-        return NULL;
-    }
-}
-
 /*
  * Contracts a 64bpp image to 32bpp and then stores it using a regular 32-bit
  * store proc.
@@ -2523,29 +2287,218 @@ static void
 fbStore64_generic (pixman_image_t *image,
 		   uint32_t *bits, const uint64_t *values, int x, int width, const pixman_indexed_t * indexed)
 {
-    bits_image_t *pict = (bits_image_t*)image;
-    storeProc32 store32 = ACCESS(pixman_storeProcForPicture32) (pict);
     uint32_t *argb8Pixels;
 
     assert(image->common.type == BITS);
-    assert(store32);
 
     argb8Pixels = pixman_malloc_ab (width, sizeof(uint32_t));
-    if (!argb8Pixels) return;
+    if (!argb8Pixels)
+	return;
 
-    // Contract the scanline.  We could do this in place if values weren't
-    // const.
+    /* Contract the scanline.  We could do this in place if values weren't
+     * const.
+     */
     pixman_contract(argb8Pixels, values, width);
-    store32(image, bits, argb8Pixels, x, width, indexed);
+    
+    image->bits.store_scanline_raw_32 (image, bits, argb8Pixels, x, width, indexed);
 
     free(argb8Pixels);
 }
 
-storeProc64 ACCESS(pixman_storeProcForPicture64) (bits_image_t * pict)
+static void
+fbFetch64_generic (bits_image_t *pict, int x, int y, int width, uint64_t *buffer)
 {
-    switch(pict->format) {
-    case PIXMAN_a2b10g10r10: return fbStore_a2b10g10r10;
-    case PIXMAN_x2b10g10r10: return fbStore_x2b10g10r10;
-    default: return fbStore64_generic;
+    /* Fetch the pixels into the first half of buffer and then expand them in
+     * place.
+     */
+    pict->fetch_scanline_raw_32 (pict, x, y, width, (uint32_t*)buffer);
+    
+    pixman_expand (buffer, (uint32_t*)buffer, pict->format, width);
+}
+
+static void
+fbFetchPixel64_generic (bits_image_t *pict, uint64_t *buffer, int n_pixels)
+{
+    pict->fetch_pixels_raw_32 (pict, (uint32_t *)buffer, n_pixels);
+    
+    pixman_expand (buffer, (uint32_t *)buffer, pict->format, n_pixels);
+}
+
+/*
+ * XXX: The transformed fetch path only works at 32-bpp so far.  When all paths
+ * have wide versions, this can be removed.
+ *
+ * WARNING: This function loses precision!
+ */
+static void
+fbFetchPixel32_generic_lossy (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+{
+    /* Since buffer contains n_pixels coordinate pairs, it also has enough room for
+     * n_pixels 64 bit pixels
+     */
+    pict->fetch_pixels_raw_64 (pict, (uint64_t *)buffer, n_pixels);
+    
+    pixman_contract (buffer, (uint64_t *)buffer, n_pixels);
+}
+
+typedef struct
+{
+    pixman_format_code_t		format;
+    fetchProc32				fetch_scanline_raw_32;
+    fetchProc64				fetch_scanline_raw_64;
+    fetch_pixels_32_t			fetch_pixels_raw_32;
+    fetch_pixels_64_t			fetch_pixels_raw_64;
+    storeProc32				store_scanline_raw_32;
+    storeProc64				store_scanline_raw_64;
+} format_info_t;
+
+#define FORMAT_INFO(format)						\
+    {									\
+	PIXMAN_##format,						\
+	    fbFetch_##format, fbFetch64_generic,			\
+	    fbFetchPixel_##format, fbFetchPixel64_generic,		\
+	    fbStore_##format, fbStore64_generic				\
+    }
+
+static const format_info_t accessors[] =
+{
+/* 32 bpp formats */
+    FORMAT_INFO (a8r8g8b8),
+    FORMAT_INFO (x8r8g8b8),
+    FORMAT_INFO (a8b8g8r8),
+    FORMAT_INFO (x8b8g8r8),
+    FORMAT_INFO (b8g8r8a8),
+    FORMAT_INFO (b8g8r8x8),
+
+/* 24bpp formats */
+    FORMAT_INFO (r8g8b8),
+    FORMAT_INFO (b8g8r8),
+    
+/* 16bpp formats */
+    FORMAT_INFO (r5g6b5),
+    FORMAT_INFO (b5g6r5),
+    
+    FORMAT_INFO (a1r5g5b5),
+    FORMAT_INFO (x1r5g5b5),
+    FORMAT_INFO (a1b5g5r5),
+    FORMAT_INFO (x1b5g5r5),
+    FORMAT_INFO (a4r4g4b4),
+    FORMAT_INFO (x4r4g4b4),
+    FORMAT_INFO (a4b4g4r4),
+    FORMAT_INFO (x4b4g4r4),
+    
+/* 8bpp formats */
+    FORMAT_INFO (a8),
+    FORMAT_INFO (r3g3b2),
+    FORMAT_INFO (b2g3r3),
+    FORMAT_INFO (a2r2g2b2),
+#if 0
+    /* FIXME */
+    FORMAT_INFO (a2b2g2r2),
+#endif
+    
+    FORMAT_INFO (c8),
+
+#define fbFetch_g8 fbFetch_c8
+#define fbFetchPixel_g8 fbFetchPixel_c8
+#define fbStore_g8 fbStore_c8
+    FORMAT_INFO (g8),
+#define fbFetch_x4c4 fbFetch_c8
+#define fbFetchPixel_x4c4 fbFetchPixel_c8
+#define fbStore_x4c4 fbStore_c8
+    FORMAT_INFO (x4c4),
+#define fbFetch_x4g4 fbFetch_c8
+#define fbFetchPixel_x4g4 fbFetchPixel_c8
+#define fbStore_x4g4 fbStore_c8
+    FORMAT_INFO (x4g4),
+    
+    FORMAT_INFO (x4a4),
+    
+/* 4bpp formats */
+    FORMAT_INFO (a4),
+    FORMAT_INFO (r1g2b1),
+    FORMAT_INFO (b1g2r1),
+    FORMAT_INFO (a1r1g1b1),
+    FORMAT_INFO (a1b1g1r1),
+    
+    FORMAT_INFO (c4),
+#define fbFetch_g4 fbFetch_c4
+#define fbFetchPixel_g4 fbFetchPixel_c4
+#define fbStore_g4 fbStore_c4
+    FORMAT_INFO (g4),
+    
+/* 1bpp formats */
+    FORMAT_INFO (a1),
+    FORMAT_INFO (g1),
+
+/* Wide formats */
+    
+    { PIXMAN_a2b10g10r10,
+      NULL, fbFetch_a2b10g10r10,
+      fbFetchPixel32_generic_lossy, fbFetchPixel_a2b10g10r10,
+      NULL, fbStore_a2b10g10r10 },
+
+    { PIXMAN_x2b10g10r10,
+      NULL, fbFetch_x2b10g10r10,
+      fbFetchPixel32_generic_lossy, fbFetchPixel_x2b10g10r10,
+      NULL, fbStore_x2b10g10r10 },
+
+/* YUV formats */
+    { PIXMAN_yuy2,
+      fbFetch_yuy2, fbFetch64_generic,
+      fbFetchPixel_yuy2, fbFetchPixel64_generic,
+      NULL, NULL },
+
+    { PIXMAN_yv12,
+      fbFetch_yv12, fbFetch64_generic,
+      fbFetchPixel_yv12, fbFetchPixel64_generic,
+      NULL, NULL },
+    
+    { PIXMAN_null },
+};
+
+static void
+setup_accessors (bits_image_t *image)
+{
+    const format_info_t *info = accessors;
+
+    while (info->format != PIXMAN_null)
+    {
+	if (info->format == image->format)
+	{
+	    image->fetch_scanline_raw_32 = info->fetch_scanline_raw_32;
+	    image->fetch_scanline_raw_64 = info->fetch_scanline_raw_64;
+	    image->fetch_pixels_raw_32 = info->fetch_pixels_raw_32;
+	    image->fetch_pixels_raw_64 = info->fetch_pixels_raw_64;
+	    image->store_scanline_raw_32 = info->store_scanline_raw_32;
+	    image->store_scanline_raw_64 = info->store_scanline_raw_64;
+
+	    return;
+	}
+
+	info++;
     }
 }
+
+#ifndef PIXMAN_FB_ACCESSORS
+void
+_pixman_bits_image_setup_raw_accessors_accessors (bits_image_t *image);
+
+void
+_pixman_bits_image_setup_raw_accessors (bits_image_t *image)
+{
+    if (image->common.read_func || image->common.write_func)
+	_pixman_bits_image_setup_raw_accessors_accessors (image);
+    else
+	setup_accessors (image);
+}
+
+#else
+
+void
+_pixman_bits_image_setup_raw_accessors_accessors (bits_image_t *image)
+{
+    setup_accessors (image);
+}
+
+#endif

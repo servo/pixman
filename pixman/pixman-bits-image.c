@@ -736,6 +736,8 @@ bits_image_property_changed (pixman_image_t *image)
 {
     bits_image_t *bits = (bits_image_t *)image;
     
+    _pixman_bits_image_setup_raw_accessors (bits);
+
     if (bits->common.alpha_map)
     {
 	image->common.get_scanline_64 =
@@ -765,22 +767,9 @@ bits_image_property_changed (pixman_image_t *image)
 	image->common.get_scanline_32 =
 	    (scanFetchProc)bits_image_fetch_transformed;
     }
-    
-    bits->fetch_scanline_raw_32 =
-	READ_ACCESS(pixman_fetchProcForPicture32)(bits);
-    bits->fetch_scanline_raw_64 =
-	READ_ACCESS(pixman_fetchProcForPicture64)(bits);
-    
-    bits->fetch_pixels_raw_32 = READ_ACCESS(pixman_fetchPixelProcForPicture32)(bits);
-    bits->fetch_pixels_raw_64 = READ_ACCESS(pixman_fetchPixelProcForPicture64)(bits);
 
     bits->store_scanline_64 = bits_image_store_scanline_64;
     bits->store_scanline_32 = bits_image_store_scanline_32;
-
-    bits->store_scanline_raw_32 =
-	WRITE_ACCESS(pixman_storeProcForPicture32)(bits);
-    bits->store_scanline_raw_64 =
-	WRITE_ACCESS(pixman_storeProcForPicture64)(bits);
 }
 
 static uint32_t *
