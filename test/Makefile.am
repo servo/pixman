@@ -24,6 +24,7 @@ TESTPROGRAMS +=			\
 	composite-test		\
 	gradient-test		\
 	alpha-test		\
+	screen-test		\
 	trap-test
 
 noinst_PROGRAMS = $(TESTPROGRAMS)
@@ -47,6 +48,9 @@ clip_in_SOURCES = clip-in.c utils.c utils.h
 
 trap_test_LDADD = $(GTK_LDADD)
 trap_test_SOURCES = trap-test.c utils.c utils.h
+
+screen_test_LDADD = $(GTK_LDADD)
+screen_test_SOURCES = screen-test.c utils.c utils.h
 
 endif
 
