@@ -53,8 +53,6 @@ pixman_sample_ceil_y (pixman_fixed_t y, int n)
     return (i | f);
 }
 
-#define _div(a,b)    ((a) >= 0 ? (a) / (b) : -((-(a) + (b) - 1) / (b)))
-
 /*
  * Compute the largest value no greater than y which is on a
  * grid row
@@ -65,7 +63,7 @@ pixman_sample_floor_y (pixman_fixed_t y, int n)
     pixman_fixed_t   f = pixman_fixed_frac(y);
     pixman_fixed_t   i = pixman_fixed_floor (y);
 
-    f = _div(f - Y_FRAC_FIRST(n), STEP_Y_SMALL(n)) * STEP_Y_SMALL(n) + Y_FRAC_FIRST(n);
+    f = DIV(f - Y_FRAC_FIRST(n), STEP_Y_SMALL(n)) * STEP_Y_SMALL(n) + Y_FRAC_FIRST(n);
     if (f < Y_FRAC_FIRST(n))
     {
 	if (pixman_fixed_to_int(i) == 0x8000)
