@@ -548,57 +548,21 @@ _pixman_gradient_walker_pixel (pixman_gradient_walker_t       *walker,
 #endif
 
 #define fbComposeGetSolid(img, res, fmt)				\
-    do									\
     {									\
-	pixman_format_code_t format__;					\
-	if (img->type == SOLID)						\
-	{								\
-	    format__ = PIXMAN_a8r8g8b8;					\
-	    (res) = img->solid.color;					\
-	}								\
-	else								\
-	{								\
-	    uint32_t	       *bits__   = (img)->bits.bits;		\
-	    format__ = (img)->bits.format;				\
-		  							\
-	    switch (PIXMAN_FORMAT_BPP((img)->bits.format))		\
-	    {								\
-	    case 32:							\
-		(res) = READ(img, (uint32_t *)bits__);			\
-		break;							\
-	    case 24:							\
-		(res) = Fetch24(img, (uint8_t *) bits__);		\
-		break;							\
-	    case 16:							\
-		(res) = READ(img, (uint16_t *) bits__);			\
-		(res) = cvt0565to0888(res);				\
-		break;							\
-	    case 8:							\
-		(res) = READ(img, (uint8_t *) bits__);			\
-		(res) = (res) << 24;					\
-		break;							\
-	    case 1:							\
-		(res) = READ(img, (uint32_t *) bits__);			\
-		(res) = FbLeftStipBits((res),1) ? 0xff000000 : 0x00000000; \
-		break;							\
-	    default:							\
-		return;							\
-	    }								\
-	    /* manage missing src alpha */				\
-	    if (!PIXMAN_FORMAT_A((img)->bits.format))			\
-		(res) |= 0xff000000;					\
-	}								\
+	uint32_t __pixel;						\
+									\
+	_pixman_image_get_scanline_32 (img, 0, 0, 1, &__pixel, NULL, 0); \
 									\
 	/* If necessary, convert RGB <--> BGR. */			\
-	if (PIXMAN_FORMAT_TYPE (format__) != PIXMAN_FORMAT_TYPE(fmt))	\
+	if (PIXMAN_FORMAT_TYPE(fmt) != PIXMAN_TYPE_ARGB)		\
 	{								\
-	    (res) = ((((res) & 0xff000000) >>  0) |			\
-		     (((res) & 0x00ff0000) >> 16) |			\
-		     (((res) & 0x0000ff00) >>  0) |			\
-		     (((res) & 0x000000ff) << 16));			\
+	    (__pixel) = ((((__pixel) & 0xff000000) >>  0) |		\
+			 (((__pixel) & 0x00ff0000) >> 16) |		\
+			 (((__pixel) & 0x0000ff00) >>  0) |		\
+			 (((__pixel) & 0x000000ff) << 16));		\
 	}								\
-    }									\
-    while (0)
+	(res) = __pixel;						\
+    }
 
 #define fbComposeGetStart(pict,x,y,type,out_stride,line,mul) do {	\
 	uint32_t	*__bits__;					\
