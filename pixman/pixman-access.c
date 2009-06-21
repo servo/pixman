@@ -2121,6 +2121,21 @@ fbStore_a2r2g2b2 (pixman_image_t *image,
 }
 
 static void
+fbStore_a2b2g2r2 (pixman_image_t *image,
+		  uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
+{
+    int i;
+    uint8_t   *pixel = ((uint8_t *) bits) + x;
+    for (i = 0; i < width; ++i) {
+	Splita(values[i]);
+	*(pixel++) =  ((a     ) & 0xc0) |
+	    ((b >> 2) & 0x30) |
+	    ((g >> 4) & 0x0c) |
+	    ((r >> 6)       );
+    }
+}
+
+static void
 fbStore_c8 (pixman_image_t *image,
 	    uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
 {
@@ -2268,7 +2283,6 @@ fbStore_g1 (pixman_image_t *image,
     {
 	uint32_t  *pixel = ((uint32_t *) bits) + ((i+x) >> 5);
 	uint32_t  mask, v;
-
 #ifdef WORDS_BIGENDIAN
 	mask = 1 << (0x1f - ((i+x) & 0x1f));
 #else
@@ -2392,10 +2406,7 @@ static const format_info_t accessors[] =
     FORMAT_INFO (r3g3b2),
     FORMAT_INFO (b2g3r3),
     FORMAT_INFO (a2r2g2b2),
-#if 0
-    /* FIXME */
     FORMAT_INFO (a2b2g2r2),
-#endif
     
     FORMAT_INFO (c8),
 
