@@ -392,10 +392,7 @@ _pixman_gradient_walker_pixel (pixman_gradient_walker_t       *walker,
 
 #define FbStipLeft(x,n)	FbScrLeft(x,n)
 #define FbStipRight(x,n) FbScrRight(x,n)
-#define FbStipMask(x,w)	(FbStipRight(FB_STIP_ALLONES,(x) & FB_STIP_MASK) & \
-			 FbStipLeft(FB_STIP_ALLONES,(FB_STIP_UNIT - ((x)+(w))) & FB_STIP_MASK))
-
-#define FbLeftMask(x)       ( ((x) & FB_MASK) ? \
+#define FbLeftMask(x)       ( ((x) & FB_MASK) ?	\
 			      FbScrRight(FB_ALLONES,(x) & FB_MASK) : 0)
 #define FbRightMask(x)      ( ((FB_UNIT - (x)) & FB_MASK) ? \
 			      FbScrLeft(FB_ALLONES,(FB_UNIT - (x)) & FB_MASK) : 0)

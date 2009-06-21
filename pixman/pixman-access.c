@@ -2427,11 +2427,16 @@ fbStore_a1 (pixman_image_t *image,
 	    uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
 {
     int i;
-    for (i = 0; i < width; ++i) {
+    for (i = 0; i < width; ++i)
+    {
 	uint32_t  *pixel = ((uint32_t *) bits) + ((i+x) >> 5);
-	uint32_t  mask = FbStipMask((i+x) & 0x1f, 1);
-
-	uint32_t v = values[i] & 0x80000000 ? mask : 0;
+	uint32_t mask, v;
+#ifdef WORDS_BIGENDIAN
+	mask = 1 << (0x1f - ((i+x) & 0x1f));
+#else
+	mask = 1 << ((i+x) & 0x1f);
+#endif
+	v = values[i] & 0x80000000 ? mask : 0;
 	WRITE(image, pixel, (READ(image, pixel) & ~mask) | v);
     }
 }
@@ -2441,11 +2446,17 @@ fbStore_g1 (pixman_image_t *image,
 	    uint32_t *bits, const uint32_t *values, int x, int width, const pixman_indexed_t * indexed)
 {
     int i;
-    for (i = 0; i < width; ++i) {
+    for (i = 0; i < width; ++i)
+    {
 	uint32_t  *pixel = ((uint32_t *) bits) + ((i+x) >> 5);
-	uint32_t  mask = FbStipMask((i+x) & 0x1f, 1);
+	uint32_t  mask, v;
 
-	uint32_t v = miIndexToEntY24(indexed,values[i]) ? mask : 0;
+#ifdef WORDS_BIGENDIAN
+	mask = 1 << (0x1f - ((i+x) & 0x1f));
+#else
+	mask = 1 << ((i + x) & 0x1f);
+#endif
+	v = miIndexToEntY24 (indexed, values[i]) ? mask : 0;
 	WRITE(image, pixel, (READ(image, pixel) & ~mask) | v);
     }
 }
