@@ -126,7 +126,7 @@ rasterizeEdges (pixman_image_t  *image,
 		    a++;
 		}
 		while (nmiddle--)
-		    WRITE(image, a++, FB_ALLONES);
+		    WRITE(image, a++, 0xffffffff);
 		if (endmask)
 		    WRITE(image, a, READ(image, a) | endmask);
 	    }
