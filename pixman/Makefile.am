@@ -10,6 +10,7 @@ libpixman_1_la_SOURCES =			\
 	pixman-gradient-walker.c		\
 	pixman-region16.c			\
 	pixman-region32.c			\
+	pixman-compiler.h			\
 	pixman-private.h			\
 	pixman-image.c				\
 	pixman-implementation.c			\
