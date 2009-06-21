@@ -16,7 +16,6 @@
  * this difference will have two versions using the same convention.
  */
 
-
 /*
  * All of the composing functions
  */
@@ -342,6 +341,11 @@ fbCombineConjointInPart (comp1_t a, comp1_t b)
 	return MASK;	    /* 1 */
     return IntDiv(b,a);     /* b/a */
 }
+
+#define FbGen(x,y,i,ax,ay,t,u,v) ((t) = (IntMult(GetComp(y,i),ay,(u)) + \
+					 IntMult(GetComp(x,i),ax,(v))), \
+				  	 (comp4_t) ((comp1_t) ((t) |		\
+					 (0 - ((t) >> G_SHIFT)))) << (i))
 
 static void
 fbCombineDisjointGeneralU (comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width, comp1_t combine)

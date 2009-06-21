@@ -29,11 +29,6 @@
 #define Add(x,y,i,t)   ((t) = GetComp(x,i) + GetComp(y,i),              \
                         (comp4_t) ((comp1_t) ((t) | (0 - ((t) >> G_SHIFT)))) << (i))
 
-#define FbGen(x,y,i,ax,ay,t,u,v) ((t) = (IntMult(GetComp(y,i),ay,(u)) + \
-					 IntMult(GetComp(x,i),ax,(v))), \
-				  (comp4_t) ((comp1_t) ((t) |		\
-							 (0 - ((t) >> G_SHIFT)))) << (i))
-
 /*
   The methods below use some tricks to be able to do two color
   components at the same time.
