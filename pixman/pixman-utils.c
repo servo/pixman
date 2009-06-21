@@ -447,7 +447,7 @@ get_fast_path (const pixman_fast_path_t *fast_paths,
 	if (info->op != op)
 	    continue;
 
-	if ((info->src_format == PIXMAN_solid && pixman_image_can_get_solid (pSrc)) ||
+	if ((info->src_format == PIXMAN_solid && pixman_image_is_solid (pSrc)) ||
 	    (pSrc->type == BITS && info->src_format == pSrc->bits.format))
 	{
 	    valid_src = TRUE;
@@ -526,7 +526,7 @@ _pixman_run_fast_path (const pixman_fast_path_t *paths,
     pixman_bool_t mask_repeat = mask && mask->common.repeat == PIXMAN_REPEAT_NORMAL;
     pixman_bool_t result;
 
-    if ((src->type == BITS || pixman_image_can_get_solid (src)) &&
+    if ((src->type == BITS || pixman_image_is_solid (src)) &&
 	(!mask || mask->type == BITS)
 	&& !src->common.transform && !(mask && mask->common.transform)
 	&& !(mask && mask->common.alpha_map) && !src->common.alpha_map && !dest->common.alpha_map

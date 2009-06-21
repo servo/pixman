@@ -508,7 +508,7 @@ pixman_image_get_depth (pixman_image_t *image)
 }
 
 pixman_bool_t
-pixman_image_can_get_solid (pixman_image_t *image)
+pixman_image_is_solid (pixman_image_t *image)
 {
     if (image->type == SOLID)
 	return TRUE;
@@ -520,25 +520,10 @@ pixman_image_can_get_solid (pixman_image_t *image)
 	return FALSE;
     }
 
-    if (image->common.repeat != PIXMAN_REPEAT_NORMAL)
+    if (image->common.repeat == PIXMAN_REPEAT_NONE)
 	return FALSE;
 
-    switch (image->bits.format)
-    {
-    case PIXMAN_a8r8g8b8:
-    case PIXMAN_x8r8g8b8:
-    case PIXMAN_a8b8g8r8:
-    case PIXMAN_x8b8g8r8:
-    case PIXMAN_b8g8r8a8:
-    case PIXMAN_b8g8r8x8:
-    case PIXMAN_r8g8b8:
-    case PIXMAN_b8g8r8:
-    case PIXMAN_r5g6b5:
-    case PIXMAN_b5g6r5:
-	return TRUE;
-    default:
-	return FALSE;
-    }
+    return TRUE;
 }
 
 uint32_t
@@ -596,7 +581,7 @@ pixman_image_is_opaque (pixman_image_t *image)
 	break;
 	
     case SOLID:
-         if (Alpha (image->solid.color) != 0xff)
+	if (Alpha (image->solid.color) != 0xff)
             return FALSE;
         break;
     }
