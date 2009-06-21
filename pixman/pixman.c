@@ -173,3 +173,148 @@ pixman_fill (uint32_t *bits,
 
     return _pixman_implementation_fill (imp, bits, stride, bpp, x, y, width, height, xor);
 }
+
+static uint32_t
+color_to_uint32 (const pixman_color_t *color)
+{
+    return
+	(color->alpha >> 8 << 24) |
+	(color->red >> 8 << 16) |
+        (color->green & 0xff00) |
+	(color->blue >> 8);
+}
+
+static pixman_bool_t
+color_to_pixel (pixman_color_t *color,
+		uint32_t       *pixel,
+		pixman_format_code_t format)
+{
+    uint32_t c = color_to_uint32 (color);
+
+    if (!(format == PIXMAN_a8r8g8b8	||
+	  format == PIXMAN_x8r8g8b8	||
+	  format == PIXMAN_a8b8g8r8	||
+	  format == PIXMAN_x8b8g8r8	||
+	  format == PIXMAN_b8g8r8a8	||
+	  format == PIXMAN_b8g8r8x8	||
+	  format == PIXMAN_r5g6b5	||
+	  format == PIXMAN_b5g6r5	||
+	  format == PIXMAN_a8))
+    {
+	return FALSE;
+    }
+
+    if (PIXMAN_FORMAT_TYPE (format) == PIXMAN_TYPE_ABGR)
+    {
+	c = ((c & 0xff000000) >>  0) |
+	    ((c & 0x00ff0000) >> 16) |
+	    ((c & 0x0000ff00) >>  0) |
+	    ((c & 0x000000ff) << 16);
+    }
+    if (PIXMAN_FORMAT_TYPE (format) == PIXMAN_TYPE_BGRA)
+    {
+	c = ((c & 0xff000000) >> 24) |
+	    ((c & 0x00ff0000) >>  8) |
+	    ((c & 0x0000ff00) <<  8) |
+	    ((c & 0x000000ff) << 24);
+    }
+
+    if (format == PIXMAN_a8)
+	c = c >> 24;
+    else if (format == PIXMAN_r5g6b5 ||
+	     format == PIXMAN_b5g6r5)
+	c = cvt8888to0565 (c);
+
+#if 0
+    printf ("color: %x %x %x %x\n", color->alpha, color->red, color->green, color->blue);
+    printf ("pixel: %x\n", c);
+#endif
+
+    *pixel = c;
+    return TRUE;
+}
+
+PIXMAN_EXPORT pixman_bool_t
+pixman_image_fill_rectangles (pixman_op_t		    op,
+			      pixman_image_t		   *dest,
+			      pixman_color_t		   *color,
+			      int			    n_rects,
+			      const pixman_rectangle16_t   *rects)
+{
+    pixman_image_t *solid;
+    pixman_color_t c;
+    int i;
+
+    if (color->alpha == 0xffff)
+    {
+	if (op == PIXMAN_OP_OVER)
+	    op = PIXMAN_OP_SRC;
+    }
+
+    if (op == PIXMAN_OP_CLEAR)
+    {
+	c.red = 0;
+	c.green = 0;
+	c.blue = 0;
+	c.alpha = 0;
+
+	color = &c;
+
+	op = PIXMAN_OP_SRC;
+    }
+
+    if (op == PIXMAN_OP_SRC)
+    {
+	uint32_t pixel;
+
+	if (color_to_pixel (color, &pixel, dest->bits.format))
+	{
+	    for (i = 0; i < n_rects; ++i)
+	    {
+		pixman_region32_t fill_region;
+		int n_boxes, j;
+		pixman_box32_t *boxes;
+
+		pixman_region32_init_rect (&fill_region, rects[i].x, rects[i].y, rects[i].width, rects[i].height);
+
+		if (dest->common.have_clip_region)
+		{
+		    if (!pixman_region32_intersect (&fill_region,
+						    &fill_region,
+						    &dest->common.clip_region))
+			return FALSE;
+		}
+
+		boxes = pixman_region32_rectangles (&fill_region, &n_boxes);
+		for (j = 0; j < n_boxes; ++j)
+		{
+		    const pixman_box32_t *box = &(boxes[j]);
+		    pixman_fill (dest->bits.bits, dest->bits.rowstride, PIXMAN_FORMAT_BPP (dest->bits.format),
+				 box->x1, box->y1, box->x2 - box->x1, box->y2 - box->y1,
+				 pixel);
+		}
+
+		pixman_region32_fini (&fill_region);
+	    }
+	    return TRUE;
+	}
+    }
+
+    solid = pixman_image_create_solid_fill (color);
+    if (!solid)
+	return FALSE;
+
+    for (i = 0; i < n_rects; ++i)
+    {
+	const pixman_rectangle16_t *rect = &(rects[i]);
+
+	pixman_image_composite (op, solid, NULL, dest,
+				0, 0, 0, 0,
+				rect->x, rect->y,
+				rect->width, rect->height);
+    }
+
+    pixman_image_unref (solid);
+
+    return TRUE;
+}

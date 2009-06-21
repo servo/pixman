@@ -337,7 +337,8 @@ union pixman_image
     solid_fill_t		solid;
 };
 
-/* Gradient walker
+/*
+ * Gradient walker
  */
 typedef struct
 {
