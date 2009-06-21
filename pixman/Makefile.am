@@ -18,7 +18,7 @@ libpixman_1_la_SOURCES =			\
 	pixman-combine64.c			\
 	pixman-combine64.h			\
 	pixman-general.c			\
-	pixman-pict.c				\
+	pixman.c				\
 	pixman-fast-path.c			\
 	pixman-solid-fill.c			\
 	pixman-conical-gradient.c		\
