@@ -85,30 +85,13 @@ fbOver (uint32_t src, uint32_t dest)
 }
 
 static uint32_t
-fbOver24 (uint32_t x, uint32_t y)
-{
-    uint16_t  a = ~x >> 24;
-    uint16_t  t;
-    uint32_t  m,n,o;
-
-    m = FbOverU(x,y,0,a,t);
-    n = FbOverU(x,y,8,a,t);
-    o = FbOverU(x,y,16,a,t);
-    return m|n|o;
-}
-
-static uint32_t
 fbIn (uint32_t x, uint8_t y)
 {
     uint16_t  a = y;
-    uint16_t  t;
-    uint32_t  m,n,o,p;
 
-    m = FbInU(x,0,a,t);
-    n = FbInU(x,8,a,t);
-    o = FbInU(x,16,a,t);
-    p = FbInU(x,24,a,t);
-    return m|n|o|p;
+    FbByteMul (x, a);
+
+    return x;
 }
 
 /*
@@ -116,7 +99,6 @@ fbIn (uint32_t x, uint8_t y)
  *
  *  opSRCxMASKxDST
  */
-
 static void
 fbCompositeOver_x888x8x8888 (pixman_implementation_t *imp,
 			     pixman_op_t      op,
@@ -486,13 +468,13 @@ fbCompositeSolidMask_nx8x0888 (pixman_implementation_t *imp,
 		else
 		{
 		    d = Fetch24(dst);
-		    d = fbOver24 (src, d);
+		    d = fbOver (src, d);
 		}
 		Store24(dst, d);
 	    }
 	    else if (m)
 	    {
-		d = fbOver24 (fbIn(src,m), Fetch24(dst));
+		d = fbOver (fbIn(src,m), Fetch24(dst));
 		Store24(dst, d);
 	    }
 	    dst += 3;
@@ -549,14 +531,14 @@ fbCompositeSolidMask_nx8x0565 (pixman_implementation_t *imp,
 		else
 		{
 		    d = *dst;
-		    d = fbOver24 (src, cvt0565to0888(d));
+		    d = fbOver (src, cvt0565to0888(d));
 		}
 		*dst = cvt8888to0565(d);
 	    }
 	    else if (m)
 	    {
 		d = *dst;
-		d = fbOver24 (fbIn(src,m), cvt0565to0888(d));
+		d = fbOver (fbIn(src,m), cvt0565to0888(d));
 		*dst = cvt8888to0565(d);
 	    }
 	    dst++;
@@ -619,7 +601,7 @@ fbCompositeSolidMask_nx8888x0565C (pixman_implementation_t *imp,
 		else
 		{
 		    d = *dst;
-		    d = fbOver24 (src, cvt0565to0888(d));
+		    d = fbOver (src, cvt0565to0888(d));
 		    *dst = cvt8888to0565(d);
 		}
 	    }
@@ -725,7 +707,7 @@ fbCompositeSrc_8888x0888 (pixman_implementation_t *imp,
 		if (a == 0xff)
 		    d = s;
 		else
-		    d = fbOver24 (s, Fetch24(dst));
+		    d = fbOver (s, Fetch24(dst));
 
 		Store24(dst, d);
 	    }
@@ -778,7 +760,7 @@ fbCompositeSrc_8888x0565 (pixman_implementation_t *imp,
 		else
 		{
 		    d = *dst;
-		    d = fbOver24 (s, cvt0565to0888(d));
+		    d = fbOver (s, cvt0565to0888(d));
 		}
 		*dst = cvt8888to0565(d);
 	    }
