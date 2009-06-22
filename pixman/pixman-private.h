@@ -307,28 +307,6 @@ uint32_t
 _pixman_gradient_walker_pixel (pixman_gradient_walker_t       *walker,
 			       pixman_fixed_32_32_t  x);
 
-
-
-#ifdef WORDS_BIGENDIAN
-#define Fetch24(img, a)  ((unsigned long) (a) & 1 ?	      \
-    ((READ(img, a) << 16) | READ(img, (uint16_t *) ((a)+1))) : \
-    ((READ(img, (uint16_t *) (a)) << 8) | READ(img, (a)+2)))
-#define Store24(img,a,v) ((unsigned long) (a) & 1 ? \
-    (WRITE(img, a, (uint8_t) ((v) >> 16)),		  \
-     WRITE(img, (uint16_t *) ((a)+1), (uint16_t) (v))) :  \
-    (WRITE(img, (uint16_t *) (a), (uint16_t) ((v) >> 8)), \
-     WRITE(img, (a)+2, (uint8_t) (v))))
-#else
-#define Fetch24(img,a)  ((unsigned long) (a) & 1 ?			     \
-    (READ(img, a) | (READ(img, (uint16_t *) ((a)+1)) << 8)) : \
-    (READ(img, (uint16_t *) (a)) | (READ(img, (a)+2) << 16)))
-#define Store24(img,a,v) ((unsigned long) (a) & 1 ? \
-    (WRITE(img, a, (uint8_t) (v)),				\
-     WRITE(img, (uint16_t *) ((a)+1), (uint16_t) ((v) >> 8))) : \
-    (WRITE(img, (uint16_t *) (a), (uint16_t) (v)),		\
-     WRITE(img, (a)+2, (uint8_t) ((v) >> 16))))
-#endif
-
 #define FbIntMult(a,b,t) ( (t) = (a) * (b) + 0x80, ( ( ( (t)>>8 ) + (t) )>>8 ) )
 #define FbIntDiv(a,b)	 (((uint16_t) (a) * 255) / (b))
 

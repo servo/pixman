@@ -29,10 +29,56 @@
 #include "pixman-combine32.h"
 
 static force_inline uint32_t
+Fetch24 (uint8_t *a)
+{
+    if (((unsigned long)a) & 1)
+    {
+#ifdef WORDS_BIGENDIAN
+	return (*a << 16) | (*(uint16_t *)(a + 1));
+#else
+	return *a | (*(uint16_t *)(a + 1) << 8);
+#endif
+    }
+    else
+    {
+#ifdef WORDS_BIGENDIAN
+	return (*(uint16_t *)a << 8) | *(a + 2);
+#else
+	return *(uint16_t *)a | (*(a + 2) << 16);
+#endif
+    }
+}
+
+static force_inline void
+Store24 (uint8_t *a, uint32_t v)
+{
+    if (((unsigned long)a) & 1)
+    {
+#ifdef WORDS_BIGENDIAN
+	*a = (uint8_t) (v >> 16);
+	*(uint16_t *)(a + 1) = (uint16_t) (v);
+#else
+	*a = (uint8_t) (v);
+	*(uint16_t *)(a + 1) = (uint16_t) (v >> 8);
+#endif	
+    }
+    else
+    {
+#ifdef WORDS_BIGENDIAN
+	*(uint16_t *)a = (uint16_t)(v >> 8)
+	*(a + 2) = (uint8_t)v;
+#else
+	*(uint16_t *)a = (uint16_t)v;
+	*(a + 2) = (uint8_t)(v >> 16);
+#endif	
+    }
+}
+
+static force_inline uint32_t
 fbOver (uint32_t src, uint32_t dest)
 {
-    // dest = (dest * (255 - alpha)) / 255 + src
-    uint32_t a = ~src >> 24; // 255 - alpha == 255 + (~alpha + 1) == ~alpha
+    uint32_t a = ~src >> 24; 
+
     FbByteMulAdd(dest, a, src);
 
     return dest;
@@ -439,15 +485,15 @@ fbCompositeSolidMask_nx8x0888 (pixman_implementation_t *imp,
 		    d = src;
 		else
 		{
-		    d = Fetch24(pDst, dst);
+		    d = Fetch24(dst);
 		    d = fbOver24 (src, d);
 		}
-		Store24(pDst, dst,d);
+		Store24(dst, d);
 	    }
 	    else if (m)
 	    {
-		d = fbOver24 (fbIn(src,m), Fetch24(pDst, dst));
-		Store24(pDst, dst, d);
+		d = fbOver24 (fbIn(src,m), Fetch24(dst));
+		Store24(dst, d);
 	    }
 	    dst += 3;
 	}
@@ -679,8 +725,9 @@ fbCompositeSrc_8888x0888 (pixman_implementation_t *imp,
 		if (a == 0xff)
 		    d = s;
 		else
-		    d = fbOver24 (s, Fetch24(pDst, dst));
-		Store24(pDst, dst, d);
+		    d = fbOver24 (s, Fetch24(dst));
+
+		Store24(dst, d);
 	    }
 	    dst += 3;
 	}

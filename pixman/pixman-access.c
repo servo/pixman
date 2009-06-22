@@ -209,8 +209,16 @@ fbFetch_r8g8b8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
     const uint8_t *pixel = (const uint8_t *)bits + 3*x;
     const uint8_t *end = pixel + 3*width;
     while (pixel < end) {
-	uint32_t b = Fetch24(pict, pixel) | 0xff000000;
-	pixel += 3;
+	uint32_t b = 0xff000000;
+#ifdef WORDS_BIGENDIAN
+	b |= (READ(pict, pixel++) << 16);
+	b |= (READ(pict, pixel++) << 8);
+	b |= (READ(pict, pixel++));
+#else
+	b |= (READ(pict, pixel++));
+	b |= (READ(pict, pixel++) << 8);
+	b |= (READ(pict, pixel++) << 16);
+#endif
 	*buffer++ = b;
     }
 }
@@ -1900,9 +1908,18 @@ fbStore_r8g8b8 (pixman_image_t *image,
 {
     int i;
     uint8_t *pixel = ((uint8_t *) bits) + 3*x;
-    for (i = 0; i < width; ++i) {
-	Store24(image, pixel, values[i]);
-	pixel += 3;
+    for (i = 0; i < width; ++i)
+    {
+	uint32_t val = values[i];
+#ifdef WORDS_BIGENDIAN
+	WRITE(image, pixel++, (val & 0x00ff0000) >> 16);
+	WRITE(image, pixel++, (val & 0x0000ff00) >>  8);
+	WRITE(image, pixel++, (val & 0x000000ff) >>  0);
+#else
+	WRITE(image, pixel++, (val & 0x000000ff) >>  0);
+	WRITE(image, pixel++, (val & 0x0000ff00) >>  8);
+	WRITE(image, pixel++, (val & 0x00ff0000) >> 16);
+#endif
     }
 }
 
@@ -1912,7 +1929,8 @@ fbStore_b8g8r8 (pixman_image_t *image,
 {
     int i;
     uint8_t *pixel = ((uint8_t *) bits) + 3*x;
-    for (i = 0; i < width; ++i) {
+    for (i = 0; i < width; ++i)
+    {
 	uint32_t val = values[i];
 #ifdef WORDS_BIGENDIAN
 	WRITE(image, pixel++, (val & 0x000000ff) >>  0);
