@@ -328,8 +328,6 @@ _pixman_gradient_walker_pixel (pixman_gradient_walker_t       *walker,
  * this difference will have two versions using the same convention.
  */
 
-#define FbInU(x,i,a,t) ((uint32_t) FbIntMult(FbGet8(x,i),(a),(t)) << (i))
-
 #define FbAdd(x,y,i,t)	((t) = FbGet8(x,i) + FbGet8(y,i),		\
 			 (uint32_t) ((uint8_t) ((t) | (0 - ((t) >> 8)))) << (i))
 
