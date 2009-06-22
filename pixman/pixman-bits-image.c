@@ -35,9 +35,6 @@
 #define Green(x) (((x) >> 8) & 0xff)
 #define Blue(x) ((x) & 0xff)
 
-#define READ_ACCESS(f) ((image->common.read_func)? f##_accessors : f)
-#define WRITE_ACCESS(f) ((image->common.write_func)? f##_accessors : f)
-
 /* Store functions */
 
 static void
@@ -167,7 +164,8 @@ bits_image_fetch_alpha_pixels (bits_image_t *image, uint32_t *buffer, int n_pixe
 	    coords += 2;
 	}
 	
-	bits_image_fetch_raw_pixels (image->common.alpha_map, alpha_pixels, tmp_n_pixels);
+	bits_image_fetch_raw_pixels (image->common.alpha_map, alpha_pixels,
+				     tmp_n_pixels);
 	bits_image_fetch_raw_pixels (image, buffer + 2 * i, tmp_n_pixels);
 	
 	for (j = 0; j < tmp_n_pixels; ++j)
@@ -729,9 +727,15 @@ bits_image_fetch_untransformed_64 (bits_image_t * image,
 				   uint64_t *buffer, void *unused, uint32_t unused2)
 {
     if (image->common.repeat == PIXMAN_REPEAT_NONE)
-	bits_image_fetch_untransformed_repeat_none (image, FALSE, x, y, width, (uint32_t *)buffer);
+    {
+	bits_image_fetch_untransformed_repeat_none (image, FALSE, x, y,
+						    width, (uint32_t *)buffer);
+    }
     else
-	bits_image_fetch_untransformed_repeat_normal (image, FALSE, x, y, width, (uint32_t *)buffer);
+    {
+	bits_image_fetch_untransformed_repeat_normal (image, FALSE, x, y,
+						      width, (uint32_t *)buffer);
+    }
 }
 
 static void
@@ -760,8 +764,10 @@ bits_image_property_changed (pixman_image_t *image)
 	     (bits->common.repeat == PIXMAN_REPEAT_NONE ||
 	      bits->common.repeat == PIXMAN_REPEAT_NORMAL))
     {
-	image->common.get_scanline_64 = (scanFetchProc)bits_image_fetch_untransformed_64;
-	image->common.get_scanline_32 = (scanFetchProc)bits_image_fetch_untransformed_32;
+	image->common.get_scanline_64 =
+	    (scanFetchProc)bits_image_fetch_untransformed_64;
+	image->common.get_scanline_32 =
+	    (scanFetchProc)bits_image_fetch_untransformed_32;
     }
     else
     {
@@ -850,10 +856,10 @@ pixman_image_create_bits (pixman_format_code_t  format,
     image->bits.height = height;
     image->bits.bits = bits;
     image->bits.free_me = free_me;
+
+    /* The rowstride is stored in number of uint32_t */
+    image->bits.rowstride = rowstride_bytes / (int) sizeof (uint32_t);
     
-    image->bits.rowstride = rowstride_bytes / (int) sizeof (uint32_t); /* we store it in number
-									* of uint32_t's
-									*/
     image->bits.indexed = NULL;
     
     image->common.property_changed = bits_image_property_changed;
