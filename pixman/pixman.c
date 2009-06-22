@@ -85,8 +85,8 @@ pixman_optimize_operator(pixman_op_t op, pixman_image_t *pSrc, pixman_image_t *p
     if(!info || pMask)
         return op;
 
-    is_source_opaque = pixman_image_is_opaque(pSrc);
-    is_dest_opaque = pixman_image_is_opaque(pDst);
+    is_source_opaque = _pixman_image_is_opaque(pSrc);
+    is_dest_opaque = _pixman_image_is_opaque(pDst);
 
     if(is_source_opaque == FALSE && is_dest_opaque == FALSE)
         return op;

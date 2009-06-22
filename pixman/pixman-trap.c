@@ -27,7 +27,6 @@
 #include <stdio.h>
 #include "pixman-private.h"
 
-
 /*
  * Compute the smallest value no less than y which is on a
  * grid row

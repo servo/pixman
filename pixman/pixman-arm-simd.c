@@ -219,7 +219,7 @@ fbCompositeSrc_8888x8x8888arm (
     fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
     fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
 
-    pixman_image_get_solid (pMask, mask, pDst->bits.format);
+    _pixman_image_get_solid (pMask, mask, pDst->bits.format);
     mask = (mask) >> 24;
 
     while (height--)
@@ -323,7 +323,7 @@ fbCompositeSolidMask_nx8x8888arm (
     int		 dstStride, maskStride;
     uint16_t	 w;
 
-    pixman_image_get_solid(pSrc, src, pDst->bits.format);
+    _pixman_image_get_solid(pSrc, src, pDst->bits.format);
 
     srca = src >> 24;
     if (src == 0)

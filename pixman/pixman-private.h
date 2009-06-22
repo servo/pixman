@@ -11,54 +11,6 @@
 
 #include "pixman-compiler.h"
 
-#undef DEBUG
-#define DEBUG 0
-
-#if DEBUG
-
-#define return_if_fail(expr)						\
-    do									\
-    {									\
-	if (!(expr))							\
-	{								\
-	    fprintf(stderr, "In %s: %s failed\n", FUNC, #expr);		\
-	    return;							\
-	}								\
-    }									\
-    while (0)
-
-#define return_val_if_fail(expr, retval) 				\
-    do									\
-    {									\
-	if (!(expr))							\
-	{								\
-	    fprintf(stderr, "In %s: %s failed\n", FUNC, #expr);		\
-	    return (retval);						\
-	}								\
-    }									\
-    while (0)
-
-#else
-
-#define return_if_fail(expr)						\
-    do									\
-    {									\
-	if (!(expr))							\
-	    return;							\
-    }									\
-    while (0)
-
-#define return_val_if_fail(expr, retval)				\
-    do									\
-    {									\
-	if (!(expr))							\
-	    return (retval);						\
-    }									\
-    while (0)
-
-#endif
-
-
 /*
  * Images
  */
@@ -74,26 +26,32 @@ typedef struct radial_gradient radial_gradient_t;
 typedef struct bits_image bits_image_t;
 typedef struct circle circle_t;
 
-typedef void     (*fetchProc32)        (bits_image_t *pict, int x, int y, int width,
+typedef void     (*fetchProc32)        (bits_image_t *pict,
+					int x, int y, int width,
 					uint32_t *buffer);
-typedef uint32_t (*fetchPixelProc32)   (bits_image_t *pict, int offset, int line);
+typedef uint32_t (*fetchPixelProc32)   (bits_image_t *pict,
+					int offset, int line);
 typedef void     (*storeProc32)        (pixman_image_t *, uint32_t *bits,
-					const uint32_t *values, int x, int width);
-typedef void     (*fetchProc64)        (bits_image_t *pict, int x, int y, int width,
+					const uint32_t *values,
+					int x, int width);
+typedef void     (*fetchProc64)        (bits_image_t *pict,
+					int x, int y, int width,
 					uint64_t *buffer);
-typedef uint64_t (*fetchPixelProc64)   (bits_image_t *pict, int offset, int line);
+typedef uint64_t (*fetchPixelProc64)   (bits_image_t *pict,
+					int offset, int line);
 typedef void     (*storeProc64)        (pixman_image_t *, uint32_t *bits,
-					const uint64_t *values, int x, int width);
-typedef void     (*fetch_pixels_32_t) (bits_image_t *image, uint32_t *buffer, int n_pixels);
-typedef void     (*fetch_pixels_64_t) (bits_image_t *image, uint64_t *buffer, int n_pixels);
-typedef void     (*scanStoreProc)     (bits_image_t *img, int x, int y, int width, uint32_t *buffer);
-typedef void     (*scanFetchProc)     (pixman_image_t *, int, int, int, uint32_t *,
+					const uint64_t *values,
+					int x, int width);
+typedef void     (*fetch_pixels_32_t) (bits_image_t *image,
+				       uint32_t *buffer, int n_pixels);
+typedef void     (*fetch_pixels_64_t) (bits_image_t *image,
+				       uint64_t *buffer, int n_pixels);
+typedef void     (*scanStoreProc)     (bits_image_t *img,
+				       int x, int y, int width,
+				       uint32_t *buffer);
+typedef void     (*scanFetchProc)     (pixman_image_t *,
+				       int, int, int, uint32_t *,
 				       uint32_t *, uint32_t);
-
-void _pixman_bits_image_setup_raw_accessors (bits_image_t *image);
-
-void _pixman_image_get_scanline_64_generic (pixman_image_t * pict, int x, int y, int width,
-					    uint64_t *buffer, uint64_t *mask, uint32_t maskBits);
 
 typedef enum
 {
@@ -111,47 +69,6 @@ typedef enum
     SOURCE_IMAGE_CLASS_VERTICAL,
 } source_pict_class_t;
 
-source_pict_class_t
-_pixman_image_classify (pixman_image_t *image,
-			int             x,
-			int             y,
-			int             width,
-			int             height);
-
-void
-_pixman_image_get_scanline_32 (pixman_image_t *image, int x, int y, int width,
-			       uint32_t *buffer, uint32_t *mask, uint32_t mask_bits);
-
-/* Even thought the type of buffer is uint32_t *, the function actually expects
- * a uint64_t *buffer.
- */
-void
-_pixman_image_get_scanline_64 (pixman_image_t *image, int x, int y, int width,
-			       uint32_t *buffer, uint32_t *unused, uint32_t unused2);
-
-void
-_pixman_image_store_scanline_32 (bits_image_t *image, int x, int y, int width,
-				 uint32_t *buffer);
-void
-_pixman_image_fetch_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels);
-
-/* Even thought the type of buffer is uint32_t *, the function actually expects
- * a uint64_t *buffer.
- */
-void
-_pixman_image_store_scanline_64 (bits_image_t *image, int x, int y, int width,
-				 uint32_t *buffer);
-
-pixman_image_t *
-_pixman_image_allocate (void);
-
-pixman_bool_t
-_pixman_init_gradient (gradient_t                   *gradient,
-		       const pixman_gradient_stop_t *stops,
-		       int	                     n_stops);
-void
-_pixman_image_reset_clip_region (pixman_image_t *image);
-
 typedef source_pict_class_t (* classify_func_t) (pixman_image_t *image,
 						 int             x,
 						 int             y,
@@ -165,7 +82,8 @@ struct image_common
     int32_t			ref_count;
     pixman_region32_t		clip_region;
     pixman_bool_t		have_clip_region;   /* FALSE if there is no clip */
-    pixman_bool_t		client_clip;	    /* Whether the source clip was set by a client */
+    pixman_bool_t		client_clip;	    /* Whether the source clip was
+						       set by a client */
     pixman_bool_t		clip_sources;	    /* Whether the clip applies when
 						     * the image is used as a source
 						     */
@@ -288,6 +206,73 @@ union pixman_image
     radial_gradient_t		radial;
     solid_fill_t		solid;
 };
+
+
+void
+_pixman_bits_image_setup_raw_accessors (bits_image_t   *image);
+
+void
+_pixman_image_get_scanline_64_generic  (pixman_image_t *pict,
+					int             x,
+					int             y,
+					int             width,
+					uint64_t       *buffer,
+					uint64_t       *mask,
+					uint32_t        maskBits);
+
+source_pict_class_t
+_pixman_image_classify (pixman_image_t *image,
+			int             x,
+			int             y,
+			int             width,
+			int             height);
+
+void
+_pixman_image_get_scanline_32 (pixman_image_t *image, int x, int y, int width,
+			       uint32_t *buffer, uint32_t *mask,
+			       uint32_t mask_bits);
+
+/* Even thought the type of buffer is uint32_t *, the function actually expects
+ * a uint64_t *buffer.
+ */
+void
+_pixman_image_get_scanline_64 (pixman_image_t *image, int x, int y, int width,
+			       uint32_t *buffer,
+			       uint32_t *unused, uint32_t unused2);
+
+void
+_pixman_image_store_scanline_32 (bits_image_t *image, int x, int y, int width,
+				 uint32_t *buffer);
+void
+_pixman_image_fetch_pixels (bits_image_t *image, uint32_t *buffer,
+			    int n_pixels);
+
+/* Even thought the type of buffer is uint32_t *, the function actually expects
+ * a uint64_t *buffer.
+ */
+void
+_pixman_image_store_scanline_64 (bits_image_t *image, int x, int y, int width,
+				 uint32_t *buffer);
+
+pixman_image_t *
+_pixman_image_allocate (void);
+
+pixman_bool_t
+_pixman_init_gradient (gradient_t                   *gradient,
+		       const pixman_gradient_stop_t *stops,
+		       int	                     n_stops);
+void
+_pixman_image_reset_clip_region (pixman_image_t *image);
+
+pixman_bool_t
+_pixman_image_is_opaque(pixman_image_t *image);
+
+pixman_bool_t
+_pixman_image_is_solid (pixman_image_t *image);
+
+uint32_t
+_pixman_image_get_solid (pixman_image_t *image,
+			pixman_format_code_t format);
 
 /*
  * Gradient walker
@@ -459,25 +444,12 @@ _pixman_gradient_walker_pixel (pixman_gradient_walker_t       *walker,
 
 #define RenderSamplesX(x,n)	((n) == 1 ? 0 : (pixman_fixed_frac (x) + X_FRAC_FIRST(n)) / STEP_X_SMALL(n))
 
-/*
- * Step across a small sample grid gap
- */
 void
 pixman_rasterize_edges_accessors (pixman_image_t *image,
 				  pixman_edge_t	*l,
 				  pixman_edge_t	*r,
 				  pixman_fixed_t	t,
 				  pixman_fixed_t	b);
-
-pixman_bool_t
-pixman_image_is_opaque(pixman_image_t *image);
-
-pixman_bool_t
-pixman_image_is_solid (pixman_image_t *image);
-
-uint32_t
-pixman_image_get_solid (pixman_image_t *image,
-			pixman_format_code_t format);
 
 /*
  * Implementations
@@ -742,25 +714,13 @@ pixman_region16_copy_from_region32 (pixman_region16_t *dst,
 				    pixman_region32_t *src);
 
 
-/*
- * Various useful macros
- */
 #ifndef FALSE
-#define FALSE 0
+#   define FALSE 0
 #endif
 
 #ifndef TRUE
-#define TRUE 1
+#   define TRUE 1
 #endif
-
-/* Integer division that rounds towards -infinity */
-#define DIV(a,b) ((((a) < 0) == ((b) < 0)) ? (a) / (b) :		\
-		  ((a) - (b) + 1 - (((b) < 0) << 1)) / (b))
-
-/* Modulus that produces the remainder wrt. DIV */
-#define MOD(a,b) ((a) < 0 ? ((b) - ((-(a) - 1) % (b))) - 1 : (a) % (b))
-
-#define CLIP(a,b,c) ((a) < (b) ? (b) : ((a) > (c) ? (c) : (a)))
 
 #ifndef MIN
 #  define MIN(a,b) ((a < b)? a : b)
@@ -770,11 +730,72 @@ pixman_region16_copy_from_region32 (pixman_region16_t *dst,
 #  define MAX(a,b) ((a > b)? a : b)
 #endif
 
+/* Integer division that rounds towards -infinity */
+#define DIV(a,b) ((((a) < 0) == ((b) < 0)) ? (a) / (b) :		\
+		  ((a) - (b) + 1 - (((b) < 0) << 1)) / (b))
 
-#ifdef PIXMAN_TIMERS
+/* Modulus that produces the remainder wrt. DIV */
+#define MOD(a,b) ((a) < 0 ? ((b) - ((-(a) - 1) % (b))) - 1 : (a) % (b))
+
+#define CLIP(v,low,high) ((v) < (low) ? (low) : ((v) > (high) ? (high) : (high)))
+
+
+/*
+ * Various debugging code
+ */
+
+#undef DEBUG
+#define DEBUG 0
+
+#if DEBUG
+
+#define return_if_fail(expr)						\
+    do									\
+    {									\
+	if (!(expr))							\
+	{								\
+	    fprintf(stderr, "In %s: %s failed\n", FUNC, #expr);		\
+	    return;							\
+	}								\
+    }									\
+    while (0)
+
+#define return_val_if_fail(expr, retval) 				\
+    do									\
+    {									\
+	if (!(expr))							\
+	{								\
+	    fprintf(stderr, "In %s: %s failed\n", FUNC, #expr);		\
+	    return (retval);						\
+	}								\
+    }									\
+    while (0)
+
+#else
+
+#define return_if_fail(expr)						\
+    do									\
+    {									\
+	if (!(expr))							\
+	    return;							\
+    }									\
+    while (0)
+
+#define return_val_if_fail(expr, retval)				\
+    do									\
+    {									\
+	if (!(expr))							\
+	    return (retval);						\
+    }									\
+    while (0)
+
+#endif
+
 /*
  * Timers
  */
+
+#ifdef PIXMAN_TIMERS
 
 static inline uint64_t
 oil_profile_stamp_rdtsc (void)

@@ -151,7 +151,7 @@ fbCompositeSolidMaskIn_nx8x8 (pixman_implementation_t *imp,
     uint16_t	w;
     uint16_t    t;
 
-    src = pixman_image_get_solid(iSrc, iDst->bits.format);
+    src = _pixman_image_get_solid(iSrc, iDst->bits.format);
 
     srca = src >> 24;
 
@@ -281,7 +281,7 @@ fbCompositeSolidMask_nx8x8888 (pixman_implementation_t *imp,
     int		 dstStride, maskStride;
     uint16_t	 w;
 
-    src = pixman_image_get_solid(pSrc, pDst->bits.format);
+    src = _pixman_image_get_solid(pSrc, pDst->bits.format);
 
     srca = src >> 24;
     if (src == 0)
@@ -340,7 +340,7 @@ fbCompositeSolidMask_nx8888x8888C (pixman_implementation_t *imp,
     uint16_t	w;
     uint32_t	m, n, o, p;
 
-    src = pixman_image_get_solid(pSrc, pDst->bits.format);
+    src = _pixman_image_get_solid(pSrc, pDst->bits.format);
 
     srca = src >> 24;
     if (src == 0)
@@ -413,7 +413,7 @@ fbCompositeSolidMask_nx8x0888 (pixman_implementation_t *imp,
     int	dstStride, maskStride;
     uint16_t	w;
 
-    src = pixman_image_get_solid(pSrc, pDst->bits.format);
+    src = _pixman_image_get_solid(pSrc, pDst->bits.format);
 
     srca = src >> 24;
     if (src == 0)
@@ -476,7 +476,7 @@ fbCompositeSolidMask_nx8x0565 (pixman_implementation_t *imp,
     int	dstStride, maskStride;
     uint16_t	w;
 
-    src = pixman_image_get_solid(pSrc, pDst->bits.format);
+    src = _pixman_image_get_solid(pSrc, pDst->bits.format);
 
     srca = src >> 24;
     if (src == 0)
@@ -542,7 +542,7 @@ fbCompositeSolidMask_nx8888x0565C (pixman_implementation_t *imp,
     uint16_t	w;
     uint32_t	m, n, o;
 
-    src = pixman_image_get_solid(pSrc, pDst->bits.format);
+    src = _pixman_image_get_solid(pSrc, pDst->bits.format);
 
     srca = src >> 24;
     if (src == 0)
@@ -913,7 +913,7 @@ fbCompositeSrcAdd_8888x8x8 (pixman_implementation_t *imp,
 
     fbComposeGetStart (pDst, xDst, yDst, uint8_t, dstStride, dstLine, 1);
     fbComposeGetStart (pMask, xMask, yMask, uint8_t, maskStride, maskLine, 1);
-    src = pixman_image_get_solid (pSrc, pDst->bits.format);
+    src = _pixman_image_get_solid (pSrc, pDst->bits.format);
     sa = (src >> 24);
 
     while (height--)
@@ -963,7 +963,7 @@ fbCompositeSolidFill (pixman_implementation_t *imp,
 {
     uint32_t	src;
 
-    src = pixman_image_get_solid(pSrc, pDst->bits.format);
+    src = _pixman_image_get_solid(pSrc, pDst->bits.format);
 
     if (pDst->bits.format == PIXMAN_a8)
 	src = src >> 24;

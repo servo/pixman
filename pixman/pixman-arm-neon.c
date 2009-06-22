@@ -461,7 +461,7 @@ fbCompositeSrc_8888x8x8888neon (
     fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
     fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
 
-    pixman_image_get_solid (pMask, mask, pDst->bits.format);
+    _pixman_image_get_solid (pMask, mask, pDst->bits.format);
     mask_alpha = vdup_n_u8((mask) >> 24);
 
     if (width>=8)
@@ -658,7 +658,7 @@ fbCompositeSolidMask_nx8x8888neon (
     uint8x8_t    mask_selector=vreinterpret_u8_u64(vcreate_u64(0x0101010100000000ULL));
     uint8x8_t    alpha_selector=vreinterpret_u8_u64(vcreate_u64(0x0707070703030303ULL));
 
-    pixman_image_get_solid(pSrc, src, pDst->bits.format);
+    _pixman_image_get_solid(pSrc, src, pDst->bits.format);
 
     srca = src >> 24;
     if (src == 0)
@@ -863,7 +863,7 @@ fbCompositeSrcAdd_8888x8x8neon (
 
     fbComposeGetStart (pDst, xDst, yDst, uint8_t, dstStride, dstLine, 1);
     fbComposeGetStart (pMask, xMask, yMask, uint8_t, maskStride, maskLine, 1);
-    pixman_image_get_solid (pSrc, src, pDst->bits.format);
+    _pixman_image_get_solid (pSrc, src, pDst->bits.format);
     sa = vdup_n_u8((src) >> 24);
 
     if (width>=8)
@@ -1734,7 +1734,7 @@ fbCompositeSolidMask_nx8x0565neon (
 	uint32_t     kernelCount, copyCount;
 	uint8_t      kernelOffset, copyOffset;
 
-	pixman_image_get_solid(pSrc, src, pDst->bits.format);
+	_pixman_image_get_solid(pSrc, src, pDst->bits.format);
 
 	// bail out if fully transparent or degenerate
 	srca = src >> 24;
@@ -1875,7 +1875,7 @@ fbCompositeSolid_nx0565neon (
 	uint32_t     kernelCount, copyCount;
 	uint8_t      kernelOffset, copyOffset;
 
-	pixman_image_get_solid(pSrc, src, pDst->bits.format);
+	_pixman_image_get_solid(pSrc, src, pDst->bits.format);
 
 	// bail out if fully transparent
 	srca = src >> 24;

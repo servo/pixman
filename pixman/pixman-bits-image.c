@@ -41,7 +41,9 @@
 /* Store functions */
 
 static void
-bits_image_store_scanline_32 (bits_image_t *image, int x, int y, int width, uint32_t *buffer)
+bits_image_store_scanline_32 (bits_image_t *image,
+			      int x, int y,
+			      int width, uint32_t *buffer)
 {
     uint32_t *bits;
     int32_t stride;
@@ -62,7 +64,9 @@ bits_image_store_scanline_32 (bits_image_t *image, int x, int y, int width, uint
 }
 
 static void
-bits_image_store_scanline_64 (bits_image_t *image, int x, int y, int width, uint32_t *buffer)
+bits_image_store_scanline_64 (bits_image_t *image,
+			      int x, int y,
+			      int width, uint32_t *buffer)
 {
     uint32_t *bits;
     int32_t stride;
@@ -360,7 +364,8 @@ bits_image_fetch_bilinear_pixels (bits_image_t *image, uint32_t *buffer, int n_p
  * a list of pixels on output
  */
 static void
-bits_image_fetch_convolution_pixels (bits_image_t *image, uint32_t *buffer, int n_pixels)
+bits_image_fetch_convolution_pixels (bits_image_t *image,
+				     uint32_t *buffer, int n_pixels)
 {
     uint32_t tmp_pixels_stack[N_TMP_PIXELS * 2]; /* Two coordinates per pixel */
     uint32_t *tmp_pixels = tmp_pixels_stack;

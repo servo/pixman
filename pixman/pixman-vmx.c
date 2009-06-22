@@ -1499,7 +1499,7 @@ fbCompositeSolid_nx8888vmx (pixman_operator_t	op,
     uint32_t	*dstLine, *dst;
     int	dstStride;
 
-    pixman_image_get_solid (pSrc, pDst, src);
+    _pixman_image_get_solid (pSrc, pDst, src);
 
     if (src >> 24 == 0)
 	return;
@@ -1533,7 +1533,7 @@ fbCompositeSolid_nx0565vmx (pixman_operator_t	op,
     uint16_t	w;
     int	dstStride;
 
-    pixman_image_get_solid (pSrc, pDst, src);
+    _pixman_image_get_solid (pSrc, pDst, src);
 
     if (src >> 24 == 0)
 	return;

@@ -28,6 +28,9 @@
 
 #include "pixman-private.h"
 
+/*
+ * Step across a small sample grid gap
+ */
 #define RenderEdgeStepSmall(edge) { \
     edge->x += edge->stepx_small;   \
     edge->e += edge->dx_small;	    \

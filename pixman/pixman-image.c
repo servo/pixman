@@ -508,7 +508,7 @@ pixman_image_get_depth (pixman_image_t *image)
 }
 
 pixman_bool_t
-pixman_image_is_solid (pixman_image_t *image)
+_pixman_image_is_solid (pixman_image_t *image)
 {
     if (image->type == SOLID)
 	return TRUE;
@@ -527,7 +527,7 @@ pixman_image_is_solid (pixman_image_t *image)
 }
 
 uint32_t
-pixman_image_get_solid (pixman_image_t *image, pixman_format_code_t format)
+_pixman_image_get_solid (pixman_image_t *image, pixman_format_code_t format)
 {
     uint32_t result;
     
@@ -546,7 +546,7 @@ pixman_image_get_solid (pixman_image_t *image, pixman_format_code_t format)
 }
 
 pixman_bool_t
-pixman_image_is_opaque (pixman_image_t *image)
+_pixman_image_is_opaque (pixman_image_t *image)
 {
     int i;
 
