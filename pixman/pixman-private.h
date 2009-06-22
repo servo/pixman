@@ -74,33 +74,26 @@ typedef struct radial_gradient radial_gradient_t;
 typedef struct bits_image bits_image_t;
 typedef struct circle circle_t;
 
-/* FIXME - the types and structures below should be give proper names
- */
-
-typedef void (*fetchProc32)(bits_image_t *pict, int x, int y, int width,
-                                     uint32_t *buffer);
-typedef uint32_t (*fetchPixelProc32)(bits_image_t *pict, int offset, int line);
-typedef void (*storeProc32)(pixman_image_t *, uint32_t *bits,
-			    const uint32_t *values, int x, int width);
-
-typedef void (*fetchProc64)(bits_image_t *pict, int x, int y, int width,
-                                     uint64_t *buffer);
-typedef uint64_t (*fetchPixelProc64)(bits_image_t *pict, int offset, int line);
-typedef void (*storeProc64)(pixman_image_t *, uint32_t *bits,
-			    const uint64_t *values, int x, int width);
-
-typedef void (* fetch_pixels_32_t) (bits_image_t *image, uint32_t *buffer, int n_pixels);
-typedef void (* fetch_pixels_64_t) (bits_image_t *image, uint64_t *buffer, int n_pixels);
+typedef void     (*fetchProc32)        (bits_image_t *pict, int x, int y, int width,
+					uint32_t *buffer);
+typedef uint32_t (*fetchPixelProc32)   (bits_image_t *pict, int offset, int line);
+typedef void     (*storeProc32)        (pixman_image_t *, uint32_t *bits,
+					const uint32_t *values, int x, int width);
+typedef void     (*fetchProc64)        (bits_image_t *pict, int x, int y, int width,
+					uint64_t *buffer);
+typedef uint64_t (*fetchPixelProc64)   (bits_image_t *pict, int offset, int line);
+typedef void     (*storeProc64)        (pixman_image_t *, uint32_t *bits,
+					const uint64_t *values, int x, int width);
+typedef void     (*fetch_pixels_32_t) (bits_image_t *image, uint32_t *buffer, int n_pixels);
+typedef void     (*fetch_pixels_64_t) (bits_image_t *image, uint64_t *buffer, int n_pixels);
+typedef void     (*scanStoreProc)     (bits_image_t *img, int x, int y, int width, uint32_t *buffer);
+typedef void     (*scanFetchProc)     (pixman_image_t *, int, int, int, uint32_t *,
+				       uint32_t *, uint32_t);
 
 void _pixman_bits_image_setup_raw_accessors (bits_image_t *image);
 
-void pixman_expand(uint64_t *dst, const uint32_t *src, pixman_format_code_t, int width);
-void pixman_contract(uint32_t *dst, const uint64_t *src, int width);
-
 void _pixman_image_get_scanline_64_generic (pixman_image_t * pict, int x, int y, int width,
 					    uint64_t *buffer, uint64_t *mask, uint32_t maskBits);
-
-/* end */
 
 typedef enum
 {
@@ -117,10 +110,6 @@ typedef enum
     SOURCE_IMAGE_CLASS_HORIZONTAL,
     SOURCE_IMAGE_CLASS_VERTICAL,
 } source_pict_class_t;
-
-typedef void (*scanStoreProc)(bits_image_t *img, int x, int y, int width, uint32_t *buffer);
-typedef void (*scanFetchProc)(pixman_image_t *, int, int, int, uint32_t *,
-			      uint32_t *, uint32_t);
 
 source_pict_class_t
 _pixman_image_classify (pixman_image_t *image,
@@ -157,9 +146,9 @@ pixman_image_t *
 _pixman_image_allocate (void);
 
 pixman_bool_t
-_pixman_init_gradient (gradient_t     *gradient,
+_pixman_init_gradient (gradient_t                   *gradient,
 		       const pixman_gradient_stop_t *stops,
-		       int	       n_stops);
+		       int	                     n_stops);
 void
 _pixman_image_reset_clip_region (pixman_image_t *image);
 
@@ -435,11 +424,9 @@ _pixman_gradient_walker_pixel (pixman_gradient_walker_t       *walker,
 #define fbComposeGetStart(pict,x,y,type,out_stride,line,mul) do {	\
 	uint32_t	*__bits__;					\
 	int		__stride__;					\
-	int		__bpp__;					\
 									\
 	__bits__ = pict->bits.bits;					\
 	__stride__ = pict->bits.rowstride;				\
-	__bpp__ = PIXMAN_FORMAT_BPP(pict->bits.format);			\
 	(out_stride) = __stride__ * (int) sizeof (uint32_t) / (int) sizeof (type);	\
 	(line) = ((type *) __bits__) +					\
 	    (out_stride) * (y) + (mul) * (x);				\
@@ -668,7 +655,6 @@ _pixman_choose_implementation (void);
 
 
 
-
 /*
  * Utilities
  */
@@ -738,6 +724,13 @@ _pixman_walk_composite_region (pixman_implementation_t *imp,
 			       uint16_t width,
 			       uint16_t height,
 			       pixman_composite_func_t compositeRect);
+
+void
+pixman_expand (uint64_t *dst, const uint32_t *src, pixman_format_code_t, int width);
+
+void
+pixman_contract (uint32_t *dst, const uint64_t *src, int width);
+
 
 /* Region Helpers */
 pixman_bool_t
