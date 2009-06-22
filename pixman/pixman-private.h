@@ -307,15 +307,13 @@ uint32_t
 _pixman_gradient_walker_pixel (pixman_gradient_walker_t       *walker,
 			       pixman_fixed_32_32_t  x);
 
-#define FbIntMult(a,b,t) ( (t) = (a) * (b) + 0x80, ( ( ( (t)>>8 ) + (t) )>>8 ) )
+#define FbIntMult(a,b,t) ((t) = (a) * (b) + 0x80, ((((t) >> 8) + (t)) >> 8))
 #define FbIntDiv(a,b)	 (((uint16_t) (a) * 255) / (b))
-
 #define FbIntAdd(x,y,t) (						\
 	(t) = x + y,							\
 	(uint32_t) (uint8_t) ((t) | (0 - ((t) >> 8))))
-
-#define FbGet8(v,i)   ((uint16_t) (uint8_t) ((v) >> i))
-
+#define div_255(x) (((x) + 0x80 + (((x) + 0x80) >> 8)) >> 8)
+#define div_65535(x) (((x) + 0x8000 + (((x) + 0x8000) >> 16)) >> 16)
 
 #define cvt8888to0565(s)    ((((s) >> 3) & 0x001f) | \
 			     (((s) >> 5) & 0x07e0) | \
@@ -323,17 +321,6 @@ _pixman_gradient_walker_pixel (pixman_gradient_walker_t       *walker,
 #define cvt0565to0888(s)    (((((s) << 3) & 0xf8) | (((s) >> 2) & 0x7)) | \
 			     ((((s) << 5) & 0xfc00) | (((s) >> 1) & 0x300)) | \
 			     ((((s) << 8) & 0xf80000) | (((s) << 3) & 0x70000)))
-
-/*
- * There are two ways of handling alpha -- either as a single unified value or
- * a separate value for each component, hence each macro must have two
- * versions.  The unified alpha version has a 'U' at the end of the name,
- * the component version has a 'C'.  Similarly, functions which deal with
- * this difference will have two versions using the same convention.
- */
-
-#define div_255(x) (((x) + 0x80 + (((x) + 0x80) >> 8)) >> 8)
-#define div_65535(x) (((x) + 0x8000 + (((x) + 0x8000) >> 16)) >> 16)
 
 #ifdef PIXMAN_FB_ACCESSORS
 

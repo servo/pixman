@@ -339,6 +339,8 @@ bits_image_fetch_bilinear_pixels (bits_image_t *image, uint32_t *buffer, int n_p
 
 	    idistx = 256 - distx;
 	    idisty = 256 - disty;
+
+#define FbGet8(v,i)   ((uint16_t) (uint8_t) ((v) >> i))
 	    
 	    ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
 	    fb = FbGet8(bl,0) * idistx + FbGet8(br,0) * distx;
