@@ -34,6 +34,18 @@
 
 #include "pixman-private.h"
 
+#define CvtR8G8B8toY15(s)       (((((s) >> 16) & 0xff) * 153 + \
+                                  (((s) >>  8) & 0xff) * 301 +		\
+                                  (((s)      ) & 0xff) * 58) >> 2)
+#define miCvtR8G8B8to15(s) ((((s) >> 3) & 0x001f) |  \
+			    (((s) >> 6) & 0x03e0) |  \
+			    (((s) >> 9) & 0x7c00))
+#define miIndexToEnt15(mif,rgb15) ((mif)->ent[rgb15])
+#define miIndexToEnt24(mif,rgb24) miIndexToEnt15(mif,miCvtR8G8B8to15(rgb24))
+
+#define miIndexToEntY24(mif,rgb24) ((mif)->ent[CvtR8G8B8toY15(rgb24)])
+
+
 #define Red(x) (((x) >> 16) & 0xff)
 #define Green(x) (((x) >> 8) & 0xff)
 #define Blue(x) ((x) & 0xff)
