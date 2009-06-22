@@ -11,7 +11,9 @@
 
 #include "pixman-compiler.h"
 
-
+/*
+ * Various useful macros
+ */
 #ifndef FALSE
 #define FALSE 0
 #endif
@@ -20,14 +22,35 @@
 #define TRUE 1
 #endif
 
+/* Integer division that rounds towards -infinity */
+#define DIV(a,b) ((((a) < 0) == ((b) < 0)) ? (a) / (b) :		\
+		  ((a) - (b) + 1 - (((b) < 0) << 1)) / (b))
+
+/* Modulus that produces the remainder wrt. DIV */
+#define MOD(a,b) ((a) < 0 ? ((b) - ((-(a) - 1) % (b))) - 1 : (a) % (b))
+
+#define CLIP(a,b,c) ((a) < (b) ? (b) : ((a) > (c) ? (c) : (a)))
+
+#ifndef MIN
+#  define MIN(a,b) ((a < b)? a : b)
+#endif
+
+#ifndef MAX
+#  define MAX(a,b) ((a > b)? a : b)
+#endif
+
 #undef DEBUG
 #define DEBUG 0
 
+/*
+ * Utilities
+ */
+
 /* Memory allocation helpers */
-void *pixman_malloc_ab (unsigned int n, unsigned int b);
-void *pixman_malloc_abc (unsigned int a, unsigned int b, unsigned int c);
-pixman_bool_t pixman_multiply_overflows_int (unsigned int a, unsigned int b);
-pixman_bool_t pixman_addition_overflows_int (unsigned int a, unsigned int b);
+void          *pixman_malloc_ab (unsigned int n, unsigned int b);
+void          *pixman_malloc_abc (unsigned int a, unsigned int b, unsigned int c);
+pixman_bool_t  pixman_multiply_overflows_int (unsigned int a, unsigned int b);
+pixman_bool_t  pixman_addition_overflows_int (unsigned int a, unsigned int b);
 
 #if DEBUG
 
@@ -72,6 +95,8 @@ pixman_bool_t pixman_addition_overflows_int (unsigned int a, unsigned int b);
     while (0)
 
 #endif
+
+
 
 typedef struct image_common image_common_t;
 typedef struct source_image source_image_t;
@@ -409,22 +434,6 @@ _pixman_gradient_walker_pixel (pixman_gradient_walker_t       *walker,
 
 #define div_255(x) (((x) + 0x80 + (((x) + 0x80) >> 8)) >> 8)
 #define div_65535(x) (((x) + 0x8000 + (((x) + 0x8000) >> 16)) >> 16)
-
-#define MOD(a,b) ((a) < 0 ? ((b) - ((-(a) - 1) % (b))) - 1 : (a) % (b))
-
-/* Divides two fixed-point numbers and returns an integer */
-#define DIV(a,b) ((((a) < 0) == ((b) < 0)) ? (a) / (b) :		\
-		  ((a) - (b) + 1 - (((b) < 0) << 1)) / (b))
-
-#define CLIP(a,b,c) ((a) < (b) ? (b) : ((a) > (c) ? (c) : (a)))
-
-#ifndef MIN
-#  define MIN(a,b) ((a < b)? a : b)
-#endif
-
-#ifndef MAX
-#  define MAX(a,b) ((a > b)? a : b)
-#endif
 
 #ifdef PIXMAN_FB_ACCESSORS
 
