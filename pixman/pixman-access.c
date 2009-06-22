@@ -45,11 +45,6 @@
 
 #define miIndexToEntY24(mif,rgb24) ((mif)->ent[CvtR8G8B8toY15(rgb24)])
 
-
-#define Red(x) (((x) >> 16) & 0xff)
-#define Green(x) (((x) >> 8) & 0xff)
-#define Blue(x) ((x) & 0xff)
-
 /*
  * YV12 setup and access macros
  */
@@ -1920,13 +1915,13 @@ fbStore_b8g8r8 (pixman_image_t *image,
     for (i = 0; i < width; ++i) {
 	uint32_t val = values[i];
 #ifdef WORDS_BIGENDIAN
-	WRITE(image, pixel++, Blue(val));
-	WRITE(image, pixel++, Green(val));
-	WRITE(image, pixel++, Red(val));
+	WRITE(image, pixel++, (val & 0x000000ff) >>  0);
+	WRITE(image, pixel++, (val & 0x0000ff00) >>  8);
+	WRITE(image, pixel++, (val & 0x00ff0000) >> 16);
 #else
-	WRITE(image, pixel++, Red(val));
-	WRITE(image, pixel++, Green(val));
-	WRITE(image, pixel++, Blue(val));
+	WRITE(image, pixel++, (val & 0x00ff0000) >> 16);
+	WRITE(image, pixel++, (val & 0x0000ff00) >>  8);
+	WRITE(image, pixel++, (val & 0x000000ff) >>  0);
 #endif
     }
 }
