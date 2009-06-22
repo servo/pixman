@@ -11,79 +11,8 @@
 
 #include "pixman-compiler.h"
 
-/*
- * Various useful macros
- */
-#ifndef FALSE
-#define FALSE 0
-#endif
-
-#ifndef TRUE
-#define TRUE 1
-#endif
-
-/* Integer division that rounds towards -infinity */
-#define DIV(a,b) ((((a) < 0) == ((b) < 0)) ? (a) / (b) :		\
-		  ((a) - (b) + 1 - (((b) < 0) << 1)) / (b))
-
-/* Modulus that produces the remainder wrt. DIV */
-#define MOD(a,b) ((a) < 0 ? ((b) - ((-(a) - 1) % (b))) - 1 : (a) % (b))
-
-#define CLIP(a,b,c) ((a) < (b) ? (b) : ((a) > (c) ? (c) : (a)))
-
-#ifndef MIN
-#  define MIN(a,b) ((a < b)? a : b)
-#endif
-
-#ifndef MAX
-#  define MAX(a,b) ((a > b)? a : b)
-#endif
-
 #undef DEBUG
 #define DEBUG 0
-
-/*
- * Utilities
- */
-
-/* Memory allocation helpers */
-void          *pixman_malloc_ab (unsigned int n, unsigned int b);
-void          *pixman_malloc_abc (unsigned int a, unsigned int b, unsigned int c);
-pixman_bool_t  pixman_multiply_overflows_int (unsigned int a, unsigned int b);
-pixman_bool_t  pixman_addition_overflows_int (unsigned int a, unsigned int b);
-
-/* Compositing utilities */
-pixman_bool_t
-_pixman_run_fast_path (const pixman_fast_path_t *paths,
-		       pixman_implementation_t *imp,
-		       pixman_op_t op,
-		       pixman_image_t *src,
-		       pixman_image_t *mask,
-		       pixman_image_t *dest,
-		       int32_t src_x,
-		       int32_t src_y,
-		       int32_t mask_x,
-		       int32_t mask_y,
-		       int32_t dest_x,
-		       int32_t dest_y,
-		       int32_t width,
-		       int32_t height);
-    
-void
-_pixman_walk_composite_region (pixman_implementation_t *imp,
-			       pixman_op_t op,
-			       pixman_image_t * pSrc,
-			       pixman_image_t * pMask,
-			       pixman_image_t * pDst,
-			       int16_t xSrc,
-			       int16_t ySrc,
-			       int16_t xMask,
-			       int16_t yMask,
-			       int16_t xDst,
-			       int16_t yDst,
-			       uint16_t width,
-			       uint16_t height,
-			       pixman_composite_func_t compositeRect);
 
 #if DEBUG
 
@@ -572,6 +501,7 @@ pixman_bool_t pixman_region32_copy_from_region16 (pixman_region32_t *dst,
 pixman_bool_t pixman_region16_copy_from_region32 (pixman_region16_t *dst,
 						  pixman_region32_t *src);
 
+
 /*
  * Implementations
  */
@@ -630,26 +560,6 @@ typedef pixman_bool_t (* pixman_fill_func_t) (pixman_implementation_t *imp,
 
 void _pixman_setup_combiner_functions_32 (pixman_implementation_t *imp);
 void _pixman_setup_combiner_functions_64 (pixman_implementation_t *imp);
-
-/* These "formats" both have depth 0, so they
- * will never clash with any real ones
- */
-#define PIXMAN_null		PIXMAN_FORMAT(0,0,0,0,0,0)
-#define PIXMAN_solid		PIXMAN_FORMAT(0,1,0,0,0,0)
-
-#define NEED_COMPONENT_ALPHA		(1 << 0)
-#define NEED_PIXBUF			(1 << 1)
-#define NEED_SOLID_MASK		        (1 << 2)
-
-typedef struct
-{
-    pixman_op_t			op;
-    pixman_format_code_t	src_format;
-    pixman_format_code_t	mask_format;
-    pixman_format_code_t	dest_format;
-    pixman_composite_func_t	func;
-    uint32_t			flags;
-} pixman_fast_path_t;
 
 struct pixman_implementation_t
 {
@@ -766,6 +676,99 @@ _pixman_implementation_create_vmx (void);
 pixman_implementation_t *
 _pixman_choose_implementation (void);
 
+
+
+
+/*
+ * Utilities
+ */
+
+/* These "formats" both have depth 0, so they
+ * will never clash with any real ones
+ */
+#define PIXMAN_null		PIXMAN_FORMAT(0,0,0,0,0,0)
+#define PIXMAN_solid		PIXMAN_FORMAT(0,1,0,0,0,0)
+
+#define NEED_COMPONENT_ALPHA		(1 << 0)
+#define NEED_PIXBUF			(1 << 1)
+#define NEED_SOLID_MASK		        (1 << 2)
+
+typedef struct
+{
+    pixman_op_t			op;
+    pixman_format_code_t	src_format;
+    pixman_format_code_t	mask_format;
+    pixman_format_code_t	dest_format;
+    pixman_composite_func_t	func;
+    uint32_t			flags;
+} pixman_fast_path_t;
+
+/* Memory allocation helpers */
+void          *pixman_malloc_ab (unsigned int n, unsigned int b);
+void          *pixman_malloc_abc (unsigned int a, unsigned int b, unsigned int c);
+pixman_bool_t  pixman_multiply_overflows_int (unsigned int a, unsigned int b);
+pixman_bool_t  pixman_addition_overflows_int (unsigned int a, unsigned int b);
+
+/* Compositing utilities */
+pixman_bool_t
+_pixman_run_fast_path (const pixman_fast_path_t *paths,
+		       pixman_implementation_t *imp,
+		       pixman_op_t op,
+		       pixman_image_t *src,
+		       pixman_image_t *mask,
+		       pixman_image_t *dest,
+		       int32_t src_x,
+		       int32_t src_y,
+		       int32_t mask_x,
+		       int32_t mask_y,
+		       int32_t dest_x,
+		       int32_t dest_y,
+		       int32_t width,
+		       int32_t height);
+    
+void
+_pixman_walk_composite_region (pixman_implementation_t *imp,
+			       pixman_op_t op,
+			       pixman_image_t * pSrc,
+			       pixman_image_t * pMask,
+			       pixman_image_t * pDst,
+			       int16_t xSrc,
+			       int16_t ySrc,
+			       int16_t xMask,
+			       int16_t yMask,
+			       int16_t xDst,
+			       int16_t yDst,
+			       uint16_t width,
+			       uint16_t height,
+			       pixman_composite_func_t compositeRect);
+
+/*
+ * Various useful macros
+ */
+#ifndef FALSE
+#define FALSE 0
+#endif
+
+#ifndef TRUE
+#define TRUE 1
+#endif
+
+/* Integer division that rounds towards -infinity */
+#define DIV(a,b) ((((a) < 0) == ((b) < 0)) ? (a) / (b) :		\
+		  ((a) - (b) + 1 - (((b) < 0) << 1)) / (b))
+
+/* Modulus that produces the remainder wrt. DIV */
+#define MOD(a,b) ((a) < 0 ? ((b) - ((-(a) - 1) % (b))) - 1 : (a) % (b))
+
+#define CLIP(a,b,c) ((a) < (b) ? (b) : ((a) > (c) ? (c) : (a)))
+
+#ifndef MIN
+#  define MIN(a,b) ((a < b)? a : b)
+#endif
+
+#ifndef MAX
+#  define MAX(a,b) ((a > b)? a : b)
+#endif
 
 
 #ifdef PIXMAN_TIMERS
