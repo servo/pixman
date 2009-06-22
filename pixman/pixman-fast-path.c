@@ -366,7 +366,6 @@ fbCompositeSolidMask_nx8888x8888C (pixman_implementation_t *imp,
     uint32_t	*maskLine, *mask, ma;
     int	dstStride, maskStride;
     uint16_t	w;
-    uint32_t	m, n, o, p;
 
     src = _pixman_image_get_solid(pSrc, pDst->bits.format);
 
@@ -398,22 +397,15 @@ fbCompositeSolidMask_nx8888x8888C (pixman_implementation_t *imp,
 	    else if (ma)
 	    {
 		d = *dst;
-#define FbInOverC(src,srca,msk,dst,i,result) { \
-    uint16_t  __a = FbGet8(msk,i); \
-    uint32_t  __t, __ta; \
-    uint32_t  __i; \
-    __t = FbIntMult (FbGet8(src,i), __a,__i); \
-    __ta = (uint8_t) ~FbIntMult (srca, __a,__i); \
-    __t = __t + FbIntMult(FbGet8(dst,i),__ta,__i); \
-    __t = (uint32_t) (uint8_t) (__t | (-(__t >> 8))); \
-    result = __t << (i); \
-}
-		FbInOverC (src, srca, ma, d, 0, m);
-		FbInOverC (src, srca, ma, d, 8, n);
-		FbInOverC (src, srca, ma, d, 16, o);
-		FbInOverC (src, srca, ma, d, 24, p);
-		*dst = m|n|o|p;
+
+		FbByteMulC (src, ma);
+		FbByteMul (ma, srca);
+		ma = ~ma;
+		FbByteMulAddC (d, ma, src);
+
+		*dst = d;
 	    }
+
 	    dst++;
 	}
     }
@@ -568,7 +560,6 @@ fbCompositeSolidMask_nx8888x0565C (pixman_implementation_t *imp,
     uint32_t	*maskLine, *mask, ma;
     int	dstStride, maskStride;
     uint16_t	w;
-    uint32_t	m, n, o;
 
     src = _pixman_image_get_solid(pSrc, pDst->bits.format);
 
@@ -609,10 +600,12 @@ fbCompositeSolidMask_nx8888x0565C (pixman_implementation_t *imp,
 	    {
 		d = *dst;
 		d = cvt0565to0888(d);
-		FbInOverC (src, srca, ma, d, 0, m);
-		FbInOverC (src, srca, ma, d, 8, n);
-		FbInOverC (src, srca, ma, d, 16, o);
-		d = m|n|o;
+
+		FbByteMulC (src, ma);
+		FbByteMul (ma, srca);
+		ma = ~ma;
+		FbByteMulAddC (d, ma, src);
+		
 		*dst = cvt8888to0565(d);
 	    }
 	    dst++;
