@@ -31,7 +31,6 @@ libpixman_1_la_SOURCES =			\
 	pixman-edge-accessors.c			\
 	pixman-edge-imp.h			\
 	pixman-trap.c				\
-	pixman-compute-region.c			\
 	pixman-timer.c				\
 	pixman-matrix.c
 

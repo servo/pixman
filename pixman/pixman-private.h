@@ -217,11 +217,11 @@ struct image_common
     image_type_t		type;
     int32_t			ref_count;
     pixman_region32_t		clip_region;
-    pixman_bool_t		have_clip_region;	/* FALSE if there is no clip */
-    pixman_bool_t		client_clip;	/* Whether the source clip was set by a client */
-    pixman_bool_t		clip_sources;		/* Whether the clip applies when
-							 * the image is used as a source
-							 */
+    pixman_bool_t		have_clip_region;   /* FALSE if there is no clip */
+    pixman_bool_t		client_clip;	    /* Whether the source clip was set by a client */
+    pixman_bool_t		clip_sources;	    /* Whether the clip applies when
+						     * the image is used as a source
+						     */
     pixman_transform_t	       *transform;
     pixman_repeat_t		repeat;
     pixman_filter_t		filter;
@@ -532,20 +532,6 @@ pixman_image_is_solid (pixman_image_t *image);
 uint32_t
 pixman_image_get_solid (pixman_image_t *image,
 			pixman_format_code_t format);
-
-pixman_bool_t
-pixman_compute_composite_region32 (pixman_region32_t *	pRegion,
-				   pixman_image_t *	pSrc,
-				   pixman_image_t *	pMask,
-				   pixman_image_t *	pDst,
-				   int16_t		xSrc,
-				   int16_t		ySrc,
-				   int16_t		xMask,
-				   int16_t		yMask,
-				   int16_t		xDst,
-				   int16_t		yDst,
-				   uint16_t		width,
-				   uint16_t		height);
 
 /* Region Helpers */
 pixman_bool_t pixman_region32_copy_from_region16 (pixman_region32_t *dst,
