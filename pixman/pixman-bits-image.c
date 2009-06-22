@@ -54,8 +54,8 @@ bits_image_store_scanline_32 (bits_image_t *image, int x, int y, int width, uint
 
     if (image->common.alpha_map)
     {
-	x -= image->common.alpha_origin.x;
-	y -= image->common.alpha_origin.y;
+	x -= image->common.alpha_origin_x;
+	y -= image->common.alpha_origin_y;
 
 	bits_image_store_scanline_32 (image->common.alpha_map, x, y, width, buffer);
     }
@@ -76,8 +76,8 @@ bits_image_store_scanline_64 (bits_image_t *image, int x, int y, int width, uint
 
     if (image->common.alpha_map)
     {
-	x -= image->common.alpha_origin.x;
-	y -= image->common.alpha_origin.y;
+	x -= image->common.alpha_origin_x;
+	y -= image->common.alpha_origin_y;
 
 	bits_image_store_scanline_64 (image->common.alpha_map, x, y, width, buffer);
     }
@@ -143,7 +143,7 @@ bits_image_fetch_alpha_pixels (bits_image_t *image, uint32_t *buffer, int n_pixe
 	    
 	    if (x != 0xffffffff)
 	    {
-		x -= image->common.alpha_origin.x;
+		x -= image->common.alpha_origin_x;
 		
 		if (x < 0 || x >= image->common.alpha_map->width)
 		    x = 0xffffffff;
@@ -151,7 +151,7 @@ bits_image_fetch_alpha_pixels (bits_image_t *image, uint32_t *buffer, int n_pixe
 	    
 	    if (y != 0xffffffff)
 	    {
-		y -= image->common.alpha_origin.y;
+		y -= image->common.alpha_origin_y;
 		
 		if (y < 0 || y >= image->common.alpha_map->height)
 		    y = 0xffffffff;

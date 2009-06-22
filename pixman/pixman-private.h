@@ -59,7 +59,9 @@
 #endif
 
 
-
+/*
+ * Images
+ */
 typedef struct image_common image_common_t;
 typedef struct source_image source_image_t;
 typedef struct solid_fill solid_fill_t;
@@ -71,7 +73,6 @@ typedef struct conical_gradient conical_gradient_t;
 typedef struct radial_gradient radial_gradient_t;
 typedef struct bits_image bits_image_t;
 typedef struct circle circle_t;
-typedef struct point point_t;
 
 /* FIXME - the types and structures below should be give proper names
  */
@@ -162,11 +163,6 @@ _pixman_init_gradient (gradient_t     *gradient,
 void
 _pixman_image_reset_clip_region (pixman_image_t *image);
 
-struct point
-{
-    int16_t x, y;
-};
-
 typedef source_pict_class_t (* classify_func_t) (pixman_image_t *image,
 						 int             x,
 						 int             y,
@@ -190,7 +186,8 @@ struct image_common
     pixman_fixed_t	       *filter_params;
     int				n_filter_params;
     bits_image_t	       *alpha_map;
-    point_t			alpha_origin;
+    int				alpha_origin_x;
+    int				alpha_origin_y;
     pixman_bool_t		component_alpha;
     pixman_read_memory_func_t	read_func;
     pixman_write_memory_func_t	write_func;
@@ -495,13 +492,6 @@ uint32_t
 pixman_image_get_solid (pixman_image_t *image,
 			pixman_format_code_t format);
 
-/* Region Helpers */
-pixman_bool_t pixman_region32_copy_from_region16 (pixman_region32_t *dst,
-						  pixman_region16_t *src);
-pixman_bool_t pixman_region16_copy_from_region32 (pixman_region16_t *dst,
-						  pixman_region32_t *src);
-
-
 /*
  * Implementations
  */
@@ -704,10 +694,17 @@ typedef struct
 } pixman_fast_path_t;
 
 /* Memory allocation helpers */
-void          *pixman_malloc_ab (unsigned int n, unsigned int b);
-void          *pixman_malloc_abc (unsigned int a, unsigned int b, unsigned int c);
-pixman_bool_t  pixman_multiply_overflows_int (unsigned int a, unsigned int b);
-pixman_bool_t  pixman_addition_overflows_int (unsigned int a, unsigned int b);
+void *
+pixman_malloc_ab (unsigned int n, unsigned int b);
+
+void *
+pixman_malloc_abc (unsigned int a, unsigned int b, unsigned int c);
+
+pixman_bool_t
+pixman_multiply_overflows_int (unsigned int a, unsigned int b);
+
+pixman_bool_t
+pixman_addition_overflows_int (unsigned int a, unsigned int b);
 
 /* Compositing utilities */
 pixman_bool_t
@@ -741,6 +738,16 @@ _pixman_walk_composite_region (pixman_implementation_t *imp,
 			       uint16_t width,
 			       uint16_t height,
 			       pixman_composite_func_t compositeRect);
+
+/* Region Helpers */
+pixman_bool_t
+pixman_region32_copy_from_region16 (pixman_region32_t *dst,
+				    pixman_region16_t *src);
+
+pixman_bool_t
+pixman_region16_copy_from_region32 (pixman_region16_t *dst,
+				    pixman_region32_t *src);
+
 
 /*
  * Various useful macros

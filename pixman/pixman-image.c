@@ -433,8 +433,8 @@ pixman_image_set_alpha_map (pixman_image_t *image,
 	    common->alpha_map = NULL;
     }
 
-    common->alpha_origin.x = x;
-    common->alpha_origin.y = y;
+    common->alpha_origin_x = x;
+    common->alpha_origin_y = y;
 
     image_property_changed (image);
 }

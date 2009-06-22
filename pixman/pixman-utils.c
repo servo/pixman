@@ -159,8 +159,8 @@ pixman_compute_composite_region32 (pixman_region32_t *	pRegion,
     if (pDst->common.alpha_map && pDst->common.alpha_map->common.have_clip_region)
     {
 	if (!miClipPictureReg (pRegion, &pDst->common.alpha_map->common.clip_region,
-			       -pDst->common.alpha_origin.x,
-			       -pDst->common.alpha_origin.y))
+			       -pDst->common.alpha_origin_x,
+			       -pDst->common.alpha_origin_y))
 	{
 	    pixman_region32_fini (pRegion);
 	    return FALSE;
@@ -179,8 +179,8 @@ pixman_compute_composite_region32 (pixman_region32_t *	pRegion,
     if (pSrc->common.alpha_map && pSrc->common.alpha_map->common.have_clip_region)
     {
 	if (!miClipPictureSrc (pRegion, (pixman_image_t *)pSrc->common.alpha_map,
-			       xDst - (xSrc - pSrc->common.alpha_origin.x),
-			       yDst - (ySrc - pSrc->common.alpha_origin.y)))
+			       xDst - (xSrc - pSrc->common.alpha_origin_x),
+			       yDst - (ySrc - pSrc->common.alpha_origin_y)))
 	{
 	    pixman_region32_fini (pRegion);
 	    return FALSE;
@@ -197,8 +197,8 @@ pixman_compute_composite_region32 (pixman_region32_t *	pRegion,
 	if (pMask->common.alpha_map && pMask->common.alpha_map->common.have_clip_region)
 	{
 	    if (!miClipPictureSrc (pRegion, (pixman_image_t *)pMask->common.alpha_map,
-				   xDst - (xMask - pMask->common.alpha_origin.x),
-				   yDst - (yMask - pMask->common.alpha_origin.y)))
+				   xDst - (xMask - pMask->common.alpha_origin_x),
+				   yDst - (yMask - pMask->common.alpha_origin_y)))
 	    {
 		pixman_region32_fini (pRegion);
 		return FALSE;
