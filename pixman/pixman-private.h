@@ -274,6 +274,17 @@ uint32_t
 _pixman_image_get_solid (pixman_image_t *image,
 			pixman_format_code_t format);
 
+#define fbComposeGetStart(pict,x,y,type,out_stride,line,mul) do {	\
+	uint32_t	*__bits__;					\
+	int		__stride__;					\
+									\
+	__bits__ = pict->bits.bits;					\
+	__stride__ = pict->bits.rowstride;				\
+	(out_stride) = __stride__ * (int) sizeof (uint32_t) / (int) sizeof (type); \
+	(line) = ((type *) __bits__) +					\
+	    (out_stride) * (y) + (mul) * (x);				\
+    } while (0)
+
 /*
  * Gradient walker
  */
@@ -314,65 +325,6 @@ _pixman_gradient_walker_pixel (pixman_gradient_walker_t       *walker,
 	(uint32_t) (uint8_t) ((t) | (0 - ((t) >> 8))))
 #define div_255(x) (((x) + 0x80 + (((x) + 0x80) >> 8)) >> 8)
 #define div_65535(x) (((x) + 0x8000 + (((x) + 0x8000) >> 16)) >> 16)
-
-#define cvt8888to0565(s)    ((((s) >> 3) & 0x001f) | \
-			     (((s) >> 5) & 0x07e0) | \
-			     (((s) >> 8) & 0xf800))
-#define cvt0565to0888(s)    (((((s) << 3) & 0xf8) | (((s) >> 2) & 0x7)) | \
-			     ((((s) << 5) & 0xfc00) | (((s) >> 1) & 0x300)) | \
-			     ((((s) << 8) & 0xf80000) | (((s) << 3) & 0x70000)))
-
-#ifdef PIXMAN_FB_ACCESSORS
-
-#define ACCESS(sym) sym##_accessors
-
-#define READ(img, ptr)							\
-    ((img)->common.read_func ((ptr), sizeof(*(ptr))))
-#define WRITE(img, ptr,val)						\
-    ((img)->common.write_func ((ptr), (val), sizeof (*(ptr))))
-
-#define MEMCPY_WRAPPED(img, dst, src, size)				\
-    do {								\
-	size_t _i;							\
-	uint8_t *_dst = (uint8_t*)(dst), *_src = (uint8_t*)(src);	\
-	for(_i = 0; _i < size; _i++) {					\
-	    WRITE((img), _dst +_i, READ((img), _src + _i));		\
-	}								\
-    } while (0)
-
-#define MEMSET_WRAPPED(img, dst, val, size)				\
-    do {								\
-	size_t _i;							\
-	uint8_t *_dst = (uint8_t*)(dst);				\
-	for(_i = 0; _i < (size_t) size; _i++) {				\
-	    WRITE((img), _dst +_i, (val));				\
-	}								\
-    } while (0)
-
-#else
-
-#define ACCESS(sym) sym
-
-#define READ(img, ptr)		(*(ptr))
-#define WRITE(img, ptr, val)	(*(ptr) = (val))
-#define MEMCPY_WRAPPED(img, dst, src, size)				\
-    memcpy(dst, src, size)
-#define MEMSET_WRAPPED(img, dst, val, size)				\
-    memset(dst, val, size)
-
-#endif
-
-#define fbComposeGetStart(pict,x,y,type,out_stride,line,mul) do {	\
-	uint32_t	*__bits__;					\
-	int		__stride__;					\
-									\
-	__bits__ = pict->bits.bits;					\
-	__stride__ = pict->bits.rowstride;				\
-	(out_stride) = __stride__ * (int) sizeof (uint32_t) / (int) sizeof (type);	\
-	(line) = ((type *) __bits__) +					\
-	    (out_stride) * (y) + (mul) * (x);				\
-    } while (0)
-
 
 #define PIXMAN_FORMAT_16BPC(f)	(PIXMAN_FORMAT_A(f) > 8 || \
 				 PIXMAN_FORMAT_R(f) > 8 || \
@@ -695,6 +647,14 @@ pixman_region16_copy_from_region32 (pixman_region16_t *dst,
 
 #define CLIP(v,low,high) ((v) < (low) ? (low) : ((v) > (high) ? (high) : (v)))
 
+/* Conversion between 8888 and 0565 */
+
+#define cvt8888to0565(s)    ((((s) >> 3) & 0x001f) | \
+			     (((s) >> 5) & 0x07e0) | \
+			     (((s) >> 8) & 0xf800))
+#define cvt0565to0888(s)    (((((s) << 3) & 0xf8) | (((s) >> 2) & 0x7)) | \
+			     ((((s) << 5) & 0xfc00) | (((s) >> 1) & 0x300)) | \
+			     ((((s) << 8) & 0xf80000) | (((s) << 3) & 0x70000)))
 
 /*
  * Various debugging code

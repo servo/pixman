@@ -33,6 +33,7 @@
 #include <assert.h>
 
 #include "pixman-private.h"
+#include "pixman-accessor.h"
 
 #define CvtR8G8B8toY15(s)       (((((s) >> 16) & 0xff) * 153 + \
                                   (((s) >>  8) & 0xff) * 301 +		\

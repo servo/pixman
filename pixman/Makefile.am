@@ -4,6 +4,7 @@ libpixman_1_la_LIBADD = @DEP_LIBS@ -lm
 libpixman_1_la_CFLAGS = -DPIXMAN_DISABLE_DEPRECATED
 libpixman_1_la_SOURCES =			\
 	pixman.h				\
+	pixman-accessor.h			\
 	pixman-access.c				\
 	pixman-access-accessors.c		\
 	pixman-cpu.c				\
