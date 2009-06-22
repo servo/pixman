@@ -2646,7 +2646,7 @@ fbCompositeSrcAdd_8888x8x8mmx (pixman_implementation_t *imp,
 	    d = *dst;
 
 	    m = FbIntMult (sa, a, tmp);
-	    r = FbAdd (m, d, 0, tmp);
+	    r = FbIntAdd (m, d, tmp);
 
 	    *dst++ = r;
 	}

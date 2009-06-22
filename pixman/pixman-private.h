@@ -310,6 +310,10 @@ _pixman_gradient_walker_pixel (pixman_gradient_walker_t       *walker,
 #define FbIntMult(a,b,t) ( (t) = (a) * (b) + 0x80, ( ( ( (t)>>8 ) + (t) )>>8 ) )
 #define FbIntDiv(a,b)	 (((uint16_t) (a) * 255) / (b))
 
+#define FbIntAdd(x,y,t) (						\
+	(t) = x + y,							\
+	(uint32_t) (uint8_t) ((t) | (0 - ((t) >> 8))))
+
 #define FbGet8(v,i)   ((uint16_t) (uint8_t) ((v) >> i))
 
 
@@ -327,9 +331,6 @@ _pixman_gradient_walker_pixel (pixman_gradient_walker_t       *walker,
  * the component version has a 'C'.  Similarly, functions which deal with
  * this difference will have two versions using the same convention.
  */
-
-#define FbAdd(x,y,i,t)	((t) = FbGet8(x,i) + FbGet8(y,i),		\
-			 (uint32_t) ((uint8_t) ((t) | (0 - ((t) >> 8)))) << (i))
 
 #define div_255(x) (((x) + 0x80 + (((x) + 0x80) >> 8)) >> 8)
 #define div_65535(x) (((x) + 0x8000 + (((x) + 0x8000) >> 16)) >> 16)

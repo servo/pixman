@@ -880,8 +880,6 @@ fbCompositeSrcAdd_8888x8888 (pixman_implementation_t *imp,
     int	dstStride, srcStride;
     uint16_t	w;
     uint32_t	s, d;
-    uint16_t	t;
-    uint32_t	m,n,o,p;
 
     fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
     fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
@@ -903,13 +901,7 @@ fbCompositeSrcAdd_8888x8888 (pixman_implementation_t *imp,
 		{
 		    d = *dst;
 		    if (d)
-		    {
-			m = FbAdd(s,d,0,t);
-			n = FbAdd(s,d,8,t);
-			o = FbAdd(s,d,16,t);
-			p = FbAdd(s,d,24,t);
-			s = m|n|o|p;
-		    }
+			FbByteAdd(s,d);
 		}
 		*dst = s;
 	    }
@@ -964,7 +956,7 @@ fbCompositeSrcAdd_8888x8x8 (pixman_implementation_t *imp,
 	    d = *dst;
 
 	    m = FbIntMult (sa, a, tmp);
-	    r = FbAdd (m, d, 0, tmp);
+	    r = FbIntAdd (m, d, tmp);
 
 	    *dst++ = r;
 	}
