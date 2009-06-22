@@ -52,6 +52,39 @@ void          *pixman_malloc_abc (unsigned int a, unsigned int b, unsigned int c
 pixman_bool_t  pixman_multiply_overflows_int (unsigned int a, unsigned int b);
 pixman_bool_t  pixman_addition_overflows_int (unsigned int a, unsigned int b);
 
+/* Compositing utilities */
+pixman_bool_t
+_pixman_run_fast_path (const pixman_fast_path_t *paths,
+		       pixman_implementation_t *imp,
+		       pixman_op_t op,
+		       pixman_image_t *src,
+		       pixman_image_t *mask,
+		       pixman_image_t *dest,
+		       int32_t src_x,
+		       int32_t src_y,
+		       int32_t mask_x,
+		       int32_t mask_y,
+		       int32_t dest_x,
+		       int32_t dest_y,
+		       int32_t width,
+		       int32_t height);
+    
+void
+_pixman_walk_composite_region (pixman_implementation_t *imp,
+			       pixman_op_t op,
+			       pixman_image_t * pSrc,
+			       pixman_image_t * pMask,
+			       pixman_image_t * pDst,
+			       int16_t xSrc,
+			       int16_t ySrc,
+			       int16_t xMask,
+			       int16_t yMask,
+			       int16_t xDst,
+			       int16_t yDst,
+			       uint16_t width,
+			       uint16_t height,
+			       pixman_composite_func_t compositeRect);
+
 #if DEBUG
 
 #define return_if_fail(expr)						\
@@ -539,52 +572,9 @@ pixman_bool_t pixman_region32_copy_from_region16 (pixman_region32_t *dst,
 pixman_bool_t pixman_region16_copy_from_region32 (pixman_region16_t *dst,
 						  pixman_region32_t *src);
 
-#ifdef PIXMAN_TIMERS
-
-/* Timing */
-static inline uint64_t
-oil_profile_stamp_rdtsc (void)
-{
-    uint64_t ts;
-    __asm__ __volatile__("rdtsc\n" : "=A" (ts));
-    return ts;
-}
-#define OIL_STAMP oil_profile_stamp_rdtsc
-
-typedef struct pixman_timer_t pixman_timer_t;
-
-struct pixman_timer_t
-{
-    int initialized;
-    const char *name;
-    uint64_t n_times;
-    uint64_t total;
-    pixman_timer_t *next;
-};
-
-extern int timer_defined;
-void pixman_timer_register (pixman_timer_t *timer);
-
-#define TIMER_BEGIN(tname)						\
-    {									\
-	static pixman_timer_t	timer##tname;				\
-	uint64_t		begin##tname;				\
-									\
-	if (!timer##tname.initialized)					\
-	{								\
-	    timer##tname.initialized = 1;				\
-	    timer##tname.name = #tname;					\
-	    pixman_timer_register (&timer##tname);			\
-	}								\
-									\
-	timer##tname.n_times++;						\
-	begin##tname = OIL_STAMP();
-
-#define TIMER_END(tname)						\
-        timer##tname.total += OIL_STAMP() - begin##tname;		\
-    }
-
-#endif /* PIXMAN_TIMERS */
+/*
+ * Implementations
+ */
 
 typedef struct pixman_implementation_t pixman_implementation_t;
 
@@ -637,22 +627,6 @@ typedef pixman_bool_t (* pixman_fill_func_t) (pixman_implementation_t *imp,
 					      int width,
 					      int height,
 					      uint32_t xor);
-
-void
-_pixman_walk_composite_region (pixman_implementation_t *imp,
-			       pixman_op_t op,
-			       pixman_image_t * pSrc,
-			       pixman_image_t * pMask,
-			       pixman_image_t * pDst,
-			       int16_t xSrc,
-			       int16_t ySrc,
-			       int16_t xMask,
-			       int16_t yMask,
-			       int16_t xDst,
-			       int16_t yDst,
-			       uint16_t width,
-			       uint16_t height,
-			       pixman_composite_func_t compositeRect);
 
 void _pixman_setup_combiner_functions_32 (pixman_implementation_t *imp);
 void _pixman_setup_combiner_functions_64 (pixman_implementation_t *imp);
@@ -789,23 +763,58 @@ pixman_implementation_t *
 _pixman_implementation_create_vmx (void);
 #endif
 
-pixman_bool_t
-_pixman_run_fast_path (const pixman_fast_path_t *paths,
-		       pixman_implementation_t *imp,
-		       pixman_op_t op,
-		       pixman_image_t *src,
-		       pixman_image_t *mask,
-		       pixman_image_t *dest,
-		       int32_t src_x,
-		       int32_t src_y,
-		       int32_t mask_x,
-		       int32_t mask_y,
-		       int32_t dest_x,
-		       int32_t dest_y,
-		       int32_t width,
-		       int32_t height);
-    
 pixman_implementation_t *
 _pixman_choose_implementation (void);
+
+
+
+#ifdef PIXMAN_TIMERS
+/*
+ * Timers
+ */
+
+static inline uint64_t
+oil_profile_stamp_rdtsc (void)
+{
+    uint64_t ts;
+    __asm__ __volatile__("rdtsc\n" : "=A" (ts));
+    return ts;
+}
+#define OIL_STAMP oil_profile_stamp_rdtsc
+
+typedef struct pixman_timer_t pixman_timer_t;
+
+struct pixman_timer_t
+{
+    int initialized;
+    const char *name;
+    uint64_t n_times;
+    uint64_t total;
+    pixman_timer_t *next;
+};
+
+extern int timer_defined;
+void pixman_timer_register (pixman_timer_t *timer);
+
+#define TIMER_BEGIN(tname)						\
+    {									\
+	static pixman_timer_t	timer##tname;				\
+	uint64_t		begin##tname;				\
+									\
+	if (!timer##tname.initialized)					\
+	{								\
+	    timer##tname.initialized = 1;				\
+	    timer##tname.name = #tname;					\
+	    pixman_timer_register (&timer##tname);			\
+	}								\
+									\
+	timer##tname.n_times++;						\
+	begin##tname = OIL_STAMP();
+
+#define TIMER_END(tname)						\
+        timer##tname.total += OIL_STAMP() - begin##tname;		\
+    }
+
+#endif /* PIXMAN_TIMERS */
 
 #endif /* PIXMAN_PRIVATE_H */

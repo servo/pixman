@@ -318,3 +318,29 @@ pixman_image_fill_rectangles (pixman_op_t		    op,
 
     return TRUE;
 }
+
+/**
+ * pixman_version:
+ *
+ * Returns the version of the pixman library encoded in a single
+ * integer as per %PIXMAN_VERSION_ENCODE. The encoding ensures that
+ * later versions compare greater than earlier versions.
+ *
+ * A run-time comparison to check that pixman's version is greater than
+ * or equal to version X.Y.Z could be performed as follows:
+ *
+ * <informalexample><programlisting>
+ * if (pixman_version() >= PIXMAN_VERSION_ENCODE(X,Y,Z)) {...}
+ * </programlisting></informalexample>
+ *
+ * See also pixman_version_string() as well as the compile-time
+ * equivalents %PIXMAN_VERSION and %PIXMAN_VERSION_STRING.
+ *
+ * Return value: the encoded version.
+ **/
+PIXMAN_EXPORT int
+pixman_version (void)
+{
+    return PIXMAN_VERSION;
+}
+
