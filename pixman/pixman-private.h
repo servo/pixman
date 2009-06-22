@@ -526,29 +526,6 @@ _pixman_gradient_walker_pixel (pixman_gradient_walker_t       *walker,
 /*
  * Step across a small sample grid gap
  */
-#define RenderEdgeStepSmall(edge) { \
-    edge->x += edge->stepx_small;   \
-    edge->e += edge->dx_small;	    \
-    if (edge->e > 0)		    \
-    {				    \
-	edge->e -= edge->dy;	    \
-	edge->x += edge->signdx;    \
-    }				    \
-}
-
-/*
- * Step across a large sample grid gap
- */
-#define RenderEdgeStepBig(edge) {   \
-    edge->x += edge->stepx_big;	    \
-    edge->e += edge->dx_big;	    \
-    if (edge->e > 0)		    \
-    {				    \
-	edge->e -= edge->dy;	    \
-	edge->x += edge->signdx;    \
-    }				    \
-}
-
 void
 pixman_rasterize_edges_accessors (pixman_image_t *image,
 				  pixman_edge_t	*l,
