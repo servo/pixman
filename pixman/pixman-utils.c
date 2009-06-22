@@ -696,3 +696,73 @@ _pixman_run_fast_path (const pixman_fast_path_t *paths,
     
     return result;
 }
+
+#define N_TMP_BOXES (16)
+
+pixman_bool_t
+pixman_region16_copy_from_region32 (pixman_region16_t *dst,
+				    pixman_region32_t *src)
+{
+    int n_boxes, i;
+    pixman_box32_t *boxes32;
+    pixman_box16_t *boxes16;
+    pixman_bool_t retval;
+    
+    boxes32 = pixman_region32_rectangles (src, &n_boxes);
+
+    boxes16 = pixman_malloc_ab (n_boxes, sizeof (pixman_box16_t));
+
+    if (!boxes16)
+	return FALSE;
+    
+    for (i = 0; i < n_boxes; ++i)
+    {
+	boxes16[i].x1 = boxes32[i].x1;
+	boxes16[i].y1 = boxes32[i].y1;
+	boxes16[i].x2 = boxes32[i].x2;
+	boxes16[i].y2 = boxes32[i].y2;
+    }
+
+    pixman_region_fini (dst);
+    retval = pixman_region_init_rects (dst, boxes16, n_boxes);
+    free (boxes16);
+    return retval;
+}
+
+pixman_bool_t
+pixman_region32_copy_from_region16 (pixman_region32_t *dst,
+				    pixman_region16_t *src)
+{
+    int n_boxes, i;
+    pixman_box16_t *boxes16;
+    pixman_box32_t *boxes32;
+    pixman_box32_t tmp_boxes[N_TMP_BOXES];
+    pixman_bool_t retval;
+    
+    boxes16 = pixman_region_rectangles (src, &n_boxes);
+
+    if (n_boxes > N_TMP_BOXES)
+	boxes32 = pixman_malloc_ab (n_boxes, sizeof (pixman_box32_t));
+    else
+	boxes32 = tmp_boxes;
+    
+    if (!boxes32)
+	return FALSE;
+    
+    for (i = 0; i < n_boxes; ++i)
+    {
+	boxes32[i].x1 = boxes16[i].x1;
+	boxes32[i].y1 = boxes16[i].y1;
+	boxes32[i].x2 = boxes16[i].x2;
+	boxes32[i].y2 = boxes16[i].y2;
+    }
+
+    pixman_region32_fini (dst);
+    retval = pixman_region32_init_rects (dst, boxes32, n_boxes);
+
+    if (boxes32 != tmp_boxes)
+	free (boxes32);
+
+    return retval;
+}
+
