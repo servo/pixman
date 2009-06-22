@@ -706,7 +706,7 @@ pixman_region16_copy_from_region32 (pixman_region16_t *dst,
 /* Modulus that produces the remainder wrt. DIV */
 #define MOD(a,b) ((a) < 0 ? ((b) - ((-(a) - 1) % (b))) - 1 : (a) % (b))
 
-#define CLIP(v,low,high) ((v) < (low) ? (low) : ((v) > (high) ? (high) : (high)))
+#define CLIP(v,low,high) ((v) < (low) ? (low) : ((v) > (high) ? (high) : (v)))
 
 
 /*
