@@ -2497,14 +2497,15 @@ fbCompositeIn_nx8x8mmx (pixman_implementation_t *imp,
 	{
 	    uint16_t	tmp;
 	    uint8_t	a;
-	    uint32_t	m;
+	    uint32_t	m, d;
 
 	    a = *mask++;
-
-	    m = FbIntMult (m, a, tmp);
-	    *dst = FbIntMult (m, *dst, tmp);
+	    d = *dst;
 	    
-	    *dst++ = r;
+	    m = FbIntMult (sa, a, tmp);
+	    d = FbIntMult (m, d, tmp);
+	    
+	    *dst++ = d;
 	}
     }
 
