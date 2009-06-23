@@ -727,12 +727,12 @@ bits_image_fetch_untransformed_64 (bits_image_t * image,
 {
     if (image->common.repeat == PIXMAN_REPEAT_NONE)
     {
-	bits_image_fetch_untransformed_repeat_none (image, FALSE, x, y,
+	bits_image_fetch_untransformed_repeat_none (image, TRUE, x, y,
 						    width, (uint32_t *)buffer);
     }
     else
     {
-	bits_image_fetch_untransformed_repeat_normal (image, FALSE, x, y,
+	bits_image_fetch_untransformed_repeat_normal (image, TRUE, x, y,
 						      width, (uint32_t *)buffer);
     }
 }
