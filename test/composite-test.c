@@ -43,7 +43,6 @@ static const Operator operators[] = {
     { "HSL_SATURATION", PIXMAN_OP_HSL_SATURATION },
     { "HSL_COLOR", PIXMAN_OP_HSL_COLOR },
     { "HSL_LUMINOSITY", PIXMAN_OP_HSL_LUMINOSITY },
-    { "FLASH_SUBTRACT", PIXMAN_OP_FLASH_SUBTRACT }
 };
 
 static uint32_t
