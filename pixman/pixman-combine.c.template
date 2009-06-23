@@ -1015,77 +1015,6 @@ PdfNonSeparableBlendMode (HSLLuminosity)
 #undef Min
 #undef PdfNonSeparableBlendMode
 
-/*
- * Flash Subtract:
- * This is the only blend mode present in Adobe Flash that is not part of 
- * the PDF specification. It has been reverse engineered from looking at 
- * Flash files. Some information can be found at
- * http://www.kaourantin.net/2005/09/some-word-on-blend-modes-in-flash.html
- */
-#define Subtract(res, Color)						\
-    do {								\
-      comp1_t dc, sc;							\
-      dc = Color (d);							\
-      sc = Color (s);							\
-      if (sc >= dc)							\
-	res = 0;							\
-      else								\
-	res = dc - sc;							\
-    } while (0)
-
-static void
-fbCombineFlashSubtractU (pixman_implementation_t *imp, pixman_op_t op,
-			 comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
-{
-    int i;
-
-    for (i = 0; i < width; ++i) {
-	comp4_t d, s;
-	comp4_t r, g, b;
-
-	d = *(dest + i);
-	s = combineMask (src, mask, i);
-
-	Subtract (r, Red);
-	Subtract (g, Green);
-	Subtract (b, Blue);
-
-	*(dest + i) = (Alpha (d) << A_SHIFT)
-	    | (r << R_SHIFT)
-	    | (g << G_SHIFT)
-	    | b;
-    }
-}
-
-static void
-fbCombineFlashSubtractC (pixman_implementation_t *imp, pixman_op_t op,
-			 comp4_t *dest, const comp4_t *src, const comp4_t *mask, int width)
-{
-    int i;
-
-    for (i = 0; i < width; ++i) {
-	comp4_t d, s, m;
-	comp4_t r, g, b;
-
-	d = *(dest + i);
-	s = *(src + i);
-	m = *(mask + i);
-
-	fbCombineMaskValueC (&s, &m);
-
-	Subtract (r, Red);
-	Subtract (g, Green);
-	Subtract (b, Blue);
-
-	*(dest + i) = (Alpha (d) << A_SHIFT)
-	    | (r << R_SHIFT)
-	    | (g << G_SHIFT)
-	    | b;
-    }
-}
-
-#undef Subtract
-
 /* Overlay
  *
  * All of the disjoint composing functions
@@ -2071,7 +2000,6 @@ _pixman_setup_combiner_functions_width (pixman_implementation_t *imp)
     imp->combine_width[PIXMAN_OP_HSL_SATURATION] = fbCombineHSLSaturationU;
     imp->combine_width[PIXMAN_OP_HSL_COLOR] = fbCombineHSLColorU;
     imp->combine_width[PIXMAN_OP_HSL_LUMINOSITY] = fbCombineHSLLuminosityU;
-    imp->combine_width[PIXMAN_OP_FLASH_SUBTRACT] = fbCombineFlashSubtractU;
 
     /* Component alpha combiners */
     imp->combine_width_ca[PIXMAN_OP_CLEAR] = fbCombineClearC;
@@ -2132,7 +2060,6 @@ _pixman_setup_combiner_functions_width (pixman_implementation_t *imp)
     imp->combine_width_ca[PIXMAN_OP_HSL_SATURATION] = fbCombineHSLSaturationC;
     imp->combine_width_ca[PIXMAN_OP_HSL_COLOR] = fbCombineHSLColorC;
     imp->combine_width_ca[PIXMAN_OP_HSL_LUMINOSITY] = fbCombineHSLLuminosityC;
-    imp->combine_width_ca[PIXMAN_OP_FLASH_SUBTRACT] = fbCombineFlashSubtractC;
 }
 
 
