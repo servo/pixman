@@ -320,10 +320,6 @@ _pixman_gradient_walker_pixel (pixman_gradient_walker_t       *walker,
 	(t) = x + y,							\
 	(uint32_t) (uint8_t) ((t) | (0 - ((t) >> 8))))
 
-#define PIXMAN_FORMAT_16BPC(f)	(PIXMAN_FORMAT_A(f) > 8 || \
-				 PIXMAN_FORMAT_R(f) > 8 || \
-				 PIXMAN_FORMAT_G(f) > 8 || \
-				 PIXMAN_FORMAT_B(f) > 8)
 /*
  * Edges
  */
@@ -616,6 +612,8 @@ pixman_region16_copy_from_region32 (pixman_region16_t *dst,
 				    pixman_region32_t *src);
 
 
+/* Misc macros */
+
 #ifndef FALSE
 #   define FALSE 0
 #endif
@@ -649,6 +647,11 @@ pixman_region16_copy_from_region32 (pixman_region16_t *dst,
 #define cvt0565to0888(s)    (((((s) << 3) & 0xf8) | (((s) >> 2) & 0x7)) | \
 			     ((((s) << 5) & 0xfc00) | (((s) >> 1) & 0x300)) | \
 			     ((((s) << 8) & 0xf80000) | (((s) << 3) & 0x70000)))
+
+#define PIXMAN_FORMAT_IS_WIDE(f)	(PIXMAN_FORMAT_A(f) > 8 || \
+					 PIXMAN_FORMAT_R(f) > 8 || \
+					 PIXMAN_FORMAT_G(f) > 8 || \
+					 PIXMAN_FORMAT_B(f) > 8)
 
 /*
  * Various debugging code

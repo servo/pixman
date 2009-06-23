@@ -58,9 +58,9 @@ general_composite_rect  (pixman_implementation_t *imp,
     const pixman_format_code_t srcFormat = src->type == BITS ? src->bits.format : 0;
     const pixman_format_code_t maskFormat = mask && mask->type == BITS ? mask->bits.format : 0;
     const pixman_format_code_t destFormat = dest->type == BITS ? dest->bits.format : 0;
-    const int srcWide = PIXMAN_FORMAT_16BPC(srcFormat);
-    const int maskWide = mask && PIXMAN_FORMAT_16BPC(maskFormat);
-    const int destWide = PIXMAN_FORMAT_16BPC(destFormat);
+    const int srcWide = PIXMAN_FORMAT_IS_WIDE(srcFormat);
+    const int maskWide = mask && PIXMAN_FORMAT_IS_WIDE(maskFormat);
+    const int destWide = PIXMAN_FORMAT_IS_WIDE(destFormat);
     const int wide = srcWide || maskWide || destWide;
     const int Bpp = wide ? 8 : 4;
     uint8_t *scanline_buffer = stack_scanline_buffer;
