@@ -414,8 +414,8 @@ bits_image_fetch_convolution_pixels (bits_image_t *image,
 	    int32_t x, y, x1, x2, y1, y2;
 
 	    /* Subtract pixman_fixed_e to ensure that 0.5 rounds to 0, not 1 */
-	    x1 = pixman_fixed_to_int (coords[0] - pixman_fixed_e) - x_off;
-	    y1 = pixman_fixed_to_int (coords[1] - pixman_fixed_e) - y_off;
+	    x1 = pixman_fixed_to_int (coords[0] - pixman_fixed_e - x_off);
+	    y1 = pixman_fixed_to_int (coords[1] - pixman_fixed_e - y_off);
 	    x2 = x1 + cwidth;
 	    y2 = y1 + cheight;
 
