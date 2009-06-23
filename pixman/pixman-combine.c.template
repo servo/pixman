@@ -564,7 +564,7 @@ static inline comp4_t
 BlendColorBurn (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
 {
     if (sca == 0) {
-	return DivOne (sa * da);
+	return 0;
     } else {
 	comp4_t sada = sa * da;
 	comp4_t rca = (da - dca) * sa * sa / sca;
