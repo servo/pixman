@@ -327,7 +327,7 @@ AM_CONDITIONAL(USE_VMX, test $have_vmx_intrinsics = yes)
 
 dnl ===========================================================================
 dnl Check for ARM SIMD instructions
-ARM_SIMD_CFLAGS="-march=armv6"
+ARM_SIMD_CFLAGS="-mcpu=arm1136j-s"
 
 have_arm_simd=no
 AC_MSG_CHECKING(whether to use ARM SIMD assembler)
