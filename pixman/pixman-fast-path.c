@@ -65,7 +65,7 @@ Store24 (uint8_t *a, uint32_t v)
     else
     {
 #ifdef WORDS_BIGENDIAN
-	*(uint16_t *)a = (uint16_t)(v >> 8)
+	*(uint16_t *)a = (uint16_t)(v >> 8);
 	*(a + 2) = (uint8_t)v;
 #else
 	*(uint16_t *)a = (uint16_t)v;
