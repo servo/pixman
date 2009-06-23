@@ -140,28 +140,14 @@ _pixman_image_get_scanline_32 (pixman_image_t *image, int x, int y, int width,
     image->common.get_scanline_32 (image, x, y, width, buffer, mask, mask_bits);
 }
 
+/* Even thought the type of buffer is uint32_t *, the function actually expects
+ * a uint64_t *buffer.
+ */
 void
 _pixman_image_get_scanline_64 (pixman_image_t *image, int x, int y, int width,
 			       uint32_t *buffer, uint32_t *unused, uint32_t unused2)
 {
     image->common.get_scanline_64 (image, x, y, width, buffer, unused, unused2);
-}
-
-/* Even thought the type of buffer is uint32_t *, the function actually expects
- * a uint64_t *buffer.
- */
-
-scanFetchProc
-_pixman_image_get_fetcher (pixman_image_t *image,
-			   int             wide)
-{
-    assert (image->common.get_scanline_64);
-    assert (image->common.get_scanline_32);
-    
-    if (wide)
-	return image->common.get_scanline_64;
-    else
-	return image->common.get_scanline_32;
 }
 
 static void
