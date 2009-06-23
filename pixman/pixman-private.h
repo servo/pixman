@@ -212,8 +212,8 @@ _pixman_image_get_scanline_64_generic  (pixman_image_t *pict,
 					int             x,
 					int             y,
 					int             width,
-					uint64_t       *buffer,
-					uint64_t       *mask,
+					uint32_t       *buffer,
+					uint32_t       *mask,
 					uint32_t        maskBits);
 
 source_pict_class_t

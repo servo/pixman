@@ -505,8 +505,9 @@ bits_image_fetch_filtered (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 }
 
 static void
-bits_image_fetch_transformed (bits_image_t * pict, int x, int y, int width,
-			      uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
+bits_image_fetch_transformed (pixman_image_t * pict, int x, int y, int width,
+			      uint32_t *buffer, uint32_t *mask,
+			      uint32_t maskBits)
 {
     uint32_t     *bits;
     int32_t    stride;
@@ -517,8 +518,8 @@ bits_image_fetch_transformed (bits_image_t * pict, int x, int y, int width,
     int32_t *coords;
     int i;
 
-    bits = pict->bits;
-    stride = pict->rowstride;
+    bits = pict->bits.bits;
+    stride = pict->bits.rowstride;
 
     /* reference point is the center of the pixel */
     v.vector[0] = pixman_int_to_fixed(x) + pixman_fixed_1 / 2;
@@ -591,7 +592,7 @@ bits_image_fetch_transformed (bits_image_t * pict, int x, int y, int width,
 	    v.vector[1] += unit.vector[1];
 	}
 
-	bits_image_fetch_filtered (pict, tmp_buffer, n_pixels);
+	bits_image_fetch_filtered (&pict->bits, tmp_buffer, n_pixels);
 	
 	for (j = 0; j < n_pixels; ++j)
 	    buffer[i++] = tmp_buffer[j];
@@ -599,7 +600,7 @@ bits_image_fetch_transformed (bits_image_t * pict, int x, int y, int width,
 }
 
 static void
-bits_image_fetch_solid_32 (bits_image_t * image,
+bits_image_fetch_solid_32 (pixman_image_t * image,
 			   int x, int y, int width,
 			   uint32_t *buffer,
 			   uint32_t *mask, uint32_t maskBits)
@@ -610,7 +611,7 @@ bits_image_fetch_solid_32 (bits_image_t * image,
     color[0] = 0;
     color[1] = 0;
     
-    image->fetch_pixels_raw_32 (image, color, 1);
+    image->bits.fetch_pixels_raw_32 (&image->bits, color, 1);
     
     end = buffer + width;
     while (buffer < end)
@@ -618,18 +619,21 @@ bits_image_fetch_solid_32 (bits_image_t * image,
 }
 
 static void
-bits_image_fetch_solid_64 (bits_image_t * image,
+bits_image_fetch_solid_64 (pixman_image_t * image,
 			   int x, int y, int width,
-			   uint64_t *buffer, void *unused, uint32_t unused2)
+			   uint32_t *b,
+			   uint32_t *unused,
+			   uint32_t unused2)
 {
     uint32_t color[2];
-    uint64_t *end;
     uint32_t *coords = (uint32_t *)color;
-
+    uint64_t *buffer = (uint64_t *)b;
+    uint64_t *end;
+    
     coords[0] = 0;
     coords[1] = 1;
     
-    image->fetch_pixels_raw_64 (image, (uint64_t *)color, 1);
+    image->bits.fetch_pixels_raw_64 (&image->bits, (uint64_t *)color, 1);
     
     end = buffer + width;
     while (buffer < end)
@@ -710,30 +714,38 @@ bits_image_fetch_untransformed_repeat_normal (bits_image_t *image, pixman_bool_t
 }
 
 static void
-bits_image_fetch_untransformed_32 (bits_image_t * image,
+bits_image_fetch_untransformed_32 (pixman_image_t * image,
 				   int x, int y, int width,
-				   uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
-{
-    if (image->common.repeat == PIXMAN_REPEAT_NONE)
-	bits_image_fetch_untransformed_repeat_none (image, FALSE, x, y, width, buffer);
-    else
-	bits_image_fetch_untransformed_repeat_normal (image, FALSE, x, y, width, buffer);
-}
-
-static void
-bits_image_fetch_untransformed_64 (bits_image_t * image,
-				   int x, int y, int width,
-				   uint64_t *buffer, void *unused, uint32_t unused2)
+				   uint32_t *buffer,
+				   uint32_t *mask, uint32_t maskBits)
 {
     if (image->common.repeat == PIXMAN_REPEAT_NONE)
     {
-	bits_image_fetch_untransformed_repeat_none (image, TRUE, x, y,
-						    width, (uint32_t *)buffer);
+	bits_image_fetch_untransformed_repeat_none (
+	    &image->bits, FALSE, x, y, width, buffer);
     }
     else
     {
-	bits_image_fetch_untransformed_repeat_normal (image, TRUE, x, y,
-						      width, (uint32_t *)buffer);
+	bits_image_fetch_untransformed_repeat_normal (
+	    &image->bits, FALSE, x, y, width, buffer);
+    }
+}
+
+static void
+bits_image_fetch_untransformed_64 (pixman_image_t * image,
+				   int x, int y, int width,
+				   uint32_t *buffer,
+				   uint32_t *unused, uint32_t unused2)
+{
+    if (image->common.repeat == PIXMAN_REPEAT_NONE)
+    {
+	bits_image_fetch_untransformed_repeat_none (
+	    &image->bits, TRUE, x, y, width, buffer);
+    }
+    else
+    {
+	bits_image_fetch_untransformed_repeat_normal (
+	    &image->bits, TRUE, x, y, width, buffer);
     }
 }
 
@@ -747,16 +759,16 @@ bits_image_property_changed (pixman_image_t *image)
     if (bits->common.alpha_map)
     {
 	image->common.get_scanline_64 =
-	    (scanFetchProc)_pixman_image_get_scanline_64_generic;
+	    _pixman_image_get_scanline_64_generic;
 	image->common.get_scanline_32 =
-	    (scanFetchProc)bits_image_fetch_transformed;
+	    bits_image_fetch_transformed;
     }
     else if ((bits->common.repeat != PIXMAN_REPEAT_NONE) &&
 	    bits->width == 1 &&
 	    bits->height == 1)
     {
-	image->common.get_scanline_64 = (scanFetchProc)bits_image_fetch_solid_64;
-	image->common.get_scanline_32 = (scanFetchProc)bits_image_fetch_solid_32;
+	image->common.get_scanline_64 = bits_image_fetch_solid_64;
+	image->common.get_scanline_32 = bits_image_fetch_solid_32;
     }
     else if (!bits->common.transform &&
 	     bits->common.filter != PIXMAN_FILTER_CONVOLUTION &&
@@ -764,16 +776,16 @@ bits_image_property_changed (pixman_image_t *image)
 	      bits->common.repeat == PIXMAN_REPEAT_NORMAL))
     {
 	image->common.get_scanline_64 =
-	    (scanFetchProc)bits_image_fetch_untransformed_64;
+	    bits_image_fetch_untransformed_64;
 	image->common.get_scanline_32 =
-	    (scanFetchProc)bits_image_fetch_untransformed_32;
+	    bits_image_fetch_untransformed_32;
     }
     else
     {
 	image->common.get_scanline_64 =
-	    (scanFetchProc)_pixman_image_get_scanline_64_generic;
+	    _pixman_image_get_scanline_64_generic;
 	image->common.get_scanline_32 =
-	    (scanFetchProc)bits_image_fetch_transformed;
+	    bits_image_fetch_transformed;
     }
 
     bits->store_scanline_64 = bits_image_store_scanline_64;
