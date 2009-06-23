@@ -319,8 +319,6 @@ _pixman_gradient_walker_pixel (pixman_gradient_walker_t       *walker,
 #define FbIntAdd(x,y,t) (						\
 	(t) = x + y,							\
 	(uint32_t) (uint8_t) ((t) | (0 - ((t) >> 8))))
-#define div_255(x) (((x) + 0x80 + (((x) + 0x80) >> 8)) >> 8)
-#define div_65535(x) (((x) + 0x8000 + (((x) + 0x8000) >> 16)) >> 16)
 
 #define PIXMAN_FORMAT_16BPC(f)	(PIXMAN_FORMAT_A(f) > 8 || \
 				 PIXMAN_FORMAT_R(f) > 8 || \

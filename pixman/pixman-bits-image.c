@@ -29,8 +29,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "pixman-private.h"
+#include "pixman-combine32.h"
 
-#define Alpha(x) ((x) >> 24)
 #define Red(x) (((x) >> 16) & 0xff)
 #define Green(x) (((x) >> 8) & 0xff)
 #define Blue(x) ((x) & 0xff)
@@ -171,14 +171,11 @@ bits_image_fetch_alpha_pixels (bits_image_t *image, uint32_t *buffer, int n_pixe
 	for (j = 0; j < tmp_n_pixels; ++j)
 	{
 	    int a = alpha_pixels[j] >> 24;
-	    
-	    buffer[i] =
-		(a << 24)					|
-		div_255 (Red (buffer[2 * i - j]) * a) << 16	|
-		div_255 (Green (buffer[2 * i - j]) * a) << 8	|
-		div_255 (Blue (buffer[2 * i - j]) * a);
-	    
-	    i++;
+	    uint32_t p = buffer[2 * i - j] | 0xff000000;
+
+	    FbByteMul (p, a);
+
+	    buffer[i++] = p;
 	}
     }
 }
