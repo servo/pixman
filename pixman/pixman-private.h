@@ -314,12 +314,6 @@ uint32_t
 _pixman_gradient_walker_pixel (pixman_gradient_walker_t       *walker,
 			       pixman_fixed_32_32_t  x);
 
-#define FbIntMult(a,b,t) ((t) = (a) * (b) + 0x80, ((((t) >> 8) + (t)) >> 8))
-#define FbIntDiv(a,b)	 (((uint16_t) (a) * 255) / (b))
-#define FbIntAdd(x,y,t) (						\
-	(t) = x + y,							\
-	(uint32_t) (uint8_t) ((t) | (0 - ((t) >> 8))))
-
 /*
  * Edges
  */

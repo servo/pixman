@@ -37,6 +37,7 @@
 
 #include <mmintrin.h>
 #include "pixman-private.h"
+#include "pixman-combine32.h"
 
 #define noVERBOSE
 
@@ -671,7 +672,7 @@ mmxCombineSaturateU (pixman_implementation_t *imp, pixman_op_t op,
         uint32_t da = ~d >> 24;
 
         if (sa > da) {
-            __m64 msa = load8888(FbIntDiv(da, sa) << 24);
+            __m64 msa = load8888(IntDiv(da, sa) << 24);
             msa = expand_alpha(msa);
             ms = pix_multiply(ms, msa);
         }
@@ -2502,8 +2503,8 @@ fbCompositeIn_nx8x8mmx (pixman_implementation_t *imp,
 	    a = *mask++;
 	    d = *dst;
 	    
-	    m = FbIntMult (sa, a, tmp);
-	    d = FbIntMult (m, d, tmp);
+	    m = IntMult (sa, a, tmp);
+	    d = IntMult (m, d, tmp);
 	    
 	    *dst++ = d;
 	}
@@ -2567,7 +2568,7 @@ fbCompositeIn_8x8mmx (pixman_implementation_t *imp,
 	    s = *src;
 	    d = *dst;
 
-	    *dst = FbIntMult (s, d, tmp);
+	    *dst = IntMult (s, d, tmp);
 
 	    src++;
 	    dst++;
@@ -2646,8 +2647,8 @@ fbCompositeSrcAdd_8888x8x8mmx (pixman_implementation_t *imp,
 	    a = *mask++;
 	    d = *dst;
 
-	    m = FbIntMult (sa, a, tmp);
-	    r = FbIntAdd (m, d, tmp);
+	    m = IntMult (sa, a, tmp);
+	    r = IntAdd (m, d, tmp);
 
 	    *dst++ = r;
 	}

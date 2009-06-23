@@ -1,4 +1,4 @@
-$usage = "Usage: combine.pl { 8 | 16 } < combine.inc";
+$usage = "Usage: combine.pl { 8 | 16 } < pixman-combine.c.template";
 
 $#ARGV == 0 or die $usage;
 

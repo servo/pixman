@@ -23,11 +23,9 @@
 
 #define IntMult(a,b,t) ( (t) = (a) * (b) + ONE_HALF, ( ( ( (t)>>G_SHIFT ) + (t) )>>G_SHIFT ) )
 #define IntDiv(a,b)    (((comp2_t) (a) * MASK) / (b))
-
-#define GetComp(v,i)   ((comp2_t) (comp1_t) ((v) >> i))
-
-#define Add(x,y,i,t)   ((t) = GetComp(x,i) + GetComp(y,i),              \
-                        (comp4_t) ((comp1_t) ((t) | (0 - ((t) >> G_SHIFT)))) << (i))
+#define IntAdd(x,y,t) (							\
+	(t) = x + y,                                                    \
+	(comp4_t) (comp1_t) ((t) | (0 - ((t) >> G_SHIFT))))
 
 #define DivOne(x)      (((x) + ONE_HALF + (((x) + ONE_HALF) >> G_SHIFT)) >> G_SHIFT)
 

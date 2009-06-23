@@ -204,7 +204,7 @@ fbCompositeSolidMaskIn_nx8x8 (pixman_implementation_t *imp,
 		}
 		else if (m != 0xff)
 		{
-		    *dst = FbIntMult(m, *dst, t);
+		    *dst = IntMult(m, *dst, t);
 		}
 		dst++;
 	    }
@@ -223,14 +223,14 @@ fbCompositeSolidMaskIn_nx8x8 (pixman_implementation_t *imp,
 	    while (w--)
 	    {
 		m = *mask++;
-		m = FbIntMult(m, srca, t);
+		m = IntMult(m, srca, t);
 		if (m == 0)
 		{
 		    *dst = 0;
 		}
 		else if (m != 0xff)
 		{
-		    *dst = FbIntMult(m, *dst, t);
+		    *dst = IntMult(m, *dst, t);
 		}
 		dst++;
 	    }
@@ -281,7 +281,7 @@ fbCompositeSrcIn_8x8 (pixman_implementation_t *imp,
 	    }
 	    else if (s != 0xff)
 	    {
-		*dst = FbIntMult(s, *dst, t);
+		*dst = IntMult(s, *dst, t);
 	    }
 	    dst++;
 	}
@@ -948,8 +948,8 @@ fbCompositeSrcAdd_8888x8x8 (pixman_implementation_t *imp,
 	    a = *mask++;
 	    d = *dst;
 
-	    m = FbIntMult (sa, a, tmp);
-	    r = FbIntAdd (m, d, tmp);
+	    m = IntMult (sa, a, tmp);
+	    r = IntAdd (m, d, tmp);
 
 	    *dst++ = r;
 	}

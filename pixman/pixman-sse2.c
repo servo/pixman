@@ -34,6 +34,7 @@
 #include <xmmintrin.h> /* for _mm_shuffle_pi16 and _MM_SHUFFLE */
 #include <emmintrin.h> /* for SSE2 intrinsics */
 #include "pixman-private.h"
+#include "pixman-combine32.h"
 
 #ifdef USE_SSE2
 
@@ -1330,7 +1331,7 @@ coreCombineSaturateUPixelsse2 (uint32_t src, uint32_t dst)
 
     if (sa > da)
     {
-        ms = pixMultiply_1x64 (ms, expandAlpha_1x64 (unpack_32_1x64 (FbIntDiv(da, sa) << 24)));
+        ms = pixMultiply_1x64 (ms, expandAlpha_1x64 (unpack_32_1x64 (IntDiv(da, sa) << 24)));
     }
 
     return pack_1x64_32 (_mm_adds_pu16 (md, ms));
