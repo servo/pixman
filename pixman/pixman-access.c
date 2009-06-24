@@ -2499,10 +2499,10 @@ fbFetchPixel32_generic_lossy (bits_image_t *pict, uint32_t *buffer, int n_pixels
 typedef struct
 {
     pixman_format_code_t		format;
-    fetchProc32				fetch_scanline_raw_32;
-    fetchProc32				fetch_scanline_raw_64;
-    fetch_pixels_32_t			fetch_pixels_raw_32;
-    fetch_pixels_32_t			fetch_pixels_raw_64;
+    fetch_scanline_t				fetch_scanline_raw_32;
+    fetch_scanline_t				fetch_scanline_raw_64;
+    fetch_pixels_t			fetch_pixels_raw_32;
+    fetch_pixels_t			fetch_pixels_raw_64;
     store_scanline_t			store_scanline_raw_32;
     store_scanline_t			store_scanline_raw_64;
 } format_info_t;

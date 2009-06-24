@@ -26,14 +26,15 @@ typedef struct radial_gradient radial_gradient_t;
 typedef struct bits_image bits_image_t;
 typedef struct circle circle_t;
 
+typedef void     (*fetch_scanline_t)  (bits_image_t *pict,
+				       int x, int y, int width,
+				       uint32_t *buffer);
+typedef void     (*fetch_pixels_t)    (bits_image_t *image,
+				       uint32_t *buffer, int n_pixels);
 typedef void     (*store_scanline_t)  (bits_image_t *image,
 				       int x, int y, int width,
 				       const uint32_t *values);
-typedef void     (*fetchProc32)        (bits_image_t *pict,
-					int x, int y, int width,
-					uint32_t *buffer);
-typedef void     (*fetch_pixels_32_t) (bits_image_t *image,
-				       uint32_t *buffer, int n_pixels);
+
 typedef void     (*scanFetchProc)     (pixman_image_t *,
 				       int, int, int, uint32_t *,
 				       uint32_t *, uint32_t);
@@ -159,12 +160,12 @@ struct bits_image
     int				rowstride; /* in number of uint32_t's */
 
     /* Fetch raw pixels, with no regard for transformations, alpha map etc. */
-    fetch_pixels_32_t		fetch_pixels_raw_32;
-    fetch_pixels_32_t		fetch_pixels_raw_64;
+    fetch_pixels_t		fetch_pixels_raw_32;
+    fetch_pixels_t		fetch_pixels_raw_64;
 
     /* Fetch raw scanlines, with no regard for transformations, alpha maps etc. */
-    fetchProc32			fetch_scanline_raw_32;
-    fetchProc32			fetch_scanline_raw_64;
+    fetch_scanline_t			fetch_scanline_raw_32;
+    fetch_scanline_t			fetch_scanline_raw_64;
 
     /* Store scanlines with no regard for alpha maps */
     store_scanline_t		store_scanline_raw_32;
