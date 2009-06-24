@@ -5,12 +5,14 @@ TESTPROGRAMS =			\
 	region-test		\
 	scaling-test		\
 	fetch-test		\
+	oob-test		\
 	trap-crasher
 
 fetch_test_LDADD = $(TEST_LDADD)
 region_test_LDADD = $(TEST_LDADD)
 scaling_test_LDADD = $(TEST_LDADD)
 trap_crasher_LDADD = $(TEST_LDADD)
+oob_test_LDADD = $(TEST_LDADD)
 
 # GTK using test programs
 
