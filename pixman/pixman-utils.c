@@ -128,8 +128,8 @@ pixman_compute_composite_region32 (pixman_region32_t *	pRegion,
     
     /* Some X servers rely on an old bug, where pixman would just believe the
      * set clip_region and not clip against the destination geometry. So, 
-     * since only X servers set "source clip", we only clip against destination
-     * geometry when that is set.
+     * since only X servers set "source clip", we don't clip against
+     * destination geometry when that is set.
      */
     if (!pDst->common.clip_sources)
     {
