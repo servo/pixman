@@ -3,34 +3,70 @@
 #include "pixman.h"
 #include "utils.h"
 
+typedef struct
+{
+    int				width;
+    int				height;
+    int				stride;
+    pixman_format_code_t	format;
+    
+} image_info_t;
+
+typedef struct
+{
+    pixman_op_t		op;
+    
+    image_info_t	src;
+    image_info_t	dest;
+
+    int			src_x;
+    int			src_y;
+    int			dest_x;
+    int			dest_y;
+    int			width;
+    int			height;
+} composite_info_t;
+
+const composite_info_t info[] =
+{
+    { PIXMAN_OP_SRC, { 3, 6, 16, PIXMAN_a8r8g8b8 }, { 5, 7, 20, PIXMAN_x8r8g8b8 }, 1, 8, 1, -1, 1, 8 },
+    { PIXMAN_OP_SRC, { 7, 5, 36, PIXMAN_a8r8g8b8 }, { 6, 5, 28, PIXMAN_x8r8g8b8 }, 8, 5, 5,  3, 1, 2 },
+};
+
+static pixman_image_t *
+make_image (const image_info_t *info)
+{
+    char *data = malloc (info->stride * info->height);
+    int i;
+
+    for (i = 0; i < info->height * info->stride; ++i)
+	data[i] = (i % 255) ^ (((i % 16) << 4) | (i & 0xf0));
+
+    return pixman_image_create_bits (info->format, info->width, info->height, (uint32_t *)data, info->stride);
+}
+    
+static void
+test_composite (const composite_info_t *info)
+{
+    pixman_image_t *src = make_image (&info->src);
+    pixman_image_t *dest = make_image (&info->dest);
+
+    pixman_image_composite (PIXMAN_OP_SRC, src, NULL, dest,
+			    info->src_x, info->src_y,
+			    0, 0,
+			    info->dest_x, info->dest_y,
+			    info->width, info->height);
+}
+
+
+
 int
 main (int argc, char **argv)
 {
-#define DWIDTH 3
-#define DHEIGHT 6
-#define DSTRIDE 16
-
-#define SWIDTH 5
-#define SHEIGHT 7
-#define SSTRIDE 20
-    
-    uint32_t *src = malloc (SHEIGHT * SSTRIDE);
-    uint32_t *dest = malloc (DHEIGHT * DSTRIDE);
-    pixman_image_t *simg, *dimg;
-
     int i;
 
-    for (i = 0; i < (SHEIGHT * SSTRIDE) / 4; ++i)
-	src[i] = 0x7f007f00;
-
-    for (i = 0; i < (DHEIGHT * DSTRIDE) / 4; ++i)
-	dest[i] = 0;
-
-    simg = pixman_image_create_bits (PIXMAN_a8r8g8b8, SWIDTH, SHEIGHT, src, SSTRIDE);
-    dimg = pixman_image_create_bits (PIXMAN_x8r8g8b8, DWIDTH, DHEIGHT, dest, DSTRIDE);
-
-    pixman_image_composite (PIXMAN_OP_SRC, simg, NULL, dimg,
-			    1, 8, 0, 0, 1, -1, 1, 8);
-
+    for (i = 0; i < sizeof (info) / sizeof (info[0]); ++i)
+	test_composite (&info[i]);
+    
     return 0;
 }
