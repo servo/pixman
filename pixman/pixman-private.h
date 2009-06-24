@@ -26,25 +26,19 @@ typedef struct radial_gradient radial_gradient_t;
 typedef struct bits_image bits_image_t;
 typedef struct circle circle_t;
 
+typedef void     (*store_scanline_t)  (bits_image_t *image,
+				       int x, int y, int width,
+				       const uint32_t *values);
 typedef void     (*fetchProc32)        (bits_image_t *pict,
 					int x, int y, int width,
 					uint32_t *buffer);
-typedef void     (*storeProc32)        (pixman_image_t *, uint32_t *bits,
-					const uint32_t *values,
-					int x, int width);
 typedef void     (*fetchProc64)        (bits_image_t *pict,
 					int x, int y, int width,
 					uint64_t *buffer);
-typedef void     (*storeProc64)        (pixman_image_t *, uint32_t *bits,
-					const uint64_t *values,
-					int x, int width);
 typedef void     (*fetch_pixels_32_t) (bits_image_t *image,
 				       uint32_t *buffer, int n_pixels);
 typedef void     (*fetch_pixels_64_t) (bits_image_t *image,
 				       uint64_t *buffer, int n_pixels);
-typedef void     (*scanStoreProc)     (bits_image_t *img,
-				       int x, int y, int width,
-				       uint32_t *buffer);
 typedef void     (*scanFetchProc)     (pixman_image_t *,
 				       int, int, int, uint32_t *,
 				       uint32_t *, uint32_t);
@@ -178,12 +172,12 @@ struct bits_image
     fetchProc64			fetch_scanline_raw_64;
 
     /* Store scanlines with no regard for alpha maps */
-    storeProc32			store_scanline_raw_32;
-    storeProc64			store_scanline_raw_64;
+    store_scanline_t		store_scanline_raw_32;
+    store_scanline_t		store_scanline_raw_64;
 
     /* Store a scanline, taking alpha maps into account */
-    scanStoreProc		store_scanline_32;
-    scanStoreProc		store_scanline_64;
+    store_scanline_t		store_scanline_32;
+    store_scanline_t		store_scanline_64;
 
     /* Used for indirect access to the bits */
     pixman_read_memory_func_t	read_func;
@@ -238,7 +232,7 @@ _pixman_image_get_scanline_64 (pixman_image_t *image, int x, int y, int width,
 
 void
 _pixman_image_store_scanline_32 (bits_image_t *image, int x, int y, int width,
-				 uint32_t *buffer);
+				 const uint32_t *buffer);
 void
 _pixman_image_fetch_pixels (bits_image_t *image, uint32_t *buffer,
 			    int n_pixels);
@@ -248,7 +242,7 @@ _pixman_image_fetch_pixels (bits_image_t *image, uint32_t *buffer,
  */
 void
 _pixman_image_store_scanline_64 (bits_image_t *image, int x, int y, int width,
-				 uint32_t *buffer);
+				 const uint32_t *buffer);
 
 pixman_image_t *
 _pixman_image_allocate (void);

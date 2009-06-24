@@ -1810,12 +1810,13 @@ fbFetchPixel_yv12 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 #define Split(v)	uint32_t	r = ((v) >> 16) & 0xff, g = ((v) >> 8) & 0xff, b = (v) & 0xff
 
 static void
-fbStore_a2b10g10r10 (pixman_image_t *image,
-		     uint32_t *bits, const uint64_t *values,
-		     int x, int width)
+fbStore_a2b10g10r10 (bits_image_t *image, int x, int y, int width, const uint32_t *v)
 {
-    int i;
+    uint32_t *bits = image->bits + image->rowstride * y;
     uint32_t *pixel = bits + x;
+    uint64_t *values = (uint64_t *)v;
+    int i;
+    
     for (i = 0; i < width; ++i) {
         WRITE(image, pixel++,
             ((values[i] >> 32) & 0xc0000000) | // A
@@ -1826,11 +1827,13 @@ fbStore_a2b10g10r10 (pixman_image_t *image,
 }
 
 static void
-fbStore_x2b10g10r10 (pixman_image_t *image,
-		     uint32_t *bits, const uint64_t *values, int x, int width)
+fbStore_x2b10g10r10 (bits_image_t *image, int x, int y, int width, const uint32_t *v)
 {
-    int i;
+    uint32_t *bits = image->bits + image->rowstride * y;
+    uint64_t *values = (uint64_t *)v;
     uint32_t *pixel = bits + x;
+    int i;
+    
     for (i = 0; i < width; ++i) {
         WRITE(image, pixel++,
             ((values[i] >> 38) & 0x3ff) |      // R
@@ -1840,48 +1843,63 @@ fbStore_x2b10g10r10 (pixman_image_t *image,
 }
 
 static void
-fbStore_a8r8g8b8 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width)
+fbStore_a8r8g8b8 (bits_image_t *image,
+		  int x, int y, int width,
+		  const uint32_t *values)
 {
+    uint32_t *bits = image->bits + image->rowstride * y;
+    
     MEMCPY_WRAPPED(image, ((uint32_t *)bits) + x, values, width*sizeof(uint32_t));
 }
 
 static void
-fbStore_x8r8g8b8 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width)
+fbStore_x8r8g8b8 (bits_image_t *image,
+		  int x, int y, int width,
+		  const uint32_t *values)
 {
-    int i;
+    uint32_t *bits = image->bits + image->rowstride * y;
     uint32_t *pixel = (uint32_t *)bits + x;
+    int i;
+    
     for (i = 0; i < width; ++i)
 	WRITE(image, pixel++, values[i] & 0xffffff);
 }
 
 static void
-fbStore_a8b8g8r8 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width)
+fbStore_a8b8g8r8 (bits_image_t *image,
+		  int x, int y, int width,
+		  const uint32_t *values)
 {
-    int i;
+    uint32_t *bits = image->bits + image->rowstride * y;
     uint32_t *pixel = (uint32_t *)bits + x;
+    int i;
+    
     for (i = 0; i < width; ++i)
 	WRITE(image, pixel++, (values[i] & 0xff00ff00) | ((values[i] >> 16) & 0xff) | ((values[i] & 0xff) << 16));
 }
 
 static void
-fbStore_x8b8g8r8 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width)
+fbStore_x8b8g8r8 (bits_image_t *image,
+		  int x, int y, int width,
+		  const uint32_t *values)
 {
-    int i;
+    uint32_t *bits = image->bits + image->rowstride * y;
     uint32_t *pixel = (uint32_t *)bits + x;
+    int i;
+    
     for (i = 0; i < width; ++i)
 	WRITE(image, pixel++, (values[i] & 0x0000ff00) | ((values[i] >> 16) & 0xff) | ((values[i] & 0xff) << 16));
 }
 
 static void
-fbStore_b8g8r8a8 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width)
+fbStore_b8g8r8a8 (bits_image_t *image,
+		  int x, int y, int width,
+		  const uint32_t *values)
 {
-    int i;
+    uint32_t *bits = image->bits + image->rowstride * y;
     uint32_t *pixel = (uint32_t *)bits + x;
+    int i;
+
     for (i = 0; i < width; ++i)
 	WRITE(image, pixel++,
 	    ((values[i] >> 24) & 0x000000ff) |
@@ -1891,11 +1909,14 @@ fbStore_b8g8r8a8 (pixman_image_t *image,
 }
 
 static void
-fbStore_b8g8r8x8 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width)
+fbStore_b8g8r8x8 (bits_image_t *image,
+		  int x, int y, int width,
+		  const uint32_t *values)
 {
-    int i;
+    uint32_t *bits = image->bits + image->rowstride * y;
     uint32_t *pixel = (uint32_t *)bits + x;
+    int i;
+
     for (i = 0; i < width; ++i)
 	WRITE(image, pixel++,
 	    ((values[i] >>  8) & 0x0000ff00) |
@@ -1904,11 +1925,14 @@ fbStore_b8g8r8x8 (pixman_image_t *image,
 }
 
 static void
-fbStore_r8g8b8 (pixman_image_t *image,
-		uint32_t *bits, const uint32_t *values, int x, int width)
+fbStore_r8g8b8 (bits_image_t *image,
+		int x, int y, int width,
+		const uint32_t *values)
 {
-    int i;
+    uint32_t *bits = image->bits + image->rowstride * y;
     uint8_t *pixel = ((uint8_t *) bits) + 3*x;
+    int i;
+
     for (i = 0; i < width; ++i)
     {
 	uint32_t val = values[i];
@@ -1925,11 +1949,14 @@ fbStore_r8g8b8 (pixman_image_t *image,
 }
 
 static void
-fbStore_b8g8r8 (pixman_image_t *image,
-		uint32_t *bits, const uint32_t *values, int x, int width)
+fbStore_b8g8r8 (bits_image_t *image,
+		int x, int y, int width,
+		const uint32_t *values)
 {
-    int i;
+    uint32_t *bits = image->bits + image->rowstride * y;
     uint8_t *pixel = ((uint8_t *) bits) + 3*x;
+    int i;
+
     for (i = 0; i < width; ++i)
     {
 	uint32_t val = values[i];
@@ -1946,11 +1973,14 @@ fbStore_b8g8r8 (pixman_image_t *image,
 }
 
 static void
-fbStore_r5g6b5 (pixman_image_t *image,
-		uint32_t *bits, const uint32_t *values, int x, int width)
+fbStore_r5g6b5 (bits_image_t *image,
+		int x, int y, int width,
+		const uint32_t *values)
 {
-    int i;
+    uint32_t *bits = image->bits + image->rowstride * y;
     uint16_t *pixel = ((uint16_t *) bits) + x;
+    int i;
+
     for (i = 0; i < width; ++i) {
 	uint32_t s = values[i];
 	WRITE(image, pixel++, ((s >> 3) & 0x001f) |
@@ -1960,11 +1990,14 @@ fbStore_r5g6b5 (pixman_image_t *image,
 }
 
 static void
-fbStore_b5g6r5 (pixman_image_t *image,
-		uint32_t *bits, const uint32_t *values, int x, int width)
+fbStore_b5g6r5 (bits_image_t *image,
+		int x, int y, int width,
+		const uint32_t *values)
 {
-    int i;
+    uint32_t *bits = image->bits + image->rowstride * y;
     uint16_t  *pixel = ((uint16_t *) bits) + x;
+    int i;
+
     for (i = 0; i < width; ++i) {
 	Split(values[i]);
 	WRITE(image, pixel++, ((b << 8) & 0xf800) |
@@ -1974,11 +2007,14 @@ fbStore_b5g6r5 (pixman_image_t *image,
 }
 
 static void
-fbStore_a1r5g5b5 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width)
+fbStore_a1r5g5b5 (bits_image_t *image,
+		  int x, int y, int width,
+		  const uint32_t *values)
 {
-    int i;
+    uint32_t *bits = image->bits + image->rowstride * y;
     uint16_t  *pixel = ((uint16_t *) bits) + x;
+    int i;
+
     for (i = 0; i < width; ++i) {
 	Splita(values[i]);
 	WRITE(image, pixel++, ((a << 8) & 0x8000) |
@@ -1989,11 +2025,14 @@ fbStore_a1r5g5b5 (pixman_image_t *image,
 }
 
 static void
-fbStore_x1r5g5b5 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width)
+fbStore_x1r5g5b5 (bits_image_t *image,
+		  int x, int y, int width,
+		  const uint32_t *values)
 {
-    int i;
+    uint32_t *bits = image->bits + image->rowstride * y;
     uint16_t  *pixel = ((uint16_t *) bits) + x;
+    int i;
+
     for (i = 0; i < width; ++i) {
 	Split(values[i]);
 	WRITE(image, pixel++, ((r << 7) & 0x7c00) |
@@ -2003,11 +2042,14 @@ fbStore_x1r5g5b5 (pixman_image_t *image,
 }
 
 static void
-fbStore_a1b5g5r5 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width)
+fbStore_a1b5g5r5 (bits_image_t *image,
+		  int x, int y, int width,
+		  const uint32_t *values)
 {
-    int i;
+    uint32_t *bits = image->bits + image->rowstride * y;
     uint16_t  *pixel = ((uint16_t *) bits) + x;
+    int i;
+
     for (i = 0; i < width; ++i) {
 	Splita(values[i]);
 	WRITE(image, pixel++, ((a << 8) & 0x8000) |
@@ -2018,11 +2060,14 @@ fbStore_a1b5g5r5 (pixman_image_t *image,
 }
 
 static void
-fbStore_x1b5g5r5 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width)
+fbStore_x1b5g5r5 (bits_image_t *image,
+		  int x, int y, int width,
+		  const uint32_t *values)
 {
-    int i;
+    uint32_t *bits = image->bits + image->rowstride * y;
     uint16_t  *pixel = ((uint16_t *) bits) + x;
+    int i;
+
     for (i = 0; i < width; ++i) {
 	Split(values[i]);
 	WRITE(image, pixel++, ((b << 7) & 0x7c00) |
@@ -2032,11 +2077,14 @@ fbStore_x1b5g5r5 (pixman_image_t *image,
 }
 
 static void
-fbStore_a4r4g4b4 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width)
+fbStore_a4r4g4b4 (bits_image_t *image,
+		  int x, int y, int width,
+		  const uint32_t *values)
 {
-    int i;
+    uint32_t *bits = image->bits + image->rowstride * y;
     uint16_t  *pixel = ((uint16_t *) bits) + x;
+    int i;
+
     for (i = 0; i < width; ++i) {
 	Splita(values[i]);
 	WRITE(image, pixel++, ((a << 8) & 0xf000) |
@@ -2047,11 +2095,14 @@ fbStore_a4r4g4b4 (pixman_image_t *image,
 }
 
 static void
-fbStore_x4r4g4b4 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width)
+fbStore_x4r4g4b4 (bits_image_t *image,
+		  int x, int y, int width,
+		  const uint32_t *values)
 {
-    int i;
+    uint32_t *bits = image->bits + image->rowstride * y;
     uint16_t  *pixel = ((uint16_t *) bits) + x;
+    int i;
+
     for (i = 0; i < width; ++i) {
 	Split(values[i]);
 	WRITE(image, pixel++, ((r << 4) & 0x0f00) |
@@ -2061,11 +2112,14 @@ fbStore_x4r4g4b4 (pixman_image_t *image,
 }
 
 static void
-fbStore_a4b4g4r4 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width)
+fbStore_a4b4g4r4 (bits_image_t *image,
+		  int x, int y, int width,
+		  const uint32_t *values)
 {
-    int i;
+    uint32_t *bits = image->bits + image->rowstride * y;
     uint16_t  *pixel = ((uint16_t *) bits) + x;
+    int i;
+
     for (i = 0; i < width; ++i) {
 	Splita(values[i]);
 	WRITE(image, pixel++, ((a << 8) & 0xf000) |
@@ -2076,11 +2130,14 @@ fbStore_a4b4g4r4 (pixman_image_t *image,
 }
 
 static void
-fbStore_x4b4g4r4 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width)
+fbStore_x4b4g4r4 (bits_image_t *image,
+		  int x, int y, int width,
+		  const uint32_t *values)
 {
-    int i;
+    uint32_t *bits = image->bits + image->rowstride * y;
     uint16_t  *pixel = ((uint16_t *) bits) + x;
+    int i;
+
     for (i = 0; i < width; ++i) {
 	Split(values[i]);
 	WRITE(image, pixel++, ((b << 4) & 0x0f00) |
@@ -2090,22 +2147,28 @@ fbStore_x4b4g4r4 (pixman_image_t *image,
 }
 
 static void
-fbStore_a8 (pixman_image_t *image,
-	    uint32_t *bits, const uint32_t *values, int x, int width)
+fbStore_a8 (bits_image_t *image,
+	    int x, int y, int width,
+	    const uint32_t *values)
 {
-    int i;
+    uint32_t *bits = image->bits + image->rowstride * y;
     uint8_t   *pixel = ((uint8_t *) bits) + x;
+    int i;
+
     for (i = 0; i < width; ++i) {
 	WRITE(image, pixel++, values[i] >> 24);
     }
 }
 
 static void
-fbStore_r3g3b2 (pixman_image_t *image,
-		uint32_t *bits, const uint32_t *values, int x, int width)
+fbStore_r3g3b2 (bits_image_t *image,
+		int x, int y, int width,
+		const uint32_t *values)
 {
-    int i;
+    uint32_t *bits = image->bits + image->rowstride * y;
     uint8_t   *pixel = ((uint8_t *) bits) + x;
+    int i;
+
     for (i = 0; i < width; ++i) {
 	Split(values[i]);
 	WRITE(image, pixel++,
@@ -2116,11 +2179,14 @@ fbStore_r3g3b2 (pixman_image_t *image,
 }
 
 static void
-fbStore_b2g3r3 (pixman_image_t *image,
-		uint32_t *bits, const uint32_t *values, int x, int width)
+fbStore_b2g3r3 (bits_image_t *image,
+		int x, int y, int width,
+		const uint32_t *values)
 {
-    int i;
+    uint32_t *bits = image->bits + image->rowstride * y;
     uint8_t   *pixel = ((uint8_t *) bits) + x;
+    int i;
+
     for (i = 0; i < width; ++i) {
 	Split(values[i]);
 	WRITE(image, pixel++,
@@ -2131,11 +2197,14 @@ fbStore_b2g3r3 (pixman_image_t *image,
 }
 
 static void
-fbStore_a2r2g2b2 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width)
+fbStore_a2r2g2b2 (bits_image_t *image,
+		  int x, int y, int width,
+		  const uint32_t *values)
 {
-    int i;
+    uint32_t *bits = image->bits + image->rowstride * y;
     uint8_t   *pixel = ((uint8_t *) bits) + x;
+    int i;
+
     for (i = 0; i < width; ++i) {
 	Splita(values[i]);
 	WRITE(image, pixel++, ((a     ) & 0xc0) |
@@ -2146,11 +2215,14 @@ fbStore_a2r2g2b2 (pixman_image_t *image,
 }
 
 static void
-fbStore_a2b2g2r2 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width)
+fbStore_a2b2g2r2 (bits_image_t *image,
+		  int x, int y, int width,
+		  const uint32_t *values)
 {
-    int i;
+    uint32_t *bits = image->bits + image->rowstride * y;
     uint8_t   *pixel = ((uint8_t *) bits) + x;
+    int i;
+
     for (i = 0; i < width; ++i) {
 	Splita(values[i]);
 	*(pixel++) =  ((a     ) & 0xc0) |
@@ -2161,23 +2233,29 @@ fbStore_a2b2g2r2 (pixman_image_t *image,
 }
 
 static void
-fbStore_c8 (pixman_image_t *image,
-	    uint32_t *bits, const uint32_t *values, int x, int width)
+fbStore_c8 (bits_image_t *image,
+	    int x, int y, int width,
+	    const uint32_t *values)
 {
-    const pixman_indexed_t *indexed = image->bits.indexed;
+    uint32_t *bits = image->bits + image->rowstride * y;
+    uint8_t *pixel = ((uint8_t *) bits) + x;
+    const pixman_indexed_t *indexed = image->indexed;
     int i;
-    uint8_t   *pixel = ((uint8_t *) bits) + x;
+    
     for (i = 0; i < width; ++i) {
 	WRITE(image, pixel++, miIndexToEnt24(indexed,values[i]));
     }
 }
 
 static void
-fbStore_x4a4 (pixman_image_t *image,
-	      uint32_t *bits, const uint32_t *values, int x, int width)
+fbStore_x4a4 (bits_image_t *image,
+	      int x, int y, int width,
+	      const uint32_t *values)
 {
-    int i;
+    uint32_t *bits = image->bits + image->rowstride * y;
     uint8_t   *pixel = ((uint8_t *) bits) + x;
+    int i;
+
     for (i = 0; i < width; ++i) {
 	WRITE(image, pixel++, values[i] >> 28);
     }
@@ -2195,20 +2273,26 @@ fbStore_x4a4 (pixman_image_t *image,
 #endif
 
 static void
-fbStore_a4 (pixman_image_t *image,
-	    uint32_t *bits, const uint32_t *values, int x, int width)
+fbStore_a4 (bits_image_t *image,
+	    int x, int y, int width,
+	    const uint32_t *values)
 {
+    uint32_t *bits = image->bits + image->rowstride * y;
     int i;
+    
     for (i = 0; i < width; ++i) {
 	Store4(image, bits, i + x, values[i]>>28);
     }
 }
 
 static void
-fbStore_r1g2b1 (pixman_image_t *image,
-		uint32_t *bits, const uint32_t *values, int x, int width)
+fbStore_r1g2b1 (bits_image_t *image,
+		int x, int y, int width,
+		const uint32_t *values)
 {
+    uint32_t *bits = image->bits + image->rowstride * y;
     int i;
+    
     for (i = 0; i < width; ++i) {
 	uint32_t  pixel;
 
@@ -2221,10 +2305,13 @@ fbStore_r1g2b1 (pixman_image_t *image,
 }
 
 static void
-fbStore_b1g2r1 (pixman_image_t *image,
-		uint32_t *bits, const uint32_t *values, int x, int width)
+fbStore_b1g2r1 (bits_image_t *image,
+		int x, int y, int width,
+		const uint32_t *values)
 {
+    uint32_t *bits = image->bits + image->rowstride * y;
     int i;
+    
     for (i = 0; i < width; ++i) {
 	uint32_t  pixel;
 
@@ -2237,10 +2324,13 @@ fbStore_b1g2r1 (pixman_image_t *image,
 }
 
 static void
-fbStore_a1r1g1b1 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width)
+fbStore_a1r1g1b1 (bits_image_t *image,
+		  int x, int y, int width,
+		  const uint32_t *values)
 {
+    uint32_t *bits = image->bits + image->rowstride * y;
     int i;
+    
     for (i = 0; i < width; ++i) {
 	uint32_t  pixel;
 	Splita(values[i]);
@@ -2253,10 +2343,13 @@ fbStore_a1r1g1b1 (pixman_image_t *image,
 }
 
 static void
-fbStore_a1b1g1r1 (pixman_image_t *image,
-		  uint32_t *bits, const uint32_t *values, int x, int width)
+fbStore_a1b1g1r1 (bits_image_t *image,
+		  int x, int y, int width,
+		  const uint32_t *values)
 {
+    uint32_t *bits = image->bits + image->rowstride * y;
     int i;
+    
     for (i = 0; i < width; ++i) {
 	uint32_t  pixel;
 	Splita(values[i]);
@@ -2269,11 +2362,14 @@ fbStore_a1b1g1r1 (pixman_image_t *image,
 }
 
 static void
-fbStore_c4 (pixman_image_t *image,
-	    uint32_t *bits, const uint32_t *values, int x, int width)
+fbStore_c4 (bits_image_t *image,
+	    int x, int y, int width,
+	    const uint32_t *values)
 {
-    const pixman_indexed_t *indexed = image->bits.indexed;
+    uint32_t *bits = image->bits + image->rowstride * y;
+    const pixman_indexed_t *indexed = image->indexed;
     int i;
+    
     for (i = 0; i < width; ++i) {
 	uint32_t  pixel;
 
@@ -2283,10 +2379,13 @@ fbStore_c4 (pixman_image_t *image,
 }
 
 static void
-fbStore_a1 (pixman_image_t *image,
-	    uint32_t *bits, const uint32_t *values, int x, int width)
+fbStore_a1 (bits_image_t *image,
+	    int x, int y, int width,
+	    const uint32_t *values)
 {
+    uint32_t *bits = image->bits + image->rowstride * y;
     int i;
+    
     for (i = 0; i < width; ++i)
     {
 	uint32_t  *pixel = ((uint32_t *) bits) + ((i+x) >> 5);
@@ -2302,11 +2401,14 @@ fbStore_a1 (pixman_image_t *image,
 }
 
 static void
-fbStore_g1 (pixman_image_t *image,
-	    uint32_t *bits, const uint32_t *values, int x, int width)
+fbStore_g1 (bits_image_t *image,
+	    int x, int y, int width,
+	    const uint32_t *values)
 {
-    const pixman_indexed_t *indexed = image->bits.indexed;
+    uint32_t *bits = image->bits + image->rowstride * y;
+    const pixman_indexed_t *indexed = image->indexed;
     int i;
+    
     for (i = 0; i < width; ++i)
     {
 	uint32_t  *pixel = ((uint32_t *) bits) + ((i+x) >> 5);
@@ -2323,11 +2425,10 @@ fbStore_g1 (pixman_image_t *image,
 
 /*
  * Contracts a 64bpp image to 32bpp and then stores it using a regular 32-bit
- * store proc.
+ * store proc. Despite the type, this function expects a uint64_t buffer.
  */
 static void
-fbStore64_generic (pixman_image_t *image,
-		   uint32_t *bits, const uint64_t *values, int x, int width)
+fbStore64_generic (bits_image_t *image, int x, int y, int width, const uint32_t *values)
 {
     uint32_t *argb8Pixels;
 
@@ -2340,9 +2441,9 @@ fbStore64_generic (pixman_image_t *image,
     /* Contract the scanline.  We could do this in place if values weren't
      * const.
      */
-    pixman_contract(argb8Pixels, values, width);
+    pixman_contract(argb8Pixels, (uint64_t *)values, width);
     
-    image->bits.store_scanline_raw_32 (image, bits, argb8Pixels, x, width);
+    image->store_scanline_raw_32 (image, x, y, width, argb8Pixels);
 
     free(argb8Pixels);
 }
@@ -2390,8 +2491,8 @@ typedef struct
     fetchProc64				fetch_scanline_raw_64;
     fetch_pixels_32_t			fetch_pixels_raw_32;
     fetch_pixels_64_t			fetch_pixels_raw_64;
-    storeProc32				store_scanline_raw_32;
-    storeProc64				store_scanline_raw_64;
+    store_scanline_t			store_scanline_raw_32;
+    store_scanline_t			store_scanline_raw_64;
 } format_info_t;
 
 #define FORMAT_INFO(format)						\

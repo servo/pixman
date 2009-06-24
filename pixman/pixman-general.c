@@ -67,7 +67,7 @@ general_composite_rect  (pixman_implementation_t *imp,
     uint8_t *src_buffer, *mask_buffer, *dest_buffer;
     scanFetchProc fetchSrc = NULL, fetchMask = NULL, fetchDest = NULL;
     pixman_combine_32_func_t compose;
-    scanStoreProc store;
+    store_scanline_t store;
     source_pict_class_t srcClass, maskClass;
     pixman_bool_t component_alpha;
     uint32_t *bits;

@@ -40,16 +40,10 @@
 static void
 bits_image_store_scanline_32 (bits_image_t *image,
 			      int x, int y,
-			      int width, uint32_t *buffer)
+			      int width,
+			      const uint32_t *buffer)
 {
-    uint32_t *bits;
-    int32_t stride;
-
-    bits = image->bits;
-    stride = image->rowstride;
-    bits += y*stride;
-
-    image->store_scanline_raw_32 ((pixman_image_t *)image, bits, buffer, x, width);
+    image->store_scanline_raw_32 (image, x, y, width, buffer);
 
     if (image->common.alpha_map)
     {
@@ -63,17 +57,10 @@ bits_image_store_scanline_32 (bits_image_t *image,
 static void
 bits_image_store_scanline_64 (bits_image_t *image,
 			      int x, int y,
-			      int width, uint32_t *buffer)
+			      int width,
+			      const uint32_t *buffer)
 {
-    uint32_t *bits;
-    int32_t stride;
-
-    bits = image->bits;
-    stride = image->rowstride;
-    bits += y*stride;
-
-    image->store_scanline_raw_64 ((pixman_image_t *)image, bits,
-				  (uint64_t *)buffer, x, width);
+    image->store_scanline_raw_64 (image, x, y, width, buffer);
 
     if (image->common.alpha_map)
     {
@@ -86,14 +73,14 @@ bits_image_store_scanline_64 (bits_image_t *image,
 
 void
 _pixman_image_store_scanline_32 (bits_image_t *image, int x, int y, int width,
-				 uint32_t *buffer)
+				 const uint32_t *buffer)
 {
     image->store_scanline_32 (image, x, y, width, buffer);
 }
 
 void
 _pixman_image_store_scanline_64 (bits_image_t *image, int x, int y, int width,
-				 uint32_t *buffer)
+				 const uint32_t *buffer)
 {
     image->store_scanline_64 (image, x, y, width, buffer);
 }
