@@ -14,7 +14,7 @@ main (int argc, char **argv)
 #define SHEIGHT 7
 #define SSTRIDE 20
     
-    uint32_t *src = malloc (DHEIGHT * SSTRIDE);
+    uint32_t *src = malloc (SHEIGHT * SSTRIDE);
     uint32_t *dest = malloc (DHEIGHT * DSTRIDE);
     pixman_image_t *simg, *dimg;
 
