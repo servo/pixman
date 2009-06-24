@@ -567,13 +567,13 @@ get_fast_path (const pixman_fast_path_t *fast_paths,
 }
 
 static inline pixman_bool_t
-image_covers (pixman_image_t *image, pixman_box32_t *extents)
+image_covers (pixman_image_t *image, pixman_box32_t *extents, int x, int y)
 {
     if (image->common.type == BITS && image->common.repeat == PIXMAN_REPEAT_NONE)
     {
-	if (extents->x1 < 0 || extents->y1 < 0 ||
-	    extents->x2 >= image->bits.width ||
-	    extents->y2 >= image->bits.height)
+	if (x > extents->x1 || y > extents->y1 ||
+	    x + image->bits.width < extents->x2 ||
+	    y + image->bits.height < extents->y2)
 	{
 	    return FALSE;
 	}
@@ -674,9 +674,9 @@ _pixman_run_fast_path (const pixman_fast_path_t *paths,
 		&region, src, mask, dest, src_x, src_y, mask_x, mask_y, dest_x, dest_y, width, height))
 	{
 	    pixman_box32_t *extents = pixman_region32_extents (&region);
-	
-	    if (image_covers (src, extents)		   &&
-		(!mask || image_covers (mask, extents)))
+
+	    if (image_covers (src, extents, dest_x - src_x, dest_y - src_y)   &&
+		(!mask || image_covers (mask, extents, dest_x - mask_x, dest_y - mask_y)))
 	    {
 		walk_region_internal (imp, op,
 				      src, mask, dest,
