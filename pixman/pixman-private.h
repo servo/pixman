@@ -26,7 +26,7 @@ typedef struct radial_gradient radial_gradient_t;
 typedef struct bits_image bits_image_t;
 typedef struct circle circle_t;
 
-typedef void     (*fetch_scanline_t)  (bits_image_t *pict,
+typedef void     (*fetch_scanline_t)  (pixman_image_t *pict,
 				       int x, int y, int width,
 				       uint32_t *buffer,
 				       const uint32_t *mask,
@@ -36,10 +36,6 @@ typedef void     (*fetch_pixels_t)    (bits_image_t *image,
 typedef void     (*store_scanline_t)  (bits_image_t *image,
 				       int x, int y, int width,
 				       const uint32_t *values);
-
-typedef void     (*scanFetchProc)     (pixman_image_t *,
-				       int, int, int, uint32_t *,
-				       const uint32_t *, uint32_t);
 
 typedef enum
 {
@@ -88,8 +84,8 @@ struct image_common
     pixman_write_memory_func_t	write_func;
     classify_func_t		classify;
     property_changed_func_t	property_changed;
-    scanFetchProc		get_scanline_32;
-    scanFetchProc		get_scanline_64;
+    fetch_scanline_t		get_scanline_32;
+    fetch_scanline_t		get_scanline_64;
 
     pixman_image_destroy_func_t destroy_func;
     void *			destroy_data;

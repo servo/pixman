@@ -65,7 +65,7 @@ general_composite_rect  (pixman_implementation_t *imp,
     const int Bpp = wide ? 8 : 4;
     uint8_t *scanline_buffer = stack_scanline_buffer;
     uint8_t *src_buffer, *mask_buffer, *dest_buffer;
-    scanFetchProc fetchSrc = NULL, fetchMask = NULL, fetchDest = NULL;
+    fetch_scanline_t fetchSrc = NULL, fetchMask = NULL, fetchDest = NULL;
     pixman_combine_32_func_t compose;
     store_scanline_t store;
     source_pict_class_t srcClass, maskClass;

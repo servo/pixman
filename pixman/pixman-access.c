@@ -50,15 +50,16 @@
  * YV12 setup and access macros
  */
 
-#define YV12_SETUP(pict) \
-	uint32_t *bits = pict->bits; \
-	int stride = pict->rowstride; \
-	int offset0 = stride < 0 ? \
-		((-stride) >> 1) * ((pict->height - 1) >> 1) - stride : \
-		stride * pict->height; \
-	int offset1 = stride < 0 ? \
-		offset0 + ((-stride) >> 1) * ((pict->height) >> 1) : \
-		offset0 + (offset0 >> 2)
+#define YV12_SETUP(image)						\
+    bits_image_t *__bits_image = (bits_image_t *)image;			\
+    uint32_t *bits = __bits_image->bits;					\
+    int stride = __bits_image->rowstride;					\
+    int offset0 = stride < 0 ?						\
+	((-stride) >> 1) * ((__bits_image->height - 1) >> 1) - stride :	\
+	stride * __bits_image->height;					\
+    int offset1 = stride < 0 ?						\
+	offset0 + ((-stride) >> 1) * ((__bits_image->height) >> 1) :	\
+	offset0 + (offset0 >> 2)
 /* Note no trailing semicolon on the above macro; if it's there, then
  * the typical usage of YV12_SETUP(pict); will have an extra trailing ;
  * that some compilers will interpret as a statement -- and then any further
@@ -79,36 +80,36 @@
 /*********************************** Fetch ************************************/
 
 static void
-fbFetch_a8r8g8b8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
+fbFetch_a8r8g8b8 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		  const uint32_t *mask, uint32_t mask_bits)
 {
-    const uint32_t *bits = pict->bits + y*pict->rowstride;
-    MEMCPY_WRAPPED(pict,
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
+    MEMCPY_WRAPPED(image,
                    buffer, (const uint32_t *)bits + x,
 		   width*sizeof(uint32_t));
 }
 
 static void
-fbFetch_x8r8g8b8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
+fbFetch_x8r8g8b8 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		  const uint32_t *mask, uint32_t mask_bits)
 {
-    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     const uint32_t *pixel = (const uint32_t *)bits + x;
     const uint32_t *end = pixel + width;
     while (pixel < end) {
-	*buffer++ = READ(pict, pixel++) | 0xff000000;
+	*buffer++ = READ(image, pixel++) | 0xff000000;
     }
 }
 
 static void
-fbFetch_a8b8g8r8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
+fbFetch_a8b8g8r8 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		  const uint32_t *mask, uint32_t mask_bits)
 {
-    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     const uint32_t *pixel = (uint32_t *)bits + x;
     const uint32_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t p = READ(pict, pixel++);
+	uint32_t p = READ(image, pixel++);
 	*buffer++ = (p & 0xff00ff00) |
 	            ((p >> 16) & 0xff) |
 	    ((p & 0xff) << 16);
@@ -116,14 +117,14 @@ fbFetch_a8b8g8r8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
 }
 
 static void
-fbFetch_x8b8g8r8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
+fbFetch_x8b8g8r8 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		  const uint32_t *mask, uint32_t mask_bits)
 {
-    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     const uint32_t *pixel = (uint32_t *)bits + x;
     const uint32_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t p = READ(pict, pixel++);
+	uint32_t p = READ(image, pixel++);
 	*buffer++ = 0xff000000 |
 	    (p & 0x0000ff00) |
 	    ((p >> 16) & 0xff) |
@@ -132,14 +133,14 @@ fbFetch_x8b8g8r8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
 }
 
 static void
-fbFetch_b8g8r8a8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
+fbFetch_b8g8r8a8 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		  const uint32_t *mask, uint32_t mask_bits)
 {
-    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     const uint32_t *pixel = (uint32_t *)bits + x;
     const uint32_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t p = READ(pict, pixel++);
+	uint32_t p = READ(image, pixel++);
 	*buffer++ = ((p & 0xff000000) >> 24) |
 	    ((p & 0x00ff0000) >> 8) |
 	    ((p & 0x0000ff00) << 8) |
@@ -148,14 +149,14 @@ fbFetch_b8g8r8a8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
 }
 
 static void
-fbFetch_b8g8r8x8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
+fbFetch_b8g8r8x8 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		  const uint32_t *mask, uint32_t mask_bits)
 {
-    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     const uint32_t *pixel = (uint32_t *)bits + x;
     const uint32_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t p = READ(pict, pixel++);
+	uint32_t p = READ(image, pixel++);
 	*buffer++ = 0xff000000 |
 	    ((p & 0xff000000) >> 24) |
 	    ((p & 0x00ff0000) >> 8) |
@@ -165,16 +166,16 @@ fbFetch_b8g8r8x8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
 
 /* Expects a uint64_t buffer */
 static void
-fbFetch_a2b10g10r10 (bits_image_t *pict, int x, int y, int width, uint32_t *b,
+fbFetch_a2b10g10r10 (pixman_image_t *image, int x, int y, int width, uint32_t *b,
 		     const uint32_t *mask, uint32_t mask_bits)
 {
-    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     const uint32_t *pixel = bits + x;
     const uint32_t *end = pixel + width;
     uint64_t *buffer = (uint64_t *)b;
     
     while (pixel < end) {
-        uint32_t p = READ(pict, pixel++);
+        uint32_t p = READ(image, pixel++);
         uint64_t a = p >> 30;
         uint64_t b = (p >> 20) & 0x3ff;
         uint64_t g = (p >> 10) & 0x3ff;
@@ -195,16 +196,16 @@ fbFetch_a2b10g10r10 (bits_image_t *pict, int x, int y, int width, uint32_t *b,
 
 /* Expects a uint64_t buffer */
 static void
-fbFetch_x2b10g10r10 (bits_image_t *pict, int x, int y, int width, uint32_t *b,
+fbFetch_x2b10g10r10 (pixman_image_t *image, int x, int y, int width, uint32_t *b,
 		     const uint32_t *mask, uint32_t mask_bits)
 {
-    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     const uint32_t *pixel = (uint32_t *)bits + x;
     const uint32_t *end = pixel + width;
     uint64_t *buffer = (uint64_t *)b;
     
     while (pixel < end) {
-        uint32_t p = READ(pict, pixel++);
+        uint32_t p = READ(image, pixel++);
         uint64_t b = (p >> 20) & 0x3ff;
         uint64_t g = (p >> 10) & 0x3ff;
         uint64_t r = p & 0x3ff;
@@ -218,58 +219,58 @@ fbFetch_x2b10g10r10 (bits_image_t *pict, int x, int y, int width, uint32_t *b,
 }
 
 static void
-fbFetch_r8g8b8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
+fbFetch_r8g8b8 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		const uint32_t *mask, uint32_t mask_bits)
 {
-    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     const uint8_t *pixel = (const uint8_t *)bits + 3*x;
     const uint8_t *end = pixel + 3*width;
     while (pixel < end) {
 	uint32_t b = 0xff000000;
 #ifdef WORDS_BIGENDIAN
-	b |= (READ(pict, pixel++) << 16);
-	b |= (READ(pict, pixel++) << 8);
-	b |= (READ(pict, pixel++));
+	b |= (READ(image, pixel++) << 16);
+	b |= (READ(image, pixel++) << 8);
+	b |= (READ(image, pixel++));
 #else
-	b |= (READ(pict, pixel++));
-	b |= (READ(pict, pixel++) << 8);
-	b |= (READ(pict, pixel++) << 16);
+	b |= (READ(image, pixel++));
+	b |= (READ(image, pixel++) << 8);
+	b |= (READ(image, pixel++) << 16);
 #endif
 	*buffer++ = b;
     }
 }
 
 static void
-fbFetch_b8g8r8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
+fbFetch_b8g8r8 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		const uint32_t *mask, uint32_t mask_bits)
 {
-    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     const uint8_t *pixel = (const uint8_t *)bits + 3*x;
     const uint8_t *end = pixel + 3*width;
     while (pixel < end) {
 	uint32_t b = 0xff000000;
 #ifdef WORDS_BIGENDIAN
-	b |= (READ(pict, pixel++));
-	b |= (READ(pict, pixel++) << 8);
-	b |= (READ(pict, pixel++) << 16);
+	b |= (READ(image, pixel++));
+	b |= (READ(image, pixel++) << 8);
+	b |= (READ(image, pixel++) << 16);
 #else
-	b |= (READ(pict, pixel++) << 16);
-	b |= (READ(pict, pixel++) << 8);
-	b |= (READ(pict, pixel++));
+	b |= (READ(image, pixel++) << 16);
+	b |= (READ(image, pixel++) << 8);
+	b |= (READ(image, pixel++));
 #endif
 	*buffer++ = b;
     }
 }
 
 static void
-fbFetch_r5g6b5 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
+fbFetch_r5g6b5 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		const uint32_t *mask, uint32_t mask_bits)
 {
-    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     const uint16_t *pixel = (const uint16_t *)bits + x;
     const uint16_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t p = READ(pict, pixel++);
+	uint32_t p = READ(image, pixel++);
 	uint32_t r = (((p) << 3) & 0xf8) |
 	    (((p) << 5) & 0xfc00) |
 	    (((p) << 8) & 0xf80000);
@@ -280,15 +281,15 @@ fbFetch_r5g6b5 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
 }
 
 static void
-fbFetch_b5g6r5 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
+fbFetch_b5g6r5 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t  r,g,b;
-    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     const uint16_t *pixel = (const uint16_t *)bits + x;
     const uint16_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t  p = READ(pict, pixel++);
+	uint32_t  p = READ(image, pixel++);
 	b = ((p & 0xf800) | ((p & 0xe000) >> 5)) >> 8;
 	g = ((p & 0x07e0) | ((p & 0x0600) >> 6)) << 5;
 	r = ((p & 0x001c) | ((p & 0x001f) << 5)) << 14;
@@ -297,15 +298,15 @@ fbFetch_b5g6r5 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
 }
 
 static void
-fbFetch_a1r5g5b5 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
+fbFetch_a1r5g5b5 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		  const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t  r,g,b, a;
-    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     const uint16_t *pixel = (const uint16_t *)bits + x;
     const uint16_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t  p = READ(pict, pixel++);
+	uint32_t  p = READ(image, pixel++);
 
 	a = (uint32_t) ((uint8_t) (0 - ((p & 0x8000) >> 15))) << 24;
 	r = ((p & 0x7c00) | ((p & 0x7000) >> 5)) << 9;
@@ -316,15 +317,15 @@ fbFetch_a1r5g5b5 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
 }
 
 static void
-fbFetch_x1r5g5b5 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
+fbFetch_x1r5g5b5 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		  const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t  r,g,b;
-    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     const uint16_t *pixel = (const uint16_t *)bits + x;
     const uint16_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t  p = READ(pict, pixel++);
+	uint32_t  p = READ(image, pixel++);
 
 	r = ((p & 0x7c00) | ((p & 0x7000) >> 5)) << 9;
 	g = ((p & 0x03e0) | ((p & 0x0380) >> 5)) << 6;
@@ -334,15 +335,15 @@ fbFetch_x1r5g5b5 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
 }
 
 static void
-fbFetch_a1b5g5r5 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
+fbFetch_a1b5g5r5 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		  const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t  r,g,b, a;
-    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     const uint16_t *pixel = (const uint16_t *)bits + x;
     const uint16_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t  p = READ(pict, pixel++);
+	uint32_t  p = READ(image, pixel++);
 
 	a = (uint32_t) ((uint8_t) (0 - ((p & 0x8000) >> 15))) << 24;
 	b = ((p & 0x7c00) | ((p & 0x7000) >> 5)) >> 7;
@@ -353,15 +354,15 @@ fbFetch_a1b5g5r5 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
 }
 
 static void
-fbFetch_x1b5g5r5 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
+fbFetch_x1b5g5r5 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		  const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t  r,g,b;
-    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     const uint16_t *pixel = (const uint16_t *)bits + x;
     const uint16_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t  p = READ(pict, pixel++);
+	uint32_t  p = READ(image, pixel++);
 
 	b = ((p & 0x7c00) | ((p & 0x7000) >> 5)) >> 7;
 	g = ((p & 0x03e0) | ((p & 0x0380) >> 5)) << 6;
@@ -371,15 +372,15 @@ fbFetch_x1b5g5r5 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
 }
 
 static void
-fbFetch_a4r4g4b4 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
+fbFetch_a4r4g4b4 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		  const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t  r,g,b, a;
-    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     const uint16_t *pixel = (const uint16_t *)bits + x;
     const uint16_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t  p = READ(pict, pixel++);
+	uint32_t  p = READ(image, pixel++);
 
 	a = ((p & 0xf000) | ((p & 0xf000) >> 4)) << 16;
 	r = ((p & 0x0f00) | ((p & 0x0f00) >> 4)) << 12;
@@ -390,15 +391,15 @@ fbFetch_a4r4g4b4 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
 }
 
 static void
-fbFetch_x4r4g4b4 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
+fbFetch_x4r4g4b4 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		  const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t  r,g,b;
-    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     const uint16_t *pixel = (const uint16_t *)bits + x;
     const uint16_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t  p = READ(pict, pixel++);
+	uint32_t  p = READ(image, pixel++);
 
 	r = ((p & 0x0f00) | ((p & 0x0f00) >> 4)) << 12;
 	g = ((p & 0x00f0) | ((p & 0x00f0) >> 4)) << 8;
@@ -408,15 +409,15 @@ fbFetch_x4r4g4b4 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
 }
 
 static void
-fbFetch_a4b4g4r4 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
+fbFetch_a4b4g4r4 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		  const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t  r,g,b, a;
-    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     const uint16_t *pixel = (const uint16_t *)bits + x;
     const uint16_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t  p = READ(pict, pixel++);
+	uint32_t  p = READ(image, pixel++);
 
 	a = ((p & 0xf000) | ((p & 0xf000) >> 4)) << 16;
 	b = ((p & 0x0f00) | ((p & 0x0f00) >> 4)) >> 4;
@@ -427,15 +428,15 @@ fbFetch_a4b4g4r4 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
 }
 
 static void
-fbFetch_x4b4g4r4 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
+fbFetch_x4b4g4r4 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		  const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t  r,g,b;
-    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     const uint16_t *pixel = (const uint16_t *)bits + x;
     const uint16_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t  p = READ(pict, pixel++);
+	uint32_t  p = READ(image, pixel++);
 
 	b = ((p & 0x0f00) | ((p & 0x0f00) >> 4)) >> 4;
 	g = ((p & 0x00f0) | ((p & 0x00f0) >> 4)) << 8;
@@ -445,27 +446,27 @@ fbFetch_x4b4g4r4 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
 }
 
 static void
-fbFetch_a8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
+fbFetch_a8 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 	    const uint32_t *mask, uint32_t mask_bits)
 {
-    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     const uint8_t *pixel = (const uint8_t *)bits + x;
     const uint8_t *end = pixel + width;
     while (pixel < end) {
-	*buffer++ = READ(pict, pixel++) << 24;
+	*buffer++ = READ(image, pixel++) << 24;
     }
 }
 
 static void
-fbFetch_r3g3b2 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
+fbFetch_r3g3b2 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t  r,g,b;
-    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     const uint8_t *pixel = (const uint8_t *)bits + x;
     const uint8_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t  p = READ(pict, pixel++);
+	uint32_t  p = READ(image, pixel++);
 
 	r = ((p & 0xe0) | ((p & 0xe0) >> 3) | ((p & 0xc0) >> 6)) << 16;
 	g = ((p & 0x1c) | ((p & 0x18) >> 3) | ((p & 0x1c) << 3)) << 8;
@@ -478,15 +479,15 @@ fbFetch_r3g3b2 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
 }
 
 static void
-fbFetch_b2g3r3 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
+fbFetch_b2g3r3 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t  r,g,b;
-    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     const uint8_t *pixel = (const uint8_t *)bits + x;
     const uint8_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t  p = READ(pict, pixel++);
+	uint32_t  p = READ(image, pixel++);
 
 	b = (((p & 0xc0)     ) |
 	     ((p & 0xc0) >> 2) |
@@ -501,15 +502,15 @@ fbFetch_b2g3r3 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
 }
 
 static void
-fbFetch_a2r2g2b2 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
+fbFetch_a2r2g2b2 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		  const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t   a,r,g,b;
-    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     const uint8_t *pixel = (const uint8_t *)bits + x;
     const uint8_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t  p = READ(pict, pixel++);
+	uint32_t  p = READ(image, pixel++);
 
 	a = ((p & 0xc0) * 0x55) << 18;
 	r = ((p & 0x30) * 0x55) << 12;
@@ -520,15 +521,15 @@ fbFetch_a2r2g2b2 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
 }
 
 static void
-fbFetch_a2b2g2r2 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
+fbFetch_a2b2g2r2 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		  const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t   a,r,g,b;
-    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     const uint8_t *pixel = (const uint8_t *)bits + x;
     const uint8_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t  p = READ(pict, pixel++);
+	uint32_t  p = READ(image, pixel++);
 
 	a = ((p & 0xc0) * 0x55) << 18;
 	b = ((p & 0x30) * 0x55) >> 6;
@@ -539,28 +540,28 @@ fbFetch_a2b2g2r2 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
 }
 
 static void
-fbFetch_c8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
+fbFetch_c8 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 	    const uint32_t *mask, uint32_t mask_bits)
 {
-    const uint32_t *bits = pict->bits + y*pict->rowstride;
-    const pixman_indexed_t * indexed = pict->indexed;
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
+    const pixman_indexed_t * indexed = image->bits.indexed;
     const uint8_t *pixel = (const uint8_t *)bits + x;
     const uint8_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t  p = READ(pict, pixel++);
+	uint32_t  p = READ(image, pixel++);
 	*buffer++ = indexed->rgba[p];
     }
 }
 
 static void
-fbFetch_x4a4 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
+fbFetch_x4a4 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 	      const uint32_t *mask, uint32_t mask_bits)
 {
-    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     const uint8_t *pixel = (const uint8_t *)bits + x;
     const uint8_t *end = pixel + width;
     while (pixel < end) {
-	uint8_t p = READ(pict, pixel++) & 0xf;
+	uint8_t p = READ(image, pixel++) & 0xf;
 	*buffer++ = (p | (p << 4)) << 24;
     }
 }
@@ -573,13 +574,13 @@ fbFetch_x4a4 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
 #endif
 
 static void
-fbFetch_a4 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
+fbFetch_a4 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 	    const uint32_t *mask, uint32_t mask_bits)
 {
-    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     int i;
     for (i = 0; i < width; ++i) {
-	uint32_t  p = Fetch4(pict, bits, i + x);
+	uint32_t  p = Fetch4(image, bits, i + x);
 
 	p |= p << 4;
 	*buffer++ = p << 24;
@@ -587,14 +588,14 @@ fbFetch_a4 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
 }
 
 static void
-fbFetch_r1g2b1 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
+fbFetch_r1g2b1 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t  r,g,b;
-    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     int i;
     for (i = 0; i < width; ++i) {
-	uint32_t  p = Fetch4(pict, bits, i + x);
+	uint32_t  p = Fetch4(image, bits, i + x);
 
 	r = ((p & 0x8) * 0xff) << 13;
 	g = ((p & 0x6) * 0x55) << 7;
@@ -604,14 +605,14 @@ fbFetch_r1g2b1 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
 }
 
 static void
-fbFetch_b1g2r1 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
+fbFetch_b1g2r1 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t  r,g,b;
-    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     int i;
     for (i = 0; i < width; ++i) {
-	uint32_t  p = Fetch4(pict, bits, i + x);
+	uint32_t  p = Fetch4(image, bits, i + x);
 
 	b = ((p & 0x8) * 0xff) >> 3;
 	g = ((p & 0x6) * 0x55) << 7;
@@ -621,14 +622,14 @@ fbFetch_b1g2r1 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
 }
 
 static void
-fbFetch_a1r1g1b1 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
+fbFetch_a1r1g1b1 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		  const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t  a,r,g,b;
-    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     int i;
     for (i = 0; i < width; ++i) {
-	uint32_t  p = Fetch4(pict, bits, i + x);
+	uint32_t  p = Fetch4(image, bits, i + x);
 
 	a = ((p & 0x8) * 0xff) << 21;
 	r = ((p & 0x4) * 0xff) << 14;
@@ -639,14 +640,14 @@ fbFetch_a1r1g1b1 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
 }
 
 static void
-fbFetch_a1b1g1r1 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
+fbFetch_a1b1g1r1 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		  const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t  a,r,g,b;
-    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     int i;
     for (i = 0; i < width; ++i) {
-	uint32_t  p = Fetch4(pict, bits, i + x);
+	uint32_t  p = Fetch4(image, bits, i + x);
 
 	a = ((p & 0x8) * 0xff) << 21;
 	r = ((p & 0x4) * 0xff) >> 3;
@@ -657,14 +658,14 @@ fbFetch_a1b1g1r1 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
 }
 
 static void
-fbFetch_c4 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
+fbFetch_c4 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 	    const uint32_t *mask, uint32_t mask_bits)
 {
-    const uint32_t *bits = pict->bits + y*pict->rowstride;
-    const pixman_indexed_t * indexed = pict->indexed;
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
+    const pixman_indexed_t * indexed = image->bits.indexed;
     int i;
     for (i = 0; i < width; ++i) {
-	uint32_t  p = Fetch4(pict, bits, i + x);
+	uint32_t  p = Fetch4 (image, bits, i + x);
 
 	*buffer++ = indexed->rgba[p];
     }
@@ -672,13 +673,13 @@ fbFetch_c4 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
 
 
 static void
-fbFetch_a1 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
+fbFetch_a1 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 	    const uint32_t *mask, uint32_t mask_bits)
 {
-    const uint32_t *bits = pict->bits + y*pict->rowstride;
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     int i;
     for (i = 0; i < width; ++i) {
-	uint32_t  p = READ(pict, bits + ((i + x) >> 5));
+	uint32_t  p = READ(image, bits + ((i + x) >> 5));
 	uint32_t  a;
 #ifdef WORDS_BIGENDIAN
 	a = p >> (0x1f - ((i+x) & 0x1f));
@@ -694,14 +695,14 @@ fbFetch_a1 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
 }
 
 static void
-fbFetch_g1 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
+fbFetch_g1 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 	    const uint32_t *mask, uint32_t mask_bits)
 {
-    const uint32_t *bits = pict->bits + y*pict->rowstride;
-    const pixman_indexed_t * indexed = pict->indexed;
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
+    const pixman_indexed_t * indexed = image->bits.indexed;
     int i;
     for (i = 0; i < width; ++i) {
-	uint32_t p = READ(pict, bits + ((i+x) >> 5));
+	uint32_t p = READ(image, bits + ((i+x) >> 5));
 	uint32_t a;
 #ifdef WORDS_BIGENDIAN
 	a = p >> (0x1f - ((i+x) & 0x1f));
@@ -714,14 +715,14 @@ fbFetch_g1 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
 }
 
 static void
-fbFetch_yuy2 (bits_image_t *pict, int x, int line, int width, uint32_t *buffer,
+fbFetch_yuy2 (pixman_image_t *image, int x, int line, int width, uint32_t *buffer,
 	      const uint32_t *mask, uint32_t mask_bits)
 {
     int16_t y, u, v;
     int32_t r, g, b;
     int   i;
 
-    const uint32_t *bits = pict->bits + pict->rowstride * line;
+    const uint32_t *bits = image->bits.bits + image->bits.rowstride * line;
 
     for (i = 0; i < width; i++)
     {
@@ -736,18 +737,18 @@ fbFetch_yuy2 (bits_image_t *pict, int x, int line, int width, uint32_t *buffer,
 	/* B = 1.164(Y - 16) + 2.018(U - 128) */
 	b = 0x012b27 * y + 0x0206a2 * u;
 
-	WRITE(pict, buffer++, 0xff000000 |
-	      (r >= 0 ? r < 0x1000000 ? r         & 0xff0000 : 0xff0000 : 0) |
-	      (g >= 0 ? g < 0x1000000 ? (g >> 8)  & 0x00ff00 : 0x00ff00 : 0) |
-	      (b >= 0 ? b < 0x1000000 ? (b >> 16) & 0x0000ff : 0x0000ff : 0));
+	*buffer++ = 0xff000000 |
+	    (r >= 0 ? r < 0x1000000 ? r         & 0xff0000 : 0xff0000 : 0) |
+	    (g >= 0 ? g < 0x1000000 ? (g >> 8)  & 0x00ff00 : 0x00ff00 : 0) |
+	    (b >= 0 ? b < 0x1000000 ? (b >> 16) & 0x0000ff : 0x0000ff : 0);
     }
 }
 
 static void
-fbFetch_yv12 (bits_image_t *pict, int x, int line, int width, uint32_t *buffer,
+fbFetch_yv12 (pixman_image_t *image, int x, int line, int width, uint32_t *buffer,
 	      const uint32_t *mask, uint32_t mask_bits)
 {
-    YV12_SETUP(pict);
+    YV12_SETUP(image);
     uint8_t *pY = YV12_Y (line);
     uint8_t *pU = YV12_U (line);
     uint8_t *pV = YV12_V (line);
@@ -768,10 +769,10 @@ fbFetch_yv12 (bits_image_t *pict, int x, int line, int width, uint32_t *buffer,
 	/* B = 1.164(Y - 16) + 2.018(U - 128) */
 	b = 0x012b27 * y + 0x0206a2 * u;
 
-	WRITE(pict, buffer++, 0xff000000 |
+	*buffer++ = 0xff000000 |
 	    (r >= 0 ? r < 0x1000000 ? r         & 0xff0000 : 0xff0000 : 0) |
 	    (g >= 0 ? g < 0x1000000 ? (g >> 8)  & 0x00ff00 : 0x00ff00 : 0) |
-	    (b >= 0 ? b < 0x1000000 ? (b >> 16) & 0x0000ff : 0x0000ff : 0));
+	    (b >= 0 ? b < 0x1000000 ? (b >> 16) & 0x0000ff : 0x0000ff : 0);
     }
 }
 
@@ -1562,7 +1563,7 @@ fbFetchPixel_a4 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 	else
 	{
 	    uint32_t *bits = pict->bits + line*pict->rowstride;
-	    uint32_t  pixel = Fetch4(pict, bits, offset);
+	    uint32_t  pixel = Fetch4 (pict, bits, offset);
 	    
 	    pixel |= pixel << 4;
 	    buffer[i] = pixel << 24;
@@ -1588,7 +1589,7 @@ fbFetchPixel_r1g2b1 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 	{
 	    uint32_t  r,g,b;
 	    uint32_t *bits = pict->bits + line*pict->rowstride;
-	    uint32_t  pixel = Fetch4(pict, bits, offset);
+	    uint32_t  pixel = Fetch4 (pict, bits, offset);
 	    
 	    r = ((pixel & 0x8) * 0xff) << 13;
 	    g = ((pixel & 0x6) * 0x55) << 7;
@@ -1616,7 +1617,7 @@ fbFetchPixel_b1g2r1 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 	{
 	    uint32_t  r,g,b;
 	    uint32_t *bits = pict->bits + line*pict->rowstride;
-	    uint32_t  pixel = Fetch4(pict, bits, offset);
+	    uint32_t  pixel = Fetch4 (pict, bits, offset);
 	    
 	    b = ((pixel & 0x8) * 0xff) >> 3;
 	    g = ((pixel & 0x6) * 0x55) << 7;
@@ -1644,7 +1645,7 @@ fbFetchPixel_a1r1g1b1 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 	{
 	    uint32_t  a,r,g,b;
 	    uint32_t *bits = pict->bits + line*pict->rowstride;
-	    uint32_t  pixel = Fetch4(pict, bits, offset);
+	    uint32_t  pixel = Fetch4 (pict, bits, offset);
 	    
 	    a = ((pixel & 0x8) * 0xff) << 21;
 	    r = ((pixel & 0x4) * 0xff) << 14;
@@ -1673,7 +1674,7 @@ fbFetchPixel_a1b1g1r1 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 	{
 	    uint32_t  a,r,g,b;
 	    uint32_t *bits = pict->bits + line*pict->rowstride;
-	    uint32_t  pixel = Fetch4(pict, bits, offset);
+	    uint32_t  pixel = Fetch4 (pict, bits, offset);
 	    
 	    a = ((pixel & 0x8) * 0xff) << 21;
 	    r = ((pixel & 0x4) * 0xff) >> 3;
@@ -1701,7 +1702,7 @@ fbFetchPixel_c4 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 	else
 	{
 	    uint32_t *bits = pict->bits + line*pict->rowstride;
-	    uint32_t  pixel = Fetch4(pict, bits, offset);
+	    uint32_t  pixel = Fetch4 (pict, bits, offset);
 	    const pixman_indexed_t * indexed = pict->indexed;
 	    
 	    buffer[i] = indexed->rgba[pixel];
@@ -2497,15 +2498,15 @@ fbStore64_generic (bits_image_t *image, int x, int y, int width, const uint32_t 
 
 /* Despite the type, this function expects both buffer and mask to be uint64_t */
 static void
-fbFetch64_generic (bits_image_t *pict, int x, int y, int width, uint32_t *buffer,
+fbFetch64_generic (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		   const uint32_t *mask, uint32_t mask_bits)
 {
     /* Fetch the pixels into the first half of buffer and then expand them in
      * place.
      */
-    pict->fetch_scanline_raw_32 (pict, x, y, width, buffer, NULL, 0);
+    image->bits.fetch_scanline_raw_32 (image, x, y, width, buffer, NULL, 0);
     
-    pixman_expand ((uint64_t *)buffer, buffer, pict->format, width);
+    pixman_expand ((uint64_t *)buffer, buffer, image->bits.format, width);
 }
 
 /* Despite the type, this function expects a uint64_t *buffer */
