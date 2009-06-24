@@ -157,12 +157,15 @@ fbFetch_b8g8r8x8 (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
     }
 }
 
+/* Expects a uint64_t buffer */
 static void
-fbFetch_a2b10g10r10 (bits_image_t *pict, int x, int y, int width, uint64_t *buffer)
+fbFetch_a2b10g10r10 (bits_image_t *pict, int x, int y, int width, uint32_t *b)
 {
     const uint32_t *bits = pict->bits + y*pict->rowstride;
     const uint32_t *pixel = bits + x;
     const uint32_t *end = pixel + width;
+    uint64_t *buffer = (uint64_t *)b;
+    
     while (pixel < end) {
         uint32_t p = READ(pict, pixel++);
         uint64_t a = p >> 30;
@@ -183,12 +186,15 @@ fbFetch_a2b10g10r10 (bits_image_t *pict, int x, int y, int width, uint64_t *buff
     }
 }
 
+/* Expects a uint64_t buffer */
 static void
-fbFetch_x2b10g10r10 (bits_image_t *pict, int x, int y, int width, uint64_t *buffer)
+fbFetch_x2b10g10r10 (bits_image_t *pict, int x, int y, int width, uint32_t *b)
 {
     const uint32_t *bits = pict->bits + y*pict->rowstride;
     const uint32_t *pixel = (uint32_t *)bits + x;
     const uint32_t *end = pixel + width;
+    uint64_t *buffer = (uint64_t *)b;
+    
     while (pixel < end) {
         uint32_t p = READ(pict, pixel++);
         uint64_t b = (p >> 20) & 0x3ff;
@@ -734,10 +740,12 @@ fbFetch_yv12 (bits_image_t *pict, int x, int line, int width, uint32_t *buffer)
 
 /**************************** Pixel wise fetching *****************************/
 
+/* Despite the type, expects a uint64_t buffer */
 static void
-fbFetchPixel_a2b10g10r10 (bits_image_t *pict, uint64_t *buffer, int n_pixels)
+fbFetchPixel_a2b10g10r10_64 (bits_image_t *pict, uint32_t *b, int n_pixels)
 {
     int i;
+    uint64_t *buffer = (uint64_t *)b;
 
     for (i = 0; i < n_pixels; ++i)
     {
@@ -771,9 +779,11 @@ fbFetchPixel_a2b10g10r10 (bits_image_t *pict, uint64_t *buffer, int n_pixels)
     }
 }
 
+/* Despite the type, this function expects a uint64_t buffer */
 static void
-fbFetchPixel_x2b10g10r10 (bits_image_t *pict, uint64_t *buffer, int n_pixels)
+fbFetchPixel_x2b10g10r10_64 (bits_image_t *pict, uint32_t *b, int n_pixels)
 {
+    uint64_t *buffer = (uint64_t *)b;
     int i;
     
     for (i = 0; i < n_pixels; ++i)
@@ -2448,23 +2458,25 @@ fbStore64_generic (bits_image_t *image, int x, int y, int width, const uint32_t 
     free(argb8Pixels);
 }
 
+/* Despite the type, this function expects a uint64_t buffer */
 static void
-fbFetch64_generic (bits_image_t *pict, int x, int y, int width, uint64_t *buffer)
+fbFetch64_generic (bits_image_t *pict, int x, int y, int width, uint32_t *buffer)
 {
     /* Fetch the pixels into the first half of buffer and then expand them in
      * place.
      */
-    pict->fetch_scanline_raw_32 (pict, x, y, width, (uint32_t*)buffer);
+    pict->fetch_scanline_raw_32 (pict, x, y, width, buffer);
     
-    pixman_expand (buffer, (uint32_t*)buffer, pict->format, width);
+    pixman_expand ((uint64_t *)buffer, buffer, pict->format, width);
 }
 
+/* Despite the type, this function expects a uint64_t *buffer */
 static void
-fbFetchPixel64_generic (bits_image_t *pict, uint64_t *buffer, int n_pixels)
+fbFetchPixel64_generic (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
-    pict->fetch_pixels_raw_32 (pict, (uint32_t *)buffer, n_pixels);
+    pict->fetch_pixels_raw_32 (pict, buffer, n_pixels);
     
-    pixman_expand (buffer, (uint32_t *)buffer, pict->format, n_pixels);
+    pixman_expand ((uint64_t *)buffer, buffer, pict->format, n_pixels);
 }
 
 /*
@@ -2477,9 +2489,9 @@ static void
 fbFetchPixel32_generic_lossy (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     /* Since buffer contains n_pixels coordinate pairs, it also has enough room for
-     * n_pixels 64 bit pixels
+     * n_pixels 64 bit pixels.
      */
-    pict->fetch_pixels_raw_64 (pict, (uint64_t *)buffer, n_pixels);
+    pict->fetch_pixels_raw_64 (pict, buffer, n_pixels);
     
     pixman_contract (buffer, (uint64_t *)buffer, n_pixels);
 }
@@ -2488,9 +2500,9 @@ typedef struct
 {
     pixman_format_code_t		format;
     fetchProc32				fetch_scanline_raw_32;
-    fetchProc64				fetch_scanline_raw_64;
+    fetchProc32				fetch_scanline_raw_64;
     fetch_pixels_32_t			fetch_pixels_raw_32;
-    fetch_pixels_64_t			fetch_pixels_raw_64;
+    fetch_pixels_32_t			fetch_pixels_raw_64;
     store_scanline_t			store_scanline_raw_32;
     store_scanline_t			store_scanline_raw_64;
 } format_info_t;
@@ -2575,12 +2587,12 @@ static const format_info_t accessors[] =
     
     { PIXMAN_a2b10g10r10,
       NULL, fbFetch_a2b10g10r10,
-      fbFetchPixel32_generic_lossy, fbFetchPixel_a2b10g10r10,
+      fbFetchPixel32_generic_lossy, fbFetchPixel_a2b10g10r10_64,
       NULL, fbStore_a2b10g10r10 },
 
     { PIXMAN_x2b10g10r10,
       NULL, fbFetch_x2b10g10r10,
-      fbFetchPixel32_generic_lossy, fbFetchPixel_x2b10g10r10,
+      fbFetchPixel32_generic_lossy, fbFetchPixel_x2b10g10r10_64,
       NULL, fbStore_x2b10g10r10 },
 
 /* YUV formats */
