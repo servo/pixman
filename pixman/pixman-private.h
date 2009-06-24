@@ -28,7 +28,9 @@ typedef struct circle circle_t;
 
 typedef void     (*fetch_scanline_t)  (bits_image_t *pict,
 				       int x, int y, int width,
-				       uint32_t *buffer);
+				       uint32_t *buffer,
+				       const uint32_t *mask,
+				       uint32_t mask_bits);
 typedef void     (*fetch_pixels_t)    (bits_image_t *image,
 				       uint32_t *buffer, int n_pixels);
 typedef void     (*store_scanline_t)  (bits_image_t *image,

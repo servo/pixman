@@ -656,9 +656,9 @@ bits_image_fetch_untransformed_repeat_none (bits_image_t *image, pixman_bool_t w
 	w = MIN (width, image->width - x);
 	
 	if (wide)
-	    image->fetch_scanline_raw_64 (image, x, y, w, buffer);
+	    image->fetch_scanline_raw_64 (image, x, y, w, buffer, NULL, 0);
 	else
-	    image->fetch_scanline_raw_32 (image, x, y, w, buffer);
+	    image->fetch_scanline_raw_32 (image, x, y, w, buffer, NULL, 0);
 	
 	width -= w;
 	buffer += w;
@@ -690,9 +690,9 @@ bits_image_fetch_untransformed_repeat_normal (bits_image_t *image, pixman_bool_t
 	w = MIN (width, image->width - x);
 	
 	if (wide)
-	    image->fetch_scanline_raw_64 (image, x, y, w, buffer);
+	    image->fetch_scanline_raw_64 (image, x, y, w, buffer, NULL, 0);
 	else
-	    image->fetch_scanline_raw_32 (image, x, y, w, buffer);
+	    image->fetch_scanline_raw_32 (image, x, y, w, buffer, NULL, 0);
 	
 	buffer += w;
 	x += w;
