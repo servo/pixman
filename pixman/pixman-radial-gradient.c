@@ -32,8 +32,8 @@
 #include "pixman-private.h"
 
 static void
-radial_gradient_get_scanline_32 (pixman_image_t *image, int x, int y, int width,
-				 uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
+radial_gradient_get_scanline_32 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+				 const uint32_t *mask, uint32_t maskBits)
 {
     /*
      * In the radial gradient problem we are given two circles (c₁,r₁) and

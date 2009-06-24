@@ -25,8 +25,8 @@
 #include "pixman-private.h"
 
 static void
-solid_fill_get_scanline_32 (pixman_image_t *image, int x, int y, int width,
-			    uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
+solid_fill_get_scanline_32 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+			    const uint32_t *mask, uint32_t maskBits)
 {
     uint32_t *end = buffer + width;
     register uint32_t color = ((solid_fill_t *)image)->color;

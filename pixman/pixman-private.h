@@ -39,7 +39,7 @@ typedef void     (*store_scanline_t)  (bits_image_t *image,
 
 typedef void     (*scanFetchProc)     (pixman_image_t *,
 				       int, int, int, uint32_t *,
-				       uint32_t *, uint32_t);
+				       const uint32_t *, uint32_t);
 
 typedef enum
 {
@@ -205,7 +205,7 @@ _pixman_image_get_scanline_64_generic  (pixman_image_t *pict,
 					int             y,
 					int             width,
 					uint32_t       *buffer,
-					uint32_t       *mask,
+					const uint32_t *mask,
 					uint32_t        maskBits);
 
 source_pict_class_t
@@ -216,17 +216,15 @@ _pixman_image_classify (pixman_image_t *image,
 			int             height);
 
 void
-_pixman_image_get_scanline_32 (pixman_image_t *image, int x, int y, int width,
-			       uint32_t *buffer, uint32_t *mask,
-			       uint32_t mask_bits);
+_pixman_image_get_scanline_32 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+			       const uint32_t *mask, uint32_t mask_bits);
 
 /* Even thought the type of buffer is uint32_t *, the function actually expects
  * a uint64_t *buffer.
  */
 void
-_pixman_image_get_scanline_64 (pixman_image_t *image, int x, int y, int width,
-			       uint32_t *buffer,
-			       uint32_t *unused, uint32_t unused2);
+_pixman_image_get_scanline_64 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+			       const uint32_t *unused, uint32_t unused2);
 
 void
 _pixman_image_store_scanline_32 (bits_image_t *image, int x, int y, int width,

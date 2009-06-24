@@ -88,8 +88,8 @@ linear_gradient_classify (pixman_image_t *image,
 }
 
 static void
-linear_gradient_get_scanline_32 (pixman_image_t *image, int x, int y, int width,
-				 uint32_t *buffer, uint32_t *mask, uint32_t maskBits)
+linear_gradient_get_scanline_32 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+				 const uint32_t *mask, uint32_t maskBits)
 {
     pixman_vector_t v, unit;
     pixman_fixed_32_32_t l;

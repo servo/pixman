@@ -492,9 +492,9 @@ bits_image_fetch_filtered (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 }
 
 static void
-bits_image_fetch_transformed (pixman_image_t * pict, int x, int y, int width,
-			      uint32_t *buffer, uint32_t *mask,
-			      uint32_t maskBits)
+bits_image_fetch_transformed (pixman_image_t * pict, int x, int y,
+			      int width, uint32_t *buffer,
+			      const uint32_t *mask, uint32_t maskBits)
 {
     uint32_t     *bits;
     int32_t    stride;
@@ -587,10 +587,9 @@ bits_image_fetch_transformed (pixman_image_t * pict, int x, int y, int width,
 }
 
 static void
-bits_image_fetch_solid_32 (pixman_image_t * image,
-			   int x, int y, int width,
-			   uint32_t *buffer,
-			   uint32_t *mask, uint32_t maskBits)
+bits_image_fetch_solid_32 (pixman_image_t * image, int x, int y,
+			   int width, uint32_t *buffer,
+			   const uint32_t *mask, uint32_t maskBits)
 {
     uint32_t color[2];
     uint32_t *end;
@@ -606,11 +605,9 @@ bits_image_fetch_solid_32 (pixman_image_t * image,
 }
 
 static void
-bits_image_fetch_solid_64 (pixman_image_t * image,
-			   int x, int y, int width,
-			   uint32_t *b,
-			   uint32_t *unused,
-			   uint32_t unused2)
+bits_image_fetch_solid_64 (pixman_image_t * image, int x, int y,
+			   int width, uint32_t *b,
+			   const uint32_t *unused, uint32_t unused2)
 {
     uint32_t color[2];
     uint32_t *coords = (uint32_t *)color;
@@ -701,10 +698,9 @@ bits_image_fetch_untransformed_repeat_normal (bits_image_t *image, pixman_bool_t
 }
 
 static void
-bits_image_fetch_untransformed_32 (pixman_image_t * image,
-				   int x, int y, int width,
-				   uint32_t *buffer,
-				   uint32_t *mask, uint32_t maskBits)
+bits_image_fetch_untransformed_32 (pixman_image_t * image, int x, int y,
+				   int width, uint32_t *buffer,
+				   const uint32_t *mask, uint32_t maskBits)
 {
     if (image->common.repeat == PIXMAN_REPEAT_NONE)
     {
@@ -719,10 +715,9 @@ bits_image_fetch_untransformed_32 (pixman_image_t * image,
 }
 
 static void
-bits_image_fetch_untransformed_64 (pixman_image_t * image,
-				   int x, int y, int width,
-				   uint32_t *buffer,
-				   uint32_t *unused, uint32_t unused2)
+bits_image_fetch_untransformed_64 (pixman_image_t * image, int x, int y,
+				   int width, uint32_t *buffer,
+				   const uint32_t *unused, uint32_t unused2)
 {
     if (image->common.repeat == PIXMAN_REPEAT_NONE)
     {
@@ -762,10 +757,8 @@ bits_image_property_changed (pixman_image_t *image)
 	     (bits->common.repeat == PIXMAN_REPEAT_NONE ||
 	      bits->common.repeat == PIXMAN_REPEAT_NORMAL))
     {
-	image->common.get_scanline_64 =
-	    bits_image_fetch_untransformed_64;
-	image->common.get_scanline_32 =
-	    bits_image_fetch_untransformed_32;
+	image->common.get_scanline_64 = bits_image_fetch_untransformed_64;
+	image->common.get_scanline_32 = bits_image_fetch_untransformed_32;
     }
     else
     {
