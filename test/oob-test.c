@@ -29,8 +29,38 @@ typedef struct
 
 const composite_info_t info[] =
 {
-    { PIXMAN_OP_SRC, { 3, 6, 16, PIXMAN_a8r8g8b8 }, { 5, 7, 20, PIXMAN_x8r8g8b8 }, 1, 8, 1, -1, 1, 8 },
-    { PIXMAN_OP_SRC, { 7, 5, 36, PIXMAN_a8r8g8b8 }, { 6, 5, 28, PIXMAN_x8r8g8b8 }, 8, 5, 5,  3, 1, 2 },
+    {
+	PIXMAN_OP_SRC,
+	{  3, 6, 16, PIXMAN_a8r8g8b8 },
+	{  5, 7, 20, PIXMAN_x8r8g8b8 },
+	1, 8,
+	1, -1,
+	1, 8
+    },
+    {
+	PIXMAN_OP_SRC,
+	{ 7, 5, 36, PIXMAN_a8r8g8b8 },
+	{ 6, 5, 28, PIXMAN_x8r8g8b8 },
+	8, 5,
+	5, 3,
+	1, 2
+    },
+    {
+	PIXMAN_OP_OVER,
+	{ 10, 10, 40, PIXMAN_a2b10g10r10 },
+	{ 10, 10, 40, PIXMAN_a2b10g10r10 },
+	0, 0,
+	0, 0,
+	10, 10
+    },
+    {
+	PIXMAN_OP_OVER,
+	{ 10, 10, 40, PIXMAN_x2b10g10r10 },
+	{ 10, 10, 40, PIXMAN_x2b10g10r10 },
+	0, 0,
+	0, 0,
+	10, 10
+    },
 };
 
 static pixman_image_t *
