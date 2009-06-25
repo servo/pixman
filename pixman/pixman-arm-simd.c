@@ -27,8 +27,6 @@
 #include <config.h>
 #endif
 
-#include "pixman-arm-simd.h"
-
 void
 fbCompositeSrcAdd_8000x8000arm (
                             pixman_implementation_t * impl,

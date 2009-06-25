@@ -30,8 +30,6 @@
 #include <config.h>
 #endif
 
-#include "pixman-arm-neon.h"
-
 #include <arm_neon.h>
 #include <string.h>
 
