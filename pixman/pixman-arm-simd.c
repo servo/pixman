@@ -27,7 +27,7 @@
 #include <config.h>
 #endif
 
-void
+static void
 fbCompositeSrcAdd_8000x8000arm (
                             pixman_implementation_t * impl,
                             pixman_op_t op,
@@ -97,7 +97,7 @@ fbCompositeSrcAdd_8000x8000arm (
 
 }
 
-void
+static void
 fbCompositeSrc_8888x8888arm (
                             pixman_implementation_t * impl,
                             pixman_op_t op,
@@ -190,7 +190,7 @@ fbCompositeSrc_8888x8888arm (
     }
 }
 
-void
+static void
 fbCompositeSrc_8888x8x8888arm (
                             pixman_implementation_t * impl,
                             pixman_op_t op,
@@ -299,7 +299,7 @@ fbCompositeSrc_8888x8x8888arm (
     }
 }
 
-void
+static void
 fbCompositeSolidMask_nx8x8888arm (
                             pixman_implementation_t * impl,
                             pixman_op_t      op,

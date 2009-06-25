@@ -122,7 +122,7 @@ static force_inline uint8x8x4_t neon8qadd(uint8x8x4_t x, uint8x8x4_t y)
 }
 
 
-void
+static void
 fbCompositeSrcAdd_8000x8000neon (
                             pixman_implementation_t * impl,
                             pixman_op_t op,
@@ -272,7 +272,7 @@ fbCompositeSrcAdd_8000x8000neon (
 }
 
 
-void
+static void
 fbCompositeSrc_8888x8888neon (
                             pixman_implementation_t * impl,
                             pixman_op_t op,
@@ -433,7 +433,7 @@ fbCompositeSrc_8888x8888neon (
     }
 }
 
-void
+static void
 fbCompositeSrc_8888x8x8888neon (
                                pixman_implementation_t * impl,
                                pixman_op_t op,
@@ -630,7 +630,7 @@ fbCompositeSrc_8888x8x8888neon (
 }
 
 
-void
+static void
 fbCompositeSolidMask_nx8x8888neon (
                             pixman_implementation_t * impl,
                             pixman_op_t      op,
@@ -836,7 +836,7 @@ fbCompositeSolidMask_nx8x8888neon (
 }
 
 
-void
+static void
 fbCompositeSrcAdd_8888x8x8neon (
                             pixman_implementation_t * impl,
                             pixman_op_t op,
@@ -955,7 +955,7 @@ fbCompositeSrcAdd_8888x8x8neon (
 
 #ifdef USE_GCC_INLINE_ASM
 
-void
+static void
 fbCompositeSrc_16x16neon (
 	pixman_implementation_t * impl,
 	pixman_op_t op,
@@ -1082,7 +1082,7 @@ fbCompositeSrc_16x16neon (
 
 #endif /* USE_GCC_INLINE_ASM */
 
-void
+static void
 fbCompositeSrc_24x16neon (
 	pixman_implementation_t * impl,
 	pixman_op_t op,
@@ -1300,7 +1300,7 @@ fbCompositeSrc_24x16neon (
 }
 
 
-pixman_bool_t
+static pixman_bool_t
 pixman_fill_neon (uint32_t *bits,
 		  int stride,
 		  int bpp,
@@ -1709,7 +1709,7 @@ static inline void SolidOver565_8pix_neon(
 #endif
 }
 
-void
+static void
 fbCompositeSolidMask_nx8x0565neon (
 	pixman_implementation_t * impl,
 	pixman_op_t op,
@@ -1851,7 +1851,7 @@ static inline void PlainOver565_8pix_neon(
 	);
 }
 
-void
+static void
 fbCompositeSolid_nx0565neon (
 	pixman_implementation_t * impl,
 	pixman_op_t op,
@@ -1981,7 +1981,7 @@ static inline void ARGB8_Over565_8pix_neon(
 	);
 }
 
-void
+static void
 fbCompositeOver_8888x0565neon (
 	pixman_implementation_t * impl,
 	pixman_op_t op,
@@ -2156,7 +2156,7 @@ arm_neon_composite (pixman_implementation_t *imp,
 				      width, height);
 }
 
-pixman_bool_t
+static pixman_bool_t
 pixman_blt_neon (
 	void *src_bits,
 	void *dst_bits,
