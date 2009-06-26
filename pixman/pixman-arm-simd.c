@@ -217,7 +217,7 @@ fbCompositeSrc_8888x8x8888arm (
     fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
     fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
 
-    _pixman_image_get_solid (pMask, mask, pDst->bits.format);
+    mask = _pixman_image_get_solid (pMask, pDst->bits.format);
     mask = (mask) >> 24;
 
     while (height--)
@@ -321,8 +321,9 @@ fbCompositeSolidMask_nx8x8888arm (
     int		 dstStride, maskStride;
     uint16_t	 w;
 
-    _pixman_image_get_solid(pSrc, src, pDst->bits.format);
+    src = _pixman_image_get_solid(pSrc, pDst->bits.format);
 
+    // bail out if fully transparent
     srca = src >> 24;
     if (src == 0)
 	return;
