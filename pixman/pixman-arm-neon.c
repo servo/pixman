@@ -1736,7 +1736,7 @@ fbCompositeSolidMask_nx8x0565neon (
 
 	// bail out if fully transparent or degenerate
 	srca = src >> 24;
-	if(srca == 0)
+	if(src == 0)
 		return;
 	if(width == 0 || height == 0)
 		return;
@@ -1877,7 +1877,7 @@ fbCompositeSolid_nx0565neon (
 
 	// bail out if fully transparent
 	srca = src >> 24;
-	if(srca == 0)
+	if(src == 0)
 		return;
 	if(width == 0 || height == 0)
 		return;
