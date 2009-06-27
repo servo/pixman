@@ -27,6 +27,8 @@
 #include <config.h>
 #endif
 
+#include "pixman-private.h"
+
 static void
 fbCompositeSrcAdd_8000x8000arm (
                             pixman_implementation_t * impl,

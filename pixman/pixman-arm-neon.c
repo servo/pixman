@@ -32,6 +32,7 @@
 
 #include <arm_neon.h>
 #include <string.h>
+#include "pixman-private.h"
 
 // Deal with an intrinsic that is defined differently in GCC
 #if !defined(__ARMCC_VERSION) && !defined(__pld)
