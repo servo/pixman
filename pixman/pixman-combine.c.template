@@ -1977,7 +1977,7 @@ _pixman_setup_combiner_functions_width (pixman_implementation_t *imp)
     imp->combine_width_ca[PIXMAN_OP_DISJOINT_SRC] = fbCombineSrcC;
     /* dest */
     imp->combine_width_ca[PIXMAN_OP_DISJOINT_OVER] = fbCombineDisjointOverC;
-    imp->combine_width_ca[PIXMAN_OP_DISJOINT_OVER_REVERSE] = fbCombineSaturateC,
+    imp->combine_width_ca[PIXMAN_OP_DISJOINT_OVER_REVERSE] = fbCombineSaturateC;
     imp->combine_width_ca[PIXMAN_OP_DISJOINT_IN] = fbCombineDisjointInC;
     imp->combine_width_ca[PIXMAN_OP_DISJOINT_IN_REVERSE] = fbCombineDisjointInReverseC;
     imp->combine_width_ca[PIXMAN_OP_DISJOINT_OUT] = fbCombineDisjointOutC;
