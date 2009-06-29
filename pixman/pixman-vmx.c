@@ -244,7 +244,7 @@ vmxCombineOverUnomask (uint32_t *dest, const uint32_t *src, int width)
         uint32_t d = dest[i];
         uint32_t ia = Alpha (~s);
 
-        FbByteMulAdd (d, ia, s);
+        UN8x4_MUL_UN8_ADD_UN8x4 (d, ia, s);
         dest[i] = d;
     }
 }
@@ -282,11 +282,11 @@ vmxCombineOverUmask (uint32_t *dest,
         uint32_t d = dest[i];
         uint32_t ia;
 
-        FbByteMul (s, m);
+        UN8x4_MUL_UN8 (s, m);
 
         ia = Alpha (~s);
 
-        FbByteMulAdd (d, ia, s);
+        UN8x4_MUL_UN8_ADD_UN8x4 (d, ia, s);
         dest[i] = d;
     }
 }
@@ -330,7 +330,7 @@ vmxCombineOverReverseUnomask (uint32_t *dest, const uint32_t *src, int width)
         uint32_t d = dest[i];
         uint32_t ia = Alpha (~dest[i]);
 
-        FbByteMulAdd (s, ia, d);
+        UN8x4_MUL_UN8_ADD_UN8x4 (s, ia, d);
         dest[i] = s;
     }
 }
@@ -368,9 +368,9 @@ vmxCombineOverReverseUmask (uint32_t *dest,
         uint32_t d = dest[i];
         uint32_t ia = Alpha (~dest[i]);
 
-        FbByteMul (s, m);
+        UN8x4_MUL_UN8 (s, m);
 
-        FbByteMulAdd (s, ia, d);
+        UN8x4_MUL_UN8_ADD_UN8x4 (s, ia, d);
         dest[i] = s;
     }
 }
@@ -413,7 +413,7 @@ vmxCombineInUnomask (uint32_t *dest, const uint32_t *src, int width)
 
         uint32_t s = src[i];
         uint32_t a = Alpha (dest[i]);
-        FbByteMul (s, a);
+        UN8x4_MUL_UN8 (s, a);
         dest[i] = s;
     }
 }
@@ -450,9 +450,9 @@ vmxCombineInUmask (uint32_t *dest,
         uint32_t s = src[i];
         uint32_t a = Alpha (dest[i]);
 
-        FbByteMul (s, m);
+        UN8x4_MUL_UN8 (s, m);
 
-        FbByteMul (s, a);
+        UN8x4_MUL_UN8 (s, a);
         dest[i] = s;
     }
 }
@@ -494,7 +494,7 @@ vmxCombineInReverseUnomask (uint32_t *dest, const uint32_t *src, int width)
     for (i = width%4; --i >=0;) {
         uint32_t d = dest[i];
         uint32_t a = Alpha (src[i]);
-        FbByteMul (d, a);
+        UN8x4_MUL_UN8 (d, a);
         dest[i] = d;
     }
 }
@@ -531,10 +531,10 @@ vmxCombineInReverseUmask (uint32_t *dest,
         uint32_t d = dest[i];
         uint32_t a = src[i];
 
-        FbByteMul (a, m);
+        UN8x4_MUL_UN8 (a, m);
 
         a = Alpha (a);
-        FbByteMul (d, a);
+        UN8x4_MUL_UN8 (d, a);
         dest[i] = d;
     }
 }
@@ -576,7 +576,7 @@ vmxCombineOutUnomask (uint32_t *dest, const uint32_t *src, int width)
     for (i = width%4; --i >=0;) {
         uint32_t s = src[i];
         uint32_t a = Alpha (~dest[i]);
-        FbByteMul (s, a);
+        UN8x4_MUL_UN8 (s, a);
         dest[i] = s;
     }
 }
@@ -613,9 +613,9 @@ vmxCombineOutUmask (uint32_t *dest,
         uint32_t s = src[i];
         uint32_t a = Alpha (~dest[i]);
 
-        FbByteMul (s, m);
+        UN8x4_MUL_UN8 (s, m);
 
-        FbByteMul (s, a);
+        UN8x4_MUL_UN8 (s, a);
         dest[i] = s;
     }
 }
@@ -657,7 +657,7 @@ vmxCombineOutReverseUnomask (uint32_t *dest, const uint32_t *src, int width)
     for (i = width%4; --i >=0;) {
         uint32_t d = dest[i];
         uint32_t a = Alpha (~src[i]);
-        FbByteMul (d, a);
+        UN8x4_MUL_UN8 (d, a);
         dest[i] = d;
     }
 }
@@ -694,10 +694,10 @@ vmxCombineOutReverseUmask (uint32_t *dest,
         uint32_t d = dest[i];
         uint32_t a = src[i];
 
-        FbByteMul (a, m);
+        UN8x4_MUL_UN8 (a, m);
 
         a = Alpha (~a);
-        FbByteMul (d, a);
+        UN8x4_MUL_UN8 (d, a);
         dest[i] = d;
     }
 }
@@ -745,7 +745,7 @@ vmxCombineAtopUnomask (uint32_t *dest, const uint32_t *src, int width)
         uint32_t dest_a = Alpha (d);
         uint32_t src_ia = Alpha (~s);
 
-        FbByteAddMul (s, dest_a, d, src_ia);
+        UN8x4_MUL_UN8_ADD_UN8x4_MUL_UN8 (s, dest_a, d, src_ia);
         dest[i] = s;
     }
 }
@@ -785,11 +785,11 @@ vmxCombineAtopUmask (uint32_t *dest,
         uint32_t dest_a = Alpha (d);
         uint32_t src_ia;
 
-        FbByteMul (s, m);
+        UN8x4_MUL_UN8 (s, m);
 
         src_ia = Alpha (~s);
 
-        FbByteAddMul (s, dest_a, d, src_ia);
+        UN8x4_MUL_UN8_ADD_UN8x4_MUL_UN8 (s, dest_a, d, src_ia);
         dest[i] = s;
     }
 }
@@ -837,7 +837,7 @@ vmxCombineAtopReverseUnomask (uint32_t *dest, const uint32_t *src, int width)
         uint32_t src_a = Alpha (s);
         uint32_t dest_ia = Alpha (~d);
 
-        FbByteAddMul (s, dest_ia, d, src_a);
+        UN8x4_MUL_UN8_ADD_UN8x4_MUL_UN8 (s, dest_ia, d, src_a);
         dest[i] = s;
     }
 }
@@ -877,11 +877,11 @@ vmxCombineAtopReverseUmask (uint32_t *dest,
         uint32_t src_a;
         uint32_t dest_ia = Alpha (~d);
 
-        FbByteMul (s, m);
+        UN8x4_MUL_UN8 (s, m);
 
         src_a = Alpha (s);
 
-        FbByteAddMul (s, dest_ia, d, src_a);
+        UN8x4_MUL_UN8_ADD_UN8x4_MUL_UN8 (s, dest_ia, d, src_a);
         dest[i] = s;
     }
 }
@@ -929,7 +929,7 @@ vmxCombineXorUnomask (uint32_t *dest, const uint32_t *src, int width)
         uint32_t src_ia = Alpha (~s);
         uint32_t dest_ia = Alpha (~d);
 
-        FbByteAddMul (s, dest_ia, d, src_ia);
+        UN8x4_MUL_UN8_ADD_UN8x4_MUL_UN8 (s, dest_ia, d, src_ia);
         dest[i] = s;
     }
 }
@@ -969,11 +969,11 @@ vmxCombineXorUmask (uint32_t *dest,
         uint32_t src_ia;
         uint32_t dest_ia = Alpha (~d);
 
-        FbByteMul (s, m);
+        UN8x4_MUL_UN8 (s, m);
 
         src_ia = Alpha (~s);
 
-        FbByteAddMul (s, dest_ia, d, src_ia);
+        UN8x4_MUL_UN8_ADD_UN8x4_MUL_UN8 (s, dest_ia, d, src_ia);
         dest[i] = s;
     }
 }
@@ -1016,7 +1016,7 @@ vmxCombineAddUnomask (uint32_t *dest, const uint32_t *src, int width)
     for (i = width%4; --i >=0;) {
         uint32_t s = src[i];
         uint32_t d = dest[i];
-        FbByteAdd (d, s);
+        UN8x4_ADD_UN8x4 (d, s);
         dest[i] = d;
     }
 }
@@ -1053,9 +1053,9 @@ vmxCombineAddUmask (uint32_t *dest,
         uint32_t s = src[i];
         uint32_t d = dest[i];
 
-        FbByteMul (s, m);
+        UN8x4_MUL_UN8 (s, m);
 
-        FbByteAdd (d, s);
+        UN8x4_ADD_UN8x4 (d, s);
         dest[i] = d;
     }
 }
@@ -1100,7 +1100,7 @@ vmxCombineSrcC (pixman_implementation_t *imp, pixman_op_t op,
     for (i = width%4; --i >=0;) {
         uint32_t a = mask[i];
         uint32_t s = src[i];
-        FbByteMulC (s, a);
+        UN8x4_MUL_UN8x4 (s, a);
         dest[i] = s;
     }
 }
@@ -1133,8 +1133,8 @@ vmxCombineOverC (pixman_implementation_t *imp, pixman_op_t op,
         uint32_t a = mask[i];
         uint32_t s = src[i];
         uint32_t d = dest[i];
-        FbByteMulC (s, a);
-        FbByteMulAddC (d, ~a, s);
+        UN8x4_MUL_UN8x4 (s, a);
+        UN8x4_MUL_UN8x4_ADD_UN8x4 (d, ~a, s);
         dest[i] = d;
     }
 }
@@ -1168,8 +1168,8 @@ vmxCombineOverReverseC (pixman_implementation_t *imp, pixman_op_t op,
         uint32_t s = src[i];
         uint32_t d = dest[i];
         uint32_t da = Alpha (d);
-        FbByteMulC (s, a);
-        FbByteMulAddC (s, ~da, d);
+        UN8x4_MUL_UN8x4 (s, a);
+        UN8x4_MUL_UN8x4_ADD_UN8x4 (s, ~da, d);
         dest[i] = s;
     }
 }
@@ -1203,8 +1203,8 @@ vmxCombineInC (pixman_implementation_t *imp, pixman_op_t op,
         uint32_t a = mask[i];
         uint32_t s = src[i];
         uint32_t da = Alpha (dest[i]);
-        FbByteMul (s, a);
-        FbByteMul (s, da);
+        UN8x4_MUL_UN8 (s, a);
+        UN8x4_MUL_UN8 (s, da);
         dest[i] = s;
     }
 }
@@ -1238,8 +1238,8 @@ vmxCombineInReverseC (pixman_implementation_t *imp, pixman_op_t op,
         uint32_t a = mask[i];
         uint32_t d = dest[i];
         uint32_t sa = Alpha (src[i]);
-        FbByteMul (a, sa);
-        FbByteMulC (d, a);
+        UN8x4_MUL_UN8 (a, sa);
+        UN8x4_MUL_UN8x4 (d, a);
         dest[i] = d;
     }
 }
@@ -1274,8 +1274,8 @@ vmxCombineOutC (pixman_implementation_t *imp, pixman_op_t op,
         uint32_t s = src[i];
         uint32_t d = dest[i];
         uint32_t da = Alpha (~d);
-        FbByteMulC (s, a);
-        FbByteMulC (s, da);
+        UN8x4_MUL_UN8x4 (s, a);
+        UN8x4_MUL_UN8x4 (s, da);
         dest[i] = s;
     }
 }
@@ -1311,8 +1311,8 @@ vmxCombineOutReverseC (pixman_implementation_t *imp, pixman_op_t op,
         uint32_t s = src[i];
         uint32_t d = dest[i];
         uint32_t sa = Alpha (s);
-        FbByteMulC (a, sa);
-        FbByteMulC (d, ~a);
+        UN8x4_MUL_UN8x4 (a, sa);
+        UN8x4_MUL_UN8x4 (d, ~a);
         dest[i] = d;
     }
 }
@@ -1352,9 +1352,9 @@ vmxCombineAtopC (pixman_implementation_t *imp, pixman_op_t op,
         uint32_t sa = Alpha (s);
         uint32_t da = Alpha (d);
 
-        FbByteMulC (s, a);
-        FbByteMul (a, sa);
-        FbByteAddMulC (d, ~a, s, da);
+        UN8x4_MUL_UN8x4 (s, a);
+        UN8x4_MUL_UN8 (a, sa);
+        UN8x4_MUL_UN8x4_ADD_UN8x4_MUL_UN8 (d, ~a, s, da);
         dest[i] = d;
     }
 }
@@ -1394,9 +1394,9 @@ vmxCombineAtopReverseC (pixman_implementation_t *imp, pixman_op_t op,
         uint32_t sa = Alpha (s);
         uint32_t da = Alpha (d);
 
-        FbByteMulC (s, a);
-        FbByteMul (a, sa);
-        FbByteAddMulC (d, a, s, ~da);
+        UN8x4_MUL_UN8x4 (s, a);
+        UN8x4_MUL_UN8 (a, sa);
+        UN8x4_MUL_UN8x4_ADD_UN8x4_MUL_UN8 (d, a, s, ~da);
         dest[i] = d;
     }
 }
@@ -1436,9 +1436,9 @@ vmxCombineXorC (pixman_implementation_t *imp, pixman_op_t op,
         uint32_t sa = Alpha (s);
         uint32_t da = Alpha (d);
 
-        FbByteMulC (s, a);
-        FbByteMul (a, sa);
-        FbByteAddMulC (d, ~a, s, ~da);
+        UN8x4_MUL_UN8x4 (s, a);
+        UN8x4_MUL_UN8 (a, sa);
+        UN8x4_MUL_UN8x4_ADD_UN8x4_MUL_UN8 (d, ~a, s, ~da);
         dest[i] = d;
     }
 }
@@ -1473,8 +1473,8 @@ vmxCombineAddC (pixman_implementation_t *imp, pixman_op_t op,
         uint32_t s = src[i];
         uint32_t d = dest[i];
 
-        FbByteMulC (s, a);
-        FbByteAdd (s, d);
+        UN8x4_MUL_UN8x4 (s, a);
+        UN8x4_ADD_UN8x4 (s, d);
         dest[i] = s;
     }
 }

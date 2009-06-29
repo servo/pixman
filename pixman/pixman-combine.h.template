@@ -21,13 +21,13 @@
  * Helper macros.
  */
 
-#define MUL_UN_width(a,b,t) ( (t) = (a) * (b) + ONE_HALF, ( ( ( (t)>>G_SHIFT ) + (t) )>>G_SHIFT ) )
-#define DIV_UN_width(a,b)    (((comp2_t) (a) * MASK) / (b))
-#define ADD_UN_width(x,y,t) (							\
+#define MUL_UNc(a,b,t) ( (t) = (a) * (b) + ONE_HALF, ( ( ( (t)>>G_SHIFT ) + (t) )>>G_SHIFT ) )
+#define DIV_UNc(a,b)    (((comp2_t) (a) * MASK) / (b))
+#define ADD_UNc(x,y,t) (							\
 	(t) = x + y,                                                    \
 	(comp4_t) (comp1_t) ((t) | (0 - ((t) >> G_SHIFT))))
 
-#define DIV_ONE_UN_width(x)      (((x) + ONE_HALF + (((x) + ONE_HALF) >> G_SHIFT)) >> G_SHIFT)
+#define DIV_ONE_UNc(x)      (((x) + ONE_HALF + (((x) + ONE_HALF) >> G_SHIFT)) >> G_SHIFT)
 
 /*
   The methods below use some tricks to be able to do two color
@@ -37,7 +37,7 @@
 /*
   x_c = (x_c * a) / 255
 */
-#define FbByteMul(x, a) do {                                            \
+#define UNcx4_MUL_UNc(x, a) do {                                            \
         comp4_t t = ((x & RB_MASK) * a) + RB_ONE_HALF;                  \
         t = (t + ((t >> COMPONENT_SIZE) & RB_MASK)) >> COMPONENT_SIZE;  \
         t &= RB_MASK;                                                   \
@@ -51,7 +51,7 @@
 /*
   x_c = (x_c * a) / 255 + y_c
 */
-#define FbByteMulAdd(x, a, y) do {                                      \
+#define UNcx4_MUL_UNc_ADD_UNcx4(x, a, y) do {                                      \
         /* multiply and divide: trunc((i + 128)*257/65536) */           \
         comp4_t t = ((x & RB_MASK) * a) + RB_ONE_HALF;                  \
         t = (t + ((t >> COMPONENT_SIZE) & RB_MASK)) >> COMPONENT_SIZE;  \
@@ -84,7 +84,7 @@
 /*
   x_c = (x_c * a + y_c * b) / 255
 */
-#define FbByteAddMul(x, a, y, b) do {                                   \
+#define UNcx4_MUL_UNc_ADD_UNcx4_MUL_UNc(x, a, y, b) do {                                   \
         comp4_t t;                                                      \
         comp4_t r = (x >> A_SHIFT) * a + (y >> A_SHIFT) * b + ONE_HALF; \
         r += (r >> G_SHIFT);                                            \
@@ -116,7 +116,7 @@
 /*
   x_c = (x_c * a_c) / 255
 */
-#define FbByteMulC(x, a) do {                                           \
+#define UNcx4_MUL_UNcx4(x, a) do {                                           \
         comp4_t t;                                                      \
         comp4_t r = (x & MASK) * (a & MASK);                            \
         r |= (x & R_MASK) * ((a >> R_SHIFT) & MASK);                    \
@@ -135,7 +135,7 @@
 /*
   x_c = (x_c * a_c) / 255 + y_c
 */
-#define FbByteMulAddC(x, a, y) do {                                     \
+#define UNcx4_MUL_UNcx4_ADD_UNcx4(x, a, y) do {                                     \
         comp4_t t;                                                      \
         comp4_t r = (x & MASK) * (a & MASK);                            \
         r |= (x & R_MASK) * ((a >> R_SHIFT) & MASK);                    \
@@ -161,7 +161,7 @@
 /*
   x_c = (x_c * a_c + y_c * b) / 255
 */
-#define FbByteAddMulC(x, a, y, b) do {                                  \
+#define UNcx4_MUL_UNcx4_ADD_UNcx4_MUL_UNc(x, a, y, b) do {                                  \
         comp4_t t;                                                      \
         comp4_t r = (x >> A_SHIFT) * (a >> A_SHIFT) +                   \
                      (y >> A_SHIFT) * b;                                \
@@ -194,7 +194,7 @@
 /*
   x_c = min(x_c + y_c, 255)
 */
-#define FbByteAdd(x, y) do {                                            \
+#define UNcx4_ADD_UNcx4(x, y) do {                                            \
         comp4_t t;                                                      \
         comp4_t r = (x & RB_MASK) + (y & RB_MASK);                      \
         r |= RB_MASK_PLUS_ONE - ((r >> G_SHIFT) & RB_MASK);             \

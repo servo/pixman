@@ -79,7 +79,7 @@ fbOver (uint32_t src, uint32_t dest)
 {
     uint32_t a = ~src >> 24; 
 
-    FbByteMulAdd(dest, a, src);
+    UN8x4_MUL_UN8_ADD_UN8x4(dest, a, src);
 
     return dest;
 }
@@ -89,7 +89,7 @@ fbIn (uint32_t x, uint8_t y)
 {
     uint16_t  a = y;
 
-    FbByteMul (x, a);
+    UN8x4_MUL_UN8 (x, a);
 
     return x;
 }
@@ -398,10 +398,10 @@ fast_CompositeOver_n_8888_8888_ca (pixman_implementation_t *imp,
 	    {
 		d = *dst;
 
-		FbByteMulC (src, ma);
-		FbByteMul (ma, srca);
+		UN8x4_MUL_UN8x4 (src, ma);
+		UN8x4_MUL_UN8 (ma, srca);
 		ma = ~ma;
-		FbByteMulAddC (d, ma, src);
+		UN8x4_MUL_UN8x4_ADD_UN8x4 (d, ma, src);
 
 		*dst = d;
 	    }
@@ -601,10 +601,10 @@ fast_CompositeOver_n_8888_0565_ca (pixman_implementation_t *imp,
 		d = *dst;
 		d = CONVERT_0565_TO_0888(d);
 
-		FbByteMulC (src, ma);
-		FbByteMul (ma, srca);
+		UN8x4_MUL_UN8x4 (src, ma);
+		UN8x4_MUL_UN8 (ma, srca);
 		ma = ~ma;
-		FbByteMulAddC (d, ma, src);
+		UN8x4_MUL_UN8x4_ADD_UN8x4 (d, ma, src);
 		
 		*dst = CONVERT_8888_TO_0565(d);
 	    }
@@ -894,7 +894,7 @@ fast_CompositeAdd_8888_8888 (pixman_implementation_t *imp,
 		{
 		    d = *dst;
 		    if (d)
-			FbByteAdd(s,d);
+			UN8x4_ADD_UN8x4(s,d);
 		}
 		*dst = s;
 	    }

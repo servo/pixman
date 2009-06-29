@@ -40,9 +40,9 @@ fbCombineMaskC (comp4_t *src, comp4_t *mask)
     }
 
     xa = x >> A_SHIFT;
-    FbByteMulC(x, a);
+    UNcx4_MUL_UNcx4(x, a);
     *(src) = x;
-    FbByteMul(a, xa);
+    UNcx4_MUL_UNc(a, xa);
     *(mask) = a;
 }
 
@@ -62,7 +62,7 @@ fbCombineMaskValueC (comp4_t *src, const comp4_t *mask)
 	return;
 
     x = *(src);
-    FbByteMulC(x, a);
+    UNcx4_MUL_UNcx4(x, a);
     *(src) =x;
 }
 
@@ -87,7 +87,7 @@ fbCombineMaskAlphaC (const comp4_t *src, comp4_t *mask)
 	return;
     }
 
-    FbByteMul(a, x);
+    UNcx4_MUL_UNc(a, x);
     *(mask) = a;
 }
 
@@ -121,7 +121,7 @@ combineMask (const comp4_t *src, const comp4_t *mask, int i)
     s = *(src + i);
 
     if (mask)
-	FbByteMul (s, m);
+	UNcx4_MUL_UNc (s, m);
 
     return s;
 }
@@ -163,7 +163,7 @@ fbCombineOverU (pixman_implementation_t *imp, pixman_op_t op,
         comp4_t d = *(dest + i);
         comp4_t ia = Alpha(~s);
 
-        FbByteMulAdd(d, ia, s);
+        UNcx4_MUL_UNc_ADD_UNcx4(d, ia, s);
 	*(dest + i) = d;
     }
 }
@@ -178,7 +178,7 @@ fbCombineOverReverseU (pixman_implementation_t *imp, pixman_op_t op,
         comp4_t s = combineMask (src, mask, i);
         comp4_t d = *(dest + i);
         comp4_t ia = Alpha(~*(dest + i));
-        FbByteMulAdd(s, ia, d);
+        UNcx4_MUL_UNc_ADD_UNcx4(s, ia, d);
 	*(dest + i) = s;
     }
 }
@@ -192,7 +192,7 @@ fbCombineInU (pixman_implementation_t *imp, pixman_op_t op,
     for (i = 0; i < width; ++i) {
         comp4_t s = combineMask (src, mask, i);
         comp4_t a = Alpha(*(dest + i));
-        FbByteMul(s, a);
+        UNcx4_MUL_UNc(s, a);
 	*(dest + i) = s;
     }
 }
@@ -207,7 +207,7 @@ fbCombineInReverseU (pixman_implementation_t *imp, pixman_op_t op,
 	comp4_t s = combineMask (src, mask, i);
 	comp4_t d = *(dest + i);
         comp4_t a = Alpha(s);
-        FbByteMul(d, a);
+        UNcx4_MUL_UNc(d, a);
 	*(dest + i) = d;
     }
 }
@@ -221,7 +221,7 @@ fbCombineOutU (pixman_implementation_t *imp, pixman_op_t op,
     for (i = 0; i < width; ++i) {
         comp4_t s = combineMask (src, mask, i);
         comp4_t a = Alpha(~*(dest + i));
-        FbByteMul(s, a);
+        UNcx4_MUL_UNc(s, a);
 	*(dest + i) = s;
     }
 }
@@ -236,7 +236,7 @@ fbCombineOutReverseU (pixman_implementation_t *imp, pixman_op_t op,
 	comp4_t s = combineMask (src, mask, i);
         comp4_t d = *(dest + i);
         comp4_t a = Alpha(~s);
-        FbByteMul(d, a);
+        UNcx4_MUL_UNc(d, a);
 	*(dest + i) = d;
     }
 }
@@ -255,7 +255,7 @@ fbCombineAtopU (pixman_implementation_t *imp, pixman_op_t op,
         comp4_t dest_a = Alpha(d);
         comp4_t src_ia = Alpha(~s);
 
-        FbByteAddMul(s, dest_a, d, src_ia);
+        UNcx4_MUL_UNc_ADD_UNcx4_MUL_UNc(s, dest_a, d, src_ia);
 	*(dest + i) = s;
     }
 }
@@ -274,7 +274,7 @@ fbCombineAtopReverseU (pixman_implementation_t *imp, pixman_op_t op,
         comp4_t src_a = Alpha(s);
         comp4_t dest_ia = Alpha(~d);
 
-        FbByteAddMul(s, dest_ia, d, src_a);
+        UNcx4_MUL_UNc_ADD_UNcx4_MUL_UNc(s, dest_ia, d, src_a);
 	*(dest + i) = s;
     }
 }
@@ -293,7 +293,7 @@ fbCombineXorU (pixman_implementation_t *imp, pixman_op_t op,
         comp4_t src_ia = Alpha(~s);
         comp4_t dest_ia = Alpha(~d);
 
-        FbByteAddMul(s, dest_ia, d, src_ia);
+        UNcx4_MUL_UNc_ADD_UNcx4_MUL_UNc(s, dest_ia, d, src_ia);
 	*(dest + i) = s;
     }
 }
@@ -306,7 +306,7 @@ fbCombineAddU (pixman_implementation_t *imp, pixman_op_t op,
     for (i = 0; i < width; ++i) {
         comp4_t s = combineMask (src, mask, i);
         comp4_t d = *(dest + i);
-        FbByteAdd(d, s);
+        UNcx4_ADD_UNcx4(d, s);
 	*(dest + i) = d;
     }
 }
@@ -328,10 +328,10 @@ fbCombineSaturateU (pixman_implementation_t *imp, pixman_op_t op,
         da = ~d >> A_SHIFT;
         if (sa > da)
         {
-            sa = DIV_UN_width(da, sa);
-            FbByteMul(s, sa);
+            sa = DIV_UNc(da, sa);
+            UNcx4_MUL_UNc(s, sa);
         };
-        FbByteAdd(d, s);
+        UNcx4_ADD_UNcx4(d, s);
 	*(dest + i) = d;
     }
 }
@@ -376,9 +376,9 @@ fbCombineMultiplyU (pixman_implementation_t *imp, pixman_op_t op,
         comp4_t src_ia = Alpha (~s);
 	comp4_t dest_ia = Alpha (~d);
 
-	FbByteAddMul (ss, dest_ia, d, src_ia);
-	FbByteMulC (d, s);
-	FbByteAdd (d, ss); 	
+	UNcx4_MUL_UNc_ADD_UNcx4_MUL_UNc (ss, dest_ia, d, src_ia);
+	UNcx4_MUL_UNcx4 (d, s);
+	UNcx4_ADD_UNcx4 (d, ss); 	
 	*(dest + i) = d;
     }
 }
@@ -397,9 +397,9 @@ fbCombineMultiplyC (pixman_implementation_t *imp, pixman_op_t op,
 
 	fbCombineMaskValueC (&s, &m);
 
-	FbByteAddMulC (r, ~m, s, dest_ia);
-	FbByteMulC (d, s);
-	FbByteAdd (r, d);
+	UNcx4_MUL_UNcx4_ADD_UNcx4_MUL_UNc (r, ~m, s, dest_ia);
+	UNcx4_MUL_UNcx4 (d, s);
+	UNcx4_ADD_UNcx4 (r, d);
 
 	*(dest + i) = r;
     }
@@ -421,10 +421,10 @@ fbCombine ## name ## U (pixman_implementation_t *imp, pixman_op_t op, \
 	comp4_t	result;				    \
 						    \
 	result = d;				    \
-        FbByteAddMul(result, isa, s, ida);	    \
+        UNcx4_MUL_UNc_ADD_UNcx4_MUL_UNc(result, isa, s, ida);	    \
 						    \
 	*(dest + i) = result +			    \
-	    (DIV_ONE_UN_width (sa * da) << A_SHIFT) +	    \
+	    (DIV_ONE_UNc (sa * da) << A_SHIFT) +	    \
 	    (blend_ ## name (Red (d), da, Red (s), sa) << R_SHIFT) + \
 	    (blend_ ## name (Green (d), da, Green (s), sa) << G_SHIFT) + \
 	    (blend_ ## name (Blue (d), da, Blue (s), sa)); \
@@ -447,10 +447,10 @@ fbCombine ## name ## C (pixman_implementation_t *imp, pixman_op_t op, \
 	fbCombineMaskValueC (&s, &m);		    \
 						    \
 	result = d;				    \
-	FbByteAddMulC (result, ~m, s, ida);	    \
+	UNcx4_MUL_UNcx4_ADD_UNcx4_MUL_UNc (result, ~m, s, ida);	    \
 						    \
 	result +=				    \
-	    (DIV_ONE_UN_width (Alpha (m) * da) << A_SHIFT) +				\
+	    (DIV_ONE_UNc (Alpha (m) * da) << A_SHIFT) +				\
 	    (blend_ ## name (Red (d), da, Red (s), Red (m)) << R_SHIFT) +	\
 	    (blend_ ## name (Green (d), da, Green (s), Green (m)) << G_SHIFT) +	\
 	    (blend_ ## name (Blue (d), da, Blue (s), Blue (m)));			\
@@ -467,7 +467,7 @@ fbCombine ## name ## C (pixman_implementation_t *imp, pixman_op_t op, \
 static inline comp4_t
 blend_Screen (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
 {
-  return DIV_ONE_UN_width (sca * da + dca * sa - sca * dca);
+  return DIV_ONE_UNc (sca * da + dca * sa - sca * dca);
 }
 
 PDF_SEPARABLE_BLEND_MODE (Screen)
@@ -490,7 +490,7 @@ blend_Overlay (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
 	rca = 2 * sca * dca;
     else
 	rca = sa * da - 2 * (da - dca) * (sa - sca);
-    return DIV_ONE_UN_width (rca);
+    return DIV_ONE_UNc (rca);
 }
 
 PDF_SEPARABLE_BLEND_MODE (Overlay)
@@ -507,7 +507,7 @@ blend_Darken (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
     
     s = sca * da;
     d = dca * sa;
-    return DIV_ONE_UN_width (s > d ? d : s);
+    return DIV_ONE_UNc (s > d ? d : s);
 }
 
 PDF_SEPARABLE_BLEND_MODE (Darken)
@@ -524,7 +524,7 @@ blend_Lighten (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
     
     s = sca * da;
     d = dca * sa;
-    return DIV_ONE_UN_width (s > d ? s : d);
+    return DIV_ONE_UNc (s > d ? s : d);
 }
 
 PDF_SEPARABLE_BLEND_MODE (Lighten)
@@ -542,10 +542,10 @@ static inline comp4_t
 blend_ColorDodge (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
 {
     if (sca >= sa) {
-	return DIV_ONE_UN_width (sa * da);
+	return DIV_ONE_UNc (sa * da);
     } else {
 	comp4_t rca = dca * sa * sa / (sa - sca);
-	return DIV_ONE_UN_width (rca > sa * da ? sa * da : rca);
+	return DIV_ONE_UNc (rca > sa * da ? sa * da : rca);
     }
 }
 
@@ -568,7 +568,7 @@ blend_ColorBurn (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
     } else {
 	comp4_t sada = sa * da;
 	comp4_t rca = (da - dca) * sa * sa / sca;
-	return DIV_ONE_UN_width (rca > sada ? 0 : sada - rca);
+	return DIV_ONE_UNc (rca > sada ? 0 : sada - rca);
     }
 }
 
@@ -586,9 +586,9 @@ static inline comp4_t
 blend_HardLight (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
 {
     if (2 * sca < sa)
-	return DIV_ONE_UN_width (2 * sca * dca);
+	return DIV_ONE_UNc (2 * sca * dca);
     else
-	return DIV_ONE_UN_width (sa * da - 2 * (da - dca) * (sa - sca));
+	return DIV_ONE_UNc (sa * da - 2 * (da - dca) * (sa - sca));
 }
 
 PDF_SEPARABLE_BLEND_MODE (HardLight)
@@ -642,9 +642,9 @@ blend_Difference (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
     comp4_t scada = sca * da;
 
     if (scada < dcasa)
-	return DIV_ONE_UN_width (dcasa - scada);
+	return DIV_ONE_UNc (dcasa - scada);
     else
-	return DIV_ONE_UN_width (scada - dcasa);
+	return DIV_ONE_UNc (scada - dcasa);
 }
 
 PDF_SEPARABLE_BLEND_MODE (Difference)
@@ -660,7 +660,7 @@ PDF_SEPARABLE_BLEND_MODE (Difference)
 static inline comp4_t
 blend_Exclusion (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
 {
-    return DIV_ONE_UN_width (sca * da + dca * sa - 2 * dca * sca);
+    return DIV_ONE_UNc (sca * da + dca * sa - 2 * dca * sca);
 }
 
 PDF_SEPARABLE_BLEND_MODE (Exclusion)
@@ -796,7 +796,7 @@ fbCombine ## name ## U (pixman_implementation_t *imp, pixman_op_t op,	\
 	comp4_t sc[3], dc[3], c[3];					\
 									\
 	result = d;							\
-        FbByteAddMul(result, isa, s, ida);				\
+        UNcx4_MUL_UNc_ADD_UNcx4_MUL_UNc(result, isa, s, ida);				\
 	dc[0] = Red (d);						\
 	sc[0] = Red (s);						\
 	dc[1] = Green (d);						\
@@ -806,10 +806,10 @@ fbCombine ## name ## U (pixman_implementation_t *imp, pixman_op_t op,	\
 	blend_ ## name (c, dc, da, sc, sa);				\
 									\
 	*(dest + i) = result +						\
-	    (DIV_ONE_UN_width (sa * da) << A_SHIFT) +				\
-	    (DIV_ONE_UN_width (c[0]) << R_SHIFT) +				\
-	    (DIV_ONE_UN_width (c[1]) << G_SHIFT) +				\
-	    (DIV_ONE_UN_width (c[2]));						\
+	    (DIV_ONE_UNc (sa * da) << A_SHIFT) +				\
+	    (DIV_ONE_UNc (c[0]) << R_SHIFT) +				\
+	    (DIV_ONE_UNc (c[1]) << G_SHIFT) +				\
+	    (DIV_ONE_UNc (c[2]));						\
     }									\
 }									
 
@@ -1014,7 +1014,7 @@ fbCombineDisjointOutPart (comp1_t a, comp1_t b)
     b = ~b;		    /* 1 - b */
     if (b >= a)		    /* 1 - b >= a -> (1-b)/a >= 1 */
 	return MASK;	    /* 1 */
-    return DIV_UN_width(b,a);     /* (1-b) / a */
+    return DIV_UNc(b,a);     /* (1-b) / a */
 }
 
 /* portion covered by both a and b */
@@ -1028,7 +1028,7 @@ fbCombineDisjointInPart (comp1_t a, comp1_t b)
     b = ~b;		    /* 1 - b */
     if (b >= a)		    /* 1 - b >= a -> (1-b)/a >= 1 */
 	return 0;	    /* 1 - 1 */
-    return ~DIV_UN_width(b,a);    /* 1 - (1-b) / a */
+    return ~DIV_UNc(b,a);    /* 1 - (1-b) / a */
 }
 
 /* portion covered by a but not b */
@@ -1042,7 +1042,7 @@ fbCombineConjointOutPart (comp1_t a, comp1_t b)
 
     if (b >= a)		    /* b >= a -> b/a >= 1 */
 	return 0x00;	    /* 0 */
-    return ~DIV_UN_width(b,a);    /* 1 - b/a */
+    return ~DIV_UNc(b,a);    /* 1 - b/a */
 }
 
 /* portion covered by both a and b */
@@ -1053,7 +1053,7 @@ fbCombineConjointInPart (comp1_t a, comp1_t b)
 
     if (b >= a)		    /* b >= a -> b/a >= 1 */
 	return MASK;	    /* 1 */
-    return DIV_UN_width(b,a);     /* b/a */
+    return DIV_UNc(b,a);     /* b/a */
 }
 
 #define GetComp(v,i)   ((comp2_t) (comp1_t) ((v) >> i))
@@ -1061,8 +1061,8 @@ fbCombineConjointInPart (comp1_t a, comp1_t b)
 #define Add(x,y,i,t)   ((t) = GetComp(x,i) + GetComp(y,i),              \
                         (comp4_t) ((comp1_t) ((t) | (0 - ((t) >> G_SHIFT)))) << (i))
 
-#define FbGen(x,y,i,ax,ay,t,u,v) ((t) = (MUL_UN_width(GetComp(y,i),ay,(u)) + \
-					 MUL_UN_width(GetComp(x,i),ax,(v))), \
+#define FbGen(x,y,i,ax,ay,t,u,v) ((t) = (MUL_UNc(GetComp(y,i),ay,(u)) + \
+					 MUL_UNc(GetComp(x,i),ax,(v))), \
 				  	 (comp4_t) ((comp1_t) ((t) |		\
 					 (0 - ((t) >> G_SHIFT)))) << (i))
 
@@ -1131,7 +1131,7 @@ fbCombineDisjointOverU (pixman_implementation_t *imp, pixman_op_t op,
             {
                 comp4_t d = *(dest + i);
                 a = fbCombineDisjointOutPart (d >> A_SHIFT, a);
-                FbByteMulAdd(d, a, s);
+                UNcx4_MUL_UNc_ADD_UNcx4(d, a, s);
                 s = d;
             }
 	    *(dest + i) = s;
@@ -1350,7 +1350,7 @@ fbCombineOverC (pixman_implementation_t *imp, pixman_op_t op,
             if (a)
             {
                 comp4_t d = *(dest + i);
-                FbByteMulAddC(d, a, s);
+                UNcx4_MUL_UNcx4_ADD_UNcx4(d, a, s);
                 s = d;
             }
 	    *(dest + i) = s;
@@ -1377,7 +1377,7 @@ fbCombineOverReverseC (pixman_implementation_t *imp, pixman_op_t op,
 
             if (a != MASK)
             {
-                FbByteMulAdd(s, a, d);
+                UNcx4_MUL_UNc_ADD_UNcx4(s, a, d);
             }
 	    *(dest + i) = s;
         }
@@ -1402,7 +1402,7 @@ fbCombineInC (pixman_implementation_t *imp, pixman_op_t op,
 	    fbCombineMaskValueC (&s, &m);
             if (a != MASK)
             {
-                FbByteMul(s, a);
+                UNcx4_MUL_UNc(s, a);
             }
         }
 	*(dest + i) = s;
@@ -1429,7 +1429,7 @@ fbCombineInReverseC (pixman_implementation_t *imp, pixman_op_t op,
             if (a)
             {
                 d = *(dest + i);
-                FbByteMulC(d, a);
+                UNcx4_MUL_UNcx4(d, a);
             }
 	    *(dest + i) = d;
         }
@@ -1455,7 +1455,7 @@ fbCombineOutC (pixman_implementation_t *imp, pixman_op_t op,
 
             if (a != MASK)
             {
-                FbByteMul(s, a);
+                UNcx4_MUL_UNc(s, a);
             }
         }
 	*(dest + i) = s;
@@ -1482,7 +1482,7 @@ fbCombineOutReverseC (pixman_implementation_t *imp, pixman_op_t op,
             if (a)
             {
                 d = *(dest + i);
-                FbByteMulC(d, a);
+                UNcx4_MUL_UNcx4(d, a);
             }
 	    *(dest + i) = d;
         }
@@ -1506,7 +1506,7 @@ fbCombineAtopC (pixman_implementation_t *imp, pixman_op_t op,
 
         ad = ~m;
 
-        FbByteAddMulC(d, ad, s, as);
+        UNcx4_MUL_UNcx4_ADD_UNcx4_MUL_UNc(d, ad, s, as);
 	*(dest + i) = d;
     }
 }
@@ -1529,7 +1529,7 @@ fbCombineAtopReverseC (pixman_implementation_t *imp, pixman_op_t op,
 
 	ad = m;
 
-        FbByteAddMulC(d, ad, s, as);
+        UNcx4_MUL_UNcx4_ADD_UNcx4_MUL_UNc(d, ad, s, as);
 	*(dest + i) = d;
     }
 }
@@ -1551,7 +1551,7 @@ fbCombineXorC (pixman_implementation_t *imp, pixman_op_t op,
 
 	ad = ~m;
 
-        FbByteAddMulC(d, ad, s, as);
+        UNcx4_MUL_UNcx4_ADD_UNcx4_MUL_UNc(d, ad, s, as);
 	*(dest + i) = d;
     }
 }
@@ -1569,7 +1569,7 @@ fbCombineAddC (pixman_implementation_t *imp, pixman_op_t op,
 
 	fbCombineMaskValueC (&s, &m);
 
-        FbByteAdd(d, s);
+        UNcx4_ADD_UNcx4(d, s);
 	*(dest + i) = d;
     }
 }

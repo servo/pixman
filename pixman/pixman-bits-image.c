@@ -160,7 +160,7 @@ bits_image_fetch_alpha_pixels (bits_image_t *image, uint32_t *buffer, int n_pixe
 	    int a = alpha_pixels[j] >> 24;
 	    uint32_t p = buffer[2 * i - j] | 0xff000000;
 
-	    FbByteMul (p, a);
+	    UN8x4_MUL_UN8 (p, a);
 
 	    buffer[i++] = p;
 	}
