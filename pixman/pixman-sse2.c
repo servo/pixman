@@ -1331,7 +1331,7 @@ coreCombineSaturateUPixelsse2 (uint32_t src, uint32_t dst)
 
     if (sa > da)
     {
-        ms = pixMultiply_1x64 (ms, expandAlpha_1x64 (unpack_32_1x64 (IntDiv(da, sa) << 24)));
+        ms = pixMultiply_1x64 (ms, expandAlpha_1x64 (unpack_32_1x64 (DIV_UN8(da, sa) << 24)));
     }
 
     return pack_1x64_32 (_mm_adds_pu16 (md, ms));

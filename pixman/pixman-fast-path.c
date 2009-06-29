@@ -204,7 +204,7 @@ fast_CompositeIn_n_8_8 (pixman_implementation_t *imp,
 		}
 		else if (m != 0xff)
 		{
-		    *dst = IntMult(m, *dst, t);
+		    *dst = MUL_UN8(m, *dst, t);
 		}
 		dst++;
 	    }
@@ -223,14 +223,14 @@ fast_CompositeIn_n_8_8 (pixman_implementation_t *imp,
 	    while (w--)
 	    {
 		m = *mask++;
-		m = IntMult(m, srca, t);
+		m = MUL_UN8(m, srca, t);
 		if (m == 0)
 		{
 		    *dst = 0;
 		}
 		else if (m != 0xff)
 		{
-		    *dst = IntMult(m, *dst, t);
+		    *dst = MUL_UN8(m, *dst, t);
 		}
 		dst++;
 	    }
@@ -281,7 +281,7 @@ fast_CompositeIn_8_8 (pixman_implementation_t *imp,
 	    }
 	    else if (s != 0xff)
 	    {
-		*dst = IntMult(s, *dst, t);
+		*dst = MUL_UN8(s, *dst, t);
 	    }
 	    dst++;
 	}
@@ -948,8 +948,8 @@ fast_CompositeAdd_8888_8_8 (pixman_implementation_t *imp,
 	    a = *mask++;
 	    d = *dst;
 
-	    m = IntMult (sa, a, tmp);
-	    r = IntAdd (m, d, tmp);
+	    m = MUL_UN8 (sa, a, tmp);
+	    r = ADD_UN8 (m, d, tmp);
 
 	    *dst++ = r;
 	}

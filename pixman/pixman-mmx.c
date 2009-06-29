@@ -672,7 +672,7 @@ mmxCombineSaturateU (pixman_implementation_t *imp, pixman_op_t op,
         uint32_t da = ~d >> 24;
 
         if (sa > da) {
-            __m64 msa = load8888(IntDiv(da, sa) << 24);
+            __m64 msa = load8888(DIV_UN8(da, sa) << 24);
             msa = expand_alpha(msa);
             ms = pix_multiply(ms, msa);
         }
@@ -2503,8 +2503,8 @@ mmx_CompositeIn_n_8_8 (pixman_implementation_t *imp,
 	    a = *mask++;
 	    d = *dst;
 	    
-	    m = IntMult (sa, a, tmp);
-	    d = IntMult (m, d, tmp);
+	    m = MUL_UN8 (sa, a, tmp);
+	    d = MUL_UN8 (m, d, tmp);
 	    
 	    *dst++ = d;
 	}
@@ -2568,7 +2568,7 @@ mmx_CompositeIn_8_8 (pixman_implementation_t *imp,
 	    s = *src;
 	    d = *dst;
 
-	    *dst = IntMult (s, d, tmp);
+	    *dst = MUL_UN8 (s, d, tmp);
 
 	    src++;
 	    dst++;
@@ -2647,8 +2647,8 @@ mmx_CompositeAdd_8888_8_8 (pixman_implementation_t *imp,
 	    a = *mask++;
 	    d = *dst;
 
-	    m = IntMult (sa, a, tmp);
-	    r = IntAdd (m, d, tmp);
+	    m = MUL_UN8 (sa, a, tmp);
+	    r = ADD_UN8 (m, d, tmp);
 
 	    *dst++ = r;
 	}

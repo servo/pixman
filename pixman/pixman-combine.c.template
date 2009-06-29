@@ -328,7 +328,7 @@ fbCombineSaturateU (pixman_implementation_t *imp, pixman_op_t op,
         da = ~d >> A_SHIFT;
         if (sa > da)
         {
-            sa = IntDiv(da, sa);
+            sa = DIV_UN_width(da, sa);
             FbByteMul(s, sa);
         };
         FbByteAdd(d, s);
@@ -424,7 +424,7 @@ fbCombine ## name ## U (pixman_implementation_t *imp, pixman_op_t op, \
         FbByteAddMul(result, isa, s, ida);	    \
 						    \
 	*(dest + i) = result +			    \
-	    (DivOne (sa * da) << A_SHIFT) +	    \
+	    (DIV_ONE_UN_width (sa * da) << A_SHIFT) +	    \
 	    (blend_ ## name (Red (d), da, Red (s), sa) << R_SHIFT) + \
 	    (blend_ ## name (Green (d), da, Green (s), sa) << G_SHIFT) + \
 	    (blend_ ## name (Blue (d), da, Blue (s), sa)); \
@@ -450,7 +450,7 @@ fbCombine ## name ## C (pixman_implementation_t *imp, pixman_op_t op, \
 	FbByteAddMulC (result, ~m, s, ida);	    \
 						    \
 	result +=				    \
-	    (DivOne (Alpha (m) * da) << A_SHIFT) +				\
+	    (DIV_ONE_UN_width (Alpha (m) * da) << A_SHIFT) +				\
 	    (blend_ ## name (Red (d), da, Red (s), Red (m)) << R_SHIFT) +	\
 	    (blend_ ## name (Green (d), da, Green (s), Green (m)) << G_SHIFT) +	\
 	    (blend_ ## name (Blue (d), da, Blue (s), Blue (m)));			\
@@ -467,7 +467,7 @@ fbCombine ## name ## C (pixman_implementation_t *imp, pixman_op_t op, \
 static inline comp4_t
 blend_Screen (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
 {
-  return DivOne (sca * da + dca * sa - sca * dca);
+  return DIV_ONE_UN_width (sca * da + dca * sa - sca * dca);
 }
 
 PDF_SEPARABLE_BLEND_MODE (Screen)
@@ -490,7 +490,7 @@ blend_Overlay (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
 	rca = 2 * sca * dca;
     else
 	rca = sa * da - 2 * (da - dca) * (sa - sca);
-    return DivOne (rca);
+    return DIV_ONE_UN_width (rca);
 }
 
 PDF_SEPARABLE_BLEND_MODE (Overlay)
@@ -507,7 +507,7 @@ blend_Darken (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
     
     s = sca * da;
     d = dca * sa;
-    return DivOne (s > d ? d : s);
+    return DIV_ONE_UN_width (s > d ? d : s);
 }
 
 PDF_SEPARABLE_BLEND_MODE (Darken)
@@ -524,7 +524,7 @@ blend_Lighten (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
     
     s = sca * da;
     d = dca * sa;
-    return DivOne (s > d ? s : d);
+    return DIV_ONE_UN_width (s > d ? s : d);
 }
 
 PDF_SEPARABLE_BLEND_MODE (Lighten)
@@ -542,10 +542,10 @@ static inline comp4_t
 blend_ColorDodge (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
 {
     if (sca >= sa) {
-	return DivOne (sa * da);
+	return DIV_ONE_UN_width (sa * da);
     } else {
 	comp4_t rca = dca * sa * sa / (sa - sca);
-	return DivOne (rca > sa * da ? sa * da : rca);
+	return DIV_ONE_UN_width (rca > sa * da ? sa * da : rca);
     }
 }
 
@@ -568,7 +568,7 @@ blend_ColorBurn (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
     } else {
 	comp4_t sada = sa * da;
 	comp4_t rca = (da - dca) * sa * sa / sca;
-	return DivOne (rca > sada ? 0 : sada - rca);
+	return DIV_ONE_UN_width (rca > sada ? 0 : sada - rca);
     }
 }
 
@@ -586,9 +586,9 @@ static inline comp4_t
 blend_HardLight (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
 {
     if (2 * sca < sa)
-	return DivOne (2 * sca * dca);
+	return DIV_ONE_UN_width (2 * sca * dca);
     else
-	return DivOne (sa * da - 2 * (da - dca) * (sa - sca));
+	return DIV_ONE_UN_width (sa * da - 2 * (da - dca) * (sa - sca));
 }
 
 PDF_SEPARABLE_BLEND_MODE (HardLight)
@@ -642,9 +642,9 @@ blend_Difference (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
     comp4_t scada = sca * da;
 
     if (scada < dcasa)
-	return DivOne (dcasa - scada);
+	return DIV_ONE_UN_width (dcasa - scada);
     else
-	return DivOne (scada - dcasa);
+	return DIV_ONE_UN_width (scada - dcasa);
 }
 
 PDF_SEPARABLE_BLEND_MODE (Difference)
@@ -660,7 +660,7 @@ PDF_SEPARABLE_BLEND_MODE (Difference)
 static inline comp4_t
 blend_Exclusion (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
 {
-    return DivOne (sca * da + dca * sa - 2 * dca * sca);
+    return DIV_ONE_UN_width (sca * da + dca * sa - 2 * dca * sca);
 }
 
 PDF_SEPARABLE_BLEND_MODE (Exclusion)
@@ -806,10 +806,10 @@ fbCombine ## name ## U (pixman_implementation_t *imp, pixman_op_t op,	\
 	blend_ ## name (c, dc, da, sc, sa);				\
 									\
 	*(dest + i) = result +						\
-	    (DivOne (sa * da) << A_SHIFT) +				\
-	    (DivOne (c[0]) << R_SHIFT) +				\
-	    (DivOne (c[1]) << G_SHIFT) +				\
-	    (DivOne (c[2]));						\
+	    (DIV_ONE_UN_width (sa * da) << A_SHIFT) +				\
+	    (DIV_ONE_UN_width (c[0]) << R_SHIFT) +				\
+	    (DIV_ONE_UN_width (c[1]) << G_SHIFT) +				\
+	    (DIV_ONE_UN_width (c[2]));						\
     }									\
 }									
 
@@ -1014,7 +1014,7 @@ fbCombineDisjointOutPart (comp1_t a, comp1_t b)
     b = ~b;		    /* 1 - b */
     if (b >= a)		    /* 1 - b >= a -> (1-b)/a >= 1 */
 	return MASK;	    /* 1 */
-    return IntDiv(b,a);     /* (1-b) / a */
+    return DIV_UN_width(b,a);     /* (1-b) / a */
 }
 
 /* portion covered by both a and b */
@@ -1028,7 +1028,7 @@ fbCombineDisjointInPart (comp1_t a, comp1_t b)
     b = ~b;		    /* 1 - b */
     if (b >= a)		    /* 1 - b >= a -> (1-b)/a >= 1 */
 	return 0;	    /* 1 - 1 */
-    return ~IntDiv(b,a);    /* 1 - (1-b) / a */
+    return ~DIV_UN_width(b,a);    /* 1 - (1-b) / a */
 }
 
 /* portion covered by a but not b */
@@ -1042,7 +1042,7 @@ fbCombineConjointOutPart (comp1_t a, comp1_t b)
 
     if (b >= a)		    /* b >= a -> b/a >= 1 */
 	return 0x00;	    /* 0 */
-    return ~IntDiv(b,a);    /* 1 - b/a */
+    return ~DIV_UN_width(b,a);    /* 1 - b/a */
 }
 
 /* portion covered by both a and b */
@@ -1053,7 +1053,7 @@ fbCombineConjointInPart (comp1_t a, comp1_t b)
 
     if (b >= a)		    /* b >= a -> b/a >= 1 */
 	return MASK;	    /* 1 */
-    return IntDiv(b,a);     /* b/a */
+    return DIV_UN_width(b,a);     /* b/a */
 }
 
 #define GetComp(v,i)   ((comp2_t) (comp1_t) ((v) >> i))
@@ -1061,8 +1061,8 @@ fbCombineConjointInPart (comp1_t a, comp1_t b)
 #define Add(x,y,i,t)   ((t) = GetComp(x,i) + GetComp(y,i),              \
                         (comp4_t) ((comp1_t) ((t) | (0 - ((t) >> G_SHIFT)))) << (i))
 
-#define FbGen(x,y,i,ax,ay,t,u,v) ((t) = (IntMult(GetComp(y,i),ay,(u)) + \
-					 IntMult(GetComp(x,i),ax,(v))), \
+#define FbGen(x,y,i,ax,ay,t,u,v) ((t) = (MUL_UN_width(GetComp(y,i),ay,(u)) + \
+					 MUL_UN_width(GetComp(x,i),ax,(v))), \
 				  	 (comp4_t) ((comp1_t) ((t) |		\
 					 (0 - ((t) >> G_SHIFT)))) << (i))
 

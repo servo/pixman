@@ -21,13 +21,13 @@
  * Helper macros.
  */
 
-#define IntMult(a,b,t) ( (t) = (a) * (b) + ONE_HALF, ( ( ( (t)>>G_SHIFT ) + (t) )>>G_SHIFT ) )
-#define IntDiv(a,b)    (((comp2_t) (a) * MASK) / (b))
-#define IntAdd(x,y,t) (							\
+#define MUL_UN_width(a,b,t) ( (t) = (a) * (b) + ONE_HALF, ( ( ( (t)>>G_SHIFT ) + (t) )>>G_SHIFT ) )
+#define DIV_UN_width(a,b)    (((comp2_t) (a) * MASK) / (b))
+#define ADD_UN_width(x,y,t) (							\
 	(t) = x + y,                                                    \
 	(comp4_t) (comp1_t) ((t) | (0 - ((t) >> G_SHIFT))))
 
-#define DivOne(x)      (((x) + ONE_HALF + (((x) + ONE_HALF) >> G_SHIFT)) >> G_SHIFT)
+#define DIV_ONE_UN_width(x)      (((x) + ONE_HALF + (((x) + ONE_HALF) >> G_SHIFT)) >> G_SHIFT)
 
 /*
   The methods below use some tricks to be able to do two color
