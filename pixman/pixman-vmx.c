@@ -1482,7 +1482,7 @@ vmxCombineAddC (pixman_implementation_t *imp, pixman_op_t op,
 
 #if 0
 void
-fbCompositeSolid_nx8888vmx (pixman_operator_t	op,
+vmx_CompositeOver_n_8888 (pixman_operator_t	op,
 			    pixman_image_t * pSrc,
 			    pixman_image_t * pMask,
 			    pixman_image_t * pDst,
@@ -1515,7 +1515,7 @@ fbCompositeSolid_nx8888vmx (pixman_operator_t	op,
 }
 
 void
-fbCompositeSolid_nx0565vmx (pixman_operator_t	op,
+vmx_CompositeOver_n_0565 (pixman_operator_t	op,
 			    pixman_image_t * pSrc,
 			    pixman_image_t * pMask,
 			    pixman_image_t * pDst,
