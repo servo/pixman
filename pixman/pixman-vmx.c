@@ -1483,9 +1483,9 @@ vmxCombineAddC (pixman_implementation_t *imp, pixman_op_t op,
 #if 0
 void
 vmx_CompositeOver_n_8888 (pixman_operator_t	op,
-			    pixman_image_t * pSrc,
-			    pixman_image_t * pMask,
-			    pixman_image_t * pDst,
+			    pixman_image_t * src_image,
+			    pixman_image_t * mask_image,
+			    pixman_image_t * dst_image,
 			    int16_t	xSrc,
 			    int16_t	ySrc,
 			    int16_t	xMask,
@@ -1499,12 +1499,12 @@ vmx_CompositeOver_n_8888 (pixman_operator_t	op,
     uint32_t	*dstLine, *dst;
     int	dstStride;
 
-    _pixman_image_get_solid (pSrc, pDst, src);
+    _pixman_image_get_solid (src_image, dst_image, src);
 
     if (src >> 24 == 0)
 	return;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
+    fbComposeGetStart (dst_image, xDst, yDst, uint32_t, dstStride, dstLine, 1);
 
     while (height--)
     {
@@ -1516,9 +1516,9 @@ vmx_CompositeOver_n_8888 (pixman_operator_t	op,
 
 void
 vmx_CompositeOver_n_0565 (pixman_operator_t	op,
-			    pixman_image_t * pSrc,
-			    pixman_image_t * pMask,
-			    pixman_image_t * pDst,
+			    pixman_image_t * src_image,
+			    pixman_image_t * mask_image,
+			    pixman_image_t * dst_image,
 			    int16_t	xSrc,
 			    int16_t	ySrc,
 			    int16_t	xMask,
@@ -1533,12 +1533,12 @@ vmx_CompositeOver_n_0565 (pixman_operator_t	op,
     uint16_t	w;
     int	dstStride;
 
-    _pixman_image_get_solid (pSrc, pDst, src);
+    _pixman_image_get_solid (src_image, dst_image, src);
 
     if (src >> 24 == 0)
 	return;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint16_t, dstStride, dstLine, 1);
+    fbComposeGetStart (dst_image, xDst, yDst, uint16_t, dstStride, dstLine, 1);
 
     while (height--)
     {

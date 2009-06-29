@@ -812,10 +812,10 @@ pixman_bool_t	pixman_image_fill_rectangles	     (pixman_op_t		    op,
 						      const pixman_rectangle16_t   *rects);
 
 /* Composite */
-pixman_bool_t pixman_compute_composite_region (pixman_region16_t *pRegion,
-					       pixman_image_t    *pSrc,
-					       pixman_image_t    *pMask,
-					       pixman_image_t    *pDst,
+pixman_bool_t pixman_compute_composite_region (pixman_region16_t *region,
+					       pixman_image_t    *src_image,
+					       pixman_image_t    *mask_image,
+					       pixman_image_t    *dst_image,
 					       int16_t            xSrc,
 					       int16_t            ySrc,
 					       int16_t            xMask,

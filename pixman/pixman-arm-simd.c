@@ -33,9 +33,9 @@ static void
 arm_CompositeAdd_8000_8000 (
                             pixman_implementation_t * impl,
                             pixman_op_t op,
-				pixman_image_t * pSrc,
-				pixman_image_t * pMask,
-				pixman_image_t * pDst,
+				pixman_image_t * src_image,
+				pixman_image_t * mask_image,
+				pixman_image_t * dst_image,
 				int32_t      xSrc,
 				int32_t      ySrc,
 				int32_t      xMask,
@@ -51,8 +51,8 @@ arm_CompositeAdd_8000_8000 (
     uint16_t	w;
     uint8_t	s, d;
 
-    fbComposeGetStart (pSrc, xSrc, ySrc, uint8_t, srcStride, srcLine, 1);
-    fbComposeGetStart (pDst, xDst, yDst, uint8_t, dstStride, dstLine, 1);
+    fbComposeGetStart (src_image, xSrc, ySrc, uint8_t, srcStride, srcLine, 1);
+    fbComposeGetStart (dst_image, xDst, yDst, uint8_t, dstStride, dstLine, 1);
 
     while (height--)
     {
@@ -103,9 +103,9 @@ static void
 arm_composite_over_8888_8888 (
                             pixman_implementation_t * impl,
                             pixman_op_t op,
-			 pixman_image_t * pSrc,
-			 pixman_image_t * pMask,
-			 pixman_image_t * pDst,
+			 pixman_image_t * src_image,
+			 pixman_image_t * mask_image,
+			 pixman_image_t * dst_image,
 			 int32_t      xSrc,
 			 int32_t      ySrc,
 			 int32_t      xMask,
@@ -123,8 +123,8 @@ arm_composite_over_8888_8888 (
     uint32_t upper_component_mask = 0xff00ff00;
     uint32_t alpha_mask = 0xff;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
+    fbComposeGetStart (dst_image, xDst, yDst, uint32_t, dstStride, dstLine, 1);
+    fbComposeGetStart (src_image, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
 
     while (height--)
     {
@@ -196,9 +196,9 @@ static void
 arm_composite_over_8888_n_8888 (
                             pixman_implementation_t * impl,
                             pixman_op_t op,
-			       pixman_image_t * pSrc,
-			       pixman_image_t * pMask,
-			       pixman_image_t * pDst,
+			       pixman_image_t * src_image,
+			       pixman_image_t * mask_image,
+			       pixman_image_t * dst_image,
 			       int32_t	xSrc,
 			       int32_t	ySrc,
 			       int32_t      xMask,
@@ -216,10 +216,10 @@ arm_composite_over_8888_n_8888 (
     uint32_t component_half = 0x800080;
     uint32_t alpha_mask = 0xff;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
+    fbComposeGetStart (dst_image, xDst, yDst, uint32_t, dstStride, dstLine, 1);
+    fbComposeGetStart (src_image, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
 
-    mask = _pixman_image_get_solid (pMask, pDst->bits.format);
+    mask = _pixman_image_get_solid (mask_image, dst_image->bits.format);
     mask = (mask) >> 24;
 
     while (height--)
@@ -305,9 +305,9 @@ static void
 arm_CompositeOver_n_8_8888 (
                             pixman_implementation_t * impl,
                             pixman_op_t      op,
-			       pixman_image_t * pSrc,
-			       pixman_image_t * pMask,
-			       pixman_image_t * pDst,
+			       pixman_image_t * src_image,
+			       pixman_image_t * mask_image,
+			       pixman_image_t * dst_image,
 			       int32_t      xSrc,
 			       int32_t      ySrc,
 			       int32_t      xMask,
@@ -323,7 +323,7 @@ arm_CompositeOver_n_8_8888 (
     int		 dstStride, maskStride;
     uint16_t	 w;
 
-    src = _pixman_image_get_solid(pSrc, pDst->bits.format);
+    src = _pixman_image_get_solid(src_image, dst_image->bits.format);
 
     // bail out if fully transparent
     srca = src >> 24;
@@ -336,8 +336,8 @@ arm_CompositeOver_n_8_8888 (
     uint32_t src_hi = (src >> 8) & component_mask;
     uint32_t src_lo = src & component_mask;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pMask, xMask, yMask, uint8_t, maskStride, maskLine, 1);
+    fbComposeGetStart (dst_image, xDst, yDst, uint32_t, dstStride, dstLine, 1);
+    fbComposeGetStart (mask_image, xMask, yMask, uint8_t, maskStride, maskLine, 1);
 
     while (height--)
     {

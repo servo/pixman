@@ -2499,9 +2499,9 @@ sse2CombineAddC (pixman_implementation_t *imp, pixman_op_t op,
 static void
 sse2_CompositeOver_n_8888 (pixman_implementation_t *imp,
 			     pixman_op_t op,
-			    pixman_image_t * pSrc,
-			    pixman_image_t * pMask,
-			    pixman_image_t * pDst,
+			    pixman_image_t * src_image,
+			    pixman_image_t * mask_image,
+			    pixman_image_t * dst_image,
 			    int32_t	xSrc,
 			    int32_t	ySrc,
 			    int32_t	xMask,
@@ -2518,12 +2518,12 @@ sse2_CompositeOver_n_8888 (pixman_implementation_t *imp,
     __m128i xmmSrc, xmmAlpha;
     __m128i xmmDst, xmmDstLo, xmmDstHi;
 
-    src = _pixman_image_get_solid(pSrc, pDst->bits.format);
+    src = _pixman_image_get_solid(src_image, dst_image->bits.format);
 
     if (src == 0)
 	return;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
+    fbComposeGetStart (dst_image, xDst, yDst, uint32_t, dstStride, dstLine, 1);
 
     xmmSrc = expandPixel_32_1x128 (src);
     xmmAlpha = expandAlpha_1x128 (xmmSrc);
@@ -2586,9 +2586,9 @@ sse2_CompositeOver_n_8888 (pixman_implementation_t *imp,
 static void
 sse2_CompositeOver_n_0565 (pixman_implementation_t *imp,
 			     pixman_op_t op,
-			    pixman_image_t * pSrc,
-			    pixman_image_t * pMask,
-			    pixman_image_t * pDst,
+			    pixman_image_t * src_image,
+			    pixman_image_t * mask_image,
+			    pixman_image_t * dst_image,
 			    int32_t	xSrc,
 			    int32_t	ySrc,
 			    int32_t	xMask,
@@ -2605,12 +2605,12 @@ sse2_CompositeOver_n_0565 (pixman_implementation_t *imp,
     __m128i xmmSrc, xmmAlpha;
     __m128i xmmDst, xmmDst0, xmmDst1, xmmDst2, xmmDst3;
 
-    src = _pixman_image_get_solid(pSrc, pDst->bits.format);
+    src = _pixman_image_get_solid(src_image, dst_image->bits.format);
 
     if (src == 0)
         return;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint16_t, dstStride, dstLine, 1);
+    fbComposeGetStart (dst_image, xDst, yDst, uint16_t, dstStride, dstLine, 1);
 
     xmmSrc = expandPixel_32_1x128 (src);
     xmmAlpha = expandAlpha_1x128 (xmmSrc);
@@ -2676,9 +2676,9 @@ sse2_CompositeOver_n_0565 (pixman_implementation_t *imp,
 static void
 sse2_CompositeOver_n_8888_8888_ca (pixman_implementation_t *imp,
 				       pixman_op_t op,
-				      pixman_image_t * pSrc,
-				      pixman_image_t * pMask,
-				      pixman_image_t * pDst,
+				      pixman_image_t * src_image,
+				      pixman_image_t * mask_image,
+				      pixman_image_t * dst_image,
 				      int32_t	xSrc,
 				      int32_t	ySrc,
 				      int32_t	xMask,
@@ -2700,13 +2700,13 @@ sse2_CompositeOver_n_8888_8888_ca (pixman_implementation_t *imp,
 
     __m64 mmxSrc, mmxAlpha, mmxMask, mmxDst;
 
-    src = _pixman_image_get_solid(pSrc, pDst->bits.format);
+    src = _pixman_image_get_solid(src_image, dst_image->bits.format);
 
     if (src == 0)
 	return;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pMask, xMask, yMask, uint32_t, maskStride, maskLine, 1);
+    fbComposeGetStart (dst_image, xDst, yDst, uint32_t, dstStride, dstLine, 1);
+    fbComposeGetStart (mask_image, xMask, yMask, uint32_t, maskStride, maskLine, 1);
 
     xmmSrc = _mm_unpacklo_epi8 (createMask_2x32_128 (src, src), _mm_setzero_si128 ());
     xmmAlpha = expandAlpha_1x128 (xmmSrc);
@@ -2810,9 +2810,9 @@ sse2_CompositeOver_n_8888_8888_ca (pixman_implementation_t *imp,
 static void
 sse2_composite_over_8888_n_8888 (pixman_implementation_t *imp,
 				pixman_op_t op,
-			       pixman_image_t * pSrc,
-			       pixman_image_t * pMask,
-			       pixman_image_t * pDst,
+			       pixman_image_t * src_image,
+			       pixman_image_t * mask_image,
+			       pixman_image_t * dst_image,
 			       int32_t	xSrc,
 			       int32_t	ySrc,
 			       int32_t      xMask,
@@ -2833,9 +2833,9 @@ sse2_composite_over_8888_n_8888 (pixman_implementation_t *imp,
     __m128i xmmDst, xmmDstLo, xmmDstHi;
     __m128i xmmAlphaLo, xmmAlphaHi;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
-    mask = _pixman_image_get_solid (pMask, pDst->bits.format);
+    fbComposeGetStart (dst_image, xDst, yDst, uint32_t, dstStride, dstLine, 1);
+    fbComposeGetStart (src_image, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
+    mask = _pixman_image_get_solid (mask_image, dst_image->bits.format);
 
     xmmMask = createMask_16_128 (mask >> 24);
 
@@ -2923,9 +2923,9 @@ sse2_composite_over_8888_n_8888 (pixman_implementation_t *imp,
 static void
 sse2_Composite_over_x888_n_8888 (pixman_implementation_t *imp,
 				pixman_op_t op,
-			       pixman_image_t * pSrc,
-			       pixman_image_t * pMask,
-			       pixman_image_t * pDst,
+			       pixman_image_t * src_image,
+			       pixman_image_t * mask_image,
+			       pixman_image_t * dst_image,
 			       int32_t	xSrc,
 			       int32_t	ySrc,
 			       int32_t      xMask,
@@ -2945,9 +2945,9 @@ sse2_Composite_over_x888_n_8888 (pixman_implementation_t *imp,
     __m128i xmmSrc, xmmSrcLo, xmmSrcHi;
     __m128i xmmDst, xmmDstLo, xmmDstHi;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
-    mask = _pixman_image_get_solid (pMask, pDst->bits.format);
+    fbComposeGetStart (dst_image, xDst, yDst, uint32_t, dstStride, dstLine, 1);
+    fbComposeGetStart (src_image, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
+    mask = _pixman_image_get_solid (mask_image, dst_image->bits.format);
 
     xmmMask = createMask_16_128 (mask >> 24);
     xmmAlpha = Mask00ff;
@@ -3036,9 +3036,9 @@ sse2_Composite_over_x888_n_8888 (pixman_implementation_t *imp,
 static void
 sse2_composite_over_8888_8888 (pixman_implementation_t *imp,
 			      pixman_op_t op,
-			     pixman_image_t * pSrc,
-			     pixman_image_t * pMask,
-			     pixman_image_t * pDst,
+			     pixman_image_t * src_image,
+			     pixman_image_t * mask_image,
+			     pixman_image_t * dst_image,
 			     int32_t	xSrc,
 			     int32_t	ySrc,
 			     int32_t      xMask,
@@ -3052,8 +3052,8 @@ sse2_composite_over_8888_8888 (pixman_implementation_t *imp,
     uint32_t	*dstLine, *dst;
     uint32_t	*srcLine, *src;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
+    fbComposeGetStart (dst_image, xDst, yDst, uint32_t, dstStride, dstLine, 1);
+    fbComposeGetStart (src_image, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
 
     dst = dstLine;
     src = srcLine;
@@ -3085,9 +3085,9 @@ fast_composite_over_8888_0565pixel (uint32_t src, uint16_t dst)
 static void
 sse2_composite_over_8888_0565 (pixman_implementation_t *imp,
 			      pixman_op_t op,
-			     pixman_image_t * pSrc,
-			     pixman_image_t * pMask,
-			     pixman_image_t * pDst,
+			     pixman_image_t * src_image,
+			     pixman_image_t * mask_image,
+			     pixman_image_t * dst_image,
 			     int32_t      xSrc,
 			     int32_t      ySrc,
 			     int32_t      xMask,
@@ -3106,8 +3106,8 @@ sse2_composite_over_8888_0565 (pixman_implementation_t *imp,
     __m128i xmmSrc, xmmSrcLo, xmmSrcHi;
     __m128i xmmDst, xmmDst0, xmmDst1, xmmDst2, xmmDst3;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint16_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
+    fbComposeGetStart (dst_image, xDst, yDst, uint16_t, dstStride, dstLine, 1);
+    fbComposeGetStart (src_image, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
 
 #if 0
     /* FIXME
@@ -3115,7 +3115,7 @@ sse2_composite_over_8888_0565 (pixman_implementation_t *imp,
      * I copy the code from MMX one and keep the fixme.
      * If it's a problem there, probably is a problem here.
      */
-    assert (pSrc->pDrawable == pMask->pDrawable);
+    assert (src_image->pDrawable == mask_image->pDrawable);
 #endif
 
     while (height--)
@@ -3199,9 +3199,9 @@ sse2_composite_over_8888_0565 (pixman_implementation_t *imp,
 static void
 sse2_CompositeOver_n_8_8888 (pixman_implementation_t *imp,
 				   pixman_op_t op,
-				  pixman_image_t * pSrc,
-				  pixman_image_t * pMask,
-				  pixman_image_t * pDst,
+				  pixman_image_t * src_image,
+				  pixman_image_t * mask_image,
+				  pixman_image_t * dst_image,
 				  int32_t      xSrc,
 				  int32_t      ySrc,
 				  int32_t      xMask,
@@ -3224,14 +3224,14 @@ sse2_CompositeOver_n_8_8888 (pixman_implementation_t *imp,
 
     __m64 mmxSrc, mmxAlpha, mmxMask, mmxDest;
 
-    src = _pixman_image_get_solid(pSrc, pDst->bits.format);
+    src = _pixman_image_get_solid(src_image, dst_image->bits.format);
 
     srca = src >> 24;
     if (src == 0)
 	return;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pMask, xMask, yMask, uint8_t, maskStride, maskLine, 1);
+    fbComposeGetStart (dst_image, xDst, yDst, uint32_t, dstStride, dstLine, 1);
+    fbComposeGetStart (mask_image, xMask, yMask, uint8_t, maskStride, maskLine, 1);
 
     xmmDef = createMask_2x32_128 (src, src);
     xmmSrc = expandPixel_32_1x128 (src);
@@ -3477,9 +3477,9 @@ pixmanFillsse2 (uint32_t *bits,
 static void
 sse2_CompositeSrc_n_8_8888 (pixman_implementation_t *imp,
 				      pixman_op_t op,
-				     pixman_image_t * pSrc,
-				     pixman_image_t * pMask,
-				     pixman_image_t * pDst,
+				     pixman_image_t * src_image,
+				     pixman_image_t * mask_image,
+				     pixman_image_t * dst_image,
 				     int32_t      xSrc,
 				     int32_t      ySrc,
 				     int32_t      xMask,
@@ -3499,19 +3499,19 @@ sse2_CompositeSrc_n_8_8888 (pixman_implementation_t *imp,
     __m128i xmmSrc, xmmDef;
     __m128i xmmMask, xmmMaskLo, xmmMaskHi;
 
-    src = _pixman_image_get_solid(pSrc, pDst->bits.format);
+    src = _pixman_image_get_solid(src_image, dst_image->bits.format);
 
     srca = src >> 24;
     if (src == 0)
     {
-        pixmanFillsse2 (pDst->bits.bits, pDst->bits.rowstride,
-                        PIXMAN_FORMAT_BPP (pDst->bits.format),
+        pixmanFillsse2 (dst_image->bits.bits, dst_image->bits.rowstride,
+                        PIXMAN_FORMAT_BPP (dst_image->bits.format),
                         xDst, yDst, width, height, 0);
         return;
     }
 
-    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pMask, xMask, yMask, uint8_t, maskStride, maskLine, 1);
+    fbComposeGetStart (dst_image, xDst, yDst, uint32_t, dstStride, dstLine, 1);
+    fbComposeGetStart (mask_image, xMask, yMask, uint8_t, maskStride, maskLine, 1);
 
     xmmDef = createMask_2x32_128 (src, src);
     xmmSrc = expandPixel_32_1x128 (src);
@@ -3613,9 +3613,9 @@ sse2_CompositeSrc_n_8_8888 (pixman_implementation_t *imp,
 static void
 sse2_CompositeOver_n_8_0565 (pixman_implementation_t *imp,
 				   pixman_op_t op,
-				  pixman_image_t * pSrc,
-				  pixman_image_t * pMask,
-				  pixman_image_t * pDst,
+				  pixman_image_t * src_image,
+				  pixman_image_t * mask_image,
+				  pixman_image_t * dst_image,
 				  int32_t      xSrc,
 				  int32_t      ySrc,
 				  int32_t      xMask,
@@ -3637,14 +3637,14 @@ sse2_CompositeOver_n_8_0565 (pixman_implementation_t *imp,
     __m128i xmmMask, xmmMaskLo, xmmMaskHi;
     __m128i xmmDst, xmmDst0, xmmDst1, xmmDst2, xmmDst3;
 
-    src = _pixman_image_get_solid(pSrc, pDst->bits.format);
+    src = _pixman_image_get_solid(src_image, dst_image->bits.format);
 
     srca = src >> 24;
     if (src == 0)
 	return;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint16_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pMask, xMask, yMask, uint8_t, maskStride, maskLine, 1);
+    fbComposeGetStart (dst_image, xDst, yDst, uint16_t, dstStride, dstLine, 1);
+    fbComposeGetStart (mask_image, xMask, yMask, uint8_t, maskStride, maskLine, 1);
 
     xmmSrc = expandPixel_32_1x128 (src);
     xmmAlpha = expandAlpha_1x128 (xmmSrc);
@@ -3763,9 +3763,9 @@ sse2_CompositeOver_n_8_0565 (pixman_implementation_t *imp,
 static void
 sse2_Composite_over_pixbuf_0565 (pixman_implementation_t *imp,
 				   pixman_op_t op,
-				  pixman_image_t * pSrc,
-				  pixman_image_t * pMask,
-				  pixman_image_t * pDst,
+				  pixman_image_t * src_image,
+				  pixman_image_t * mask_image,
+				  pixman_image_t * dst_image,
 				  int32_t      xSrc,
 				  int32_t      ySrc,
 				  int32_t      xMask,
@@ -3785,8 +3785,8 @@ sse2_Composite_over_pixbuf_0565 (pixman_implementation_t *imp,
     __m128i xmmSrc, xmmSrcLo, xmmSrcHi;
     __m128i xmmDst, xmmDst0, xmmDst1, xmmDst2, xmmDst3;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint16_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
+    fbComposeGetStart (dst_image, xDst, yDst, uint16_t, dstStride, dstLine, 1);
+    fbComposeGetStart (src_image, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
 
 #if 0
     /* FIXME
@@ -3794,7 +3794,7 @@ sse2_Composite_over_pixbuf_0565 (pixman_implementation_t *imp,
      * I copy the code from MMX one and keep the fixme.
      * If it's a problem there, probably is a problem here.
      */
-    assert (pSrc->pDrawable == pMask->pDrawable);
+    assert (src_image->pDrawable == mask_image->pDrawable);
 #endif
 
     while (height--)
@@ -3898,9 +3898,9 @@ sse2_Composite_over_pixbuf_0565 (pixman_implementation_t *imp,
 static void
 sse2_Composite_over_pixbuf_8888 (pixman_implementation_t *imp,
 				   pixman_op_t op,
-				  pixman_image_t * pSrc,
-				  pixman_image_t * pMask,
-				  pixman_image_t * pDst,
+				  pixman_image_t * src_image,
+				  pixman_image_t * mask_image,
+				  pixman_image_t * dst_image,
 				  int32_t      xSrc,
 				  int32_t      ySrc,
 				  int32_t      xMask,
@@ -3919,8 +3919,8 @@ sse2_Composite_over_pixbuf_8888 (pixman_implementation_t *imp,
     __m128i xmmSrcLo, xmmSrcHi;
     __m128i xmmDstLo, xmmDstHi;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
+    fbComposeGetStart (dst_image, xDst, yDst, uint32_t, dstStride, dstLine, 1);
+    fbComposeGetStart (src_image, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
 
 #if 0
     /* FIXME
@@ -3928,7 +3928,7 @@ sse2_Composite_over_pixbuf_8888 (pixman_implementation_t *imp,
      * I copy the code from MMX one and keep the fixme.
      * If it's a problem there, probably is a problem here.
      */
-    assert (pSrc->pDrawable == pMask->pDrawable);
+    assert (src_image->pDrawable == mask_image->pDrawable);
 #endif
 
     while (height--)
@@ -4013,9 +4013,9 @@ sse2_Composite_over_pixbuf_8888 (pixman_implementation_t *imp,
 static void
 sse2_CompositeOver_n_8888_0565_ca (pixman_implementation_t *imp,
 				       pixman_op_t op,
-				      pixman_image_t * pSrc,
-				      pixman_image_t * pMask,
-				      pixman_image_t * pDst,
+				      pixman_image_t * src_image,
+				      pixman_image_t * mask_image,
+				      pixman_image_t * dst_image,
 				      int32_t      xSrc,
 				      int32_t      ySrc,
 				      int32_t      xMask,
@@ -4038,13 +4038,13 @@ sse2_CompositeOver_n_8888_0565_ca (pixman_implementation_t *imp,
 
     __m64 mmxSrc, mmxAlpha, mmxMask, mmxDest;
 
-    src = _pixman_image_get_solid(pSrc, pDst->bits.format);
+    src = _pixman_image_get_solid(src_image, dst_image->bits.format);
 
     if (src == 0)
         return;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint16_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pMask, xMask, yMask, uint32_t, maskStride, maskLine, 1);
+    fbComposeGetStart (dst_image, xDst, yDst, uint16_t, dstStride, dstLine, 1);
+    fbComposeGetStart (mask_image, xMask, yMask, uint32_t, maskStride, maskLine, 1);
 
     xmmSrc = expandPixel_32_1x128 (src);
     xmmAlpha = expandAlpha_1x128 (xmmSrc);
@@ -4161,9 +4161,9 @@ sse2_CompositeOver_n_8888_0565_ca (pixman_implementation_t *imp,
 static void
 sse2_CompositeIn_n_8_8 (pixman_implementation_t *imp,
 			 pixman_op_t op,
-			pixman_image_t * pSrc,
-			pixman_image_t * pMask,
-			pixman_image_t * pDst,
+			pixman_image_t * src_image,
+			pixman_image_t * mask_image,
+			pixman_image_t * dst_image,
 			int32_t      xSrc,
 			int32_t      ySrc,
 			int32_t      xMask,
@@ -4184,10 +4184,10 @@ sse2_CompositeIn_n_8_8 (pixman_implementation_t *imp,
     __m128i xmmMask, xmmMaskLo, xmmMaskHi;
     __m128i xmmDst, xmmDstLo, xmmDstHi;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint8_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pMask, xMask, yMask, uint8_t, maskStride, maskLine, 1);
+    fbComposeGetStart (dst_image, xDst, yDst, uint8_t, dstStride, dstLine, 1);
+    fbComposeGetStart (mask_image, xMask, yMask, uint8_t, maskStride, maskLine, 1);
 
-    src = _pixman_image_get_solid(pSrc, pDst->bits.format);
+    src = _pixman_image_get_solid(src_image, dst_image->bits.format);
 
     sa = src >> 24;
     if (sa == 0)
@@ -4264,9 +4264,9 @@ sse2_CompositeIn_n_8_8 (pixman_implementation_t *imp,
 static void
 sse2_CompositeIn_8_8 (pixman_implementation_t *imp,
 		       pixman_op_t op,
-		      pixman_image_t * pSrc,
-		      pixman_image_t * pMask,
-		      pixman_image_t * pDst,
+		      pixman_image_t * src_image,
+		      pixman_image_t * mask_image,
+		      pixman_image_t * dst_image,
 		      int32_t      xSrc,
 		      int32_t      ySrc,
 		      int32_t      xMask,
@@ -4285,8 +4285,8 @@ sse2_CompositeIn_8_8 (pixman_implementation_t *imp,
     __m128i xmmSrc, xmmSrcLo, xmmSrcHi;
     __m128i xmmDst, xmmDstLo, xmmDstHi;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint8_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pSrc, xSrc, ySrc, uint8_t, srcStride, srcLine, 1);
+    fbComposeGetStart (dst_image, xDst, yDst, uint8_t, dstStride, dstLine, 1);
+    fbComposeGetStart (src_image, xSrc, ySrc, uint8_t, srcStride, srcLine, 1);
 
     while (height--)
     {
@@ -4354,9 +4354,9 @@ sse2_CompositeIn_8_8 (pixman_implementation_t *imp,
 static void
 sse2_CompositeAdd_8888_8_8 (pixman_implementation_t *imp,
 				pixman_op_t op,
-			       pixman_image_t * pSrc,
-			       pixman_image_t * pMask,
-			       pixman_image_t * pDst,
+			       pixman_image_t * src_image,
+			       pixman_image_t * mask_image,
+			       pixman_image_t * dst_image,
 			       int32_t      xSrc,
 			       int32_t      ySrc,
 			       int32_t      xMask,
@@ -4378,10 +4378,10 @@ sse2_CompositeAdd_8888_8_8 (pixman_implementation_t *imp,
     __m128i xmmMask, xmmMaskLo, xmmMaskHi;
     __m128i xmmDst, xmmDstLo, xmmDstHi;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint8_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pMask, xMask, yMask, uint8_t, maskStride, maskLine, 1);
+    fbComposeGetStart (dst_image, xDst, yDst, uint8_t, dstStride, dstLine, 1);
+    fbComposeGetStart (mask_image, xMask, yMask, uint8_t, maskStride, maskLine, 1);
 
-    src = _pixman_image_get_solid(pSrc, pDst->bits.format);
+    src = _pixman_image_get_solid(src_image, dst_image->bits.format);
 
     sa = src >> 24;
     if (sa == 0)
@@ -4460,9 +4460,9 @@ sse2_CompositeAdd_8888_8_8 (pixman_implementation_t *imp,
 static void
 sse2_CompositeAdd_8000_8000 (pixman_implementation_t *imp,
 				 pixman_op_t op,
-				pixman_image_t * pSrc,
-				pixman_image_t * pMask,
-				pixman_image_t * pDst,
+				pixman_image_t * src_image,
+				pixman_image_t * mask_image,
+				pixman_image_t * dst_image,
 				int32_t      xSrc,
 				int32_t      ySrc,
 				int32_t      xMask,
@@ -4478,8 +4478,8 @@ sse2_CompositeAdd_8000_8000 (pixman_implementation_t *imp,
     uint16_t	w;
     uint16_t	t;
 
-    fbComposeGetStart (pSrc, xSrc, ySrc, uint8_t, srcStride, srcLine, 1);
-    fbComposeGetStart (pDst, xDst, yDst, uint8_t, dstStride, dstLine, 1);
+    fbComposeGetStart (src_image, xSrc, ySrc, uint8_t, srcStride, srcLine, 1);
+    fbComposeGetStart (dst_image, xDst, yDst, uint8_t, dstStride, dstLine, 1);
 
     while (height--)
     {
@@ -4527,9 +4527,9 @@ sse2_CompositeAdd_8000_8000 (pixman_implementation_t *imp,
 static void
 sse2_CompositeAdd_8888_8888 (pixman_implementation_t *imp,
 				 pixman_op_t 	op,
-				pixman_image_t *	pSrc,
-				pixman_image_t *	pMask,
-				pixman_image_t *	 pDst,
+				pixman_image_t *	src_image,
+				pixman_image_t *	mask_image,
+				pixman_image_t *	 dst_image,
 				int32_t		 xSrc,
 				int32_t      ySrc,
 				int32_t      xMask,
@@ -4543,8 +4543,8 @@ sse2_CompositeAdd_8888_8888 (pixman_implementation_t *imp,
     uint32_t	*srcLine, *src;
     int	dstStride, srcStride;
 
-    fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
-    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
+    fbComposeGetStart (src_image, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
+    fbComposeGetStart (dst_image, xDst, yDst, uint32_t, dstStride, dstLine, 1);
 
     while (height--)
     {
@@ -4705,9 +4705,9 @@ pixmanBltsse2 (uint32_t *src_bits,
 static void
 sse2_CompositeCopyArea (pixman_implementation_t *imp,
 			 pixman_op_t       op,
-			pixman_image_t *	pSrc,
-			pixman_image_t *	pMask,
-			pixman_image_t *	pDst,
+			pixman_image_t *	src_image,
+			pixman_image_t *	mask_image,
+			pixman_image_t *	dst_image,
 			int32_t		xSrc,
 			int32_t		ySrc,
 			int32_t		xMask,
@@ -4717,12 +4717,12 @@ sse2_CompositeCopyArea (pixman_implementation_t *imp,
 			int32_t		width,
 			int32_t		height)
 {
-    pixmanBltsse2 (pSrc->bits.bits,
-		    pDst->bits.bits,
-		    pSrc->bits.rowstride,
-		    pDst->bits.rowstride,
-		    PIXMAN_FORMAT_BPP (pSrc->bits.format),
-		    PIXMAN_FORMAT_BPP (pDst->bits.format),
+    pixmanBltsse2 (src_image->bits.bits,
+		    dst_image->bits.bits,
+		    src_image->bits.rowstride,
+		    dst_image->bits.rowstride,
+		    PIXMAN_FORMAT_BPP (src_image->bits.format),
+		    PIXMAN_FORMAT_BPP (dst_image->bits.format),
 		    xSrc, ySrc, xDst, yDst, width, height);
 }
 
@@ -4731,9 +4731,9 @@ sse2_CompositeCopyArea (pixman_implementation_t *imp,
 void
 sse2_CompositeOver_x888_8_8888 (pixman_implementation_t *imp,
 				 pixman_op_t      op,
-				pixman_image_t * pSrc,
-				pixman_image_t * pMask,
-				pixman_image_t * pDst,
+				pixman_image_t * src_image,
+				pixman_image_t * mask_image,
+				pixman_image_t * dst_image,
 				int32_t      xSrc,
 				int32_t      ySrc,
 				int32_t      xMask,
@@ -4754,9 +4754,9 @@ sse2_CompositeOver_x888_8_8888 (pixman_implementation_t *imp,
     __m128i xmmDst, xmmDstLo, xmmDstHi;
     __m128i xmmMask, xmmMaskLo, xmmMaskHi;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pMask, xMask, yMask, uint8_t, maskStride, maskLine, 1);
-    fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
+    fbComposeGetStart (dst_image, xDst, yDst, uint32_t, dstStride, dstLine, 1);
+    fbComposeGetStart (mask_image, xMask, yMask, uint8_t, maskStride, maskLine, 1);
+    fbComposeGetStart (src_image, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
 
     while (height--)
     {

@@ -179,24 +179,24 @@ if (!(pReg)->data || (((pReg)->data->numRects + (n)) > (pReg)->data->size)) \
 if (!(pReg)->data || (((pReg)->data->numRects + (n)) > (pReg)->data->size)) \
     if (!pixman_rect_alloc(pReg, n)) { return FALSE; }
 
-#define ADDRECT(pNextRect,nx1,ny1,nx2,ny2)	\
+#define ADDRECT(next_rect,nx1,ny1,nx2,ny2)	\
 {						\
-    pNextRect->x1 = nx1;			\
-    pNextRect->y1 = ny1;			\
-    pNextRect->x2 = nx2;			\
-    pNextRect->y2 = ny2;			\
-    pNextRect++;				\
+    next_rect->x1 = nx1;			\
+    next_rect->y1 = ny1;			\
+    next_rect->x2 = nx2;			\
+    next_rect->y2 = ny2;			\
+    next_rect++;				\
 }
 
-#define NEWRECT(pReg,pNextRect,nx1,ny1,nx2,ny2)			\
+#define NEWRECT(pReg,next_rect,nx1,ny1,nx2,ny2)			\
 {									\
     if (!(pReg)->data || ((pReg)->data->numRects == (pReg)->data->size))\
     {									\
 	if (!pixman_rect_alloc(pReg, 1))					\
 	    return FALSE;						\
-	pNextRect = PIXREGION_TOP(pReg);					\
+	next_rect = PIXREGION_TOP(pReg);					\
     }									\
-    ADDRECT(pNextRect,nx1,ny1,nx2,ny2);					\
+    ADDRECT(next_rect,nx1,ny1,nx2,ny2);					\
     pReg->data->numRects++;						\
     assert(pReg->data->numRects<=pReg->data->size);			\
 }
@@ -507,7 +507,7 @@ pixman_region_appendNonO (
     int  	y1,
     int  	y2)
 {
-    box_type_t *	pNextRect;
+    box_type_t *	next_rect;
     int	newRects;
 
     newRects = rEnd - r;
@@ -517,11 +517,11 @@ pixman_region_appendNonO (
 
     /* Make sure we have enough space for all rectangles to be added */
     RECTALLOC(region, newRects);
-    pNextRect = PIXREGION_TOP(region);
+    next_rect = PIXREGION_TOP(region);
     region->data->numRects += newRects;
     do {
 	assert(r->x1 < r->x2);
-	ADDRECT(pNextRect, r->x1, y1, r->x2, y2);
+	ADDRECT(next_rect, r->x1, y1, r->x2, y2);
 	r++;
     } while (r != rEnd);
 
@@ -913,9 +913,9 @@ pixman_region_intersectO (region_type_t *region,
 {
     int  	x1;
     int  	x2;
-    box_type_t *	pNextRect;
+    box_type_t *	next_rect;
 
-    pNextRect = PIXREGION_TOP(region);
+    next_rect = PIXREGION_TOP(region);
 
     assert(y1 < y2);
     assert(r1 != r1End && r2 != r2End);
@@ -929,7 +929,7 @@ pixman_region_intersectO (region_type_t *region,
 	 * overlap to the new region.
 	 */
 	if (x1 < x2)
-	    NEWRECT(region, pNextRect, x1, y1, x2, y2);
+	    NEWRECT(region, next_rect, x1, y1, x2, y2);
 
 	/*
 	 * Advance the pointer(s) with the leftmost right side, since the next
@@ -1015,7 +1015,7 @@ PREFIX(_intersect) (region_type_t * 	newReg,
 	if (x2 < r->x2) x2 = r->x2;				\
     } else {							\
 	/* Add current rectangle, start new one */		\
-	NEWRECT(region, pNextRect, x1, y1, x2, y2);		\
+	NEWRECT(region, next_rect, x1, y1, x2, y2);		\
 	x1 = r->x1;						\
 	x2 = r->x2;						\
     }								\
@@ -1052,14 +1052,14 @@ pixman_region_unionO (
     int	  y2,
     int		  *pOverlap)
 {
-    box_type_t *     pNextRect;
+    box_type_t *     next_rect;
     int        x1;     /* left and right side of current union */
     int        x2;
 
     assert (y1 < y2);
     assert(r1 != r1End && r2 != r2End);
 
-    pNextRect = PIXREGION_TOP(region);
+    next_rect = PIXREGION_TOP(region);
 
     /* Start off current rectangle */
     if (r1->x1 < r2->x1)
@@ -1096,7 +1096,7 @@ pixman_region_unionO (
     }
 
     /* Add current rectangle */
-    NEWRECT(region, pNextRect, x1, y1, x2, y2);
+    NEWRECT(region, next_rect, x1, y1, x2, y2);
 
     return TRUE;
 }
@@ -1545,7 +1545,7 @@ pixman_region_subtractO (
     int  	y2,
     int		*pOverlap)
 {
-    box_type_t *	pNextRect;
+    box_type_t *	next_rect;
     int  	x1;
 
     x1 = r1->x1;
@@ -1553,7 +1553,7 @@ pixman_region_subtractO (
     assert(y1<y2);
     assert(r1 != r1End && r2 != r2End);
 
-    pNextRect = PIXREGION_TOP(region);
+    next_rect = PIXREGION_TOP(region);
 
     do
     {
@@ -1596,7 +1596,7 @@ pixman_region_subtractO (
 	     * part of minuend to region and skip to next subtrahend.
 	     */
 	    assert(x1<r2->x1);
-	    NEWRECT(region, pNextRect, x1, y1, r2->x1, y2);
+	    NEWRECT(region, next_rect, x1, y1, r2->x1, y2);
 
 	    x1 = r2->x2;
 	    if (x1 >= r1->x2)
@@ -1622,7 +1622,7 @@ pixman_region_subtractO (
 	     * Minuend used up: add any remaining piece before advancing.
 	     */
 	    if (r1->x2 > x1)
-		NEWRECT(region, pNextRect, x1, y1, r1->x2, y2);
+		NEWRECT(region, next_rect, x1, y1, r1->x2, y2);
 	    r1++;
 	    if (r1 != r1End)
 		x1 = r1->x1;
@@ -1635,7 +1635,7 @@ pixman_region_subtractO (
     while (r1 != r1End)
     {
 	assert(x1<r1->x2);
-	NEWRECT(region, pNextRect, x1, y1, r1->x2, y2);
+	NEWRECT(region, next_rect, x1, y1, r1->x2, y2);
 	r1++;
 	if (r1 != r1End)
 	    x1 = r1->x1;

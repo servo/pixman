@@ -76,17 +76,17 @@ pixman_operator_can_be_optimized(pixman_op_t op)
  * The output operator should be mathematically equivalent to the source.
  */
 static pixman_op_t
-pixman_optimize_operator(pixman_op_t op, pixman_image_t *pSrc, pixman_image_t *pMask, pixman_image_t *pDst )
+pixman_optimize_operator(pixman_op_t op, pixman_image_t *src_image, pixman_image_t *mask_image, pixman_image_t *dst_image )
 {
     pixman_bool_t is_source_opaque;
     pixman_bool_t is_dest_opaque;
     const optimized_operator_info_t *info = pixman_operator_can_be_optimized(op);
 
-    if(!info || pMask)
+    if(!info || mask_image)
         return op;
 
-    is_source_opaque = _pixman_image_is_opaque(pSrc);
-    is_dest_opaque = _pixman_image_is_opaque(pDst);
+    is_source_opaque = _pixman_image_is_opaque(src_image);
+    is_dest_opaque = _pixman_image_is_opaque(dst_image);
 
     if(is_source_opaque == FALSE && is_dest_opaque == FALSE)
         return op;
