@@ -474,7 +474,7 @@ pixman_coalesce (
 
 /* Quicky macro to avoid trivial reject procedure calls to pixman_coalesce */
 
-#define Coalesce(newReg, prevBand, curBand)				\
+#define COALESCE(newReg, prevBand, curBand)				\
     if (curBand - prevBand == newReg->data->numRects - curBand) {	\
 	prevBand = pixman_coalesce(newReg, prevBand, curBand);		\
     } else {								\
@@ -527,7 +527,7 @@ pixman_region_appendNonO (
     return TRUE;
 }
 
-#define FindBand(r, rBandEnd, rEnd, ry1)		    \
+#define FIND_BAND(r, rBandEnd, rEnd, ry1)		    \
 {							    \
     ry1 = r->y1;					    \
     rBandEnd = r+1;					    \
@@ -536,7 +536,7 @@ pixman_region_appendNonO (
     }							    \
 }
 
-#define	AppendRegions(newReg, r, rEnd)					\
+#define	APPEND_REGIONS(newReg, r, rEnd)					\
 {									\
     int newRects;							\
     if ((newRects = rEnd - r)) {					\
@@ -703,8 +703,8 @@ pixman_op(
 	assert(r1 != r1End);
 	assert(r2 != r2End);
 
-	FindBand(r1, r1BandEnd, r1End, r1y1);
-	FindBand(r2, r2BandEnd, r2End, r2y1);
+	FIND_BAND(r1, r1BandEnd, r1End, r1y1);
+	FIND_BAND(r2, r2BandEnd, r2End, r2y1);
 
 	/*
 	 * First handle the band that doesn't intersect, if any.
@@ -722,7 +722,7 @@ pixman_op(
 		    curBand = newReg->data->numRects;
 		    if (!pixman_region_appendNonO(newReg, r1, r1BandEnd, top, bot))
 			goto bail;
-		    Coalesce(newReg, prevBand, curBand);
+		    COALESCE(newReg, prevBand, curBand);
 		}
 	    }
 	    ytop = r2y1;
@@ -734,7 +734,7 @@ pixman_op(
 		    curBand = newReg->data->numRects;
 		    if (!pixman_region_appendNonO(newReg, r2, r2BandEnd, top, bot))
 			goto bail;
-		    Coalesce(newReg, prevBand, curBand);
+		    COALESCE(newReg, prevBand, curBand);
 		}
 	    }
 	    ytop = r1y1;
@@ -755,7 +755,7 @@ pixman_op(
 				 ytop, ybot,
 				 overlap))
 		goto bail;
-	    Coalesce(newReg, prevBand, curBand);
+	    COALESCE(newReg, prevBand, curBand);
 	}
 
 	/*
@@ -777,27 +777,27 @@ pixman_op(
 
     if ((r1 != r1End) && appendNon1) {
 	/* Do first nonOverlap1Func call, which may be able to coalesce */
-	FindBand(r1, r1BandEnd, r1End, r1y1);
+	FIND_BAND(r1, r1BandEnd, r1End, r1y1);
 	curBand = newReg->data->numRects;
 	if (!pixman_region_appendNonO(newReg,
 				      r1, r1BandEnd,
 				      MAX(r1y1, ybot), r1->y2))
 	    goto bail;
-	Coalesce(newReg, prevBand, curBand);
+	COALESCE(newReg, prevBand, curBand);
 	/* Just append the rest of the boxes  */
-	AppendRegions(newReg, r1BandEnd, r1End);
+	APPEND_REGIONS(newReg, r1BandEnd, r1End);
 
     } else if ((r2 != r2End) && appendNon2) {
 	/* Do first nonOverlap2Func call, which may be able to coalesce */
-	FindBand(r2, r2BandEnd, r2End, r2y1);
+	FIND_BAND(r2, r2BandEnd, r2End, r2y1);
 	curBand = newReg->data->numRects;
 	if (!pixman_region_appendNonO(newReg,
 				      r2, r2BandEnd,
 				      MAX(r2y1, ybot), r2->y2))
 	    goto bail;
-	Coalesce(newReg, prevBand, curBand);
+	COALESCE(newReg, prevBand, curBand);
 	/* Append rest of boxes */
-	AppendRegions(newReg, r2BandEnd, r2End);
+	APPEND_REGIONS(newReg, r2BandEnd, r2End);
     }
 
     if (oldData)
@@ -1204,7 +1204,7 @@ PREFIX(_union) (region_type_t *newReg,
  *	    Batch Rectangle Union
  *====================================================================*/
 
-#define ExchangeRects(a, b) \
+#define EXCHANGE_RECTS(a, b) \
 {			    \
     box_type_t     t;	    \
     t = rects[a];	    \
@@ -1230,12 +1230,12 @@ QuickSortRects(
 	{
 	    if (rects[0].y1 > rects[1].y1 ||
 		    (rects[0].y1 == rects[1].y1 && rects[0].x1 > rects[1].x1))
-		ExchangeRects(0, 1);
+		EXCHANGE_RECTS(0, 1);
 	    return;
 	}
 
 	/* Choose partition element, stick in location 0 */
-        ExchangeRects(0, numRects >> 1);
+        EXCHANGE_RECTS(0, numRects >> 1);
 	y1 = rects[0].y1;
 	x1 = rects[0].x1;
 
@@ -1258,11 +1258,11 @@ QuickSortRects(
 		j--;
             } while (y1 < r->y1 || (y1 == r->y1 && x1 < r->x1));
             if (i < j)
-		ExchangeRects(i, j);
+		EXCHANGE_RECTS(i, j);
         } while (i < j);
 
         /* Move partition element back to middle */
-        ExchangeRects(0, j);
+        EXCHANGE_RECTS(0, j);
 
 	/* Recurse */
         if (numRects-j-1 > 1)
@@ -1415,7 +1415,7 @@ validate (region_type_t * badreg,
 		/* Put box into new band */
 		if (reg->extents.x2 < riBox->x2) reg->extents.x2 = riBox->x2;
 		if (reg->extents.x1 > box->x1)   reg->extents.x1 = box->x1;
-		Coalesce(reg, rit->prevBand, rit->curBand);
+		COALESCE(reg, rit->prevBand, rit->curBand);
 		rit->curBand = reg->data->numRects;
 		RECTALLOC_BAIL(reg, 1, bail);
 		*PIXREGION_TOP(reg) = *box;
@@ -1459,7 +1459,7 @@ validate (region_type_t * badreg,
 NextRect: ;
     } /* for i */
 
-    /* Make a final pass over each region in order to Coalesce and set
+    /* Make a final pass over each region in order to COALESCE and set
        extents.x2 and extents.y2 */
 
     for (j = numRI, rit = ri; --j >= 0; rit++)
@@ -1468,7 +1468,7 @@ NextRect: ;
 	riBox = PIXREGION_END(reg);
 	reg->extents.y2 = riBox->y2;
 	if (reg->extents.x2 < riBox->x2) reg->extents.x2 = riBox->x2;
-	Coalesce(reg, rit->prevBand, rit->curBand);
+	COALESCE(reg, rit->prevBand, rit->curBand);
 	if (reg->data->numRects == 1) /* keep unions happy below */
 	{
 	    FREE_DATA(reg);
