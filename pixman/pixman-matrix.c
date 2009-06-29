@@ -299,13 +299,13 @@ within_epsilon(pixman_fixed_t a, pixman_fixed_t b, pixman_fixed_t epsilon)
 	return t <= epsilon;
 }
 
-#define epsilon	(pixman_fixed_t) (2)
+#define EPSILON	(pixman_fixed_t) (2)
 
-#define IS_SAME(a,b) (within_epsilon(a, b, epsilon))
-#define IS_ZERO(a)   (within_epsilon(a, 0, epsilon))
-#define IS_ONE(a)    (within_epsilon(a, F(1), epsilon))
-#define IS_UNIT(a)   (within_epsilon(a, F( 1), epsilon) || \
-		      within_epsilon(a, F(-1), epsilon) || \
+#define IS_SAME(a,b) (within_epsilon(a, b, EPSILON))
+#define IS_ZERO(a)   (within_epsilon(a, 0, EPSILON))
+#define IS_ONE(a)    (within_epsilon(a, F(1), EPSILON))
+#define IS_UNIT(a)   (within_epsilon(a, F( 1), EPSILON) || \
+		      within_epsilon(a, F(-1), EPSILON) || \
 		      IS_ZERO(a))
 #define IS_INT(a)    (IS_ZERO(pixman_fixed_frac(a)))
 
