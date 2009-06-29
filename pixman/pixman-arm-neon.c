@@ -1504,7 +1504,7 @@ pixman_fill_neon (uint32_t *bits,
 // TODO: is there a more generic way of doing this being introduced?
 #define NEON_SCANLINE_BUFFER_PIXELS (1024)
 
-static inline void QuadwordCopy_neon(
+static inline void neon_quadword_copy(
 	void* dst,
 	void* src,
 	uint32_t count,       // of quadwords
@@ -1802,18 +1802,18 @@ neon_CompositeOver_n_8_0565 (
 		// left edge, middle block, right edge
 		for( ; y--; maskLine += maskStride, alignedLine += dstStride, dstLine += dstStride) {
 			// We don't want to overrun the edges of the glyph, so realign the edge data into known buffers
-			QuadwordCopy_neon(glyphLine + copyOffset, maskLine, width >> 4, width & 0xF);
+			neon_quadword_copy(glyphLine + copyOffset, maskLine, width >> 4, width & 0xF);
 
 			// Uncached framebuffer access is really, really slow if we do it piecemeal.
 			// It should be much faster if we grab it all at once.
 			// One scanline should easily fit in L1 cache, so this should not waste RAM bandwidth.
-			QuadwordCopy_neon(scanLine, alignedLine, copyCount, copyTail);
+			neon_quadword_copy(scanLine, alignedLine, copyCount, copyTail);
 
 			// Apply the actual filter
 			SolidOver565_8pix_neon(src, scanLine + kernelOffset, glyphLine + kernelOffset, 8 * sizeof(*dstLine), 8, kernelCount);
 
 			// Copy the modified scanline back
-			QuadwordCopy_neon(dstLine, scanLine + copyOffset, width >> 3, (width & 7) * 2);
+			neon_quadword_copy(dstLine, scanLine + copyOffset, width >> 3, (width & 7) * 2);
 		}
 	}
 }
@@ -1956,13 +1956,13 @@ neon_CompositeOver_n_0565 (
 			// Uncached framebuffer access is really, really slow if we do it piecemeal.
 			// It should be much faster if we grab it all at once.
 			// One scanline should easily fit in L1 cache, so this should not waste RAM bandwidth.
-			QuadwordCopy_neon(scanLine, alignedLine, copyCount, copyTail);
+			neon_quadword_copy(scanLine, alignedLine, copyCount, copyTail);
 
 			// Apply the actual filter
 			PlainOver565_8pix_neon(src, scanLine + kernelOffset, 8 * sizeof(*dstLine), kernelCount);
 
 			// Copy the modified scanline back
-			QuadwordCopy_neon(dstLine, scanLine + copyOffset, width >> 3, (width & 7) * 2);
+			neon_quadword_copy(dstLine, scanLine + copyOffset, width >> 3, (width & 7) * 2);
 		}
 	}
 }
@@ -2118,13 +2118,13 @@ neon_CompositeOver_8888_0565 (
 			// Uncached framebuffer access is really, really slow if we do it piecemeal.
 			// It should be much faster if we grab it all at once.
 			// One scanline should easily fit in L1 cache, so this should not waste RAM bandwidth.
-			QuadwordCopy_neon(scanLine, alignedLine, copyCount, copyTail);
+			neon_quadword_copy(scanLine, alignedLine, copyCount, copyTail);
 
 			// Apply the actual filter
 			ARGB8_Over565_8pix_neon(srcLine, scanLine + kernelOffset, srcStride * sizeof(*srcLine), kernelCount);
 
 			// Copy the modified scanline back
-			QuadwordCopy_neon(dstLine, scanLine + copyOffset, width >> 3, (width & 7) * 2);
+			neon_quadword_copy(dstLine, scanLine + copyOffset, width >> 3, (width & 7) * 2);
 		}
 	}
 }
@@ -2227,7 +2227,7 @@ pixman_blt_neon (
 		uint32_t offset         = byte_width % 16;
 
 		while(height--) {
-			QuadwordCopy_neon(dst_bytes, src_bytes, quadword_count, offset);
+			neon_quadword_copy(dst_bytes, src_bytes, quadword_count, offset);
 			src_bytes += src_stride_bytes;
 			dst_bytes += dst_stride_bytes;
 		}
