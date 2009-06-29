@@ -36,12 +36,12 @@ arm_CompositeAdd_8000_8000 (
 				pixman_image_t * src_image,
 				pixman_image_t * mask_image,
 				pixman_image_t * dst_image,
-				int32_t      xSrc,
-				int32_t      ySrc,
-				int32_t      xMask,
-				int32_t      yMask,
-				int32_t      xDst,
-				int32_t      yDst,
+				int32_t      src_x,
+				int32_t      src_y,
+				int32_t      mask_x,
+				int32_t      mask_y,
+				int32_t      dest_x,
+				int32_t      dest_y,
 				int32_t      width,
 				int32_t      height)
 {
@@ -51,8 +51,8 @@ arm_CompositeAdd_8000_8000 (
     uint16_t	w;
     uint8_t	s, d;
 
-    fbComposeGetStart (src_image, xSrc, ySrc, uint8_t, srcStride, srcLine, 1);
-    fbComposeGetStart (dst_image, xDst, yDst, uint8_t, dstStride, dstLine, 1);
+    fbComposeGetStart (src_image, src_x, src_y, uint8_t, srcStride, srcLine, 1);
+    fbComposeGetStart (dst_image, dest_x, dest_y, uint8_t, dstStride, dstLine, 1);
 
     while (height--)
     {
@@ -106,12 +106,12 @@ arm_composite_over_8888_8888 (
 			 pixman_image_t * src_image,
 			 pixman_image_t * mask_image,
 			 pixman_image_t * dst_image,
-			 int32_t      xSrc,
-			 int32_t      ySrc,
-			 int32_t      xMask,
-			 int32_t      yMask,
-			 int32_t      xDst,
-			 int32_t      yDst,
+			 int32_t      src_x,
+			 int32_t      src_y,
+			 int32_t      mask_x,
+			 int32_t      mask_y,
+			 int32_t      dest_x,
+			 int32_t      dest_y,
 			 int32_t      width,
 			 int32_t      height)
 {
@@ -123,8 +123,8 @@ arm_composite_over_8888_8888 (
     uint32_t upper_component_mask = 0xff00ff00;
     uint32_t alpha_mask = 0xff;
 
-    fbComposeGetStart (dst_image, xDst, yDst, uint32_t, dstStride, dstLine, 1);
-    fbComposeGetStart (src_image, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
+    fbComposeGetStart (dst_image, dest_x, dest_y, uint32_t, dstStride, dstLine, 1);
+    fbComposeGetStart (src_image, src_x, src_y, uint32_t, srcStride, srcLine, 1);
 
     while (height--)
     {
@@ -199,12 +199,12 @@ arm_composite_over_8888_n_8888 (
 			       pixman_image_t * src_image,
 			       pixman_image_t * mask_image,
 			       pixman_image_t * dst_image,
-			       int32_t	xSrc,
-			       int32_t	ySrc,
-			       int32_t      xMask,
-			       int32_t      yMask,
-			       int32_t      xDst,
-			       int32_t      yDst,
+			       int32_t	src_x,
+			       int32_t	src_y,
+			       int32_t      mask_x,
+			       int32_t      mask_y,
+			       int32_t      dest_x,
+			       int32_t      dest_y,
 			       int32_t      width,
 			       int32_t      height)
 {
@@ -216,8 +216,8 @@ arm_composite_over_8888_n_8888 (
     uint32_t component_half = 0x800080;
     uint32_t alpha_mask = 0xff;
 
-    fbComposeGetStart (dst_image, xDst, yDst, uint32_t, dstStride, dstLine, 1);
-    fbComposeGetStart (src_image, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
+    fbComposeGetStart (dst_image, dest_x, dest_y, uint32_t, dstStride, dstLine, 1);
+    fbComposeGetStart (src_image, src_x, src_y, uint32_t, srcStride, srcLine, 1);
 
     mask = _pixman_image_get_solid (mask_image, dst_image->bits.format);
     mask = (mask) >> 24;
@@ -308,12 +308,12 @@ arm_CompositeOver_n_8_8888 (
 			       pixman_image_t * src_image,
 			       pixman_image_t * mask_image,
 			       pixman_image_t * dst_image,
-			       int32_t      xSrc,
-			       int32_t      ySrc,
-			       int32_t      xMask,
-			       int32_t      yMask,
-			       int32_t      xDst,
-			       int32_t      yDst,
+			       int32_t      src_x,
+			       int32_t      src_y,
+			       int32_t      mask_x,
+			       int32_t      mask_y,
+			       int32_t      dest_x,
+			       int32_t      dest_y,
 			       int32_t      width,
 			       int32_t      height)
 {
@@ -336,8 +336,8 @@ arm_CompositeOver_n_8_8888 (
     uint32_t src_hi = (src >> 8) & component_mask;
     uint32_t src_lo = src & component_mask;
 
-    fbComposeGetStart (dst_image, xDst, yDst, uint32_t, dstStride, dstLine, 1);
-    fbComposeGetStart (mask_image, xMask, yMask, uint8_t, maskStride, maskLine, 1);
+    fbComposeGetStart (dst_image, dest_x, dest_y, uint32_t, dstStride, dstLine, 1);
+    fbComposeGetStart (mask_image, mask_x, mask_y, uint8_t, maskStride, maskLine, 1);
 
     while (height--)
     {

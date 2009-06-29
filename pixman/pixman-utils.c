@@ -107,22 +107,22 @@ pixman_compute_composite_region32 (pixman_region32_t *	region,
 				   pixman_image_t *	src_image,
 				   pixman_image_t *	mask_image,
 				   pixman_image_t *	dst_image,
-				   int16_t		xSrc,
-				   int16_t		ySrc,
-				   int16_t		xMask,
-				   int16_t		yMask,
-				   int16_t		xDst,
-				   int16_t		yDst,
+				   int16_t		src_x,
+				   int16_t		src_y,
+				   int16_t		mask_x,
+				   int16_t		mask_y,
+				   int16_t		dest_x,
+				   int16_t		dest_y,
 				   uint16_t		width,
 				   uint16_t		height)
 {
     int		v;
     
-    region->extents.x1 = xDst;
-    v = xDst + width;
+    region->extents.x1 = dest_x;
+    v = dest_x + width;
     region->extents.x2 = BOUND(v);
-    region->extents.y1 = yDst;
-    v = yDst + height;
+    region->extents.y1 = dest_y;
+    v = dest_y + height;
     region->extents.y2 = BOUND(v);
 
     region->extents.x1 = MAX (region->extents.x1, 0);
@@ -172,7 +172,7 @@ pixman_compute_composite_region32 (pixman_region32_t *	region,
     /* clip against src */
     if (src_image->common.have_clip_region)
     {
-	if (!miClipPictureSrc (region, src_image, xDst - xSrc, yDst - ySrc))
+	if (!miClipPictureSrc (region, src_image, dest_x - src_x, dest_y - src_y))
 	{
 	    pixman_region32_fini (region);
 	    return FALSE;
@@ -181,8 +181,8 @@ pixman_compute_composite_region32 (pixman_region32_t *	region,
     if (src_image->common.alpha_map && src_image->common.alpha_map->common.have_clip_region)
     {
 	if (!miClipPictureSrc (region, (pixman_image_t *)src_image->common.alpha_map,
-			       xDst - (xSrc - src_image->common.alpha_origin_x),
-			       yDst - (ySrc - src_image->common.alpha_origin_y)))
+			       dest_x - (src_x - src_image->common.alpha_origin_x),
+			       dest_y - (src_y - src_image->common.alpha_origin_y)))
 	{
 	    pixman_region32_fini (region);
 	    return FALSE;
@@ -191,7 +191,7 @@ pixman_compute_composite_region32 (pixman_region32_t *	region,
     /* clip against mask */
     if (mask_image && mask_image->common.have_clip_region)
     {
-	if (!miClipPictureSrc (region, mask_image, xDst - xMask, yDst - yMask))
+	if (!miClipPictureSrc (region, mask_image, dest_x - mask_x, dest_y - mask_y))
 	{
 	    pixman_region32_fini (region);
 	    return FALSE;
@@ -199,8 +199,8 @@ pixman_compute_composite_region32 (pixman_region32_t *	region,
 	if (mask_image->common.alpha_map && mask_image->common.alpha_map->common.have_clip_region)
 	{
 	    if (!miClipPictureSrc (region, (pixman_image_t *)mask_image->common.alpha_map,
-				   xDst - (xMask - mask_image->common.alpha_origin_x),
-				   yDst - (yMask - mask_image->common.alpha_origin_y)))
+				   dest_x - (mask_x - mask_image->common.alpha_origin_x),
+				   dest_y - (mask_y - mask_image->common.alpha_origin_y)))
 	    {
 		pixman_region32_fini (region);
 		return FALSE;
@@ -216,12 +216,12 @@ pixman_compute_composite_region (pixman_region16_t *	region,
 				 pixman_image_t *	src_image,
 				 pixman_image_t *	mask_image,
 				 pixman_image_t *	dst_image,
-				 int16_t		xSrc,
-				 int16_t		ySrc,
-				 int16_t		xMask,
-				 int16_t		yMask,
-				 int16_t		xDst,
-				 int16_t		yDst,
+				 int16_t		src_x,
+				 int16_t		src_y,
+				 int16_t		mask_x,
+				 int16_t		mask_y,
+				 int16_t		dest_x,
+				 int16_t		dest_y,
 				 uint16_t	width,
 				 uint16_t	height)
 {
@@ -231,7 +231,7 @@ pixman_compute_composite_region (pixman_region16_t *	region,
     pixman_region32_init (&r32);
     
     retval = pixman_compute_composite_region32 (&r32, src_image, mask_image, dst_image,
-						xSrc, ySrc, xMask, yMask, xDst, yDst,
+						src_x, src_y, mask_x, mask_y, dest_x, dest_y,
 						width, height);
 
     if (retval)
@@ -378,12 +378,12 @@ walk_region_internal (pixman_implementation_t *imp,
 		      pixman_image_t * src_image,
 		      pixman_image_t * mask_image,
 		      pixman_image_t * dst_image,
-		      int16_t xSrc,
-		      int16_t ySrc,
-		      int16_t xMask,
-		      int16_t yMask,
-		      int16_t xDst,
-		      int16_t yDst,
+		      int16_t src_x,
+		      int16_t src_y,
+		      int16_t mask_x,
+		      int16_t mask_y,
+		      int16_t dest_x,
+		      int16_t dest_y,
 		      uint16_t width,
 		      uint16_t height,
 		      pixman_bool_t srcRepeat,
@@ -400,15 +400,15 @@ walk_region_internal (pixman_implementation_t *imp,
     while (n--)
     {
 	h = pbox->y2 - pbox->y1;
-	y_src = pbox->y1 - yDst + ySrc;
-	y_msk = pbox->y1 - yDst + yMask;
+	y_src = pbox->y1 - dest_y + src_y;
+	y_msk = pbox->y1 - dest_y + mask_y;
 	y_dst = pbox->y1;
 	while (h)
 	{
 	    h_this = h;
 	    w = pbox->x2 - pbox->x1;
-	    x_src = pbox->x1 - xDst + xSrc;
-	    x_msk = pbox->x1 - xDst + xMask;
+	    x_src = pbox->x1 - dest_x + src_x;
+	    x_msk = pbox->x1 - dest_x + mask_x;
 	    x_dst = pbox->x1;
 	    
 	    if (maskRepeat)
@@ -462,12 +462,12 @@ _pixman_walk_composite_region (pixman_implementation_t *imp,
 			       pixman_image_t * src_image,
 			       pixman_image_t * mask_image,
 			       pixman_image_t * dst_image,
-			       int16_t xSrc,
-			       int16_t ySrc,
-			       int16_t xMask,
-			       int16_t yMask,
-			       int16_t xDst,
-			       int16_t yDst,
+			       int16_t src_x,
+			       int16_t src_y,
+			       int16_t mask_x,
+			       int16_t mask_y,
+			       int16_t dest_x,
+			       int16_t dest_y,
 			       uint16_t width,
 			       uint16_t height,
 			       pixman_composite_func_t compositeRect)
@@ -477,11 +477,11 @@ _pixman_walk_composite_region (pixman_implementation_t *imp,
     pixman_region32_init (&region);
 
     if (pixman_compute_composite_region32 (
-	    &region, src_image, mask_image, dst_image, xSrc, ySrc, xMask, yMask, xDst, yDst, width, height))
+	    &region, src_image, mask_image, dst_image, src_x, src_y, mask_x, mask_y, dest_x, dest_y, width, height))
     {
 	walk_region_internal (imp, op,
 			      src_image, mask_image, dst_image,
-			      xSrc, ySrc, xMask, yMask, xDst, yDst,
+			      src_x, src_y, mask_x, mask_y, dest_x, dest_y,
 			      width, height, FALSE, FALSE,
 			      &region,
 			      compositeRect);

@@ -130,12 +130,12 @@ neon_CompositeAdd_8000_8000 (
                                 pixman_image_t * src_image,
                                 pixman_image_t * mask_image,
                                 pixman_image_t * dst_image,
-                                int32_t      xSrc,
-                                int32_t      ySrc,
-                                int32_t      xMask,
-                                int32_t      yMask,
-                                int32_t      xDst,
-                                int32_t      yDst,
+                                int32_t      src_x,
+                                int32_t      src_y,
+                                int32_t      mask_x,
+                                int32_t      mask_y,
+                                int32_t      dest_x,
+                                int32_t      dest_y,
                                 int32_t      width,
                                 int32_t      height)
 {
@@ -144,8 +144,8 @@ neon_CompositeAdd_8000_8000 (
     int dstStride, srcStride;
     uint16_t    w;
 
-    fbComposeGetStart (src_image, xSrc, ySrc, uint8_t, srcStride, srcLine, 1);
-    fbComposeGetStart (dst_image, xDst, yDst, uint8_t, dstStride, dstLine, 1);
+    fbComposeGetStart (src_image, src_x, src_y, uint8_t, srcStride, srcLine, 1);
+    fbComposeGetStart (dst_image, dest_x, dest_y, uint8_t, dstStride, dstLine, 1);
 
     if (width>=8)
     {
@@ -280,12 +280,12 @@ neon_composite_over_8888_8888 (
 			 pixman_image_t * src_image,
 			 pixman_image_t * mask_image,
 			 pixman_image_t * dst_image,
-			 int32_t      xSrc,
-			 int32_t      ySrc,
-			 int32_t      xMask,
-			 int32_t      yMask,
-			 int32_t      xDst,
-			 int32_t      yDst,
+			 int32_t      src_x,
+			 int32_t      src_y,
+			 int32_t      mask_x,
+			 int32_t      mask_y,
+			 int32_t      dest_x,
+			 int32_t      dest_y,
 			 int32_t      width,
 			 int32_t      height)
 {
@@ -294,8 +294,8 @@ neon_composite_over_8888_8888 (
     int	dstStride, srcStride;
     uint32_t	w;
 
-    fbComposeGetStart (dst_image, xDst, yDst, uint32_t, dstStride, dstLine, 1);
-    fbComposeGetStart (src_image, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
+    fbComposeGetStart (dst_image, dest_x, dest_y, uint32_t, dstStride, dstLine, 1);
+    fbComposeGetStart (src_image, src_x, src_y, uint32_t, srcStride, srcLine, 1);
 
     if (width>=8)
     {
@@ -441,12 +441,12 @@ neon_composite_over_8888_n_8888 (
 			       pixman_image_t * src_image,
 			       pixman_image_t * mask_image,
 			       pixman_image_t * dst_image,
-			       int32_t	xSrc,
-			       int32_t	ySrc,
-			       int32_t      xMask,
-			       int32_t      yMask,
-			       int32_t      xDst,
-			       int32_t      yDst,
+			       int32_t	src_x,
+			       int32_t	src_y,
+			       int32_t      mask_x,
+			       int32_t      mask_y,
+			       int32_t      dest_x,
+			       int32_t      dest_y,
 			       int32_t      width,
 			       int32_t      height)
 {
@@ -457,8 +457,8 @@ neon_composite_over_8888_n_8888 (
     uint32_t	w;
     uint8x8_t mask_alpha;
 
-    fbComposeGetStart (dst_image, xDst, yDst, uint32_t, dstStride, dstLine, 1);
-    fbComposeGetStart (src_image, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
+    fbComposeGetStart (dst_image, dest_x, dest_y, uint32_t, dstStride, dstLine, 1);
+    fbComposeGetStart (src_image, src_x, src_y, uint32_t, srcStride, srcLine, 1);
 
     mask = _pixman_image_get_solid (mask_image, dst_image->bits.format);
     mask_alpha = vdup_n_u8((mask) >> 24);
@@ -638,12 +638,12 @@ neon_CompositeOver_n_8_8888 (
 			       pixman_image_t * src_image,
 			       pixman_image_t * mask_image,
 			       pixman_image_t * dst_image,
-			       int32_t      xSrc,
-			       int32_t      ySrc,
-			       int32_t      xMask,
-			       int32_t      yMask,
-			       int32_t      xDst,
-			       int32_t      yDst,
+			       int32_t      src_x,
+			       int32_t      src_y,
+			       int32_t      mask_x,
+			       int32_t      mask_y,
+			       int32_t      dest_x,
+			       int32_t      dest_y,
 			       int32_t      width,
 			       int32_t      height)
 {
@@ -670,8 +670,8 @@ neon_CompositeOver_n_8_8888 (
     sval8.val[2]=vdup_lane_u8(sval2,2);
     sval8.val[3]=vdup_lane_u8(sval2,3);
 
-    fbComposeGetStart (dst_image, xDst, yDst, uint32_t, dstStride, dstLine, 1);
-    fbComposeGetStart (mask_image, xMask, yMask, uint8_t, maskStride, maskLine, 1);
+    fbComposeGetStart (dst_image, dest_x, dest_y, uint32_t, dstStride, dstLine, 1);
+    fbComposeGetStart (mask_image, mask_x, mask_y, uint8_t, maskStride, maskLine, 1);
 
     if (width>=8)
     {
@@ -845,12 +845,12 @@ neon_CompositeAdd_8888_8_8 (
                             pixman_image_t * src_image,
                             pixman_image_t * mask_image,
                             pixman_image_t * dst_image,
-                            int32_t      xSrc,
-                            int32_t      ySrc,
-                            int32_t      xMask,
-                            int32_t      yMask,
-                            int32_t      xDst,
-                            int32_t      yDst,
+                            int32_t      src_x,
+                            int32_t      src_y,
+                            int32_t      mask_x,
+                            int32_t      mask_y,
+                            int32_t      dest_x,
+                            int32_t      dest_y,
                             int32_t      width,
                             int32_t      height)
 {
@@ -861,8 +861,8 @@ neon_CompositeAdd_8888_8_8 (
     uint32_t    src;
     uint8x8_t   sa;
 
-    fbComposeGetStart (dst_image, xDst, yDst, uint8_t, dstStride, dstLine, 1);
-    fbComposeGetStart (mask_image, xMask, yMask, uint8_t, maskStride, maskLine, 1);
+    fbComposeGetStart (dst_image, dest_x, dest_y, uint8_t, dstStride, dstLine, 1);
+    fbComposeGetStart (mask_image, mask_x, mask_y, uint8_t, maskStride, maskLine, 1);
     src = _pixman_image_get_solid (src_image, dst_image->bits.format);
     sa = vdup_n_u8((src) >> 24);
 
@@ -964,12 +964,12 @@ neon_CompositeSrc_16_16 (
 	pixman_image_t * src_image,
 	pixman_image_t * mask_image,
 	pixman_image_t * dst_image,
-	int32_t      xSrc,
-	int32_t      ySrc,
-	int32_t      xMask,
-	int32_t      yMask,
-	int32_t      xDst,
-	int32_t      yDst,
+	int32_t      src_x,
+	int32_t      src_y,
+	int32_t      mask_x,
+	int32_t      mask_y,
+	int32_t      dest_x,
+	int32_t      dest_y,
 	int32_t      width,
 	int32_t      height)
 {
@@ -980,8 +980,8 @@ neon_CompositeSrc_16_16 (
 		return;
 
 	/* We simply copy 16-bit-aligned pixels from one place to another. */
-	fbComposeGetStart (src_image, xSrc, ySrc, uint16_t, srcStride, srcLine, 1);
-	fbComposeGetStart (dst_image, xDst, yDst, uint16_t, dstStride, dstLine, 1);
+	fbComposeGetStart (src_image, src_x, src_y, uint16_t, srcStride, srcLine, 1);
+	fbComposeGetStart (dst_image, dest_x, dest_y, uint16_t, dstStride, dstLine, 1);
 
 	/* Preload the first input scanline */
 	{
@@ -1091,12 +1091,12 @@ neon_CompositeSrc_24_16 (
 	pixman_image_t * src_image,
 	pixman_image_t * mask_image,
 	pixman_image_t * dst_image,
-	int32_t      xSrc,
-	int32_t      ySrc,
-	int32_t      xMask,
-	int32_t      yMask,
-	int32_t      xDst,
-	int32_t      yDst,
+	int32_t      src_x,
+	int32_t      src_y,
+	int32_t      mask_x,
+	int32_t      mask_y,
+	int32_t      dest_x,
+	int32_t      dest_y,
 	int32_t      width,
 	int32_t      height)
 {
@@ -1108,8 +1108,8 @@ neon_CompositeSrc_24_16 (
 		return;
 
 	/* We simply copy pixels from one place to another, assuming that the source's alpha is opaque. */
-	fbComposeGetStart (src_image, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
-	fbComposeGetStart (dst_image, xDst, yDst, uint16_t, dstStride, dstLine, 1);
+	fbComposeGetStart (src_image, src_x, src_y, uint32_t, srcStride, srcLine, 1);
+	fbComposeGetStart (dst_image, dest_x, dest_y, uint16_t, dstStride, dstLine, 1);
 
 	/* Preload the first input scanline */
 	{
@@ -1718,12 +1718,12 @@ neon_CompositeOver_n_8_0565 (
 	pixman_image_t * src_image,
 	pixman_image_t * mask_image,
 	pixman_image_t * dst_image,
-	int32_t      xSrc,
-	int32_t      ySrc,
-	int32_t      xMask,
-	int32_t      yMask,
-	int32_t      xDst,
-	int32_t      yDst,
+	int32_t      src_x,
+	int32_t      src_y,
+	int32_t      mask_x,
+	int32_t      mask_y,
+	int32_t      dest_x,
+	int32_t      dest_y,
 	int32_t      width,
 	int32_t      height)
 {
@@ -1748,14 +1748,14 @@ neon_CompositeOver_n_8_0565 (
 		// TODO: there must be a more elegant way of doing this.
 		int x;
 		for(x=0; x < width; x += NEON_SCANLINE_BUFFER_PIXELS) {
-			neon_CompositeOver_n_8_0565(impl, op, src_image, mask_image, dst_image, xSrc+x, ySrc, xMask+x, yMask, xDst+x, yDst,
+			neon_CompositeOver_n_8_0565(impl, op, src_image, mask_image, dst_image, src_x+x, src_y, mask_x+x, mask_y, dest_x+x, dest_y,
 											  (x+NEON_SCANLINE_BUFFER_PIXELS > width) ? width-x : NEON_SCANLINE_BUFFER_PIXELS, height);
 		}
 		return;
 	}
 
-	fbComposeGetStart (dst_image, xDst, yDst, uint16_t, dstStride, dstLine, 1);
-	fbComposeGetStart (mask_image, xMask, yMask, uint8_t, maskStride, maskLine, 1);
+	fbComposeGetStart (dst_image, dest_x, dest_y, uint16_t, dstStride, dstLine, 1);
+	fbComposeGetStart (mask_image, mask_x, mask_y, uint8_t, maskStride, maskLine, 1);
 
 	// keep within minimum number of aligned quadwords on width
 	// while also keeping the minimum number of columns to process
@@ -1873,12 +1873,12 @@ neon_CompositeOver_n_0565 (
 	pixman_image_t * src_image,
 	pixman_image_t * mask_image,
 	pixman_image_t * dst_image,
-	int32_t      xSrc,
-	int32_t      ySrc,
-	int32_t      xMask,
-	int32_t      yMask,
-	int32_t      xDst,
-	int32_t      yDst,
+	int32_t      src_x,
+	int32_t      src_y,
+	int32_t      mask_x,
+	int32_t      mask_y,
+	int32_t      dest_x,
+	int32_t      dest_y,
 	int32_t      width,
 	int32_t      height)
 {
@@ -1902,13 +1902,13 @@ neon_CompositeOver_n_0565 (
 		// TODO: there must be a more elegant way of doing this.
 		int x;
 		for(x=0; x < width; x += NEON_SCANLINE_BUFFER_PIXELS) {
-			neon_CompositeOver_n_0565(impl, op, src_image, mask_image, dst_image, xSrc+x, ySrc, xMask+x, yMask, xDst+x, yDst,
+			neon_CompositeOver_n_0565(impl, op, src_image, mask_image, dst_image, src_x+x, src_y, mask_x+x, mask_y, dest_x+x, dest_y,
 										(x+NEON_SCANLINE_BUFFER_PIXELS > width) ? width-x : NEON_SCANLINE_BUFFER_PIXELS, height);
 		}
 		return;
 	}
 
-	fbComposeGetStart (dst_image, xDst, yDst, uint16_t, dstStride, dstLine, 1);
+	fbComposeGetStart (dst_image, dest_x, dest_y, uint16_t, dstStride, dstLine, 1);
 
 	// keep within minimum number of aligned quadwords on width
 	// while also keeping the minimum number of columns to process
@@ -2016,12 +2016,12 @@ neon_CompositeOver_8888_0565 (
 	pixman_image_t * src_image,
 	pixman_image_t * mask_image,
 	pixman_image_t * dst_image,
-	int32_t      xSrc,
-	int32_t      ySrc,
-	int32_t      xMask,
-	int32_t      yMask,
-	int32_t      xDst,
-	int32_t      yDst,
+	int32_t      src_x,
+	int32_t      src_y,
+	int32_t      mask_x,
+	int32_t      mask_y,
+	int32_t      dest_x,
+	int32_t      dest_y,
 	int32_t      width,
 	int32_t      height)
 {
@@ -2038,14 +2038,14 @@ neon_CompositeOver_8888_0565 (
 		// split the blit, so we can use a fixed-size scanline buffer
 		int x;
 		for(x=0; x < width; x += NEON_SCANLINE_BUFFER_PIXELS) {
-			neon_CompositeOver_8888_0565(impl, op, src_image, mask_image, dst_image, xSrc+x, ySrc, xMask+x, yMask, xDst+x, yDst,
+			neon_CompositeOver_8888_0565(impl, op, src_image, mask_image, dst_image, src_x+x, src_y, mask_x+x, mask_y, dest_x+x, dest_y,
 										  (x+NEON_SCANLINE_BUFFER_PIXELS > width) ? width-x : NEON_SCANLINE_BUFFER_PIXELS, height);
 		}
 		return;
 	}
 
-	fbComposeGetStart (dst_image, xDst, yDst, uint16_t, dstStride, dstLine, 1);
-	fbComposeGetStart (src_image, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
+	fbComposeGetStart (dst_image, dest_x, dest_y, uint16_t, dstStride, dstLine, 1);
+	fbComposeGetStart (src_image, src_x, src_y, uint32_t, srcStride, srcLine, 1);
 
 	// keep within minimum number of aligned quadwords on width
 	// while also keeping the minimum number of columns to process
