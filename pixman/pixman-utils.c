@@ -36,7 +36,7 @@
 #define BOUND(v)	(int16_t) ((v) < INT16_MIN ? INT16_MIN : (v) > INT16_MAX ? INT16_MAX : (v))
 
 static inline pixman_bool_t
-miClipPictureReg (pixman_region32_t *	region,
+clip_general_image (pixman_region32_t *	region,
 		  pixman_region32_t *	clip,
 		  int		dx,
 		  int		dy)
@@ -80,7 +80,7 @@ miClipPictureReg (pixman_region32_t *	region,
 
 
 static inline pixman_bool_t
-miClipPictureSrc (pixman_region32_t *	region,
+clip_source_image (pixman_region32_t *	region,
 		  pixman_image_t *	picture,
 		  int		dx,
 		  int		dy)
@@ -93,7 +93,7 @@ miClipPictureSrc (pixman_region32_t *	region,
     if (!picture->common.clip_sources || !picture->common.client_clip)
 	return TRUE;
 
-    return miClipPictureReg (region,
+    return clip_general_image (region,
 			     &picture->common.clip_region,
 			     dx, dy);
 }
@@ -151,7 +151,7 @@ pixman_compute_composite_region32 (pixman_region32_t *	region,
     
     if (dst_image->common.have_clip_region)
     {
-	if (!miClipPictureReg (region, &dst_image->common.clip_region, 0, 0))
+	if (!clip_general_image (region, &dst_image->common.clip_region, 0, 0))
 	{
 	    pixman_region32_fini (region);
 	    return FALSE;
@@ -160,7 +160,7 @@ pixman_compute_composite_region32 (pixman_region32_t *	region,
     
     if (dst_image->common.alpha_map && dst_image->common.alpha_map->common.have_clip_region)
     {
-	if (!miClipPictureReg (region, &dst_image->common.alpha_map->common.clip_region,
+	if (!clip_general_image (region, &dst_image->common.alpha_map->common.clip_region,
 			       -dst_image->common.alpha_origin_x,
 			       -dst_image->common.alpha_origin_y))
 	{
@@ -172,7 +172,7 @@ pixman_compute_composite_region32 (pixman_region32_t *	region,
     /* clip against src */
     if (src_image->common.have_clip_region)
     {
-	if (!miClipPictureSrc (region, src_image, dest_x - src_x, dest_y - src_y))
+	if (!clip_source_image (region, src_image, dest_x - src_x, dest_y - src_y))
 	{
 	    pixman_region32_fini (region);
 	    return FALSE;
@@ -180,7 +180,7 @@ pixman_compute_composite_region32 (pixman_region32_t *	region,
     }
     if (src_image->common.alpha_map && src_image->common.alpha_map->common.have_clip_region)
     {
-	if (!miClipPictureSrc (region, (pixman_image_t *)src_image->common.alpha_map,
+	if (!clip_source_image (region, (pixman_image_t *)src_image->common.alpha_map,
 			       dest_x - (src_x - src_image->common.alpha_origin_x),
 			       dest_y - (src_y - src_image->common.alpha_origin_y)))
 	{
@@ -191,14 +191,14 @@ pixman_compute_composite_region32 (pixman_region32_t *	region,
     /* clip against mask */
     if (mask_image && mask_image->common.have_clip_region)
     {
-	if (!miClipPictureSrc (region, mask_image, dest_x - mask_x, dest_y - mask_y))
+	if (!clip_source_image (region, mask_image, dest_x - mask_x, dest_y - mask_y))
 	{
 	    pixman_region32_fini (region);
 	    return FALSE;
 	}	
 	if (mask_image->common.alpha_map && mask_image->common.alpha_map->common.have_clip_region)
 	{
-	    if (!miClipPictureSrc (region, (pixman_image_t *)mask_image->common.alpha_map,
+	    if (!clip_source_image (region, (pixman_image_t *)mask_image->common.alpha_map,
 				   dest_x - (mask_x - mask_image->common.alpha_origin_x),
 				   dest_y - (mask_y - mask_image->common.alpha_origin_y)))
 	    {
