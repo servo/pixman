@@ -31,10 +31,6 @@
 #include "pixman-private.h"
 #include "pixman-combine32.h"
 
-#define Red(x) (((x) >> 16) & 0xff)
-#define Green(x) (((x) >> 8) & 0xff)
-#define Blue(x) ((x) & 0xff)
-
 /* Store functions */
 
 static void
@@ -441,10 +437,10 @@ bits_image_fetch_convolution_pixels (bits_image_t *image,
 		{
 		    uint32_t c = *u++;
 
-		    srtot += Red(c) * f;
-		    sgtot += Green(c) * f;
-		    sbtot += Blue(c) * f;
-		    satot += Alpha(c) * f;
+		    srtot += RED_8(c) * f;
+		    sgtot += GREEN_8(c) * f;
+		    sbtot += BLUE_8(c) * f;
+		    satot += ALPHA_8(c) * f;
 		}
 	    }
 

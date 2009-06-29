@@ -9,10 +9,6 @@
 
 #include "pixman-combine.h"
 
-#define Red(x) (((x) >> R_SHIFT) & MASK)
-#define Green(x) (((x) >> G_SHIFT) & MASK)
-#define Blue(x) ((x) & MASK)
-
 /*** per channel helper functions ***/
 
 static void
@@ -67,7 +63,7 @@ fbCombineMaskValueC (comp4_t *src, const comp4_t *mask)
 }
 
 static void
-fbCombineMaskAlphaC (const comp4_t *src, comp4_t *mask)
+fbCombineMaskALPHA_cC (const comp4_t *src, comp4_t *mask)
 {
     comp4_t a = *(mask);
     comp4_t	x;
@@ -161,7 +157,7 @@ fbCombineOverU (pixman_implementation_t *imp, pixman_op_t op,
     for (i = 0; i < width; ++i) {
         comp4_t s = combineMask (src, mask, i);
         comp4_t d = *(dest + i);
-        comp4_t ia = Alpha(~s);
+        comp4_t ia = ALPHA_c(~s);
 
         UNcx4_MUL_UNc_ADD_UNcx4(d, ia, s);
 	*(dest + i) = d;
@@ -177,7 +173,7 @@ fbCombineOverReverseU (pixman_implementation_t *imp, pixman_op_t op,
     for (i = 0; i < width; ++i) {
         comp4_t s = combineMask (src, mask, i);
         comp4_t d = *(dest + i);
-        comp4_t ia = Alpha(~*(dest + i));
+        comp4_t ia = ALPHA_c(~*(dest + i));
         UNcx4_MUL_UNc_ADD_UNcx4(s, ia, d);
 	*(dest + i) = s;
     }
@@ -191,7 +187,7 @@ fbCombineInU (pixman_implementation_t *imp, pixman_op_t op,
     int i;
     for (i = 0; i < width; ++i) {
         comp4_t s = combineMask (src, mask, i);
-        comp4_t a = Alpha(*(dest + i));
+        comp4_t a = ALPHA_c(*(dest + i));
         UNcx4_MUL_UNc(s, a);
 	*(dest + i) = s;
     }
@@ -206,7 +202,7 @@ fbCombineInReverseU (pixman_implementation_t *imp, pixman_op_t op,
     for (i = 0; i < width; ++i) {
 	comp4_t s = combineMask (src, mask, i);
 	comp4_t d = *(dest + i);
-        comp4_t a = Alpha(s);
+        comp4_t a = ALPHA_c(s);
         UNcx4_MUL_UNc(d, a);
 	*(dest + i) = d;
     }
@@ -220,7 +216,7 @@ fbCombineOutU (pixman_implementation_t *imp, pixman_op_t op,
     int i;
     for (i = 0; i < width; ++i) {
         comp4_t s = combineMask (src, mask, i);
-        comp4_t a = Alpha(~*(dest + i));
+        comp4_t a = ALPHA_c(~*(dest + i));
         UNcx4_MUL_UNc(s, a);
 	*(dest + i) = s;
     }
@@ -235,7 +231,7 @@ fbCombineOutReverseU (pixman_implementation_t *imp, pixman_op_t op,
     for (i = 0; i < width; ++i) {
 	comp4_t s = combineMask (src, mask, i);
         comp4_t d = *(dest + i);
-        comp4_t a = Alpha(~s);
+        comp4_t a = ALPHA_c(~s);
         UNcx4_MUL_UNc(d, a);
 	*(dest + i) = d;
     }
@@ -252,8 +248,8 @@ fbCombineAtopU (pixman_implementation_t *imp, pixman_op_t op,
     for (i = 0; i < width; ++i) {
         comp4_t s = combineMask (src, mask, i);
         comp4_t d = *(dest + i);
-        comp4_t dest_a = Alpha(d);
-        comp4_t src_ia = Alpha(~s);
+        comp4_t dest_a = ALPHA_c(d);
+        comp4_t src_ia = ALPHA_c(~s);
 
         UNcx4_MUL_UNc_ADD_UNcx4_MUL_UNc(s, dest_a, d, src_ia);
 	*(dest + i) = s;
@@ -271,8 +267,8 @@ fbCombineAtopReverseU (pixman_implementation_t *imp, pixman_op_t op,
     for (i = 0; i < width; ++i) {
         comp4_t s = combineMask (src, mask, i);
         comp4_t d = *(dest + i);
-        comp4_t src_a = Alpha(s);
-        comp4_t dest_ia = Alpha(~d);
+        comp4_t src_a = ALPHA_c(s);
+        comp4_t dest_ia = ALPHA_c(~d);
 
         UNcx4_MUL_UNc_ADD_UNcx4_MUL_UNc(s, dest_ia, d, src_a);
 	*(dest + i) = s;
@@ -290,8 +286,8 @@ fbCombineXorU (pixman_implementation_t *imp, pixman_op_t op,
     for (i = 0; i < width; ++i) {
         comp4_t s = combineMask (src, mask, i);
         comp4_t d = *(dest + i);
-        comp4_t src_ia = Alpha(~s);
-        comp4_t dest_ia = Alpha(~d);
+        comp4_t src_ia = ALPHA_c(~s);
+        comp4_t dest_ia = ALPHA_c(~d);
 
         UNcx4_MUL_UNc_ADD_UNcx4_MUL_UNc(s, dest_ia, d, src_ia);
 	*(dest + i) = s;
@@ -373,8 +369,8 @@ fbCombineMultiplyU (pixman_implementation_t *imp, pixman_op_t op,
         comp4_t s = combineMask (src, mask, i);
         comp4_t d = *(dest + i);
 	comp4_t ss = s;
-        comp4_t src_ia = Alpha (~s);
-	comp4_t dest_ia = Alpha (~d);
+        comp4_t src_ia = ALPHA_c (~s);
+	comp4_t dest_ia = ALPHA_c (~d);
 
 	UNcx4_MUL_UNc_ADD_UNcx4_MUL_UNc (ss, dest_ia, d, src_ia);
 	UNcx4_MUL_UNcx4 (d, s);
@@ -393,7 +389,7 @@ fbCombineMultiplyC (pixman_implementation_t *imp, pixman_op_t op,
         comp4_t s = *(src + i);
 	comp4_t d = *(dest + i);
 	comp4_t r = d;
-	comp4_t dest_ia = Alpha (~d);
+	comp4_t dest_ia = ALPHA_c (~d);
 
 	fbCombineMaskValueC (&s, &m);
 
@@ -414,9 +410,9 @@ fbCombine ## name ## U (pixman_implementation_t *imp, pixman_op_t op, \
     for (i = 0; i < width; ++i) {		    \
         comp4_t s = combineMask (src, mask, i);     \
         comp4_t d = *(dest + i);		    \
-        comp1_t sa = Alpha(s);			    \
+        comp1_t sa = ALPHA_c(s);			    \
         comp1_t isa = ~sa;			    \
-        comp1_t da = Alpha(d);	  		    \
+        comp1_t da = ALPHA_c(d);	  		    \
         comp1_t ida = ~da;			    \
 	comp4_t	result;				    \
 						    \
@@ -425,9 +421,9 @@ fbCombine ## name ## U (pixman_implementation_t *imp, pixman_op_t op, \
 						    \
 	*(dest + i) = result +			    \
 	    (DIV_ONE_UNc (sa * da) << A_SHIFT) +	    \
-	    (blend_ ## name (Red (d), da, Red (s), sa) << R_SHIFT) + \
-	    (blend_ ## name (Green (d), da, Green (s), sa) << G_SHIFT) + \
-	    (blend_ ## name (Blue (d), da, Blue (s), sa)); \
+	    (blend_ ## name (RED_c (d), da, RED_c (s), sa) << R_SHIFT) + \
+	    (blend_ ## name (GREEN_c (d), da, GREEN_c (s), sa) << G_SHIFT) + \
+	    (blend_ ## name (BLUE_c (d), da, BLUE_c (s), sa)); \
     }						    \
 }						    \
 						    \
@@ -440,7 +436,7 @@ fbCombine ## name ## C (pixman_implementation_t *imp, pixman_op_t op, \
 	comp4_t m = *(mask + i);		    \
 	comp4_t s = *(src + i);                     \
 	comp4_t d = *(dest + i);		    \
-	comp1_t da = Alpha(d);  		    \
+	comp1_t da = ALPHA_c(d);  		    \
 	comp1_t ida = ~da;			    \
 	comp4_t result;				    \
 						    \
@@ -450,10 +446,10 @@ fbCombine ## name ## C (pixman_implementation_t *imp, pixman_op_t op, \
 	UNcx4_MUL_UNcx4_ADD_UNcx4_MUL_UNc (result, ~m, s, ida);	    \
 						    \
 	result +=				    \
-	    (DIV_ONE_UNc (Alpha (m) * da) << A_SHIFT) +				\
-	    (blend_ ## name (Red (d), da, Red (s), Red (m)) << R_SHIFT) +	\
-	    (blend_ ## name (Green (d), da, Green (s), Green (m)) << G_SHIFT) +	\
-	    (blend_ ## name (Blue (d), da, Blue (s), Blue (m)));			\
+	    (DIV_ONE_UNc (ALPHA_c (m) * da) << A_SHIFT) +				\
+	    (blend_ ## name (RED_c (d), da, RED_c (s), RED_c (m)) << R_SHIFT) +	\
+	    (blend_ ## name (GREEN_c (d), da, GREEN_c (s), GREEN_c (m)) << G_SHIFT) +	\
+	    (blend_ ## name (BLUE_c (d), da, BLUE_c (s), BLUE_c (m)));			\
 						    \
 	*(dest + i) = result;			    \
     }						    \
@@ -788,21 +784,21 @@ fbCombine ## name ## U (pixman_implementation_t *imp, pixman_op_t op,	\
     for (i = 0; i < width; ++i) {					\
         comp4_t s = combineMask (src, mask, i);				\
         comp4_t d = *(dest + i);					\
-        comp1_t sa = Alpha(s);						\
+        comp1_t sa = ALPHA_c(s);						\
         comp1_t isa = ~sa;						\
-        comp1_t da = Alpha(d);						\
+        comp1_t da = ALPHA_c(d);						\
         comp1_t ida = ~da;						\
 	comp4_t	result;							\
 	comp4_t sc[3], dc[3], c[3];					\
 									\
 	result = d;							\
         UNcx4_MUL_UNc_ADD_UNcx4_MUL_UNc(result, isa, s, ida);				\
-	dc[0] = Red (d);						\
-	sc[0] = Red (s);						\
-	dc[1] = Green (d);						\
-	sc[1] = Green (s);						\
-	dc[2] = Blue (d);						\
-	sc[2] = Blue (s);						\
+	dc[0] = RED_c (d);						\
+	sc[0] = RED_c (s);						\
+	dc[1] = GREEN_c (d);						\
+	sc[1] = GREEN_c (s);						\
+	dc[2] = BLUE_c (d);						\
+	sc[2] = BLUE_c (s);						\
 	blend_ ## name (c, dc, da, sc, sa);				\
 									\
 	*(dest + i) = result +						\
@@ -1420,7 +1416,7 @@ fbCombineInReverseC (pixman_implementation_t *imp, pixman_op_t op,
         comp4_t m = *(mask + i);
         comp4_t a;
 
-	fbCombineMaskAlphaC (&s, &m);
+	fbCombineMaskALPHA_cC (&s, &m);
 
 	a = m;
         if (a != ~0)
@@ -1473,7 +1469,7 @@ fbCombineOutReverseC (pixman_implementation_t *imp, pixman_op_t op,
 	comp4_t m = *(mask + i);
 	comp4_t a;
 
-	fbCombineMaskAlphaC (&s, &m);
+	fbCombineMaskALPHA_cC (&s, &m);
 
         a = ~m;
         if (a != ~0)

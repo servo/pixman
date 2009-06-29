@@ -15,7 +15,10 @@
 #define RB_ONE_HALF
 #define RB_MASK_PLUS_ONE
 
-#define Alpha(x) ((x) >> A_SHIFT)
+#define ALPHA_c(x) ((x) >> A_SHIFT)
+#define RED_c(x) (((x) >> R_SHIFT) & MASK)
+#define GREEN_c(x) (((x) >> G_SHIFT) & MASK)
+#define BLUE_c(x) ((x) & MASK)
 
 /*
  * Helper macros.
