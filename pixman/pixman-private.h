@@ -196,7 +196,7 @@ void
 _pixman_bits_image_setup_raw_accessors (bits_image_t   *image);
 
 void
-_pixman_image_get_scanline_64_generic  (pixman_image_t *pict,
+_pixman_image_get_scanline_generic_64  (pixman_image_t *pict,
 					int             x,
 					int             y,
 					int             width,
@@ -621,10 +621,10 @@ pixman_region16_copy_from_region32 (pixman_region16_t *dst,
 
 /* Conversion between 8888 and 0565 */
 
-#define cvt8888to0565(s)    ((((s) >> 3) & 0x001f) | \
+#define CONVERT_8888_TO_0565(s)    ((((s) >> 3) & 0x001f) | \
 			     (((s) >> 5) & 0x07e0) | \
 			     (((s) >> 8) & 0xf800))
-#define cvt0565to0888(s)    (((((s) << 3) & 0xf8) | (((s) >> 2) & 0x7)) | \
+#define CONVERT_0565_TO_0888(s)    (((((s) << 3) & 0xf8) | (((s) >> 2) & 0x7)) | \
 			     ((((s) << 5) & 0xfc00) | (((s) >> 1) & 0x300)) | \
 			     ((((s) << 8) & 0xf80000) | (((s) << 3) & 0x70000)))
 

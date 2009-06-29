@@ -80,24 +80,24 @@ rasterizeEdges (pixman_image_t  *image,
 	    {
 
 #ifdef WORDS_BIGENDIAN
-#   define FbScrLeft(x,n)	((x) << (n))
+#   define SCREEN_SHIFT_LEFT(x,n)	((x) << (n))
 #   define FbScrRight(x,n)	((x) >> (n))
 #else
-#   define FbScrLeft(x,n)	((x) >> (n))
+#   define SCREEN_SHIFT_LEFT(x,n)	((x) >> (n))
 #   define FbScrRight(x,n)	((x) << (n))
 #endif
 
-#define FbLeftMask(x)							\
+#define LEFT_MASK(x)							\
 		(((x) & 0x1f) ?						\
 		 FbScrRight (0xffffffff, (x) & 0x1f) : 0)
-#define FbRightMask(x)							\
+#define RIGHT_MASK(x)							\
 		(((32 - (x)) & 0x1f) ?					\
-		 FbScrLeft (0xffffffff, (32 - (x)) & 0x1f) : 0)
+		 SCREEN_SHIFT_LEFT (0xffffffff, (32 - (x)) & 0x1f) : 0)
 		
 #define FbMaskBits(x,w,l,n,r) {						\
 		    n = (w);						\
-		    r = FbRightMask ((x) + n);				\
-		    l = FbLeftMask (x);					\
+		    r = RIGHT_MASK ((x) + n);				\
+		    l = LEFT_MASK (x);					\
 		    if (l) {						\
 			n -= 32 - ((x) & 0x1f);				\
 			if (n < 0) {					\

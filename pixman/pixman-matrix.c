@@ -301,58 +301,58 @@ within_epsilon(pixman_fixed_t a, pixman_fixed_t b, pixman_fixed_t epsilon)
 
 #define epsilon	(pixman_fixed_t) (2)
 
-#define is_same(a,b) (within_epsilon(a, b, epsilon))
-#define is_zero(a)   (within_epsilon(a, 0, epsilon))
-#define is_one(a)    (within_epsilon(a, F(1), epsilon))
-#define is_unit(a)   (within_epsilon(a, F( 1), epsilon) || \
+#define IS_SAME(a,b) (within_epsilon(a, b, epsilon))
+#define IS_ZERO(a)   (within_epsilon(a, 0, epsilon))
+#define IS_ONE(a)    (within_epsilon(a, F(1), epsilon))
+#define IS_UNIT(a)   (within_epsilon(a, F( 1), epsilon) || \
 		      within_epsilon(a, F(-1), epsilon) || \
-		      is_zero(a))
-#define is_int(a)    (is_zero(pixman_fixed_frac(a)))
+		      IS_ZERO(a))
+#define IS_INT(a)    (IS_ZERO(pixman_fixed_frac(a)))
 
 PIXMAN_EXPORT pixman_bool_t
 pixman_transform_is_identity(const struct pixman_transform *t)
 {
-	return ( is_same(t->matrix[0][0], t->matrix[1][1]) &&
-		 is_same(t->matrix[0][0], t->matrix[2][2]) &&
-		!is_zero(t->matrix[0][0]) &&
-		 is_zero(t->matrix[0][1]) &&
-		 is_zero(t->matrix[0][2]) &&
-		 is_zero(t->matrix[1][0]) &&
-		 is_zero(t->matrix[1][2]) &&
-		 is_zero(t->matrix[2][0]) &&
-		 is_zero(t->matrix[2][1]));
+	return ( IS_SAME(t->matrix[0][0], t->matrix[1][1]) &&
+		 IS_SAME(t->matrix[0][0], t->matrix[2][2]) &&
+		!IS_ZERO(t->matrix[0][0]) &&
+		 IS_ZERO(t->matrix[0][1]) &&
+		 IS_ZERO(t->matrix[0][2]) &&
+		 IS_ZERO(t->matrix[1][0]) &&
+		 IS_ZERO(t->matrix[1][2]) &&
+		 IS_ZERO(t->matrix[2][0]) &&
+		 IS_ZERO(t->matrix[2][1]));
 }
 
 PIXMAN_EXPORT pixman_bool_t
 pixman_transform_is_scale(const struct pixman_transform *t)
 {
-	return (!is_zero(t->matrix[0][0]) &&
-		 is_zero(t->matrix[0][1]) &&
-		 is_zero(t->matrix[0][2]) &&
+	return (!IS_ZERO(t->matrix[0][0]) &&
+		 IS_ZERO(t->matrix[0][1]) &&
+		 IS_ZERO(t->matrix[0][2]) &&
 
-		 is_zero(t->matrix[1][0]) &&
-		!is_zero(t->matrix[1][1]) &&
-		 is_zero(t->matrix[1][2]) &&
+		 IS_ZERO(t->matrix[1][0]) &&
+		!IS_ZERO(t->matrix[1][1]) &&
+		 IS_ZERO(t->matrix[1][2]) &&
 
-		 is_zero(t->matrix[2][0]) &&
-		 is_zero(t->matrix[2][1]) &&
-		!is_zero(t->matrix[2][2]));
+		 IS_ZERO(t->matrix[2][0]) &&
+		 IS_ZERO(t->matrix[2][1]) &&
+		!IS_ZERO(t->matrix[2][2]));
 }
 
 PIXMAN_EXPORT pixman_bool_t
 pixman_transform_is_int_translate(const struct pixman_transform *t)
 {
-	return (is_one (t->matrix[0][0]) &&
-		is_zero(t->matrix[0][1]) &&
-		is_int (t->matrix[0][2]) &&
+	return (IS_ONE (t->matrix[0][0]) &&
+		IS_ZERO(t->matrix[0][1]) &&
+		IS_INT (t->matrix[0][2]) &&
 
-		is_zero(t->matrix[1][0]) &&
-		is_one (t->matrix[1][1]) &&
-		is_int (t->matrix[1][2]) &&
+		IS_ZERO(t->matrix[1][0]) &&
+		IS_ONE (t->matrix[1][1]) &&
+		IS_INT (t->matrix[1][2]) &&
 
-		is_zero(t->matrix[2][0]) &&
-		is_zero(t->matrix[2][1]) &&
-		is_one (t->matrix[2][2]));
+		IS_ZERO(t->matrix[2][0]) &&
+		IS_ZERO(t->matrix[2][1]) &&
+		IS_ONE (t->matrix[2][2]));
 }
 
 PIXMAN_EXPORT pixman_bool_t

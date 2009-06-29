@@ -29,7 +29,7 @@
 #include "pixman-combine32.h"
 
 static force_inline uint32_t
-Fetch24 (uint8_t *a)
+fetch_24 (uint8_t *a)
 {
     if (((unsigned long)a) & 1)
     {
@@ -50,7 +50,7 @@ Fetch24 (uint8_t *a)
 }
 
 static force_inline void
-Store24 (uint8_t *a, uint32_t v)
+store_24 (uint8_t *a, uint32_t v)
 {
     if (((unsigned long)a) & 1)
     {
@@ -459,15 +459,15 @@ fast_CompositeOver_n_8_0888 (pixman_implementation_t *imp,
 		    d = src;
 		else
 		{
-		    d = Fetch24(dst);
+		    d = fetch_24(dst);
 		    d = fbOver (src, d);
 		}
-		Store24(dst, d);
+		store_24(dst, d);
 	    }
 	    else if (m)
 	    {
-		d = fbOver (fbIn(src,m), Fetch24(dst));
-		Store24(dst, d);
+		d = fbOver (fbIn(src,m), fetch_24(dst));
+		store_24(dst, d);
 	    }
 	    dst += 3;
 	}
@@ -523,15 +523,15 @@ fast_CompositeOver_n_8_0565 (pixman_implementation_t *imp,
 		else
 		{
 		    d = *dst;
-		    d = fbOver (src, cvt0565to0888(d));
+		    d = fbOver (src, CONVERT_0565_TO_0888(d));
 		}
-		*dst = cvt8888to0565(d);
+		*dst = CONVERT_8888_TO_0565(d);
 	    }
 	    else if (m)
 	    {
 		d = *dst;
-		d = fbOver (fbIn(src,m), cvt0565to0888(d));
-		*dst = cvt8888to0565(d);
+		d = fbOver (fbIn(src,m), CONVERT_0565_TO_0888(d));
+		*dst = CONVERT_8888_TO_0565(d);
 	    }
 	    dst++;
 	}
@@ -567,7 +567,7 @@ fast_CompositeOver_n_8888_0565_ca (pixman_implementation_t *imp,
     if (src == 0)
 	return;
 
-    src16 = cvt8888to0565(src);
+    src16 = CONVERT_8888_TO_0565(src);
 
     fbComposeGetStart (dst_image, xDst, yDst, uint16_t, dstStride, dstLine, 1);
     fbComposeGetStart (mask_image, xMask, yMask, uint32_t, maskStride, maskLine, 1);
@@ -592,21 +592,21 @@ fast_CompositeOver_n_8888_0565_ca (pixman_implementation_t *imp,
 		else
 		{
 		    d = *dst;
-		    d = fbOver (src, cvt0565to0888(d));
-		    *dst = cvt8888to0565(d);
+		    d = fbOver (src, CONVERT_0565_TO_0888(d));
+		    *dst = CONVERT_8888_TO_0565(d);
 		}
 	    }
 	    else if (ma)
 	    {
 		d = *dst;
-		d = cvt0565to0888(d);
+		d = CONVERT_0565_TO_0888(d);
 
 		FbByteMulC (src, ma);
 		FbByteMul (ma, srca);
 		ma = ~ma;
 		FbByteMulAddC (d, ma, src);
 		
-		*dst = cvt8888to0565(d);
+		*dst = CONVERT_8888_TO_0565(d);
 	    }
 	    dst++;
 	}
@@ -700,9 +700,9 @@ fast_CompositeSrc_8888_0888 (pixman_implementation_t *imp,
 		if (a == 0xff)
 		    d = s;
 		else
-		    d = fbOver (s, Fetch24(dst));
+		    d = fbOver (s, fetch_24(dst));
 
-		Store24(dst, d);
+		store_24(dst, d);
 	    }
 	    dst += 3;
 	}
@@ -753,9 +753,9 @@ fast_composite_over_8888_0565 (pixman_implementation_t *imp,
 		else
 		{
 		    d = *dst;
-		    d = fbOver (s, cvt0565to0888(d));
+		    d = fbOver (s, CONVERT_0565_TO_0888(d));
 		}
-		*dst = cvt8888to0565(d);
+		*dst = CONVERT_8888_TO_0565(d);
 	    }
 	    dst++;
 	}
@@ -796,7 +796,7 @@ fast_CompositeSrc_x888_0565 (pixman_implementation_t *imp,
 	while (w--)
 	{
 	    s = *src++;
-	    *dst = cvt8888to0565(s);
+	    *dst = CONVERT_8888_TO_0565(s);
 	    dst++;
 	}
     }
@@ -983,7 +983,7 @@ fast_CompositeSolidFill (pixman_implementation_t *imp,
 	src = src >> 24;
     else if (dst_image->bits.format == PIXMAN_r5g6b5 ||
 	     dst_image->bits.format == PIXMAN_b5g6r5)
-	src = cvt8888to0565 (src);
+	src = CONVERT_8888_TO_0565 (src);
 
     pixman_fill (dst_image->bits.bits, dst_image->bits.rowstride,
 		 PIXMAN_FORMAT_BPP (dst_image->bits.format),

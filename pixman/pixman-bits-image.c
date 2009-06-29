@@ -741,7 +741,7 @@ bits_image_property_changed (pixman_image_t *image)
     if (bits->common.alpha_map)
     {
 	image->common.get_scanline_64 =
-	    _pixman_image_get_scanline_64_generic;
+	    _pixman_image_get_scanline_generic_64;
 	image->common.get_scanline_32 =
 	    bits_image_fetch_transformed;
     }
@@ -763,7 +763,7 @@ bits_image_property_changed (pixman_image_t *image)
     else
     {
 	image->common.get_scanline_64 =
-	    _pixman_image_get_scanline_64_generic;
+	    _pixman_image_get_scanline_generic_64;
 	image->common.get_scanline_32 =
 	    bits_image_fetch_transformed;
     }

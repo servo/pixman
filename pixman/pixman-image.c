@@ -63,7 +63,7 @@ _pixman_init_gradient (gradient_t     *gradient,
  * depth, but that's a project for the future.
  */
 void
-_pixman_image_get_scanline_64_generic (pixman_image_t * pict, int x, int y,
+_pixman_image_get_scanline_generic_64 (pixman_image_t * pict, int x, int y,
 				       int width, uint32_t *buffer,
 				       const uint32_t *mask, uint32_t maskBits)
 {

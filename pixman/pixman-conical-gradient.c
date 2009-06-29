@@ -123,7 +123,7 @@ static void
 conical_gradient_property_changed (pixman_image_t *image)
 {
     image->common.get_scanline_32 = conical_gradient_get_scanline_32;
-    image->common.get_scanline_64 = _pixman_image_get_scanline_64_generic;
+    image->common.get_scanline_64 = _pixman_image_get_scanline_generic_64;
 }
 
 PIXMAN_EXPORT pixman_image_t *
