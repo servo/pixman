@@ -24,7 +24,7 @@
 #endif
 
 static void
-rasterizeEdges (pixman_image_t  *image,
+RASTERIZE_EDGES (pixman_image_t  *image,
 		pixman_edge_t	*l,
 		pixman_edge_t	*r,
 		pixman_fixed_t		t,
@@ -132,7 +132,7 @@ rasterizeEdges (pixman_image_t  *image,
 	    }
 #else
 	    {
-		DefineAlpha(line,lxi);
+		DEFINE_ALPHA(line,lxi);
 		int	    lxs;
 		int     rxs;
 
@@ -143,20 +143,20 @@ rasterizeEdges (pixman_image_t  *image,
 		/* Add coverage across row */
 		if (lxi == rxi)
 		{
-		    AddAlpha (rxs - lxs);
+		    ADD_ALPHA (rxs - lxs);
 		}
 		else
 		{
 		    int	xi;
 
-		    AddAlpha (N_X_FRAC(N_BITS) - lxs);
-		    StepAlpha;
+		    ADD_ALPHA (N_X_FRAC(N_BITS) - lxs);
+		    STEP_ALPHA;
 		    for (xi = lxi + 1; xi < rxi; xi++)
 		    {
-			AddAlpha (N_X_FRAC(N_BITS));
-			StepAlpha;
+			ADD_ALPHA (N_X_FRAC(N_BITS));
+			STEP_ALPHA;
 		    }
-		    AddAlpha (rxs);
+		    ADD_ALPHA (rxs);
 		}
 	    }
 #endif
@@ -168,15 +168,15 @@ rasterizeEdges (pixman_image_t  *image,
 #if N_BITS > 1
 	if (pixman_fixed_frac (y) != Y_FRAC_LAST(N_BITS))
 	{
-	    RenderEdgeStepSmall (l);
-	    RenderEdgeStepSmall (r);
+	    RENDER_EDGE_STEP_SMALL (l);
+	    RENDER_EDGE_STEP_SMALL (r);
 	    y += STEP_Y_SMALL(N_BITS);
 	}
 	else
 #endif
 	{
-	    RenderEdgeStepBig (l);
-	    RenderEdgeStepBig (r);
+	    RENDER_EDGE_STEP_BIG (l);
+	    RENDER_EDGE_STEP_BIG (r);
 	    y += STEP_Y_BIG(N_BITS);
 	    line += stride;
 	}
