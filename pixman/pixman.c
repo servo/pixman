@@ -37,9 +37,9 @@ typedef struct
     pixman_op_t			opSrcDstOpaque;
     pixman_op_t			opSrcOpaque;
     pixman_op_t			opDstOpaque;
-} OptimizedOperatorInfo;
+} optimized_operator_info_t;
 
-static const OptimizedOperatorInfo optimized_operators[] =
+static const optimized_operator_info_t optimized_operators[] =
 {
     /* Input Operator           SRC&DST Opaque          SRC Opaque              DST Opaque      */
     { PIXMAN_OP_OVER,           PIXMAN_OP_SRC,          PIXMAN_OP_SRC,          PIXMAN_OP_OVER },
@@ -58,10 +58,10 @@ static const OptimizedOperatorInfo optimized_operators[] =
 /*
  * Check if the current operator could be optimized
  */
-static const OptimizedOperatorInfo*
+static const optimized_operator_info_t*
 pixman_operator_can_be_optimized(pixman_op_t op)
 {
-    const OptimizedOperatorInfo *info;
+    const optimized_operator_info_t *info;
 
     for (info = optimized_operators; info->op != PIXMAN_OP_NONE; info++)
     {
@@ -80,7 +80,7 @@ pixman_optimize_operator(pixman_op_t op, pixman_image_t *pSrc, pixman_image_t *p
 {
     pixman_bool_t is_source_opaque;
     pixman_bool_t is_dest_opaque;
-    const OptimizedOperatorInfo *info = pixman_operator_can_be_optimized(op);
+    const optimized_operator_info_t *info = pixman_operator_can_be_optimized(op);
 
     if(!info || pMask)
         return op;
