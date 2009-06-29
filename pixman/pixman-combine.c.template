@@ -63,7 +63,7 @@ fbCombineMaskValueC (comp4_t *src, const comp4_t *mask)
 }
 
 static void
-fbCombineMaskALPHA_cC (const comp4_t *src, comp4_t *mask)
+fbCombineMaskAlphaC (const comp4_t *src, comp4_t *mask)
 {
     comp4_t a = *(mask);
     comp4_t	x;
@@ -1416,7 +1416,7 @@ fbCombineInReverseC (pixman_implementation_t *imp, pixman_op_t op,
         comp4_t m = *(mask + i);
         comp4_t a;
 
-	fbCombineMaskALPHA_cC (&s, &m);
+	fbCombineMaskAlphaC (&s, &m);
 
 	a = m;
         if (a != ~0)
@@ -1469,7 +1469,7 @@ fbCombineOutReverseC (pixman_implementation_t *imp, pixman_op_t op,
 	comp4_t m = *(mask + i);
 	comp4_t a;
 
-	fbCombineMaskALPHA_cC (&s, &m);
+	fbCombineMaskAlphaC (&s, &m);
 
         a = ~m;
         if (a != ~0)
