@@ -804,18 +804,18 @@ fetch_scanline_yv12 (pixman_image_t *image, int x, int line, int width, uint32_t
 	      const uint32_t *mask, uint32_t mask_bits)
 {
     YV12_SETUP(image);
-    uint8_t *pY = YV12_Y (line);
-    uint8_t *pU = YV12_U (line);
-    uint8_t *pV = YV12_V (line);
+    uint8_t *y_line = YV12_Y (line);
+    uint8_t *u_line = YV12_U (line);
+    uint8_t *v_line = YV12_V (line);
     int16_t y, u, v;
     int32_t r, g, b;
     int   i;
 
     for (i = 0; i < width; i++)
     {
-	y = pY[x + i] - 16;
-	u = pU[(x + i) >> 1] - 128;
-	v = pV[(x + i) >> 1] - 128;
+	y = y_line[x + i] - 16;
+	u = u_line[(x + i) >> 1] - 128;
+	v = v_line[(x + i) >> 1] - 128;
 
 	/* R = 1.164(Y - 16) + 1.596(V - 128) */
 	r = 0x012b27 * y + 0x019a2e * v;

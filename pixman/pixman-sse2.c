@@ -3115,7 +3115,7 @@ sse2_composite_over_8888_0565 (pixman_implementation_t *imp,
      * I copy the code from MMX one and keep the fixme.
      * If it's a problem there, probably is a problem here.
      */
-    assert (src_image->pDrawable == mask_image->pDrawable);
+    assert (src_image->drawable == mask_image->drawable);
 #endif
 
     while (height--)
@@ -3794,7 +3794,7 @@ sse2_Composite_over_pixbuf_0565 (pixman_implementation_t *imp,
      * I copy the code from MMX one and keep the fixme.
      * If it's a problem there, probably is a problem here.
      */
-    assert (src_image->pDrawable == mask_image->pDrawable);
+    assert (src_image->drawable == mask_image->drawable);
 #endif
 
     while (height--)
@@ -3928,7 +3928,7 @@ sse2_Composite_over_pixbuf_8888 (pixman_implementation_t *imp,
      * I copy the code from MMX one and keep the fixme.
      * If it's a problem there, probably is a problem here.
      */
-    assert (src_image->pDrawable == mask_image->pDrawable);
+    assert (src_image->drawable == mask_image->drawable);
 #endif
 
     while (height--)

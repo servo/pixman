@@ -37,32 +37,32 @@
 
 static inline pixman_bool_t
 miClipPictureReg (pixman_region32_t *	region,
-		  pixman_region32_t *	pClip,
+		  pixman_region32_t *	clip,
 		  int		dx,
 		  int		dy)
 {
     if (pixman_region32_n_rects(region) == 1 &&
-	pixman_region32_n_rects(pClip) == 1)
+	pixman_region32_n_rects(clip) == 1)
     {
-	pixman_box32_t *  pRbox = pixman_region32_rectangles(region, NULL);
-	pixman_box32_t *  pCbox = pixman_region32_rectangles(pClip, NULL);
+	pixman_box32_t *  rbox = pixman_region32_rectangles(region, NULL);
+	pixman_box32_t *  cbox = pixman_region32_rectangles(clip, NULL);
 	int	v;
 	
-	if (pRbox->x1 < (v = pCbox->x1 + dx))
-	    pRbox->x1 = BOUND(v);
-	if (pRbox->x2 > (v = pCbox->x2 + dx))
-	    pRbox->x2 = BOUND(v);
-	if (pRbox->y1 < (v = pCbox->y1 + dy))
-	    pRbox->y1 = BOUND(v);
-	if (pRbox->y2 > (v = pCbox->y2 + dy))
-	    pRbox->y2 = BOUND(v);
-	if (pRbox->x1 >= pRbox->x2 ||
-	    pRbox->y1 >= pRbox->y2)
+	if (rbox->x1 < (v = cbox->x1 + dx))
+	    rbox->x1 = BOUND(v);
+	if (rbox->x2 > (v = cbox->x2 + dx))
+	    rbox->x2 = BOUND(v);
+	if (rbox->y1 < (v = cbox->y1 + dy))
+	    rbox->y1 = BOUND(v);
+	if (rbox->y2 > (v = cbox->y2 + dy))
+	    rbox->y2 = BOUND(v);
+	if (rbox->x1 >= rbox->x2 ||
+	    rbox->y1 >= rbox->y2)
 	{
 	    pixman_region32_init (region);
 	}
     }
-    else if (!pixman_region32_not_empty (pClip))
+    else if (!pixman_region32_not_empty (clip))
     {
 	return FALSE;
     }
@@ -70,7 +70,7 @@ miClipPictureReg (pixman_region32_t *	region,
     {
 	if (dx || dy)
 	    pixman_region32_translate (region, -dx, -dy);
-	if (!pixman_region32_intersect (region, region, pClip))
+	if (!pixman_region32_intersect (region, region, clip))
 	    return FALSE;
 	if (dx || dy)
 	    pixman_region32_translate(region, dx, dy);
@@ -81,7 +81,7 @@ miClipPictureReg (pixman_region32_t *	region,
 
 static inline pixman_bool_t
 miClipPictureSrc (pixman_region32_t *	region,
-		  pixman_image_t *	pPicture,
+		  pixman_image_t *	picture,
 		  int		dx,
 		  int		dy)
 {
@@ -90,11 +90,11 @@ miClipPictureSrc (pixman_region32_t *	region,
      * the clip was not set by a client, then it is a hierarchy
      * clip and those should always be ignored for sources).
      */
-    if (!pPicture->common.clip_sources || !pPicture->common.client_clip)
+    if (!picture->common.clip_sources || !picture->common.client_clip)
 	return TRUE;
 
     return miClipPictureReg (region,
-			     &pPicture->common.clip_region,
+			     &picture->common.clip_region,
 			     dx, dy);
 }
 

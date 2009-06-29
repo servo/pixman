@@ -1487,7 +1487,7 @@ mmx_composite_over_8888_0565 (pixman_implementation_t *imp,
 
 #if 0
     /* FIXME */
-    assert (src_image->pDrawable == mask_image->pDrawable);
+    assert (src_image->drawable == mask_image->drawable);
 #endif
 
     while (height--)
@@ -2126,7 +2126,7 @@ mmx_Composite_over_pixbuf_0565 (pixman_implementation_t *imp,
 
 #if 0
     /* FIXME */
-    assert (src_image->pDrawable == mask_image->pDrawable);
+    assert (src_image->drawable == mask_image->drawable);
 #endif
 
     while (height--)
@@ -2248,7 +2248,7 @@ mmx_Composite_over_pixbuf_8888 (pixman_implementation_t *imp,
 
 #if 0
     /* FIXME */
-    assert (src_image->pDrawable == mask_image->pDrawable);
+    assert (src_image->drawable == mask_image->drawable);
 #endif
 
     while (height--)
