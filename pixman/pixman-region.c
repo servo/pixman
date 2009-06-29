@@ -49,6 +49,7 @@ SOFTWARE.
 #include <limits.h>
 #include <string.h>
 #include <stdio.h>
+#include "pixman-private.h"
 
 #define PIXREGION_NIL(reg) ((reg)->data && !(reg)->data->numRects)
 /* not a region */
@@ -63,21 +64,7 @@ SOFTWARE.
 #define PIXREGION_END(reg) PIXREGION_BOX(reg, (reg)->data->numRects - 1)
 
 
-#undef assert
-#ifdef DEBUG_PIXREGION
-#define assert(expr) {if (!(expr)) \
-		FatalError("Assertion failed file %s, line %d: expr\n", \
-			__FILE__, __LINE__); }
-#else
-#define assert(expr)
-#endif
-
 #define good(reg) assert(PREFIX(_selfcheck) (reg))
-
-#undef MIN
-#define MIN(a,b) ((a) < (b) ? (a) : (b))
-#undef MAX
-#define MAX(a,b) ((a) > (b) ? (a) : (b))
 
 static const box_type_t PREFIX(_emptyBox_) = {0, 0, 0, 0};
 static const region_data_type_t PREFIX(_emptyData_) = {0, 0};
