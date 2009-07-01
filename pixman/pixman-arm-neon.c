@@ -1731,7 +1731,7 @@ fbCompositeSolidMask_nx8x0565neon (
 	uint16_t    *dstLine, *alignedLine;
 	uint8_t     *maskLine;
 	uint32_t     dstStride, maskStride;
-	uint32_t     kernelCount, copyCount;
+	uint32_t     kernelCount, copyCount, copyTail;
 	uint8_t      kernelOffset, copyOffset;
 
 	src = _pixman_image_get_solid(pSrc, pDst->bits.format);
@@ -1764,19 +1764,32 @@ fbCompositeSolidMask_nx8x0565neon (
 		unsigned long alignedRight = (((unsigned long)(dstLine + width)) + 0xF) & ~0xF;
 		unsigned long ceilingLength = (((unsigned long) width) * sizeof(*dstLine) + 0xF) & ~0xF;
 
-		// the fast copy must always be quadword aligned
+		// the fast copy should be quadword aligned
 		copyOffset = dstLine - ((uint16_t*) alignedLeft);
 		alignedLine = dstLine - copyOffset;
 		copyCount = (uint32_t) ((alignedRight - alignedLeft) >> 4);
+		copyTail = 0;
 
 		if(alignedRight - alignedLeft > ceilingLength) {
-			// unaligned routine is tightest, and will not overrun
+			// unaligned routine is tightest
 			kernelCount = (uint32_t) (ceilingLength >> 4);
 			kernelOffset = copyOffset;
 		} else {
 			// aligned routine is equally tight, so it is safer to align
 			kernelCount = copyCount;
 			kernelOffset = 0;
+		}
+
+		// We should avoid reading beyond scanline ends for safety
+		if(alignedLine < (dstLine - xDst) ||
+			(alignedLine + (copyCount * 16 / sizeof(*dstLine))) > ((dstLine - xDst) + pDst->bits.width))
+		{
+			// switch to precise read
+			copyOffset = kernelOffset = 0;
+			alignedLine = dstLine;
+			kernelCount = (uint32_t) (ceilingLength >> 4);
+			copyCount = (width * sizeof(*dstLine)) >> 4;
+			copyTail = (width * sizeof(*dstLine)) & 0xF;
 		}
 	}
 
@@ -1794,7 +1807,7 @@ fbCompositeSolidMask_nx8x0565neon (
 			// Uncached framebuffer access is really, really slow if we do it piecemeal.
 			// It should be much faster if we grab it all at once.
 			// One scanline should easily fit in L1 cache, so this should not waste RAM bandwidth.
-			QuadwordCopy_neon(scanLine, alignedLine, copyCount, 0);
+			QuadwordCopy_neon(scanLine, alignedLine, copyCount, copyTail);
 
 			// Apply the actual filter
 			SolidOver565_8pix_neon(src, scanLine + kernelOffset, glyphLine + kernelOffset, 8 * sizeof(*dstLine), 8, kernelCount);
@@ -1872,7 +1885,7 @@ fbCompositeSolid_nx0565neon (
 	uint32_t     src, srca;
 	uint16_t    *dstLine, *alignedLine;
 	uint32_t     dstStride;
-	uint32_t     kernelCount, copyCount;
+	uint32_t     kernelCount, copyCount, copyTail;
 	uint8_t      kernelOffset, copyOffset;
 
 	src = _pixman_image_get_solid(pSrc, pDst->bits.format);
@@ -1904,19 +1917,32 @@ fbCompositeSolid_nx0565neon (
 		unsigned long alignedRight = (((unsigned long)(dstLine + width)) + 0xF) & ~0xF;
 		unsigned long ceilingLength = (((unsigned long) width) * sizeof(*dstLine) + 0xF) & ~0xF;
 
-		// the fast copy must always be quadword aligned
+		// the fast copy should be quadword aligned
 		copyOffset = dstLine - ((uint16_t*) alignedLeft);
 		alignedLine = dstLine - copyOffset;
 		copyCount = (uint32_t) ((alignedRight - alignedLeft) >> 4);
+		copyTail = 0;
 
 		if(alignedRight - alignedLeft > ceilingLength) {
-			// unaligned routine is tightest, and will not overrun
+			// unaligned routine is tightest
 			kernelCount = (uint32_t) (ceilingLength >> 4);
 			kernelOffset = copyOffset;
 		} else {
 			// aligned routine is equally tight, so it is safer to align
 			kernelCount = copyCount;
 			kernelOffset = 0;
+		}
+
+		// We should avoid reading beyond scanline ends for safety
+		if(alignedLine < (dstLine - xDst) ||
+			(alignedLine + (copyCount * 16 / sizeof(*dstLine))) > ((dstLine - xDst) + pDst->bits.width))
+		{
+			// switch to precise read
+			copyOffset = kernelOffset = 0;
+			alignedLine = dstLine;
+			kernelCount = (uint32_t) (ceilingLength >> 4);
+			copyCount = (width * sizeof(*dstLine)) >> 4;
+			copyTail = (width * sizeof(*dstLine)) & 0xF;
 		}
 	}
 
@@ -1930,7 +1956,7 @@ fbCompositeSolid_nx0565neon (
 			// Uncached framebuffer access is really, really slow if we do it piecemeal.
 			// It should be much faster if we grab it all at once.
 			// One scanline should easily fit in L1 cache, so this should not waste RAM bandwidth.
-			QuadwordCopy_neon(scanLine, alignedLine, copyCount, 0);
+			QuadwordCopy_neon(scanLine, alignedLine, copyCount, copyTail);
 
 			// Apply the actual filter
 			PlainOver565_8pix_neon(src, scanLine + kernelOffset, 8 * sizeof(*dstLine), kernelCount);
@@ -2002,7 +2028,7 @@ fbCompositeOver_8888x0565neon (
 	uint32_t    *srcLine;
 	uint16_t    *dstLine, *alignedLine;
 	uint32_t     dstStride, srcStride;
-	uint32_t     kernelCount, copyCount;
+	uint32_t     kernelCount, copyCount, copyTail;
 	uint8_t      kernelOffset, copyOffset;
 
 	// we assume mask is opaque
@@ -2028,19 +2054,32 @@ fbCompositeOver_8888x0565neon (
 		unsigned long alignedRight = (((unsigned long)(dstLine + width)) + 0xF) & ~0xF;
 		unsigned long ceilingLength = (((unsigned long) width) * sizeof(*dstLine) + 0xF) & ~0xF;
 
-		// the fast copy must always be quadword aligned
+		// the fast copy should be quadword aligned
 		copyOffset = dstLine - ((uint16_t*) alignedLeft);
 		alignedLine = dstLine - copyOffset;
 		copyCount = (uint32_t) ((alignedRight - alignedLeft) >> 4);
+		copyTail = 0;
 
 		if(alignedRight - alignedLeft > ceilingLength) {
-			// unaligned routine is tightest, and will not overrun
+			// unaligned routine is tightest
 			kernelCount = (uint32_t) (ceilingLength >> 4);
 			kernelOffset = copyOffset;
 		} else {
 			// aligned routine is equally tight, so it is safer to align
 			kernelCount = copyCount;
 			kernelOffset = 0;
+		}
+
+		// We should avoid reading beyond scanline ends for safety
+		if(alignedLine < (dstLine - xDst) ||
+			(alignedLine + (copyCount * 16 / sizeof(*dstLine))) > ((dstLine - xDst) + pDst->bits.width))
+		{
+			// switch to precise read
+			copyOffset = kernelOffset = 0;
+			alignedLine = dstLine;
+			kernelCount = (uint32_t) (ceilingLength >> 4);
+			copyCount = (width * sizeof(*dstLine)) >> 4;
+			copyTail = (width * sizeof(*dstLine)) & 0xF;
 		}
 	}
 
@@ -2079,7 +2118,7 @@ fbCompositeOver_8888x0565neon (
 			// Uncached framebuffer access is really, really slow if we do it piecemeal.
 			// It should be much faster if we grab it all at once.
 			// One scanline should easily fit in L1 cache, so this should not waste RAM bandwidth.
-			QuadwordCopy_neon(scanLine, alignedLine, copyCount, 0);
+			QuadwordCopy_neon(scanLine, alignedLine, copyCount, copyTail);
 
 			// Apply the actual filter
 			ARGB8_Over565_8pix_neon(srcLine, scanLine + kernelOffset, srcStride * sizeof(*srcLine), kernelCount);
