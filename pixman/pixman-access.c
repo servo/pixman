@@ -166,7 +166,7 @@ fbFetch_b8g8r8x8 (pixman_image_t *image, int x, int y, int width, uint32_t *buff
 
 /* Expects a uint64_t buffer */
 static void
-fbFetch_a2b10g10r10 (pixman_image_t *image, int x, int y, int width, uint32_t *b,
+fbFetch_a2r10g10b10 (pixman_image_t *image, int x, int y, int width, uint32_t *b,
 		     const uint32_t *mask, uint32_t mask_bits)
 {
     const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
@@ -174,6 +174,61 @@ fbFetch_a2b10g10r10 (pixman_image_t *image, int x, int y, int width, uint32_t *b
     const uint32_t *end = pixel + width;
     uint64_t *buffer = (uint64_t *)b;
     
+    while (pixel < end) {
+        uint32_t p = READ(image, pixel++);
+        uint64_t a = p >> 30;
+        uint64_t r = (p >> 20) & 0x3ff;
+        uint64_t g = (p >> 10) & 0x3ff;
+        uint64_t b = p & 0x3ff;
+
+        r = r << 6 | r >> 4;
+        g = g << 6 | g >> 4;
+        b = b << 6 | b >> 4;
+
+        a <<= 62;
+        a |= a >> 2;
+        a |= a >> 4;
+        a |= a >> 8;
+
+        *buffer++ = a << 48 | r << 32 | g << 16 | b;
+    }
+}
+
+/* Expects a uint64_t buffer */
+static void
+fbFetch_x2r10g10b10 (pixman_image_t *image, int x, int y, int width, uint32_t *b,
+		     const uint32_t *mask, uint32_t mask_bits)
+{
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
+    const uint32_t *pixel = (uint32_t *)bits + x;
+    const uint32_t *end = pixel + width;
+    uint64_t *buffer = (uint64_t *)b;
+
+    while (pixel < end) {
+        uint32_t p = READ(image, pixel++);
+        uint64_t r = (p >> 20) & 0x3ff;
+        uint64_t g = (p >> 10) & 0x3ff;
+        uint64_t b = p & 0x3ff;
+
+        r = r << 6 | r >> 4;
+        g = g << 6 | g >> 4;
+        b = b << 6 | b >> 4;
+
+        *buffer++ = 0xffffULL << 48 | r << 32 | g << 16 | b;
+    }
+}
+
+
+/* Expects a uint64_t buffer */
+static void
+fbFetch_a2b10g10r10 (pixman_image_t *image, int x, int y, int width, uint32_t *b,
+		     const uint32_t *mask, uint32_t mask_bits)
+{
+    const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
+    const uint32_t *pixel = bits + x;
+    const uint32_t *end = pixel + width;
+    uint64_t *buffer = (uint64_t *)b;
+
     while (pixel < end) {
         uint32_t p = READ(image, pixel++);
         uint64_t a = p >> 30;
@@ -203,7 +258,7 @@ fbFetch_x2b10g10r10 (pixman_image_t *image, int x, int y, int width, uint32_t *b
     const uint32_t *pixel = (uint32_t *)bits + x;
     const uint32_t *end = pixel + width;
     uint64_t *buffer = (uint64_t *)b;
-    
+
     while (pixel < end) {
         uint32_t p = READ(image, pixel++);
         uint64_t b = (p >> 20) & 0x3ff;
@@ -780,6 +835,78 @@ fbFetch_yv12 (pixman_image_t *image, int x, int line, int width, uint32_t *buffe
 
 /* Despite the type, expects a uint64_t buffer */
 static void
+fbFetchPixel_a2r10g10b10_64 (bits_image_t *pict, uint32_t *b, int n_pixels)
+{
+    int i;
+    uint64_t *buffer = (uint64_t *)b;
+
+    for (i = 0; i < n_pixels; ++i)
+    {
+	int offset = ((uint32_t *)buffer)[2 * i];
+	int line = ((uint32_t *)buffer)[2 * i + 1];
+
+	if (offset == 0xffffffff || line == 0xffffffff)
+	{
+	    buffer[i] = 0;
+	}
+	else
+	{
+	    uint32_t *bits = pict->bits + line*pict->rowstride;
+	    uint32_t p = READ(pict, bits + offset);
+	    uint64_t a = p >> 30;
+	    uint64_t r = (p >> 20) & 0x3ff;
+	    uint64_t g = (p >> 10) & 0x3ff;
+	    uint64_t b = p & 0x3ff;
+
+	    r = r << 6 | r >> 4;
+	    g = g << 6 | g >> 4;
+	    b = b << 6 | b >> 4;
+
+	    a <<= 62;
+	    a |= a >> 2;
+	    a |= a >> 4;
+	    a |= a >> 8;
+
+	    buffer[i] = a << 48 | r << 32 | g << 16 | b;
+	}
+    }
+}
+
+/* Despite the type, this function expects a uint64_t buffer */
+static void
+fbFetchPixel_x2r10g10b10_64 (bits_image_t *pict, uint32_t *b, int n_pixels)
+{
+    uint64_t *buffer = (uint64_t *)b;
+    int i;
+
+    for (i = 0; i < n_pixels; ++i)
+    {
+	int offset = ((uint32_t *)buffer)[2 * i];
+	int line = ((uint32_t *)buffer)[2 * i + 1];
+
+	if (offset == 0xffffffff || line == 0xffffffff)
+	{
+	    buffer[i] = 0;
+	}
+	else
+	{
+	    uint32_t *bits = pict->bits + line*pict->rowstride;
+	    uint32_t p = READ(pict, bits + offset);
+	    uint64_t r = (p >> 20) & 0x3ff;
+	    uint64_t g = (p >> 10) & 0x3ff;
+	    uint64_t b = p & 0x3ff;
+
+	    r = r << 6 | r >> 4;
+	    g = g << 6 | g >> 4;
+	    b = b << 6 | b >> 4;
+
+	    buffer[i] = 0xffffULL << 48 | r << 32 | g << 16 | b;
+	}
+    }
+}
+
+/* Despite the type, expects a uint64_t buffer */
+static void
 fbFetchPixel_a2b10g10r10_64 (bits_image_t *pict, uint32_t *b, int n_pixels)
 {
     int i;
@@ -811,7 +938,7 @@ fbFetchPixel_a2b10g10r10_64 (bits_image_t *pict, uint32_t *b, int n_pixels)
 	    a |= a >> 2;
 	    a |= a >> 4;
 	    a |= a >> 8;
-	    
+
 	    buffer[i] = a << 48 | r << 32 | g << 16 | b;
 	}
     }
@@ -823,7 +950,7 @@ fbFetchPixel_x2b10g10r10_64 (bits_image_t *pict, uint32_t *b, int n_pixels)
 {
     uint64_t *buffer = (uint64_t *)b;
     int i;
-    
+
     for (i = 0; i < n_pixels; ++i)
     {
 	int offset = ((uint32_t *)buffer)[2 * i];
@@ -844,7 +971,7 @@ fbFetchPixel_x2b10g10r10_64 (bits_image_t *pict, uint32_t *b, int n_pixels)
 	    r = r << 6 | r >> 4;
 	    g = g << 6 | g >> 4;
 	    b = b << 6 | b >> 4;
-	    
+
 	    buffer[i] = 0xffffULL << 48 | r << 32 | g << 16 | b;
 	}
     }
@@ -1858,6 +1985,39 @@ fbFetchPixel_yv12 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 #define Split(v)	uint32_t	r = ((v) >> 16) & 0xff, g = ((v) >> 8) & 0xff, b = (v) & 0xff
 
 static void
+fbStore_a2r10g10b10 (bits_image_t *image, int x, int y, int width, const uint32_t *v)
+{
+    uint32_t *bits = image->bits + image->rowstride * y;
+    uint32_t *pixel = bits + x;
+    uint64_t *values = (uint64_t *)v;
+    int i;
+
+    for (i = 0; i < width; ++i) {
+        WRITE(image, pixel++,
+            ((values[i] >> 32) & 0xc0000000) | // A
+	    ((values[i] >> 18) & 0x3ff00000) | // R
+	    ((values[i] >> 12) & 0xffc00) |    // G
+	    ((values[i] >> 6) & 0x3ff));       // B
+    }
+}
+
+static void
+fbStore_x2r10g10b10 (bits_image_t *image, int x, int y, int width, const uint32_t *v)
+{
+    uint32_t *bits = image->bits + image->rowstride * y;
+    uint64_t *values = (uint64_t *)v;
+    uint32_t *pixel = bits + x;
+    int i;
+
+    for (i = 0; i < width; ++i) {
+        WRITE(image, pixel++,
+	    ((values[i] >> 18) & 0x3ff00000) | // R
+	    ((values[i] >> 12) & 0xffc00) |    // G
+	    ((values[i] >> 6) & 0x3ff));       // B
+    }
+}
+
+static void
 fbStore_a2b10g10r10 (bits_image_t *image, int x, int y, int width, const uint32_t *v)
 {
     uint32_t *bits = image->bits + image->rowstride * y;
@@ -2623,7 +2783,17 @@ static const format_info_t accessors[] =
     FORMAT_INFO (g1),
 
 /* Wide formats */
-    
+
+    { PIXMAN_a2r10g10b10,
+      NULL, fbFetch_a2r10g10b10,
+      fbFetchPixel32_generic_lossy, fbFetchPixel_a2r10g10b10_64,
+      NULL, fbStore_a2r10g10b10 },
+
+    { PIXMAN_x2r10g10b10,
+      NULL, fbFetch_x2r10g10b10,
+      fbFetchPixel32_generic_lossy, fbFetchPixel_x2r10g10b10_64,
+      NULL, fbStore_x2r10g10b10 },
+
     { PIXMAN_a2b10g10r10,
       NULL, fbFetch_a2b10g10r10,
       fbFetchPixel32_generic_lossy, fbFetchPixel_a2b10g10r10_64,
