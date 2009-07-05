@@ -81,15 +81,15 @@ RASTERIZE_EDGES (pixman_image_t  *image,
 
 #ifdef WORDS_BIGENDIAN
 #   define SCREEN_SHIFT_LEFT(x,n)	((x) << (n))
-#   define FbScrRight(x,n)	((x) >> (n))
+#   define SCREEN_SHIFT_RIGHT(x,n)	((x) >> (n))
 #else
 #   define SCREEN_SHIFT_LEFT(x,n)	((x) >> (n))
-#   define FbScrRight(x,n)	((x) << (n))
+#   define SCREEN_SHIFT_RIGHT(x,n)	((x) << (n))
 #endif
 
 #define LEFT_MASK(x)							\
 		(((x) & 0x1f) ?						\
-		 FbScrRight (0xffffffff, (x) & 0x1f) : 0)
+		 SCREEN_SHIFT_RIGHT (0xffffffff, (x) & 0x1f) : 0)
 #define RIGHT_MASK(x)							\
 		(((32 - (x)) & 0x1f) ?					\
 		 SCREEN_SHIFT_LEFT (0xffffffff, (32 - (x)) & 0x1f) : 0)
