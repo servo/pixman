@@ -1141,8 +1141,8 @@ neon_CompositeSrc_24_16 (
 		uint16_t *dstPtr = dstLine;
 		uint32_t *srcPtr = srcLine;
 		uint32_t count = width;
-		const uint32_t RBmask = 0x1F;
-		const uint32_t Gmask = 0x3F;
+		const uint32_t rb_mask = 0x1F;
+		const uint32_t g_mask = 0x3F;
 
 		// If you're going to complain about a goto, take a long hard look
 		// at the massive blocks of assembler this skips over.  ;-)
@@ -1268,13 +1268,13 @@ neon_CompositeSrc_24_16 (
 			uint32_t dstPixelsA;
 			uint32_t dstPixelsB;
 
-			dstPixelsA  = ((srcPixelA >>  3) & RBmask);
-			dstPixelsA |= ((srcPixelA >> 10) &  Gmask) << 5;
-			dstPixelsA |= ((srcPixelA >> 19) & RBmask) << 11;
+			dstPixelsA  = ((srcPixelA >>  3) & rb_mask);
+			dstPixelsA |= ((srcPixelA >> 10) &  g_mask) << 5;
+			dstPixelsA |= ((srcPixelA >> 19) & rb_mask) << 11;
 
-			dstPixelsB  = ((srcPixelB >>  3) & RBmask);
-			dstPixelsB |= ((srcPixelB >> 10) &  Gmask) << 5;
-			dstPixelsB |= ((srcPixelB >> 19) & RBmask) << 11;
+			dstPixelsB  = ((srcPixelB >>  3) & rb_mask);
+			dstPixelsB |= ((srcPixelB >> 10) &  g_mask) << 5;
+			dstPixelsB |= ((srcPixelB >> 19) & rb_mask) << 11;
 
 			// little-endian mode only
 			*((uint32_t*) dstPtr) = dstPixelsA | (dstPixelsB << 16);
@@ -1287,9 +1287,9 @@ neon_CompositeSrc_24_16 (
 
 			// ARM is really good at shift-then-ALU ops.
 			// This block should end up as three shift-ANDs and two shift-ORs.
-			uint32_t tmpBlue  = (srcPixel >>  3) & RBmask;
-			uint32_t tmpGreen = (srcPixel >> 10) & Gmask;
-			uint32_t tmpRed   = (srcPixel >> 19) & RBmask;
+			uint32_t tmpBlue  = (srcPixel >>  3) & rb_mask;
+			uint32_t tmpGreen = (srcPixel >> 10) & g_mask;
+			uint32_t tmpRed   = (srcPixel >> 19) & rb_mask;
 			uint16_t dstPixel = (tmpRed << 11) | (tmpGreen << 5) | tmpBlue;
 
 			*dstPtr++ = dstPixel;
