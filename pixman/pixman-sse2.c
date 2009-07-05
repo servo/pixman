@@ -2317,7 +2317,7 @@ create_mask_2x32_128 (uint32_t mask0, uint32_t mask1)
 /* SSE2 code patch for fbcompose.c */
 
 static void
-sse2combine_over_u (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_over_u (pixman_implementation_t *imp, pixman_op_t op,
 		  uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
     core_combine_over_u_sse2 (dst, src, mask, width);
@@ -2325,7 +2325,7 @@ sse2combine_over_u (pixman_implementation_t *imp, pixman_op_t op,
 }
 
 static void
-sse2combine_over_reverse_u (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_over_reverse_u (pixman_implementation_t *imp, pixman_op_t op,
 			 uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
     core_combine_over_reverse_u_sse2 (dst, src, mask, width);
@@ -2333,7 +2333,7 @@ sse2combine_over_reverse_u (pixman_implementation_t *imp, pixman_op_t op,
 }
 
 static void
-sse2combine_in_u (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_in_u (pixman_implementation_t *imp, pixman_op_t op,
 		uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
     core_combine_in_u_sse2 (dst, src, mask, width);
@@ -2341,7 +2341,7 @@ sse2combine_in_u (pixman_implementation_t *imp, pixman_op_t op,
 }
 
 static void
-sse2combine_in_reverse_u (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_in_reverse_u (pixman_implementation_t *imp, pixman_op_t op,
 		       uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
     core_combine_reverse_in_u_sse2 (dst, src, mask, width);
@@ -2349,7 +2349,7 @@ sse2combine_in_reverse_u (pixman_implementation_t *imp, pixman_op_t op,
 }
 
 static void
-sse2combine_out_u (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_out_u (pixman_implementation_t *imp, pixman_op_t op,
 		 uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
     core_combine_out_u_sse2 (dst, src, mask, width);
@@ -2357,7 +2357,7 @@ sse2combine_out_u (pixman_implementation_t *imp, pixman_op_t op,
 }
 
 static void
-sse2combine_out_reverse_u (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_out_reverse_u (pixman_implementation_t *imp, pixman_op_t op,
 			uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
     core_combine_reverse_out_u_sse2 (dst, src, mask, width);
@@ -2365,7 +2365,7 @@ sse2combine_out_reverse_u (pixman_implementation_t *imp, pixman_op_t op,
 }
 
 static void
-sse2combine_atop_u (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_atop_u (pixman_implementation_t *imp, pixman_op_t op,
 		  uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
     core_combine_atop_u_sse2 (dst, src, mask, width);
@@ -2373,7 +2373,7 @@ sse2combine_atop_u (pixman_implementation_t *imp, pixman_op_t op,
 }
 
 static void
-sse2combine_atop_reverse_u (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_atop_reverse_u (pixman_implementation_t *imp, pixman_op_t op,
 			 uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
     core_combine_reverse_atop_u_sse2 (dst, src, mask, width);
@@ -2381,7 +2381,7 @@ sse2combine_atop_reverse_u (pixman_implementation_t *imp, pixman_op_t op,
 }
 
 static void
-sse2combine_xor_u (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_xor_u (pixman_implementation_t *imp, pixman_op_t op,
 		 uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
     core_combine_xor_u_sse2 (dst, src, mask, width);
@@ -2389,7 +2389,7 @@ sse2combine_xor_u (pixman_implementation_t *imp, pixman_op_t op,
 }
 
 static void
-sse2combine_add_u (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_add_u (pixman_implementation_t *imp, pixman_op_t op,
 		 uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
     core_combine_add_u_sse2 (dst, src, mask, width);
@@ -2397,7 +2397,7 @@ sse2combine_add_u (pixman_implementation_t *imp, pixman_op_t op,
 }
 
 static void
-sse2combine_saturate_u (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_saturate_u (pixman_implementation_t *imp, pixman_op_t op,
 		      uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
     core_combine_saturate_u_sse2 (dst, src, mask, width);
@@ -2405,7 +2405,7 @@ sse2combine_saturate_u (pixman_implementation_t *imp, pixman_op_t op,
 }
 
 static void
-sse2combine_src_c (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_src_c (pixman_implementation_t *imp, pixman_op_t op,
 		 uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
     core_combine_src_c_sse2 (dst, src, mask, width);
@@ -2413,7 +2413,7 @@ sse2combine_src_c (pixman_implementation_t *imp, pixman_op_t op,
 }
 
 static void
-sse2combine_over_c (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_over_c (pixman_implementation_t *imp, pixman_op_t op,
 		  uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
     core_combine_over_c_sse2 (dst, src, mask, width);
@@ -2421,7 +2421,7 @@ sse2combine_over_c (pixman_implementation_t *imp, pixman_op_t op,
 }
 
 static void
-sse2combine_over_reverse_c (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_over_reverse_c (pixman_implementation_t *imp, pixman_op_t op,
 			 uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
     core_combine_over_reverse_c_sse2 (dst, src, mask, width);
@@ -2429,7 +2429,7 @@ sse2combine_over_reverse_c (pixman_implementation_t *imp, pixman_op_t op,
 }
 
 static void
-sse2combine_in_c (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_in_c (pixman_implementation_t *imp, pixman_op_t op,
 		uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
     core_combine_in_c_sse2 (dst, src, mask, width);
@@ -2437,7 +2437,7 @@ sse2combine_in_c (pixman_implementation_t *imp, pixman_op_t op,
 }
 
 static void
-sse2combine_in_reverse_c (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_in_reverse_c (pixman_implementation_t *imp, pixman_op_t op,
 		       uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
     core_combine_in_reverse_c_sse2 (dst, src, mask, width);
@@ -2445,7 +2445,7 @@ sse2combine_in_reverse_c (pixman_implementation_t *imp, pixman_op_t op,
 }
 
 static void
-sse2combine_out_c (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_out_c (pixman_implementation_t *imp, pixman_op_t op,
 		 uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
     core_combine_out_c_sse2 (dst, src, mask, width);
@@ -2453,7 +2453,7 @@ sse2combine_out_c (pixman_implementation_t *imp, pixman_op_t op,
 }
 
 static void
-sse2combine_out_reverse_c (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_out_reverse_c (pixman_implementation_t *imp, pixman_op_t op,
 			uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
     core_combine_out_reverse_c_sse2 (dst, src, mask, width);
@@ -2461,7 +2461,7 @@ sse2combine_out_reverse_c (pixman_implementation_t *imp, pixman_op_t op,
 }
 
 static void
-sse2combine_atop_c (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_atop_c (pixman_implementation_t *imp, pixman_op_t op,
 		  uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
     core_combine_atop_c_sse2 (dst, src, mask, width);
@@ -2469,7 +2469,7 @@ sse2combine_atop_c (pixman_implementation_t *imp, pixman_op_t op,
 }
 
 static void
-sse2combine_atop_reverse_c (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_atop_reverse_c (pixman_implementation_t *imp, pixman_op_t op,
 			 uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
     core_combine_reverse_atop_c_sse2 (dst, src, mask, width);
@@ -2477,7 +2477,7 @@ sse2combine_atop_reverse_c (pixman_implementation_t *imp, pixman_op_t op,
 }
 
 static void
-sse2combine_xor_c (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_xor_c (pixman_implementation_t *imp, pixman_op_t op,
 		 uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
     core_combine_xor_c_sse2 (dst, src, mask, width);
@@ -2485,7 +2485,7 @@ sse2combine_xor_c (pixman_implementation_t *imp, pixman_op_t op,
 }
 
 static void
-sse2combine_add_c (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_add_c (pixman_implementation_t *imp, pixman_op_t op,
 		 uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
     core_combine_add_c_sse2 (dst, src, mask, width);
@@ -5086,30 +5086,30 @@ _pixman_implementation_create_sse2 (void)
     /* Set up function pointers */
     
     /* SSE code patch for fbcompose.c */
-    imp->combine_32[PIXMAN_OP_OVER] = sse2combine_over_u;
-    imp->combine_32[PIXMAN_OP_OVER_REVERSE] = sse2combine_over_reverse_u;
-    imp->combine_32[PIXMAN_OP_IN] = sse2combine_in_u;
-    imp->combine_32[PIXMAN_OP_IN_REVERSE] = sse2combine_in_reverse_u;
-    imp->combine_32[PIXMAN_OP_OUT] = sse2combine_out_u;
-    imp->combine_32[PIXMAN_OP_OUT_REVERSE] = sse2combine_out_reverse_u;
-    imp->combine_32[PIXMAN_OP_ATOP] = sse2combine_atop_u;
-    imp->combine_32[PIXMAN_OP_ATOP_REVERSE] = sse2combine_atop_reverse_u;
-    imp->combine_32[PIXMAN_OP_XOR] = sse2combine_xor_u;
-    imp->combine_32[PIXMAN_OP_ADD] = sse2combine_add_u;
+    imp->combine_32[PIXMAN_OP_OVER] = sse2_combine_over_u;
+    imp->combine_32[PIXMAN_OP_OVER_REVERSE] = sse2_combine_over_reverse_u;
+    imp->combine_32[PIXMAN_OP_IN] = sse2_combine_in_u;
+    imp->combine_32[PIXMAN_OP_IN_REVERSE] = sse2_combine_in_reverse_u;
+    imp->combine_32[PIXMAN_OP_OUT] = sse2_combine_out_u;
+    imp->combine_32[PIXMAN_OP_OUT_REVERSE] = sse2_combine_out_reverse_u;
+    imp->combine_32[PIXMAN_OP_ATOP] = sse2_combine_atop_u;
+    imp->combine_32[PIXMAN_OP_ATOP_REVERSE] = sse2_combine_atop_reverse_u;
+    imp->combine_32[PIXMAN_OP_XOR] = sse2_combine_xor_u;
+    imp->combine_32[PIXMAN_OP_ADD] = sse2_combine_add_u;
     
-    imp->combine_32[PIXMAN_OP_SATURATE] = sse2combine_saturate_u;
+    imp->combine_32[PIXMAN_OP_SATURATE] = sse2_combine_saturate_u;
     
-    imp->combine_32_ca[PIXMAN_OP_SRC] = sse2combine_src_c;
-    imp->combine_32_ca[PIXMAN_OP_OVER] = sse2combine_over_c;
-    imp->combine_32_ca[PIXMAN_OP_OVER_REVERSE] = sse2combine_over_reverse_c;
-    imp->combine_32_ca[PIXMAN_OP_IN] = sse2combine_in_c;
-    imp->combine_32_ca[PIXMAN_OP_IN_REVERSE] = sse2combine_in_reverse_c;
-    imp->combine_32_ca[PIXMAN_OP_OUT] = sse2combine_out_c;
-    imp->combine_32_ca[PIXMAN_OP_OUT_REVERSE] = sse2combine_out_reverse_c;
-    imp->combine_32_ca[PIXMAN_OP_ATOP] = sse2combine_atop_c;
-    imp->combine_32_ca[PIXMAN_OP_ATOP_REVERSE] = sse2combine_atop_reverse_c;
-    imp->combine_32_ca[PIXMAN_OP_XOR] = sse2combine_xor_c;
-    imp->combine_32_ca[PIXMAN_OP_ADD] = sse2combine_add_c;
+    imp->combine_32_ca[PIXMAN_OP_SRC] = sse2_combine_src_c;
+    imp->combine_32_ca[PIXMAN_OP_OVER] = sse2_combine_over_c;
+    imp->combine_32_ca[PIXMAN_OP_OVER_REVERSE] = sse2_combine_over_reverse_c;
+    imp->combine_32_ca[PIXMAN_OP_IN] = sse2_combine_in_c;
+    imp->combine_32_ca[PIXMAN_OP_IN_REVERSE] = sse2_combine_in_reverse_c;
+    imp->combine_32_ca[PIXMAN_OP_OUT] = sse2_combine_out_c;
+    imp->combine_32_ca[PIXMAN_OP_OUT_REVERSE] = sse2_combine_out_reverse_c;
+    imp->combine_32_ca[PIXMAN_OP_ATOP] = sse2_combine_atop_c;
+    imp->combine_32_ca[PIXMAN_OP_ATOP_REVERSE] = sse2_combine_atop_reverse_c;
+    imp->combine_32_ca[PIXMAN_OP_XOR] = sse2_combine_xor_c;
+    imp->combine_32_ca[PIXMAN_OP_ADD] = sse2_combine_add_c;
     
     imp->composite = sse2_composite;
     imp->blt = sse2_blt;
