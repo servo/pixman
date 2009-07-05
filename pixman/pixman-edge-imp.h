@@ -20,7 +20,7 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef rasterizeSpan
+#ifndef rasterize_span
 #endif
 
 static void
@@ -50,7 +50,7 @@ RASTERIZE_EDGES (pixman_image_t  *image,
 #if N_BITS == 1
 	/* For the non-antialiased case, round the coordinates up, in effect
 	 * sampling the center of the pixel. (The AA case does a similar 
-	 * adjustment in RenderSamplesX) */
+	 * adjustment in RENDER_SAMPLES_X) */
 	lx += X_FRAC_FIRST(1);
 	rx += X_FRAC_FIRST(1);
 #endif
@@ -94,7 +94,7 @@ RASTERIZE_EDGES (pixman_image_t  *image,
 		(((32 - (x)) & 0x1f) ?					\
 		 SCREEN_SHIFT_LEFT (0xffffffff, (32 - (x)) & 0x1f) : 0)
 		
-#define FbMaskBits(x,w,l,n,r) {						\
+#define MASK_BITS(x,w,l,n,r) {						\
 		    n = (w);						\
 		    r = RIGHT_MASK ((x) + n);				\
 		    l = LEFT_MASK (x);					\
@@ -119,7 +119,7 @@ RASTERIZE_EDGES (pixman_image_t  *image,
 		a += x >> 5;
 		x &= 0x1f;
 		
-		FbMaskBits (x, width, startmask, nmiddle, endmask);
+		MASK_BITS (x, width, startmask, nmiddle, endmask);
 
 		if (startmask) {
 		    WRITE(image, a, READ(image, a) | startmask);
@@ -137,8 +137,8 @@ RASTERIZE_EDGES (pixman_image_t  *image,
 		int     rxs;
 
 		/* Sample coverage for edge pixels */
-		lxs = RenderSamplesX (lx, N_BITS);
-		rxs = RenderSamplesX (rx, N_BITS);
+		lxs = RENDER_SAMPLES_X (lx, N_BITS);
+		rxs = RENDER_SAMPLES_X (rx, N_BITS);
 
 		/* Add coverage across row */
 		if (lxi == rxi)
@@ -183,4 +183,4 @@ RASTERIZE_EDGES (pixman_image_t  *image,
     }
 }
 
-#undef rasterizeSpan
+#undef rasterize_span

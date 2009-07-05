@@ -398,7 +398,7 @@ typedef struct pixman_region16		pixman_region16_t;
 
 struct pixman_region16_data {
     long		size;
-    long		numRects;
+    long		num_rects;
 /*  pixman_box16_t	rects[size];   in memory but not explicitly declared */
 };
 
@@ -455,10 +455,10 @@ void                    pixman_region_translate           (pixman_region16_t    
 							   int                     y);
 pixman_bool_t           pixman_region_copy                (pixman_region16_t      *dest,
 							   pixman_region16_t      *source);
-pixman_bool_t           pixman_region_intersect           (pixman_region16_t      *newReg,
+pixman_bool_t           pixman_region_intersect           (pixman_region16_t      *new_reg,
 							   pixman_region16_t      *reg1,
 							   pixman_region16_t      *reg2);
-pixman_bool_t           pixman_region_union               (pixman_region16_t      *newReg,
+pixman_bool_t           pixman_region_union               (pixman_region16_t      *new_reg,
 							   pixman_region16_t      *reg1,
 							   pixman_region16_t      *reg2);
 pixman_bool_t           pixman_region_union_rect          (pixman_region16_t      *dest,
@@ -467,12 +467,12 @@ pixman_bool_t           pixman_region_union_rect          (pixman_region16_t    
 							   int                     y,
 							   unsigned int            width,
 							   unsigned int            height);
-pixman_bool_t           pixman_region_subtract            (pixman_region16_t      *regD,
-							   pixman_region16_t      *regM,
-							   pixman_region16_t      *regS);
-pixman_bool_t           pixman_region_inverse             (pixman_region16_t      *newReg,
+pixman_bool_t           pixman_region_subtract            (pixman_region16_t      *reg_d,
+							   pixman_region16_t      *reg_m,
+							   pixman_region16_t      *reg_s);
+pixman_bool_t           pixman_region_inverse             (pixman_region16_t      *new_reg,
 							   pixman_region16_t      *reg1,
-							   pixman_box16_t         *invRect);
+							   pixman_box16_t         *inv_rect);
 pixman_bool_t           pixman_region_contains_point      (pixman_region16_t      *region,
 							   int                     x,
 							   int                     y,
@@ -500,7 +500,7 @@ typedef struct pixman_region32		pixman_region32_t;
 
 struct pixman_region32_data {
     long		size;
-    long		numRects;
+    long		num_rects;
 /*  pixman_box32_t	rects[size];   in memory but not explicitly declared */
 };
 
@@ -542,10 +542,10 @@ void                    pixman_region32_translate          (pixman_region32_t *r
 							    int                y);
 pixman_bool_t           pixman_region32_copy               (pixman_region32_t *dest,
 							    pixman_region32_t *source);
-pixman_bool_t           pixman_region32_intersect          (pixman_region32_t *newReg,
+pixman_bool_t           pixman_region32_intersect          (pixman_region32_t *new_reg,
 							    pixman_region32_t *reg1,
 							    pixman_region32_t *reg2);
-pixman_bool_t           pixman_region32_union              (pixman_region32_t *newReg,
+pixman_bool_t           pixman_region32_union              (pixman_region32_t *new_reg,
 							    pixman_region32_t *reg1,
 							    pixman_region32_t *reg2);
 pixman_bool_t           pixman_region32_union_rect         (pixman_region32_t *dest,
@@ -554,12 +554,12 @@ pixman_bool_t           pixman_region32_union_rect         (pixman_region32_t *d
 							    int                y,
 							    unsigned int       width,
 							    unsigned int       height);
-pixman_bool_t           pixman_region32_subtract           (pixman_region32_t *regD,
-							    pixman_region32_t *regM,
-							    pixman_region32_t *regS);
-pixman_bool_t           pixman_region32_inverse            (pixman_region32_t *newReg,
+pixman_bool_t           pixman_region32_subtract           (pixman_region32_t *reg_d,
+							    pixman_region32_t *reg_m,
+							    pixman_region32_t *reg_s);
+pixman_bool_t           pixman_region32_inverse            (pixman_region32_t *new_reg,
 							    pixman_region32_t *reg1,
-							    pixman_box32_t    *invRect);
+							    pixman_box32_t    *inv_rect);
 pixman_bool_t           pixman_region32_contains_point     (pixman_region32_t *region,
 							    int                x,
 							    int                y,

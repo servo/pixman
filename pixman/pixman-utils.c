@@ -386,10 +386,10 @@ walk_region_internal (pixman_implementation_t *imp,
 		      int16_t dest_y,
 		      uint16_t width,
 		      uint16_t height,
-		      pixman_bool_t srcRepeat,
-		      pixman_bool_t maskRepeat,
+		      pixman_bool_t src_repeat,
+		      pixman_bool_t mask_repeat,
 		      pixman_region32_t *region,
-		      pixman_composite_func_t compositeRect)
+		      pixman_composite_func_t composite_rect)
 {
     int n;
     const pixman_box32_t *pbox;
@@ -411,13 +411,13 @@ walk_region_internal (pixman_implementation_t *imp,
 	    x_msk = pbox->x1 - dest_x + mask_x;
 	    x_dst = pbox->x1;
 	    
-	    if (maskRepeat)
+	    if (mask_repeat)
 	    {
 		y_msk = MOD (y_msk, mask_image->bits.height);
 		if (h_this > mask_image->bits.height - y_msk)
 		    h_this = mask_image->bits.height - y_msk;
 	    }
-	    if (srcRepeat)
+	    if (src_repeat)
 	    {
 		y_src = MOD (y_src, src_image->bits.height);
 		if (h_this > src_image->bits.height - y_src)
@@ -426,19 +426,19 @@ walk_region_internal (pixman_implementation_t *imp,
 	    while (w)
 	    {
 		w_this = w;
-		if (maskRepeat)
+		if (mask_repeat)
 		{
 		    x_msk = MOD (x_msk, mask_image->bits.width);
 		    if (w_this > mask_image->bits.width - x_msk)
 			w_this = mask_image->bits.width - x_msk;
 		}
-		if (srcRepeat)
+		if (src_repeat)
 		{
 		    x_src = MOD (x_src, src_image->bits.width);
 		    if (w_this > src_image->bits.width - x_src)
 			w_this = src_image->bits.width - x_src;
 		}
-		(*compositeRect) (imp,
+		(*composite_rect) (imp,
 				  op, src_image, mask_image, dst_image,
 				  x_src, y_src, x_msk, y_msk, x_dst, y_dst,
 				  w_this, h_this);
@@ -470,7 +470,7 @@ _pixman_walk_composite_region (pixman_implementation_t *imp,
 			       int16_t dest_y,
 			       uint16_t width,
 			       uint16_t height,
-			       pixman_composite_func_t compositeRect)
+			       pixman_composite_func_t composite_rect)
 {
     pixman_region32_t region;
     
@@ -484,7 +484,7 @@ _pixman_walk_composite_region (pixman_implementation_t *imp,
 			      src_x, src_y, mask_x, mask_y, dest_x, dest_y,
 			      width, height, FALSE, FALSE,
 			      &region,
-			      compositeRect);
+			      composite_rect);
     }
 
     pixman_region32_fini (&region);

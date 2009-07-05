@@ -202,7 +202,7 @@ _pixman_image_get_scanline_generic_64  (pixman_image_t *pict,
 					int             width,
 					uint32_t       *buffer,
 					const uint32_t *mask,
-					uint32_t        maskBits);
+					uint32_t        mask_bits);
 
 source_pict_class_t
 _pixman_image_classify (pixman_image_t *image,
@@ -320,7 +320,7 @@ _pixman_gradient_walker_pixel (pixman_gradient_walker_t       *walker,
 #define X_FRAC_FIRST(n)	(STEP_X_SMALL(n) / 2)
 #define X_FRAC_LAST(n)	(X_FRAC_FIRST(n) + (N_X_FRAC(n) - 1) * STEP_X_SMALL(n))
 
-#define RenderSamplesX(x,n)	((n) == 1 ? 0 : (pixman_fixed_frac (x) + X_FRAC_FIRST(n)) / STEP_X_SMALL(n))
+#define RENDER_SAMPLES_X(x,n)	((n) == 1 ? 0 : (pixman_fixed_frac (x) + X_FRAC_FIRST(n)) / STEP_X_SMALL(n))
 
 void
 pixman_rasterize_edges_accessors (pixman_image_t *image,
@@ -573,7 +573,7 @@ _pixman_walk_composite_region (pixman_implementation_t *imp,
 			       int16_t dest_y,
 			       uint16_t width,
 			       uint16_t height,
-			       pixman_composite_func_t compositeRect);
+			       pixman_composite_func_t composite_rect);
 
 void
 pixman_expand (uint64_t *dst, const uint32_t *src, pixman_format_code_t, int width);

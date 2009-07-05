@@ -55,20 +55,20 @@ general_composite_rect  (pixman_implementation_t *imp,
 			 int32_t                  height)
 {
     uint8_t stack_scanline_buffer[SCANLINE_BUFFER_LENGTH * 3];
-    const pixman_format_code_t srcFormat = src->type == BITS ? src->bits.format : 0;
-    const pixman_format_code_t maskFormat = mask && mask->type == BITS ? mask->bits.format : 0;
-    const pixman_format_code_t destFormat = dest->type == BITS ? dest->bits.format : 0;
-    const int srcWide = PIXMAN_FORMAT_IS_WIDE(srcFormat);
-    const int maskWide = mask && PIXMAN_FORMAT_IS_WIDE(maskFormat);
-    const int destWide = PIXMAN_FORMAT_IS_WIDE(destFormat);
-    const int wide = srcWide || maskWide || destWide;
+    const pixman_format_code_t src_format = src->type == BITS ? src->bits.format : 0;
+    const pixman_format_code_t mask_format = mask && mask->type == BITS ? mask->bits.format : 0;
+    const pixman_format_code_t dest_format = dest->type == BITS ? dest->bits.format : 0;
+    const int src_wide = PIXMAN_FORMAT_IS_WIDE(src_format);
+    const int mask_wide = mask && PIXMAN_FORMAT_IS_WIDE(mask_format);
+    const int dest_wide = PIXMAN_FORMAT_IS_WIDE(dest_format);
+    const int wide = src_wide || mask_wide || dest_wide;
     const int Bpp = wide ? 8 : 4;
     uint8_t *scanline_buffer = stack_scanline_buffer;
     uint8_t *src_buffer, *mask_buffer, *dest_buffer;
-    fetch_scanline_t fetchSrc = NULL, fetchMask = NULL, fetchDest = NULL;
+    fetch_scanline_t fetch_src = NULL, fetch_mask = NULL, fetch_dest = NULL;
     pixman_combine_32_func_t compose;
     store_scanline_t store;
-    source_pict_class_t srcClass, maskClass;
+    source_pict_class_t src_class, mask_class;
     pixman_bool_t component_alpha;
     uint32_t *bits;
     int32_t stride;
@@ -86,38 +86,38 @@ general_composite_rect  (pixman_implementation_t *imp,
     mask_buffer = src_buffer + width * Bpp;
     dest_buffer = mask_buffer + width * Bpp;
     
-    srcClass = _pixman_image_classify (src,
+    src_class = _pixman_image_classify (src,
 				       src_x, src_y,
 				       width, height);
     
-    maskClass = SOURCE_IMAGE_CLASS_UNKNOWN;
+    mask_class = SOURCE_IMAGE_CLASS_UNKNOWN;
     if (mask)
     {
-	maskClass = _pixman_image_classify (mask,
+	mask_class = _pixman_image_classify (mask,
 					    src_x, src_y,
 					    width, height);
     }
     
     if (op == PIXMAN_OP_CLEAR)
-        fetchSrc = NULL;
+        fetch_src = NULL;
     else if (wide)
-	fetchSrc = _pixman_image_get_scanline_64;
+	fetch_src = _pixman_image_get_scanline_64;
     else
-	fetchSrc = _pixman_image_get_scanline_32;
+	fetch_src = _pixman_image_get_scanline_32;
     
     if (!mask || op == PIXMAN_OP_CLEAR)
-	fetchMask = NULL;
+	fetch_mask = NULL;
     else if (wide)
-	fetchMask = _pixman_image_get_scanline_64;
+	fetch_mask = _pixman_image_get_scanline_64;
     else
-	fetchMask = _pixman_image_get_scanline_32;
+	fetch_mask = _pixman_image_get_scanline_32;
     
     if (op == PIXMAN_OP_CLEAR || op == PIXMAN_OP_SRC)
-	fetchDest = NULL;
+	fetch_dest = NULL;
     else if (wide)
-	fetchDest = _pixman_image_get_scanline_64;
+	fetch_dest = _pixman_image_get_scanline_64;
     else
-	fetchDest = _pixman_image_get_scanline_32;
+	fetch_dest = _pixman_image_get_scanline_32;
 
     if (wide)
 	store = _pixman_image_store_scanline_64;
@@ -150,8 +150,8 @@ general_composite_rect  (pixman_implementation_t *imp,
     }
     
     component_alpha =
-	fetchSrc			&&
-	fetchMask			&&
+	fetch_src			&&
+	fetch_mask			&&
 	mask				&&
 	mask->common.type == BITS	&&
 	mask->common.component_alpha	&&
@@ -175,49 +175,49 @@ general_composite_rect  (pixman_implementation_t *imp,
     if (!compose)
 	return;
     
-    if (!fetchMask)
+    if (!fetch_mask)
 	mask_buffer = NULL;
     
     for (i = 0; i < height; ++i)
     {
 	/* fill first half of scanline with source */
-	if (fetchSrc)
+	if (fetch_src)
 	{
-	    if (fetchMask)
+	    if (fetch_mask)
 	    {
 		/* fetch mask before source so that fetching of
 		   source can be optimized */
-		fetchMask (mask, mask_x, mask_y + i,
+		fetch_mask (mask, mask_x, mask_y + i,
 			   width, (void *)mask_buffer, 0, 0);
 		
-		if (maskClass == SOURCE_IMAGE_CLASS_HORIZONTAL)
-		    fetchMask = NULL;
+		if (mask_class == SOURCE_IMAGE_CLASS_HORIZONTAL)
+		    fetch_mask = NULL;
 	    }
 	    
-	    if (srcClass == SOURCE_IMAGE_CLASS_HORIZONTAL)
+	    if (src_class == SOURCE_IMAGE_CLASS_HORIZONTAL)
 	    {
-		fetchSrc (src, src_x, src_y + i,
+		fetch_src (src, src_x, src_y + i,
 			  width, (void *)src_buffer, 0, 0);
-		fetchSrc = NULL;
+		fetch_src = NULL;
 	    }
 	    else
 	    {
-		fetchSrc (src, src_x, src_y + i,
+		fetch_src (src, src_x, src_y + i,
 			  width, (void *)src_buffer, (void *)mask_buffer,
 			  0xffffffff);
 	    }
 	}
-	else if (fetchMask)
+	else if (fetch_mask)
 	{
-	    fetchMask (mask, mask_x, mask_y + i,
+	    fetch_mask (mask, mask_x, mask_y + i,
 		       width, (void *)mask_buffer, 0, 0);
 	}
 	
 	if (store)
 	{
 	    /* fill dest into second half of scanline */
-	    if (fetchDest)
-		fetchDest (dest, dest_x, dest_y + i,
+	    if (fetch_dest)
+		fetch_dest (dest, dest_x, dest_y + i,
 			   width, (void *)dest_buffer, 0, 0);
 	    
 	    /* blend */

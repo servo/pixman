@@ -490,7 +490,7 @@ bits_image_fetch_filtered (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 static void
 bits_image_fetch_transformed (pixman_image_t * pict, int x, int y,
 			      int width, uint32_t *buffer,
-			      const uint32_t *mask, uint32_t maskBits)
+			      const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t     *bits;
     int32_t    stride;
@@ -585,7 +585,7 @@ bits_image_fetch_transformed (pixman_image_t * pict, int x, int y,
 static void
 bits_image_fetch_solid_32 (pixman_image_t * image, int x, int y,
 			   int width, uint32_t *buffer,
-			   const uint32_t *mask, uint32_t maskBits)
+			   const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t color[2];
     uint32_t *end;
@@ -696,7 +696,7 @@ bits_image_fetch_untransformed_repeat_normal (bits_image_t *image, pixman_bool_t
 static void
 bits_image_fetch_untransformed_32 (pixman_image_t * image, int x, int y,
 				   int width, uint32_t *buffer,
-				   const uint32_t *mask, uint32_t maskBits)
+				   const uint32_t *mask, uint32_t mask_bits)
 {
     if (image->common.repeat == PIXMAN_REPEAT_NONE)
     {

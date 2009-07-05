@@ -34,9 +34,9 @@
 typedef struct
 {
     pixman_op_t			op;
-    pixman_op_t			opSrcDstOpaque;
-    pixman_op_t			opSrcOpaque;
-    pixman_op_t			opDstOpaque;
+    pixman_op_t			op_src_dst_opaque;
+    pixman_op_t			op_src_opaque;
+    pixman_op_t			op_dst_opaque;
 } optimized_operator_info_t;
 
 static const optimized_operator_info_t optimized_operators[] =
@@ -92,11 +92,11 @@ pixman_optimize_operator(pixman_op_t op, pixman_image_t *src_image, pixman_image
         return op;
 
     if(is_source_opaque && is_dest_opaque)
-        return info->opSrcDstOpaque;
+        return info->op_src_dst_opaque;
     else if(is_source_opaque)
-        return info->opSrcOpaque;
+        return info->op_src_opaque;
     else if(is_dest_opaque)
-        return info->opDstOpaque;
+        return info->op_dst_opaque;
 
     return op;
 

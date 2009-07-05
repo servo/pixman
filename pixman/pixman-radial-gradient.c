@@ -33,7 +33,7 @@
 
 static void
 radial_gradient_get_scanline_32 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
-				 const uint32_t *mask, uint32_t maskBits)
+				 const uint32_t *mask, uint32_t mask_bits)
 {
     /*
      * In the radial gradient problem we are given two circles (c₁,r₁) and
@@ -185,7 +185,7 @@ radial_gradient_get_scanline_32 (pixman_image_t *image, int x, int y, int width,
     
     if (affine) {
 	while (buffer < end) {
-	    if (!mask || *mask++ & maskBits)
+	    if (!mask || *mask++ & mask_bits)
 	    {
 		double pdx, pdy;
 		double B, C;
@@ -222,7 +222,7 @@ radial_gradient_get_scanline_32 (pixman_image_t *image, int x, int y, int width,
     } else {
 	/* projective */
 	while (buffer < end) {
-	    if (!mask || *mask++ & maskBits)
+	    if (!mask || *mask++ & mask_bits)
 	    {
 		double pdx, pdy;
 		double B, C;

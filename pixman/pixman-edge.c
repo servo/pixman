@@ -190,8 +190,8 @@ rasterize_edges_8 (pixman_image_t       *image,
 	    rxi = pixman_fixed_to_int (rx);
 
             /* Sample coverage for edge pixels */
-            lxs = RenderSamplesX (lx, 8);
-            rxs = RenderSamplesX (rx, 8);
+            lxs = RENDER_SAMPLES_X (lx, 8);
+            rxs = RENDER_SAMPLES_X (rx, 8);
 
             /* Add coverage across row */
 	    if (lxi == rxi)

@@ -146,7 +146,7 @@ _pixman_gradient_walker_reset (pixman_gradient_walker_t       *walker,
 	right_x += (pos - x);
 	break;
 	
-    default:  /* RepeatNone */
+    default:  /* REPEAT_NONE */
 	for (n = 0; n < count; n++)
 	    if (pos < stops[n].x)
 		break;

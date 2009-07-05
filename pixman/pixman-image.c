@@ -64,7 +64,7 @@ _pixman_init_gradient (gradient_t     *gradient,
 void
 _pixman_image_get_scanline_generic_64 (pixman_image_t * pict, int x, int y,
 				       int width, uint32_t *buffer,
-				       const uint32_t *mask, uint32_t maskBits)
+				       const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t *mask8 = NULL;
 
@@ -80,7 +80,7 @@ _pixman_image_get_scanline_generic_64 (pixman_image_t * pict, int x, int y,
 
     // Fetch the source image into the first half of buffer.
     _pixman_image_get_scanline_32 (pict, x, y, width, (uint32_t*)buffer, mask8,
-				   maskBits);
+				   mask_bits);
 
     // Expand from 32bpp to 64bpp in place.
     pixman_expand ((uint64_t *)buffer, buffer, PIXMAN_a8r8g8b8, width);

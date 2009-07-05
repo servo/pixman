@@ -2638,22 +2638,22 @@ store_scanline_g1 (bits_image_t *image,
 static void
 store_scanline_generic_64 (bits_image_t *image, int x, int y, int width, const uint32_t *values)
 {
-    uint32_t *argb8Pixels;
+    uint32_t *argb8_pixels;
 
     assert(image->common.type == BITS);
 
-    argb8Pixels = pixman_malloc_ab (width, sizeof(uint32_t));
-    if (!argb8Pixels)
+    argb8_pixels = pixman_malloc_ab (width, sizeof(uint32_t));
+    if (!argb8_pixels)
 	return;
 
     /* Contract the scanline.  We could do this in place if values weren't
      * const.
      */
-    pixman_contract(argb8Pixels, (uint64_t *)values, width);
+    pixman_contract(argb8_pixels, (uint64_t *)values, width);
     
-    image->store_scanline_raw_32 (image, x, y, width, argb8Pixels);
+    image->store_scanline_raw_32 (image, x, y, width, argb8_pixels);
 
-    free(argb8Pixels);
+    free(argb8_pixels);
 }
 
 /* Despite the type, this function expects both buffer and mask to be uint64_t */

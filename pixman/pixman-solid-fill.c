@@ -26,7 +26,7 @@
 
 static void
 solid_fill_get_scanline_32 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
-			    const uint32_t *mask, uint32_t maskBits)
+			    const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t *end = buffer + width;
     register uint32_t color = ((solid_fill_t *)image)->color;
