@@ -320,19 +320,19 @@ bits_image_fetch_bilinear_pixels (bits_image_t *image, uint32_t *buffer, int n_p
 	    idistx = 256 - distx;
 	    idisty = 256 - disty;
 
-#define FbGet8(v,i)   ((uint16_t) (uint8_t) ((v) >> i))
+#define GET8(v,i)   ((uint16_t) (uint8_t) ((v) >> i))
 	    
-	    ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
-	    fb = FbGet8(bl,0) * idistx + FbGet8(br,0) * distx;
+	    ft = GET8(tl,0) * idistx + GET8(tr,0) * distx;
+	    fb = GET8(bl,0) * idistx + GET8(br,0) * distx;
 	    r = (((ft * idisty + fb * disty) >> 16) & 0xff);
-	    ft = FbGet8(tl,8) * idistx + FbGet8(tr,8) * distx;
-	    fb = FbGet8(bl,8) * idistx + FbGet8(br,8) * distx;
+	    ft = GET8(tl,8) * idistx + GET8(tr,8) * distx;
+	    fb = GET8(bl,8) * idistx + GET8(br,8) * distx;
 	    r |= (((ft * idisty + fb * disty) >> 8) & 0xff00);
-	    ft = FbGet8(tl,16) * idistx + FbGet8(tr,16) * distx;
-	    fb = FbGet8(bl,16) * idistx + FbGet8(br,16) * distx;
+	    ft = GET8(tl,16) * idistx + GET8(tr,16) * distx;
+	    fb = GET8(bl,16) * idistx + GET8(br,16) * distx;
 	    r |= (((ft * idisty + fb * disty)) & 0xff0000);
-	    ft = FbGet8(tl,24) * idistx + FbGet8(tr,24) * distx;
-	    fb = FbGet8(bl,24) * idistx + FbGet8(br,24) * distx;
+	    ft = GET8(tl,24) * idistx + GET8(tr,24) * distx;
+	    fb = GET8(bl,24) * idistx + GET8(br,24) * distx;
 	    r |= (((ft * idisty + fb * disty) << 8) & 0xff000000);
 
 	    buffer[i++] = r;
