@@ -84,7 +84,7 @@ unpack_128_2x128 (__m128i data, __m128i* data_lo, __m128i* data_hi)
 }
 
 static force_inline __m128i
-unpack_565to8888 (__m128i lo)
+unpack_565_to_8888 (__m128i lo)
 {
     __m128i r, g, b, rb, t;
     
@@ -112,8 +112,8 @@ unpack_565_128_4x128 (__m128i data, __m128i* data0, __m128i* data1, __m128i* dat
     lo = _mm_unpacklo_epi16 (data, _mm_setzero_si128 ());
     hi = _mm_unpackhi_epi16 (data, _mm_setzero_si128 ());
 
-    lo = unpack_565to8888 (lo);
-    hi = unpack_565to8888 (hi);
+    lo = unpack_565_to_8888 (lo);
+    hi = unpack_565_to_8888 (hi);
 
     unpack_128_2x128 (lo, data0, data1);
     unpack_128_2x128 (hi, data2, data3);
@@ -329,7 +329,7 @@ load_128_unaligned (const __m128i* src)
 
 /* save 4 pixels using Write Combining memory on a 16-byte boundary aligned address */
 static force_inline void
-save128write_combining (__m128i* dst, __m128i data)
+save_128_write_combining (__m128i* dst, __m128i data)
 {
     _mm_stream_si128 (dst, data);
 }
