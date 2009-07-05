@@ -3889,8 +3889,6 @@ sse2_Composite_over_pixbuf_0565 (pixman_implementation_t *imp,
     _mm_empty();
 }
 
-/* "8888RevNP" is GdkPixbuf's format: ABGR, non premultiplied */
-
 /* -------------------------------------------------------------------------------------------------
  * fast_Composite_over_pixbuf_8888
  */
