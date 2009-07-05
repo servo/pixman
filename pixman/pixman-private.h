@@ -256,7 +256,7 @@ uint32_t
 _pixman_image_get_solid (pixman_image_t *image,
 			pixman_format_code_t format);
 
-#define fbComposeGetStart(pict,x,y,type,out_stride,line,mul) do {	\
+#define PIXMAN_IMAGE_GET_LINE(pict,x,y,type,out_stride,line,mul) do {	\
 	uint32_t	*__bits__;					\
 	int		__stride__;					\
 									\

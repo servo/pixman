@@ -1504,7 +1504,7 @@ vmx_CompositeOver_n_8888 (pixman_operator_t	op,
     if (src >> 24 == 0)
 	return;
 
-    fbComposeGetStart (dst_image, dest_x, dest_y, uint32_t, dstStride, dstLine, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint32_t, dstStride, dstLine, 1);
 
     while (height--)
     {
@@ -1538,7 +1538,7 @@ vmx_CompositeOver_n_0565 (pixman_operator_t	op,
     if (src >> 24 == 0)
 	return;
 
-    fbComposeGetStart (dst_image, dest_x, dest_y, uint16_t, dstStride, dstLine, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint16_t, dstStride, dstLine, 1);
 
     while (height--)
     {

@@ -51,8 +51,8 @@ arm_CompositeAdd_8000_8000 (
     uint16_t	w;
     uint8_t	s, d;
 
-    fbComposeGetStart (src_image, src_x, src_y, uint8_t, srcStride, srcLine, 1);
-    fbComposeGetStart (dst_image, dest_x, dest_y, uint8_t, dstStride, dstLine, 1);
+    PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint8_t, srcStride, srcLine, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint8_t, dstStride, dstLine, 1);
 
     while (height--)
     {
@@ -123,8 +123,8 @@ arm_composite_over_8888_8888 (
     uint32_t upper_component_mask = 0xff00ff00;
     uint32_t alpha_mask = 0xff;
 
-    fbComposeGetStart (dst_image, dest_x, dest_y, uint32_t, dstStride, dstLine, 1);
-    fbComposeGetStart (src_image, src_x, src_y, uint32_t, srcStride, srcLine, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint32_t, dstStride, dstLine, 1);
+    PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint32_t, srcStride, srcLine, 1);
 
     while (height--)
     {
@@ -216,8 +216,8 @@ arm_composite_over_8888_n_8888 (
     uint32_t component_half = 0x800080;
     uint32_t alpha_mask = 0xff;
 
-    fbComposeGetStart (dst_image, dest_x, dest_y, uint32_t, dstStride, dstLine, 1);
-    fbComposeGetStart (src_image, src_x, src_y, uint32_t, srcStride, srcLine, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint32_t, dstStride, dstLine, 1);
+    PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint32_t, srcStride, srcLine, 1);
 
     mask = _pixman_image_get_solid (mask_image, dst_image->bits.format);
     mask = (mask) >> 24;
@@ -336,8 +336,8 @@ arm_CompositeOver_n_8_8888 (
     uint32_t src_hi = (src >> 8) & component_mask;
     uint32_t src_lo = src & component_mask;
 
-    fbComposeGetStart (dst_image, dest_x, dest_y, uint32_t, dstStride, dstLine, 1);
-    fbComposeGetStart (mask_image, mask_x, mask_y, uint8_t, maskStride, maskLine, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint32_t, dstStride, dstLine, 1);
+    PIXMAN_IMAGE_GET_LINE (mask_image, mask_x, mask_y, uint8_t, maskStride, maskLine, 1);
 
     while (height--)
     {
