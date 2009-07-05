@@ -1052,13 +1052,13 @@ combineConjointInPart (comp1_t a, comp1_t b)
     return DIV_UNc(b,a);     /* b/a */
 }
 
-#define GetComp(v,i)   ((comp2_t) (comp1_t) ((v) >> i))
+#define GET_COMP(v,i)   ((comp2_t) (comp1_t) ((v) >> i))
 
-#define Add(x,y,i,t)   ((t) = GetComp(x,i) + GetComp(y,i),              \
+#define ADD(x,y,i,t)   ((t) = GET_COMP(x,i) + GET_COMP(y,i),              \
                         (comp4_t) ((comp1_t) ((t) | (0 - ((t) >> G_SHIFT)))) << (i))
 
-#define FbGen(x,y,i,ax,ay,t,u,v) ((t) = (MUL_UNc(GetComp(y,i),ay,(u)) + \
-					 MUL_UNc(GetComp(x,i),ax,(v))), \
+#define GENERIC(x,y,i,ax,ay,t,u,v) ((t) = (MUL_UNc(GET_COMP(y,i),ay,(u)) + \
+					 MUL_UNc(GET_COMP(x,i),ax,(v))), \
 				  	 (comp4_t) ((comp1_t) ((t) |		\
 					 (0 - ((t) >> G_SHIFT)))) << (i))
 
@@ -1103,10 +1103,10 @@ combineDisjointGeneralU (comp4_t *dest, const comp4_t *src, const comp4_t *mask,
             Fb = MASK;
             break;
         }
-        m = FbGen (s,d,0,Fa,Fb,t, u, v);
-        n = FbGen (s,d,G_SHIFT,Fa,Fb,t, u, v);
-        o = FbGen (s,d,R_SHIFT,Fa,Fb,t, u, v);
-        p = FbGen (s,d,A_SHIFT,Fa,Fb,t, u, v);
+        m = GENERIC (s,d,0,Fa,Fb,t, u, v);
+        n = GENERIC (s,d,G_SHIFT,Fa,Fb,t, u, v);
+        o = GENERIC (s,d,R_SHIFT,Fa,Fb,t, u, v);
+        p = GENERIC (s,d,A_SHIFT,Fa,Fb,t, u, v);
         s = m|n|o|p;
 	*(dest + i) = s;
     }
@@ -1225,10 +1225,10 @@ combineConjointGeneralU (comp4_t *dest, const comp4_t *src, const comp4_t *mask,
             Fb = MASK;
             break;
         }
-        m = FbGen (s,d,0,Fa,Fb,t, u, v);
-        n = FbGen (s,d,G_SHIFT,Fa,Fb,t, u, v);
-        o = FbGen (s,d,R_SHIFT,Fa,Fb,t, u, v);
-        p = FbGen (s,d,A_SHIFT,Fa,Fb,t, u, v);
+        m = GENERIC (s,d,0,Fa,Fb,t, u, v);
+        n = GENERIC (s,d,G_SHIFT,Fa,Fb,t, u, v);
+        o = GENERIC (s,d,R_SHIFT,Fa,Fb,t, u, v);
+        p = GENERIC (s,d,A_SHIFT,Fa,Fb,t, u, v);
         s = m|n|o|p;
 	*(dest + i) = s;
     }
@@ -1595,24 +1595,24 @@ combineSaturateC (pixman_implementation_t *imp, pixman_op_t op,
         da = ~d >> A_SHIFT;
 
         if (sb <= da)
-            m = Add(s,d,0,t);
+            m = ADD(s,d,0,t);
         else
-            m = FbGen (s, d, 0, (da << G_SHIFT) / sb, MASK, t, u, v);
+            m = GENERIC (s, d, 0, (da << G_SHIFT) / sb, MASK, t, u, v);
 
         if (sg <= da)
-            n = Add(s,d,G_SHIFT,t);
+            n = ADD(s,d,G_SHIFT,t);
         else
-            n = FbGen (s, d, G_SHIFT, (da << G_SHIFT) / sg, MASK, t, u, v);
+            n = GENERIC (s, d, G_SHIFT, (da << G_SHIFT) / sg, MASK, t, u, v);
 
         if (sr <= da)
-            o = Add(s,d,R_SHIFT,t);
+            o = ADD(s,d,R_SHIFT,t);
         else
-            o = FbGen (s, d, R_SHIFT, (da << G_SHIFT) / sr, MASK, t, u, v);
+            o = GENERIC (s, d, R_SHIFT, (da << G_SHIFT) / sr, MASK, t, u, v);
 
         if (sa <= da)
-            p = Add(s,d,A_SHIFT,t);
+            p = ADD(s,d,A_SHIFT,t);
         else
-            p = FbGen (s, d, A_SHIFT, (da << G_SHIFT) / sa, MASK, t, u, v);
+            p = GENERIC (s, d, A_SHIFT, (da << G_SHIFT) / sa, MASK, t, u, v);
 
 	*(dest + i) = m|n|o|p;
     }
@@ -1685,10 +1685,10 @@ combineDisjointGeneralC (comp4_t *dest, const comp4_t *src, const comp4_t *mask,
             Fb = ~0;
             break;
         }
-        m = FbGen (s,d,0,GetComp(Fa,0),GetComp(Fb,0),t, u, v);
-        n = FbGen (s,d,G_SHIFT,GetComp(Fa,G_SHIFT),GetComp(Fb,G_SHIFT),t, u, v);
-        o = FbGen (s,d,R_SHIFT,GetComp(Fa,R_SHIFT),GetComp(Fb,R_SHIFT),t, u, v);
-        p = FbGen (s,d,A_SHIFT,GetComp(Fa,A_SHIFT),GetComp(Fb,A_SHIFT),t, u, v);
+        m = GENERIC (s,d,0,GET_COMP(Fa,0),GET_COMP(Fb,0),t, u, v);
+        n = GENERIC (s,d,G_SHIFT,GET_COMP(Fa,G_SHIFT),GET_COMP(Fb,G_SHIFT),t, u, v);
+        o = GENERIC (s,d,R_SHIFT,GET_COMP(Fa,R_SHIFT),GET_COMP(Fb,R_SHIFT),t, u, v);
+        p = GENERIC (s,d,A_SHIFT,GET_COMP(Fa,A_SHIFT),GET_COMP(Fb,A_SHIFT),t, u, v);
         s = m|n|o|p;
 	*(dest + i) = s;
     }
@@ -1817,10 +1817,10 @@ combineConjointGeneralC (comp4_t *dest, const comp4_t *src, const comp4_t *mask,
             Fb = ~0;
             break;
         }
-        m = FbGen (s,d,0,GetComp(Fa,0),GetComp(Fb,0),t, u, v);
-        n = FbGen (s,d,G_SHIFT,GetComp(Fa,G_SHIFT),GetComp(Fb,G_SHIFT),t, u, v);
-        o = FbGen (s,d,R_SHIFT,GetComp(Fa,R_SHIFT),GetComp(Fb,R_SHIFT),t, u, v);
-        p = FbGen (s,d,A_SHIFT,GetComp(Fa,A_SHIFT),GetComp(Fb,A_SHIFT),t, u, v);
+        m = GENERIC (s,d,0,GET_COMP(Fa,0),GET_COMP(Fb,0),t, u, v);
+        n = GENERIC (s,d,G_SHIFT,GET_COMP(Fa,G_SHIFT),GET_COMP(Fb,G_SHIFT),t, u, v);
+        o = GENERIC (s,d,R_SHIFT,GET_COMP(Fa,R_SHIFT),GET_COMP(Fb,R_SHIFT),t, u, v);
+        p = GENERIC (s,d,A_SHIFT,GET_COMP(Fa,A_SHIFT),GET_COMP(Fb,A_SHIFT),t, u, v);
         s = m|n|o|p;
 	*(dest + i) = s;
     }
