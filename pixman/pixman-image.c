@@ -30,8 +30,7 @@
 #include <assert.h>
 
 #include "pixman-private.h"
-
-#define Alpha(x) ((x) >> 24)
+#include "pixman-combine32.h"
 
 pixman_bool_t
 _pixman_init_gradient (gradient_t     *gradient,
@@ -568,7 +567,7 @@ _pixman_image_is_opaque (pixman_image_t *image)
 	break;
 	
     case SOLID:
-	if (Alpha (image->solid.color) != 0xff)
+	if (ALPHA_8 (image->solid.color) != 0xff)
             return FALSE;
         break;
     }
