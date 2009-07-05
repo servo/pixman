@@ -290,7 +290,7 @@ pixman_have_arm_neon (void)
 #endif
 
 typedef enum {
-    NoFeatures = 0,
+    NO_FEATURES = 0,
     MMX = 0x1,
     MMX_EXTENSIONS = 0x2,
     SSE = 0x6,
