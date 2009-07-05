@@ -1074,7 +1074,7 @@ vmx_combine_add_u (pixman_implementation_t *imp, pixman_op_t op,
 }
 
 static void
-vmx_combine_src_c (pixman_implementation_t *imp, pixman_op_t op,
+vmx_combine_src_ca (pixman_implementation_t *imp, pixman_op_t op,
 		uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     int i;
@@ -1106,7 +1106,7 @@ vmx_combine_src_c (pixman_implementation_t *imp, pixman_op_t op,
 }
 
 static void
-vmx_combine_over_c (pixman_implementation_t *imp, pixman_op_t op,
+vmx_combine_over_ca (pixman_implementation_t *imp, pixman_op_t op,
 		 uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     int i;
@@ -1140,7 +1140,7 @@ vmx_combine_over_c (pixman_implementation_t *imp, pixman_op_t op,
 }
 
 static void
-vmx_combine_over_reverse_c (pixman_implementation_t *imp, pixman_op_t op,
+vmx_combine_over_reverse_ca (pixman_implementation_t *imp, pixman_op_t op,
 			uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     int i;
@@ -1175,7 +1175,7 @@ vmx_combine_over_reverse_c (pixman_implementation_t *imp, pixman_op_t op,
 }
 
 static void
-vmx_combine_in_c (pixman_implementation_t *imp, pixman_op_t op,
+vmx_combine_in_ca (pixman_implementation_t *imp, pixman_op_t op,
 	       uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     int i;
@@ -1210,7 +1210,7 @@ vmx_combine_in_c (pixman_implementation_t *imp, pixman_op_t op,
 }
 
 static void
-vmx_combine_in_reverse_c (pixman_implementation_t *imp, pixman_op_t op,
+vmx_combine_in_reverse_ca (pixman_implementation_t *imp, pixman_op_t op,
 		      uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     int i;
@@ -1245,7 +1245,7 @@ vmx_combine_in_reverse_c (pixman_implementation_t *imp, pixman_op_t op,
 }
 
 static void
-vmx_combine_out_c (pixman_implementation_t *imp, pixman_op_t op,
+vmx_combine_out_ca (pixman_implementation_t *imp, pixman_op_t op,
 		uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     int i;
@@ -1281,7 +1281,7 @@ vmx_combine_out_c (pixman_implementation_t *imp, pixman_op_t op,
 }
 
 static void
-vmx_combine_out_reverse_c (pixman_implementation_t *imp, pixman_op_t op,
+vmx_combine_out_reverse_ca (pixman_implementation_t *imp, pixman_op_t op,
 		       uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     int i;
@@ -1318,7 +1318,7 @@ vmx_combine_out_reverse_c (pixman_implementation_t *imp, pixman_op_t op,
 }
 
 static void
-vmx_combine_atop_c (pixman_implementation_t *imp, pixman_op_t op,
+vmx_combine_atop_ca (pixman_implementation_t *imp, pixman_op_t op,
 		 uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     int i;
@@ -1360,7 +1360,7 @@ vmx_combine_atop_c (pixman_implementation_t *imp, pixman_op_t op,
 }
 
 static void
-vmx_combine_atop_reverse_c (pixman_implementation_t *imp, pixman_op_t op,
+vmx_combine_atop_reverse_ca (pixman_implementation_t *imp, pixman_op_t op,
 			uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     int i;
@@ -1402,7 +1402,7 @@ vmx_combine_atop_reverse_c (pixman_implementation_t *imp, pixman_op_t op,
 }
 
 static void
-vmx_combine_xor_c (pixman_implementation_t *imp, pixman_op_t op,
+vmx_combine_xor_ca (pixman_implementation_t *imp, pixman_op_t op,
 		uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     int i;
@@ -1444,7 +1444,7 @@ vmx_combine_xor_c (pixman_implementation_t *imp, pixman_op_t op,
 }
 
 static void
-vmx_combine_add_c (pixman_implementation_t *imp, pixman_op_t op,
+vmx_combine_add_ca (pixman_implementation_t *imp, pixman_op_t op,
 		uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     int i;
@@ -1578,17 +1578,17 @@ _pixman_implementation_create_vmx (void)
 
     imp->combine_32[PIXMAN_OP_ADD] = vmx_combine_add_u;
 
-    imp->combine_32_ca[PIXMAN_OP_SRC] = vmx_combine_src_c;
-    imp->combine_32_ca[PIXMAN_OP_OVER] = vmx_combine_over_c;
-    imp->combine_32_ca[PIXMAN_OP_OVER_REVERSE] = vmx_combine_over_reverse_c;
-    imp->combine_32_ca[PIXMAN_OP_IN] = vmx_combine_in_c;
-    imp->combine_32_ca[PIXMAN_OP_IN_REVERSE] = vmx_combine_in_reverse_c;
-    imp->combine_32_ca[PIXMAN_OP_OUT] = vmx_combine_out_c;
-    imp->combine_32_ca[PIXMAN_OP_OUT_REVERSE] = vmx_combine_out_reverse_c;
-    imp->combine_32_ca[PIXMAN_OP_ATOP] = vmx_combine_atop_c;
-    imp->combine_32_ca[PIXMAN_OP_ATOP_REVERSE] = vmx_combine_atop_reverse_c;
-    imp->combine_32_ca[PIXMAN_OP_XOR] = vmx_combine_xor_c;
-    imp->combine_32_ca[PIXMAN_OP_ADD] = vmx_combine_add_c;
+    imp->combine_32_ca[PIXMAN_OP_SRC] = vmx_combine_src_ca;
+    imp->combine_32_ca[PIXMAN_OP_OVER] = vmx_combine_over_ca;
+    imp->combine_32_ca[PIXMAN_OP_OVER_REVERSE] = vmx_combine_over_reverse_ca;
+    imp->combine_32_ca[PIXMAN_OP_IN] = vmx_combine_in_ca;
+    imp->combine_32_ca[PIXMAN_OP_IN_REVERSE] = vmx_combine_in_reverse_ca;
+    imp->combine_32_ca[PIXMAN_OP_OUT] = vmx_combine_out_ca;
+    imp->combine_32_ca[PIXMAN_OP_OUT_REVERSE] = vmx_combine_out_reverse_ca;
+    imp->combine_32_ca[PIXMAN_OP_ATOP] = vmx_combine_atop_ca;
+    imp->combine_32_ca[PIXMAN_OP_ATOP_REVERSE] = vmx_combine_atop_reverse_ca;
+    imp->combine_32_ca[PIXMAN_OP_XOR] = vmx_combine_xor_ca;
+    imp->combine_32_ca[PIXMAN_OP_ADD] = vmx_combine_add_ca;
     
     return imp;
 }
