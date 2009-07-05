@@ -668,10 +668,10 @@ PDF_SEPARABLE_BLEND_MODE (Exclusion)
  * to operate in Hsl space, with Cmax, Cmid, Cmin referring to the max, mid 
  * and min value of the red, green and blue components.
  * 
- * Lum (C) = 0.3 × Cred + 0.59 × Cgreen + 0.11 × Cblue
+ * LUM (C) = 0.3 × Cred + 0.59 × Cgreen + 0.11 × Cblue
  *
  * ClipColor (C):
- *   l = Lum (C)
+ *   l = LUM (C)
  *   min = Cmin
  *   max = Cmax
  *   if n < 0.0
@@ -680,14 +680,14 @@ PDF_SEPARABLE_BLEND_MODE (Exclusion)
  *     C = l + ( ( ( C – l ) × ( 1 – l ) ) ⁄ ( max – l ) )
  *   return C
  *
- * SetLum (C, l):
- *   d = l – Lum (C)
+ * set_lum (C, l):
+ *   d = l – LUM (C)
  *   C += d
  *   return ClipColor (C)
  *
- * Sat (C) = Max (C) - Min (C)
+ * SAT (C) = CH_MAX (C) - CH_MIN (C)
  *
- * SetSat (C, s):
+ * set_sat (C, s):
  *  if Cmax > Cmin
  *    Cmid = ( ( ( Cmid – Cmin ) × s ) ⁄ ( Cmax – Cmin ) )
  *    Cmax = s
@@ -698,9 +698,9 @@ PDF_SEPARABLE_BLEND_MODE (Exclusion)
  */
 
 /* For premultiplied colors, we need to know what happens when C is
- * multiplied by a real number. Lum and Sat are linear:
+ * multiplied by a real number. LUM and SAT are linear:
  *
- *    Lum (r × C) = r × Lum (C)		Sat (r * C) = r * Sat (C)
+ *    LUM (r × C) = r × LUM (C)		SAT (r * C) = r * SAT (C)
  *
  * If we extend ClipColor with an extra argument a and change
  *
@@ -716,25 +716,25 @@ PDF_SEPARABLE_BLEND_MODE (Exclusion)
  *
  * for positive r.
  *
- * Similarly, we can extend SetLum with an extra argument that is just passed
+ * Similarly, we can extend set_lum with an extra argument that is just passed
  * on to ClipColor:
  *
- *   r * SetLum ( C, l, a)
+ *   r * set_lum ( C, l, a)
  *
- *   = r × ClipColor ( C + l - Lum (C), a)
+ *   = r × ClipColor ( C + l - LUM (C), a)
  *
- *   = ClipColor ( r * C + r × l - r * Lum (C), r * a)
+ *   = ClipColor ( r * C + r × l - r * LUM (C), r * a)
  *
- *   = SetLum ( r * C, r * l, r * a)
+ *   = set_lum ( r * C, r * l, r * a)
  *
- * Finally, SetSat:
+ * Finally, set_sat:
  *
- *    r * SetSat (C, s) = SetSat (x * C, r * s)
+ *    r * set_sat (C, s) = set_sat (x * C, r * s)
  *
  * The above holds for all non-zero x, because they x'es in the fraction for
  * C_mid cancel out. Specifically, it holds for x = r:
  *
- *    r * SetSat (C, s) = SetSat (rC, rs)
+ *    r * set_sat (C, s) = set_sat (rC, rs)
  *  
  */
 
@@ -744,36 +744,36 @@ PDF_SEPARABLE_BLEND_MODE (Exclusion)
  *   Color:
  *
  *     a_s * a_d * B(s, d)
- *   = a_s * a_d * SetLum (S/a_s, Lum (D/a_d), 1)
- *   = SetLum (S * a_d, a_s * Lum (D), a_s * a_d)
+ *   = a_s * a_d * set_lum (S/a_s, LUM (D/a_d), 1)
+ *   = set_lum (S * a_d, a_s * LUM (D), a_s * a_d)
  *
  *
  *   Luminosity:
  *
  *     a_s * a_d * B(s, d)
- *   = a_s * a_d * SetLum (D/a_d, Lum(S/a_s), 1)
- *   = SetLum (a_s * D, a_d * Lum(S), a_s * a_d)
+ *   = a_s * a_d * set_lum (D/a_d, LUM(S/a_s), 1)
+ *   = set_lum (a_s * D, a_d * LUM(S), a_s * a_d)
  *
  *
  *   Saturation:
  *
  *     a_s * a_d * B(s, d)
- *   = a_s * a_d * SetLum (SetSat (D/a_d, Sat (S/a_s)), Lum (D/a_d), 1)
- *   = SetLum (a_s * a_d * SetSat (D/a_d, Sat (S/a_s)), a_s * Lum (D), a_s * a_d)
- *   = SetLum (SetSat (a_s * D, a_d * Sat (S), a_s * Lum (D), a_s * a_d))
+ *   = a_s * a_d * set_lum (set_sat (D/a_d, SAT (S/a_s)), LUM (D/a_d), 1)
+ *   = set_lum (a_s * a_d * set_sat (D/a_d, SAT (S/a_s)), a_s * LUM (D), a_s * a_d)
+ *   = set_lum (set_sat (a_s * D, a_d * SAT (S), a_s * LUM (D), a_s * a_d))
  *
  *   Hue:
  *
  *     a_s * a_d * B(s, d)
- *   = a_s * a_d * SetLum (SetSat (S/a_s, Sat (D/a_d)), Lum (D/a_d), 1)
- *   = a_s * a_d * SetLum (SetSat (a_d * S, a_s * Sat (D)), a_s * Lum (D), a_s * a_d)
+ *   = a_s * a_d * set_lum (set_sat (S/a_s, SAT (D/a_d)), LUM (D/a_d), 1)
+ *   = a_s * a_d * set_lum (set_sat (a_d * S, a_s * SAT (D)), a_s * LUM (D), a_s * a_d)
  *
  */
     
-#define Min(c) (c[0] < c[1] ? (c[0] < c[2] ? c[0] : c[2]) : (c[1] < c[2] ? c[1] : c[2]))
-#define Max(c) (c[0] > c[1] ? (c[0] > c[2] ? c[0] : c[2]) : (c[1] > c[2] ? c[1] : c[2]))
-#define Lum(c) ((c[0] * 30 + c[1] * 59 + c[2] * 11) / 100)
-#define Sat(c) (Max (c) - Min (c))
+#define CH_MIN(c) (c[0] < c[1] ? (c[0] < c[2] ? c[0] : c[2]) : (c[1] < c[2] ? c[1] : c[2]))
+#define CH_MAX(c) (c[0] > c[1] ? (c[0] > c[2] ? c[0] : c[2]) : (c[1] > c[2] ? c[1] : c[2]))
+#define LUM(c) ((c[0] * 30 + c[1] * 59 + c[2] * 11) / 100)
+#define SAT(c) (CH_MAX (c) - CH_MIN (c))
 
 #define PDF_NON_SEPARABLE_BLEND_MODE(name)					\
 static void								\
@@ -810,7 +810,7 @@ combine ## name ## U (pixman_implementation_t *imp, pixman_op_t op,	\
 }									
 
 static void
-SetLum (comp4_t dest[3], comp4_t src[3], comp4_t sa, comp4_t lum)
+set_lum (comp4_t dest[3], comp4_t src[3], comp4_t sa, comp4_t lum)
 {
   double a, l, min, max;
   double tmp[3];
@@ -820,15 +820,15 @@ SetLum (comp4_t dest[3], comp4_t src[3], comp4_t sa, comp4_t lum)
   tmp[0] = src[0] * (1.0 / MASK);
   tmp[1] = src[1] * (1.0 / MASK);
   tmp[2] = src[2] * (1.0 / MASK);
-  l = l - Lum (tmp);
+  l = l - LUM (tmp);
   tmp[0] += l;
   tmp[1] += l;
   tmp[2] += l;
 
   /* ClipColor */
-  l = Lum (tmp);
-  min = Min (tmp);
-  max = Max (tmp);
+  l = LUM (tmp);
+  min = CH_MIN (tmp);
+  max = CH_MAX (tmp);
 
   if (min < 0) {
     tmp[0] = l + (tmp[0] - l) * l / (l - min);
@@ -846,7 +846,7 @@ SetLum (comp4_t dest[3], comp4_t src[3], comp4_t sa, comp4_t lum)
 }
 
 static void
-SetSat (comp4_t dest[3], comp4_t src[3], comp4_t sat)
+set_sat (comp4_t dest[3], comp4_t src[3], comp4_t sat)
 {
   int id[3];
   comp4_t min, max;
@@ -895,7 +895,7 @@ SetSat (comp4_t dest[3], comp4_t src[3], comp4_t sat)
 
 /*
  * Hue:
- * B(Cb, Cs) = SetLum (SetSat (Cs, Sat (Cb)), Lum (Cb))
+ * B(Cb, Cs) = set_lum (set_sat (Cs, SAT (Cb)), LUM (Cb))
  */
 static inline void
 blend_HslHue (comp4_t c[3], comp4_t dc[3], comp4_t da, comp4_t sc[3], comp4_t sa)
@@ -903,15 +903,15 @@ blend_HslHue (comp4_t c[3], comp4_t dc[3], comp4_t da, comp4_t sc[3], comp4_t sa
     c[0] = sc[0] * da;
     c[1] = sc[1] * da;
     c[2] = sc[2] * da;
-    SetSat (c, c, Sat (dc) * sa);
-    SetLum (c, c, sa * da, Lum (dc) * sa);
+    set_sat (c, c, SAT (dc) * sa);
+    set_lum (c, c, sa * da, LUM (dc) * sa);
 }
 
 PDF_NON_SEPARABLE_BLEND_MODE (HslHue)
 
 /*
  * Saturation:
- * B(Cb, Cs) = SetLum (SetSat (Cb, Sat (Cs)), Lum (Cb))
+ * B(Cb, Cs) = set_lum (set_sat (Cb, SAT (Cs)), LUM (Cb))
  */
 static inline void
 blend_HslSaturation (comp4_t c[3], comp4_t dc[3], comp4_t da, comp4_t sc[3], comp4_t sa)
@@ -919,15 +919,15 @@ blend_HslSaturation (comp4_t c[3], comp4_t dc[3], comp4_t da, comp4_t sc[3], com
     c[0] = dc[0] * sa;
     c[1] = dc[1] * sa;
     c[2] = dc[2] * sa;
-    SetSat (c, c, Sat (sc) * da);
-    SetLum (c, c, sa * da, Lum (dc) * sa);
+    set_sat (c, c, SAT (sc) * da);
+    set_lum (c, c, sa * da, LUM (dc) * sa);
 }
 
 PDF_NON_SEPARABLE_BLEND_MODE (HslSaturation)
 
 /*
  * Color:
- * B(Cb, Cs) = SetLum (Cs, Lum (Cb))
+ * B(Cb, Cs) = set_lum (Cs, LUM (Cb))
  */
 static inline void
 blend_HslColor (comp4_t c[3], comp4_t dc[3], comp4_t da, comp4_t sc[3], comp4_t sa)
@@ -935,14 +935,14 @@ blend_HslColor (comp4_t c[3], comp4_t dc[3], comp4_t da, comp4_t sc[3], comp4_t 
     c[0] = sc[0] * da;
     c[1] = sc[1] * da;
     c[2] = sc[2] * da;
-    SetLum (c, c, sa * da, Lum (dc) * sa);
+    set_lum (c, c, sa * da, LUM (dc) * sa);
 }
 
 PDF_NON_SEPARABLE_BLEND_MODE (HslColor)
 
 /*
  * Luminosity:
- * B(Cb, Cs) = SetLum (Cb, Lum (Cs))
+ * B(Cb, Cs) = set_lum (Cb, LUM (Cs))
  */
 static inline void
 blend_HslLuminosity (comp4_t c[3], comp4_t dc[3], comp4_t da, comp4_t sc[3], comp4_t sa)
@@ -950,15 +950,15 @@ blend_HslLuminosity (comp4_t c[3], comp4_t dc[3], comp4_t da, comp4_t sc[3], com
     c[0] = dc[0] * sa;
     c[1] = dc[1] * sa;
     c[2] = dc[2] * sa;
-    SetLum (c, c, sa * da, Lum (sc) * da);
+    set_lum (c, c, sa * da, LUM (sc) * da);
 }
 
 PDF_NON_SEPARABLE_BLEND_MODE (HslLuminosity)
 
-#undef Sat
-#undef Lum
-#undef Max
-#undef Min
+#undef SAT
+#undef LUM
+#undef CH_MAX
+#undef CH_MIN
 #undef PDF_NON_SEPARABLE_BLEND_MODE
 
 /* Overlay
