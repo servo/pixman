@@ -217,7 +217,7 @@ over (vector unsigned int src, vector unsigned int srca,
         vec_st ((vector unsigned int) tmp1, 0, dest );
 
 static void
-vmxCombineOverUnomask (uint32_t *dest, const uint32_t *src, int width)
+vmxCombineOverU_no_mask (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
     vector unsigned int  vdest, vsrc;
@@ -250,7 +250,7 @@ vmxCombineOverUnomask (uint32_t *dest, const uint32_t *src, int width)
 }
 
 static void
-vmxCombineOverUmask (uint32_t *dest,
+vmxCombineOverU_mask (uint32_t *dest,
                      const uint32_t *src,
                      const uint32_t *mask,
                      int width)
@@ -297,13 +297,13 @@ vmxCombineOverU(pixman_implementation_t *imp, pixman_op_t op,
                 int width)
 {
     if (mask)
-        vmxCombineOverUmask(dest, src, mask, width);
+        vmxCombineOverU_mask(dest, src, mask, width);
     else
-        vmxCombineOverUnomask(dest, src, width);
+        vmxCombineOverU_no_mask(dest, src, width);
 }
 
 static void
-vmxCombineOverReverseUnomask (uint32_t *dest, const uint32_t *src, int width)
+vmxCombineOverReverseU_no_mask (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
     vector unsigned int  vdest, vsrc;
@@ -336,7 +336,7 @@ vmxCombineOverReverseUnomask (uint32_t *dest, const uint32_t *src, int width)
 }
 
 static void
-vmxCombineOverReverseUmask (uint32_t *dest,
+vmxCombineOverReverseU_mask (uint32_t *dest,
                             const uint32_t *src,
                             const uint32_t *mask,
                             int width)
@@ -381,13 +381,13 @@ vmxCombineOverReverseU (pixman_implementation_t *imp, pixman_op_t op,
                         const uint32_t *mask, int width)
 {
     if (mask)
-        vmxCombineOverReverseUmask(dest, src, mask, width);
+        vmxCombineOverReverseU_mask(dest, src, mask, width);
     else
-        vmxCombineOverReverseUnomask(dest, src, width);
+        vmxCombineOverReverseU_no_mask(dest, src, width);
 }
 
 static void
-vmxCombineInUnomask (uint32_t *dest, const uint32_t *src, int width)
+vmxCombineInU_no_mask (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
     vector unsigned int  vdest, vsrc;
@@ -419,7 +419,7 @@ vmxCombineInUnomask (uint32_t *dest, const uint32_t *src, int width)
 }
 
 static void
-vmxCombineInUmask (uint32_t *dest,
+vmxCombineInU_mask (uint32_t *dest,
                    const uint32_t *src,
                    const uint32_t *mask,
                    int width)
@@ -463,13 +463,13 @@ vmxCombineInU (pixman_implementation_t *imp, pixman_op_t op,
                int width)
 {
     if (mask)
-        vmxCombineInUmask(dest, src, mask, width);
+        vmxCombineInU_mask(dest, src, mask, width);
     else
-        vmxCombineInUnomask(dest, src, width);
+        vmxCombineInU_no_mask(dest, src, width);
 }
 
 static void
-vmxCombineInReverseUnomask (uint32_t *dest, const uint32_t *src, int width)
+vmxCombineInReverseU_no_mask (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
     vector unsigned int  vdest, vsrc;
@@ -500,7 +500,7 @@ vmxCombineInReverseUnomask (uint32_t *dest, const uint32_t *src, int width)
 }
 
 static void
-vmxCombineInReverseUmask (uint32_t *dest,
+vmxCombineInReverseU_mask (uint32_t *dest,
                           const uint32_t *src,
                           const uint32_t *mask,
                           int width)
@@ -545,13 +545,13 @@ vmxCombineInReverseU (pixman_implementation_t *imp, pixman_op_t op,
                       const uint32_t *mask, int width)
 {
     if (mask)
-        vmxCombineInReverseUmask(dest, src, mask, width);
+        vmxCombineInReverseU_mask(dest, src, mask, width);
     else
-        vmxCombineInReverseUnomask(dest, src, width);
+        vmxCombineInReverseU_no_mask(dest, src, width);
 }
 
 static void
-vmxCombineOutUnomask (uint32_t *dest, const uint32_t *src, int width)
+vmxCombineOutU_no_mask (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
     vector unsigned int  vdest, vsrc;
@@ -582,7 +582,7 @@ vmxCombineOutUnomask (uint32_t *dest, const uint32_t *src, int width)
 }
 
 static void
-vmxCombineOutUmask (uint32_t *dest,
+vmxCombineOutU_mask (uint32_t *dest,
                     const uint32_t *src,
                     const uint32_t *mask,
                     int width)
@@ -626,13 +626,13 @@ vmxCombineOutU (pixman_implementation_t *imp, pixman_op_t op,
                 int width)
 {
     if (mask)
-        vmxCombineOutUmask(dest, src, mask, width);
+        vmxCombineOutU_mask(dest, src, mask, width);
     else
-        vmxCombineOutUnomask(dest, src, width);
+        vmxCombineOutU_no_mask(dest, src, width);
 }
 
 static void
-vmxCombineOutReverseUnomask (uint32_t *dest, const uint32_t *src, int width)
+vmxCombineOutReverseU_no_mask (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
     vector unsigned int  vdest, vsrc;
@@ -663,7 +663,7 @@ vmxCombineOutReverseUnomask (uint32_t *dest, const uint32_t *src, int width)
 }
 
 static void
-vmxCombineOutReverseUmask (uint32_t *dest,
+vmxCombineOutReverseU_mask (uint32_t *dest,
                            const uint32_t *src,
                            const uint32_t *mask,
                            int width)
@@ -710,13 +710,13 @@ vmxCombineOutReverseU (pixman_implementation_t *imp, pixman_op_t op,
                        int width)
 {
     if (mask)
-        vmxCombineOutReverseUmask(dest, src, mask, width);
+        vmxCombineOutReverseU_mask(dest, src, mask, width);
     else
-        vmxCombineOutReverseUnomask(dest, src, width);
+        vmxCombineOutReverseU_no_mask(dest, src, width);
 }
 
 static void
-vmxCombineAtopUnomask (uint32_t *dest, const uint32_t *src, int width)
+vmxCombineAtopU_no_mask (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
     vector unsigned int  vdest, vsrc;
@@ -751,7 +751,7 @@ vmxCombineAtopUnomask (uint32_t *dest, const uint32_t *src, int width)
 }
 
 static void
-vmxCombineAtopUmask (uint32_t *dest,
+vmxCombineAtopU_mask (uint32_t *dest,
                      const uint32_t *src,
                      const uint32_t *mask,
                      int width)
@@ -802,13 +802,13 @@ vmxCombineAtopU (pixman_implementation_t *imp, pixman_op_t op,
                  int width)
 {
     if (mask)
-        vmxCombineAtopUmask(dest, src, mask, width);
+        vmxCombineAtopU_mask(dest, src, mask, width);
     else
-        vmxCombineAtopUnomask(dest, src, width);
+        vmxCombineAtopU_no_mask(dest, src, width);
 }
 
 static void
-vmxCombineAtopReverseUnomask (uint32_t *dest, const uint32_t *src, int width)
+vmxCombineAtopReverseU_no_mask (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
     vector unsigned int  vdest, vsrc;
@@ -843,7 +843,7 @@ vmxCombineAtopReverseUnomask (uint32_t *dest, const uint32_t *src, int width)
 }
 
 static void
-vmxCombineAtopReverseUmask (uint32_t *dest,
+vmxCombineAtopReverseU_mask (uint32_t *dest,
                             const uint32_t *src,
                             const uint32_t *mask,
                             int width)
@@ -894,13 +894,13 @@ vmxCombineAtopReverseU (pixman_implementation_t *imp, pixman_op_t op,
                         int width)
 {
     if (mask)
-        vmxCombineAtopReverseUmask(dest, src, mask, width);
+        vmxCombineAtopReverseU_mask(dest, src, mask, width);
     else
-        vmxCombineAtopReverseUnomask(dest, src, width);
+        vmxCombineAtopReverseU_no_mask(dest, src, width);
 }
 
 static void
-vmxCombineXorUnomask (uint32_t *dest, const uint32_t *src, int width)
+vmxCombineXorU_no_mask (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
     vector unsigned int  vdest, vsrc;
@@ -935,7 +935,7 @@ vmxCombineXorUnomask (uint32_t *dest, const uint32_t *src, int width)
 }
 
 static void
-vmxCombineXorUmask (uint32_t *dest,
+vmxCombineXorU_mask (uint32_t *dest,
                     const uint32_t *src,
                     const uint32_t *mask,
                     int width)
@@ -986,13 +986,13 @@ vmxCombineXorU (pixman_implementation_t *imp, pixman_op_t op,
                 int width)
 {
     if (mask)
-        vmxCombineXorUmask(dest, src, mask, width);
+        vmxCombineXorU_mask(dest, src, mask, width);
     else
-        vmxCombineXorUnomask(dest, src, width);
+        vmxCombineXorU_no_mask(dest, src, width);
 }
 
 static void
-vmxCombineAddUnomask (uint32_t *dest, const uint32_t *src, int width)
+vmxCombineAddU_no_mask (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
     vector unsigned int  vdest, vsrc;
@@ -1022,7 +1022,7 @@ vmxCombineAddUnomask (uint32_t *dest, const uint32_t *src, int width)
 }
 
 static void
-vmxCombineAddUmask (uint32_t *dest,
+vmxCombineAddU_mask (uint32_t *dest,
                     const uint32_t *src,
                     const uint32_t *mask,
                     int width)
@@ -1068,9 +1068,9 @@ vmxCombineAddU (pixman_implementation_t *imp, pixman_op_t op,
                 int width)
 {
     if (mask)
-        vmxCombineAddUmask(dest, src, mask, width);
+        vmxCombineAddU_mask(dest, src, mask, width);
     else
-        vmxCombineAddUnomask(dest, src, width);
+        vmxCombineAddU_no_mask(dest, src, width);
 }
 
 static void
