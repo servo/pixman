@@ -68,7 +68,7 @@
 #define N_BITS	4
 #define rasterizeEdges	fbRasterizeEdges4
 
-#if BITMAP_BIT_ORDER == LSBFirst
+#ifndef WORDS_BIG_ENDIAN
 #define Shift4(o)	((o) << 2)
 #else
 #define Shift4(o)	((1-(o)) << 2)
