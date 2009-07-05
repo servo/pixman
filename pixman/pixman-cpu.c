@@ -289,16 +289,17 @@ pixman_have_arm_neon (void)
 #include <sys/auxv.h>
 #endif
 
-enum CPUFeatures {
+typedef enum {
     NoFeatures = 0,
     MMX = 0x1,
     MMX_EXTENSIONS = 0x2,
     SSE = 0x6,
     SSE2 = 0x8,
     CMOV = 0x10
-};
+} cpu_features_t;
+    
 
-static unsigned int detectCPUFeatures(void) {
+static unsigned int detect_cpu_features(void) {
     unsigned int features = 0;
     unsigned int result = 0;
 
@@ -469,7 +470,7 @@ pixman_have_mmx (void)
 
     if (!initialized)
     {
-        unsigned int features = detectCPUFeatures();
+        unsigned int features = detect_cpu_features();
 	mmx_present = (features & (MMX|MMX_EXTENSIONS)) == (MMX|MMX_EXTENSIONS);
         initialized = TRUE;
     }
@@ -486,7 +487,7 @@ pixman_have_sse2 (void)
 
     if (!initialized)
     {
-        unsigned int features = detectCPUFeatures();
+        unsigned int features = detect_cpu_features();
         sse2_present = (features & (MMX|MMX_EXTENSIONS|SSE|SSE2)) == (MMX|MMX_EXTENSIONS|SSE|SSE2);
         initialized = TRUE;
     }
