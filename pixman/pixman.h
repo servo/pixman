@@ -398,7 +398,7 @@ typedef struct pixman_region16		pixman_region16_t;
 
 struct pixman_region16_data {
     long		size;
-    long		num_rects;
+    long		numRects;
 /*  pixman_box16_t	rects[size];   in memory but not explicitly declared */
 };
 
@@ -500,7 +500,7 @@ typedef struct pixman_region32		pixman_region32_t;
 
 struct pixman_region32_data {
     long		size;
-    long		num_rects;
+    long		numRects;
 /*  pixman_box32_t	rects[size];   in memory but not explicitly declared */
 };
 
