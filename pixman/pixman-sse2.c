@@ -2698,7 +2698,7 @@ sse2_composite_over_n_8888_8888_ca (pixman_implementation_t *imp,
     __m128i xmm_dst, xmm_dst_lo, xmm_dst_hi;
     __m128i xmm_mask, xmm_mask_lo, xmm_mask_hi;
 
-    __m64 mmsrc_x, mmx_alpha, mmmask_x, mmdest_x;
+    __m64 mmx_src, mmx_alpha, mmx_mask, mmx_dest;
 
     src = _pixman_image_get_solid(src_image, dst_image->bits.format);
 
@@ -2710,7 +2710,7 @@ sse2_composite_over_n_8888_8888_ca (pixman_implementation_t *imp,
 
     xmm_src = _mm_unpacklo_epi8 (create_mask_2x32_128 (src, src), _mm_setzero_si128 ());
     xmm_alpha = expand_alpha_1x128 (xmm_src);
-    mmsrc_x   = _mm_movepi64_pi64 (xmm_src);
+    mmx_src   = _mm_movepi64_pi64 (xmm_src);
     mmx_alpha = _mm_movepi64_pi64 (xmm_alpha);
 
     while (height--)
@@ -2733,13 +2733,13 @@ sse2_composite_over_n_8888_8888_ca (pixman_implementation_t *imp,
             if (m)
             {
                 d = *pd;
-                mmmask_x = unpack_32_1x64 (m);
-                mmdest_x = unpack_32_1x64 (d);
+                mmx_mask = unpack_32_1x64 (m);
+                mmx_dest = unpack_32_1x64 (d);
 
-                *pd = pack_1x64_32 (in_over_1x64 (&mmsrc_x,
+                *pd = pack_1x64_32 (in_over_1x64 (&mmx_src,
                                                  &mmx_alpha,
-                                                 &mmmask_x,
-                                                 &mmdest_x));
+                                                 &mmx_mask,
+                                                 &mmx_dest));
             }
 
             pd++;
@@ -2785,13 +2785,13 @@ sse2_composite_over_n_8888_8888_ca (pixman_implementation_t *imp,
             if (m)
             {
                 d = *pd;
-                mmmask_x = unpack_32_1x64 (m);
-                mmdest_x = unpack_32_1x64 (d);
+                mmx_mask = unpack_32_1x64 (m);
+                mmx_dest = unpack_32_1x64 (d);
 
-                *pd = pack_1x64_32 (in_over_1x64 (&mmsrc_x,
+                *pd = pack_1x64_32 (in_over_1x64 (&mmx_src,
                                                  &mmx_alpha,
-                                                 &mmmask_x,
-                                                 &mmdest_x));
+                                                 &mmx_mask,
+                                                 &mmx_dest));
             }
 
             pd++;
@@ -3222,7 +3222,7 @@ sse2_composite_over_n_8_8888 (pixman_implementation_t *imp,
     __m128i xmm_dst, xmm_dst_lo, xmm_dst_hi;
     __m128i xmm_mask, xmm_mask_lo, xmm_mask_hi;
 
-    __m64 mmsrc_x, mmx_alpha, mmmask_x, mmx_dest;
+    __m64 mmx_src, mmx_alpha, mmx_mask, mmx_dest;
 
     src = _pixman_image_get_solid(src_image, dst_image->bits.format);
 
@@ -3236,7 +3236,7 @@ sse2_composite_over_n_8_8888 (pixman_implementation_t *imp,
     xmm_def = create_mask_2x32_128 (src, src);
     xmm_src = expand_pixel_32_1x128 (src);
     xmm_alpha = expand_alpha_1x128 (xmm_src);
-    mmsrc_x   = _mm_movepi64_pi64 (xmm_src);
+    mmx_src   = _mm_movepi64_pi64 (xmm_src);
     mmx_alpha = _mm_movepi64_pi64 (xmm_alpha);
 
     while (height--)
@@ -3258,12 +3258,12 @@ sse2_composite_over_n_8_8888 (pixman_implementation_t *imp,
             if (m)
             {
                 d = *dst;
-                mmmask_x = expand_pixel_8_1x64 (m);
+                mmx_mask = expand_pixel_8_1x64 (m);
                 mmx_dest = unpack_32_1x64 (d);
 
-                *dst = pack_1x64_32 (in_over_1x64 (&mmsrc_x,
+                *dst = pack_1x64_32 (in_over_1x64 (&mmx_src,
                                                   &mmx_alpha,
-                                                  &mmmask_x,
+                                                  &mmx_mask,
                                                   &mmx_dest));
             }
 
@@ -3316,12 +3316,12 @@ sse2_composite_over_n_8_8888 (pixman_implementation_t *imp,
             if (m)
             {
                 d = *dst;
-                mmmask_x = expand_pixel_8_1x64 (m);
+                mmx_mask = expand_pixel_8_1x64 (m);
                 mmx_dest = unpack_32_1x64 (d);
 
-                *dst = pack_1x64_32 (in_over_1x64 (&mmsrc_x,
+                *dst = pack_1x64_32 (in_over_1x64 (&mmx_src,
                                                   &mmx_alpha,
-                                                  &mmmask_x,
+                                                  &mmx_mask,
                                                   &mmx_dest));
             }
 
@@ -3631,7 +3631,7 @@ sse2_composite_over_n_8_0565 (pixman_implementation_t *imp,
     int	dst_stride, mask_stride;
     uint16_t	w;
     uint32_t m;
-    __m64 mmsrc_x, mmx_alpha, mmmask_x, mmx_dest;
+    __m64 mmx_src, mmx_alpha, mmx_mask, mmx_dest;
 
     __m128i xmm_src, xmm_alpha;
     __m128i xmm_mask, xmm_mask_lo, xmm_mask_hi;
@@ -3648,7 +3648,7 @@ sse2_composite_over_n_8_0565 (pixman_implementation_t *imp,
 
     xmm_src = expand_pixel_32_1x128 (src);
     xmm_alpha = expand_alpha_1x128 (xmm_src);
-    mmsrc_x = _mm_movepi64_pi64 (xmm_src);
+    mmx_src = _mm_movepi64_pi64 (xmm_src);
     mmx_alpha = _mm_movepi64_pi64 (xmm_alpha);
 
     while (height--)
@@ -3670,12 +3670,12 @@ sse2_composite_over_n_8_0565 (pixman_implementation_t *imp,
             if (m)
             {
                 d = *dst;
-                mmmask_x = expand_alpha_rev_1x64 (unpack_32_1x64 (m));
+                mmx_mask = expand_alpha_rev_1x64 (unpack_32_1x64 (m));
                 mmx_dest = expand565_16_1x64 (d);
 
-                *dst = pack_565_32_16 (pack_1x64_32 (in_over_1x64 (&mmsrc_x,
+                *dst = pack_565_32_16 (pack_1x64_32 (in_over_1x64 (&mmx_src,
                                                                  &mmx_alpha,
-                                                                 &mmmask_x,
+                                                                 &mmx_mask,
                                                                  &mmx_dest)));
             }
 
@@ -3739,12 +3739,12 @@ sse2_composite_over_n_8_0565 (pixman_implementation_t *imp,
             if (m)
             {
                 d = *dst;
-                mmmask_x = expand_alpha_rev_1x64 (unpack_32_1x64 (m));
+                mmx_mask = expand_alpha_rev_1x64 (unpack_32_1x64 (m));
                 mmx_dest = expand565_16_1x64 (d);
 
-                *dst = pack_565_32_16 (pack_1x64_32 (in_over_1x64 (&mmsrc_x,
+                *dst = pack_565_32_16 (pack_1x64_32 (in_over_1x64 (&mmx_src,
                                                                  &mmx_alpha,
-                                                                 &mmmask_x,
+                                                                 &mmx_mask,
                                                                  &mmx_dest)));
             }
 
@@ -4034,7 +4034,7 @@ sse2_composite_over_n_8888_0565_ca (pixman_implementation_t *imp,
     __m128i xmm_mask, xmm_mask_lo, xmm_mask_hi;
     __m128i xmm_dst, xmm_dst0, xmm_dst1, xmm_dst2, xmm_dst3;
 
-    __m64 mmsrc_x, mmx_alpha, mmmask_x, mmx_dest;
+    __m64 mmx_src, mmx_alpha, mmx_mask, mmx_dest;
 
     src = _pixman_image_get_solid(src_image, dst_image->bits.format);
 
@@ -4046,7 +4046,7 @@ sse2_composite_over_n_8888_0565_ca (pixman_implementation_t *imp,
 
     xmm_src = expand_pixel_32_1x128 (src);
     xmm_alpha = expand_alpha_1x128 (xmm_src);
-    mmsrc_x = _mm_movepi64_pi64 (xmm_src);
+    mmx_src = _mm_movepi64_pi64 (xmm_src);
     mmx_alpha = _mm_movepi64_pi64 (xmm_alpha);
 
     while (height--)
@@ -4068,12 +4068,12 @@ sse2_composite_over_n_8888_0565_ca (pixman_implementation_t *imp,
             if (m)
             {
                 d = *dst;
-                mmmask_x = unpack_32_1x64 (m);
+                mmx_mask = unpack_32_1x64 (m);
                 mmx_dest = expand565_16_1x64 (d);
 
-                *dst = pack_565_32_16 (pack_1x64_32 (in_over_1x64 (&mmsrc_x,
+                *dst = pack_565_32_16 (pack_1x64_32 (in_over_1x64 (&mmx_src,
                                                                  &mmx_alpha,
-                                                                 &mmmask_x,
+                                                                 &mmx_mask,
                                                                  &mmx_dest)));
             }
 
@@ -4134,12 +4134,12 @@ sse2_composite_over_n_8888_0565_ca (pixman_implementation_t *imp,
             if (m)
             {
                 d = *dst;
-                mmmask_x = unpack_32_1x64 (m);
+                mmx_mask = unpack_32_1x64 (m);
                 mmx_dest = expand565_16_1x64 (d);
 
-                *dst = pack_565_32_16 (pack_1x64_32 (in_over_1x64 (&mmsrc_x,
+                *dst = pack_565_32_16 (pack_1x64_32 (in_over_1x64 (&mmx_src,
                                                                  &mmx_alpha,
-                                                                 &mmmask_x,
+                                                                 &mmx_mask,
                                                                  &mmx_dest)));
             }
 
