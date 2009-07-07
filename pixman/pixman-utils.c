@@ -86,7 +86,9 @@ miClipPictureSrc (pixman_region32_t *	pRegion,
 		  int		dy)
 {
     /* Source clips are ignored, unless they are explicitly turned on
-     * and the clip in question was set by an X client
+     * and the clip in question was set by an X client. (Because if
+     * the clip was not set by a client, then it is a hierarchy
+     * clip and those should always be ignored for sources).
      */
     if (!pPicture->common.clip_sources || !pPicture->common.client_clip)
 	return TRUE;
