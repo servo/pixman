@@ -12,6 +12,7 @@ main ()
     pixman_box32_t boxes[] = {
 	{ 10, 10, 20, 20 },
 	{ 30, 30, 30, 40 },
+	{ 50, 45, 60, 44 },
     };
     int i;
     pixman_box32_t *b;
@@ -31,7 +32,7 @@ main ()
      * but using an empty rectangle for initialization should
      * work.
      */
-    pixman_region32_init_rects (&r1, boxes, 2);
+    pixman_region32_init_rects (&r1, boxes, 3);
 
     b = pixman_region32_rectangles (&r1, &i);
 
@@ -45,4 +46,3 @@ main ()
 
     return 0;
 }
-
