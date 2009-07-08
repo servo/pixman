@@ -34,10 +34,15 @@ main ()
     pixman_region32_init_rects (&r1, boxes, 2);
 
     b = pixman_region32_rectangles (&r1, &i);
+
+    assert (i == 1);
+    
     while (--i)
     {
 	assert (b[i].x1 < b[i].x2);
 	assert (b[i].y1 < b[i].y2);
     }
+
+    return 0;
 }
 

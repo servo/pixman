@@ -2088,7 +2088,9 @@ PIXMAN_EXPORT pixman_bool_t
 PREFIX(_init_rects) (region_type_t *region,
 		     box_type_t *boxes, int count)
 {
-    int overlap;
+    box_type_t *rects;
+    int displacement;
+    int i;
 
     /* if it's 1, then we just want to set the extents, so call
      * the existing method. */
@@ -2114,11 +2116,53 @@ PREFIX(_init_rects) (region_type_t *region,
     if (!pixman_rect_alloc(region, count))
 	return FALSE;
 
+    rects = PIXREGION_RECTS(region);
+    
     /* Copy in the rects */
-    memcpy (PIXREGION_RECTS(region), boxes, sizeof(box_type_t) * count);
+    memcpy (rects, boxes, sizeof(box_type_t) * count);
     region->data->numRects = count;
+
+    /* Eliminate empty rectangles */
+    displacement = 0;
+    
+    for (i = 0; i < count; ++i)
+    {
+	box_type_t *box = &rects[i];
+
+	if (box->x1 == box->x2 || box->y1 == box->y2)
+	    displacement++;
+	else if (displacement)
+	    rects[i - displacement] = rects[i];
+    }
+
+    region->data->numRects -= displacement;
+
+    /* If eliminating empty rectangles caused there
+     * to be only 0 or 1 rectangles, deal with that.
+     */
+    if (region->data->numRects == 0)
+    {
+	freeData (region);
+	region->data = NULL;
+
+	good (region);
+	
+	return TRUE;
+    }
+
+    if (region->data->numRects == 1)
+    {
+	region->extents = rects[0];
+
+	freeData (region);
+	region->data = NULL;
+
+	good (region);
+	
+	return TRUE;
+    }
 
     /* Validate */
     region->extents.x1 = region->extents.x2 = 0;
-    return validate (region, &overlap);
+    return validate (region, &i);
 }
