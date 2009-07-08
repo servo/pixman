@@ -2122,14 +2122,14 @@ PREFIX(_init_rects) (region_type_t *region,
     memcpy (rects, boxes, sizeof(box_type_t) * count);
     region->data->numRects = count;
 
-    /* Eliminate empty rectangles */
+    /* Eliminate empty and malformed rectangles */
     displacement = 0;
     
     for (i = 0; i < count; ++i)
     {
 	box_type_t *box = &rects[i];
 
-	if (box->x1 == box->x2 || box->y1 == box->y2)
+	if (box->x1 >= box->x2 || box->y1 >= box->y2)
 	    displacement++;
 	else if (displacement)
 	    rects[i - displacement] = rects[i];
