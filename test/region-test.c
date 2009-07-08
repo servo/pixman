@@ -37,7 +37,7 @@ main ()
 
     assert (i == 1);
     
-    while (--i)
+    while (i--)
     {
 	assert (b[i].x1 < b[i].x2);
 	assert (b[i].y1 < b[i].y2);
