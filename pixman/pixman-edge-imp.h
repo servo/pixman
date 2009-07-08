@@ -20,11 +20,11 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef rasterizeSpan
+#ifndef rasterize_span
 #endif
 
 static void
-rasterizeEdges (pixman_image_t  *image,
+RASTERIZE_EDGES (pixman_image_t  *image,
 		pixman_edge_t	*l,
 		pixman_edge_t	*r,
 		pixman_fixed_t		t,
@@ -50,7 +50,7 @@ rasterizeEdges (pixman_image_t  *image,
 #if N_BITS == 1
 	/* For the non-antialiased case, round the coordinates up, in effect
 	 * sampling the center of the pixel. (The AA case does a similar 
-	 * adjustment in RenderSamplesX) */
+	 * adjustment in RENDER_SAMPLES_X) */
 	lx += X_FRAC_FIRST(1);
 	rx += X_FRAC_FIRST(1);
 #endif
@@ -80,24 +80,24 @@ rasterizeEdges (pixman_image_t  *image,
 	    {
 
 #ifdef WORDS_BIGENDIAN
-#   define FbScrLeft(x,n)	((x) << (n))
-#   define FbScrRight(x,n)	((x) >> (n))
+#   define SCREEN_SHIFT_LEFT(x,n)	((x) << (n))
+#   define SCREEN_SHIFT_RIGHT(x,n)	((x) >> (n))
 #else
-#   define FbScrLeft(x,n)	((x) >> (n))
-#   define FbScrRight(x,n)	((x) << (n))
+#   define SCREEN_SHIFT_LEFT(x,n)	((x) >> (n))
+#   define SCREEN_SHIFT_RIGHT(x,n)	((x) << (n))
 #endif
 
-#define FbLeftMask(x)							\
+#define LEFT_MASK(x)							\
 		(((x) & 0x1f) ?						\
-		 FbScrRight (0xffffffff, (x) & 0x1f) : 0)
-#define FbRightMask(x)							\
+		 SCREEN_SHIFT_RIGHT (0xffffffff, (x) & 0x1f) : 0)
+#define RIGHT_MASK(x)							\
 		(((32 - (x)) & 0x1f) ?					\
-		 FbScrLeft (0xffffffff, (32 - (x)) & 0x1f) : 0)
+		 SCREEN_SHIFT_LEFT (0xffffffff, (32 - (x)) & 0x1f) : 0)
 		
-#define FbMaskBits(x,w,l,n,r) {						\
+#define MASK_BITS(x,w,l,n,r) {						\
 		    n = (w);						\
-		    r = FbRightMask ((x) + n);				\
-		    l = FbLeftMask (x);					\
+		    r = RIGHT_MASK ((x) + n);				\
+		    l = LEFT_MASK (x);					\
 		    if (l) {						\
 			n -= 32 - ((x) & 0x1f);				\
 			if (n < 0) {					\
@@ -119,7 +119,7 @@ rasterizeEdges (pixman_image_t  *image,
 		a += x >> 5;
 		x &= 0x1f;
 		
-		FbMaskBits (x, width, startmask, nmiddle, endmask);
+		MASK_BITS (x, width, startmask, nmiddle, endmask);
 
 		if (startmask) {
 		    WRITE(image, a, READ(image, a) | startmask);
@@ -132,31 +132,31 @@ rasterizeEdges (pixman_image_t  *image,
 	    }
 #else
 	    {
-		DefineAlpha(line,lxi);
+		DEFINE_ALPHA(line,lxi);
 		int	    lxs;
 		int     rxs;
 
 		/* Sample coverage for edge pixels */
-		lxs = RenderSamplesX (lx, N_BITS);
-		rxs = RenderSamplesX (rx, N_BITS);
+		lxs = RENDER_SAMPLES_X (lx, N_BITS);
+		rxs = RENDER_SAMPLES_X (rx, N_BITS);
 
 		/* Add coverage across row */
 		if (lxi == rxi)
 		{
-		    AddAlpha (rxs - lxs);
+		    ADD_ALPHA (rxs - lxs);
 		}
 		else
 		{
 		    int	xi;
 
-		    AddAlpha (N_X_FRAC(N_BITS) - lxs);
-		    StepAlpha;
+		    ADD_ALPHA (N_X_FRAC(N_BITS) - lxs);
+		    STEP_ALPHA;
 		    for (xi = lxi + 1; xi < rxi; xi++)
 		    {
-			AddAlpha (N_X_FRAC(N_BITS));
-			StepAlpha;
+			ADD_ALPHA (N_X_FRAC(N_BITS));
+			STEP_ALPHA;
 		    }
-		    AddAlpha (rxs);
+		    ADD_ALPHA (rxs);
 		}
 	    }
 #endif
@@ -168,19 +168,19 @@ rasterizeEdges (pixman_image_t  *image,
 #if N_BITS > 1
 	if (pixman_fixed_frac (y) != Y_FRAC_LAST(N_BITS))
 	{
-	    RenderEdgeStepSmall (l);
-	    RenderEdgeStepSmall (r);
+	    RENDER_EDGE_STEP_SMALL (l);
+	    RENDER_EDGE_STEP_SMALL (r);
 	    y += STEP_Y_SMALL(N_BITS);
 	}
 	else
 #endif
 	{
-	    RenderEdgeStepBig (l);
-	    RenderEdgeStepBig (r);
+	    RENDER_EDGE_STEP_BIG (l);
+	    RENDER_EDGE_STEP_BIG (r);
 	    y += STEP_Y_BIG(N_BITS);
 	    line += stride;
 	}
     }
 }
 
-#undef rasterizeSpan
+#undef rasterize_span

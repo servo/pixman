@@ -35,16 +35,16 @@
 #include "pixman-private.h"
 #include "pixman-accessor.h"
 
-#define CvtR8G8B8toY15(s)       (((((s) >> 16) & 0xff) * 153 + \
+#define CONVERT_RGB24_TO_Y15(s)       (((((s) >> 16) & 0xff) * 153 + \
                                   (((s) >>  8) & 0xff) * 301 +		\
                                   (((s)      ) & 0xff) * 58) >> 2)
-#define miCvtR8G8B8to15(s) ((((s) >> 3) & 0x001f) |  \
+#define CONVERT_RGB24_TO_RGB15(s) ((((s) >> 3) & 0x001f) |  \
 			    (((s) >> 6) & 0x03e0) |  \
 			    (((s) >> 9) & 0x7c00))
-#define miIndexToEnt15(mif,rgb15) ((mif)->ent[rgb15])
-#define miIndexToEnt24(mif,rgb24) miIndexToEnt15(mif,miCvtR8G8B8to15(rgb24))
+#define RGB16_TO_ENTRY(mif,rgb15) ((mif)->ent[rgb15])
+#define RGB24_TO_ENTRY(mif,rgb24) RGB16_TO_ENTRY(mif,CONVERT_RGB24_TO_RGB15(rgb24))
 
-#define miIndexToEntY24(mif,rgb24) ((mif)->ent[CvtR8G8B8toY15(rgb24)])
+#define RGB24_TO_ENTRY_Y(mif,rgb24) ((mif)->ent[CONVERT_RGB24_TO_Y15(rgb24)])
 
 /*
  * YV12 setup and access macros
@@ -80,7 +80,7 @@
 /*********************************** Fetch ************************************/
 
 static void
-fbFetch_a8r8g8b8 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+fetch_scanline_a8r8g8b8 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		  const uint32_t *mask, uint32_t mask_bits)
 {
     const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
@@ -90,7 +90,7 @@ fbFetch_a8r8g8b8 (pixman_image_t *image, int x, int y, int width, uint32_t *buff
 }
 
 static void
-fbFetch_x8r8g8b8 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+fetch_scanline_x8r8g8b8 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		  const uint32_t *mask, uint32_t mask_bits)
 {
     const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
@@ -102,7 +102,7 @@ fbFetch_x8r8g8b8 (pixman_image_t *image, int x, int y, int width, uint32_t *buff
 }
 
 static void
-fbFetch_a8b8g8r8 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+fetch_scanline_a8b8g8r8 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		  const uint32_t *mask, uint32_t mask_bits)
 {
     const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
@@ -117,7 +117,7 @@ fbFetch_a8b8g8r8 (pixman_image_t *image, int x, int y, int width, uint32_t *buff
 }
 
 static void
-fbFetch_x8b8g8r8 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+fetch_scanline_x8b8g8r8 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		  const uint32_t *mask, uint32_t mask_bits)
 {
     const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
@@ -133,7 +133,7 @@ fbFetch_x8b8g8r8 (pixman_image_t *image, int x, int y, int width, uint32_t *buff
 }
 
 static void
-fbFetch_b8g8r8a8 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+fetch_scanline_b8g8r8a8 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		  const uint32_t *mask, uint32_t mask_bits)
 {
     const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
@@ -149,7 +149,7 @@ fbFetch_b8g8r8a8 (pixman_image_t *image, int x, int y, int width, uint32_t *buff
 }
 
 static void
-fbFetch_b8g8r8x8 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+fetch_scanline_b8g8r8x8 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		  const uint32_t *mask, uint32_t mask_bits)
 {
     const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
@@ -166,7 +166,7 @@ fbFetch_b8g8r8x8 (pixman_image_t *image, int x, int y, int width, uint32_t *buff
 
 /* Expects a uint64_t buffer */
 static void
-fbFetch_a2r10g10b10 (pixman_image_t *image, int x, int y, int width, uint32_t *b,
+fetch_scanline_a2r10g10b10 (pixman_image_t *image, int x, int y, int width, uint32_t *b,
 		     const uint32_t *mask, uint32_t mask_bits)
 {
     const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
@@ -196,7 +196,7 @@ fbFetch_a2r10g10b10 (pixman_image_t *image, int x, int y, int width, uint32_t *b
 
 /* Expects a uint64_t buffer */
 static void
-fbFetch_x2r10g10b10 (pixman_image_t *image, int x, int y, int width, uint32_t *b,
+fetch_scanline_x2r10g10b10 (pixman_image_t *image, int x, int y, int width, uint32_t *b,
 		     const uint32_t *mask, uint32_t mask_bits)
 {
     const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
@@ -221,8 +221,8 @@ fbFetch_x2r10g10b10 (pixman_image_t *image, int x, int y, int width, uint32_t *b
 
 /* Expects a uint64_t buffer */
 static void
-fbFetch_a2b10g10r10 (pixman_image_t *image, int x, int y, int width, uint32_t *b,
-		     const uint32_t *mask, uint32_t mask_bits)
+fetch_scanline_a2b10g10r10 (pixman_image_t *image, int x, int y, int width, uint32_t *b,
+			    const uint32_t *mask, uint32_t mask_bits)
 {
     const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     const uint32_t *pixel = bits + x;
@@ -251,7 +251,7 @@ fbFetch_a2b10g10r10 (pixman_image_t *image, int x, int y, int width, uint32_t *b
 
 /* Expects a uint64_t buffer */
 static void
-fbFetch_x2b10g10r10 (pixman_image_t *image, int x, int y, int width, uint32_t *b,
+fetch_scanline_x2b10g10r10 (pixman_image_t *image, int x, int y, int width, uint32_t *b,
 		     const uint32_t *mask, uint32_t mask_bits)
 {
     const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
@@ -274,7 +274,7 @@ fbFetch_x2b10g10r10 (pixman_image_t *image, int x, int y, int width, uint32_t *b
 }
 
 static void
-fbFetch_r8g8b8 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+fetch_scanline_r8g8b8 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		const uint32_t *mask, uint32_t mask_bits)
 {
     const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
@@ -296,7 +296,7 @@ fbFetch_r8g8b8 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer
 }
 
 static void
-fbFetch_b8g8r8 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+fetch_scanline_b8g8r8 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		const uint32_t *mask, uint32_t mask_bits)
 {
     const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
@@ -318,7 +318,7 @@ fbFetch_b8g8r8 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer
 }
 
 static void
-fbFetch_r5g6b5 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+fetch_scanline_r5g6b5 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		const uint32_t *mask, uint32_t mask_bits)
 {
     const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
@@ -336,7 +336,7 @@ fbFetch_r5g6b5 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer
 }
 
 static void
-fbFetch_b5g6r5 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+fetch_scanline_b5g6r5 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t  r,g,b;
@@ -353,7 +353,7 @@ fbFetch_b5g6r5 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer
 }
 
 static void
-fbFetch_a1r5g5b5 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+fetch_scanline_a1r5g5b5 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		  const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t  r,g,b, a;
@@ -372,7 +372,7 @@ fbFetch_a1r5g5b5 (pixman_image_t *image, int x, int y, int width, uint32_t *buff
 }
 
 static void
-fbFetch_x1r5g5b5 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+fetch_scanline_x1r5g5b5 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		  const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t  r,g,b;
@@ -390,7 +390,7 @@ fbFetch_x1r5g5b5 (pixman_image_t *image, int x, int y, int width, uint32_t *buff
 }
 
 static void
-fbFetch_a1b5g5r5 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+fetch_scanline_a1b5g5r5 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		  const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t  r,g,b, a;
@@ -409,7 +409,7 @@ fbFetch_a1b5g5r5 (pixman_image_t *image, int x, int y, int width, uint32_t *buff
 }
 
 static void
-fbFetch_x1b5g5r5 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+fetch_scanline_x1b5g5r5 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		  const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t  r,g,b;
@@ -427,7 +427,7 @@ fbFetch_x1b5g5r5 (pixman_image_t *image, int x, int y, int width, uint32_t *buff
 }
 
 static void
-fbFetch_a4r4g4b4 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+fetch_scanline_a4r4g4b4 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		  const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t  r,g,b, a;
@@ -446,7 +446,7 @@ fbFetch_a4r4g4b4 (pixman_image_t *image, int x, int y, int width, uint32_t *buff
 }
 
 static void
-fbFetch_x4r4g4b4 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+fetch_scanline_x4r4g4b4 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		  const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t  r,g,b;
@@ -464,7 +464,7 @@ fbFetch_x4r4g4b4 (pixman_image_t *image, int x, int y, int width, uint32_t *buff
 }
 
 static void
-fbFetch_a4b4g4r4 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+fetch_scanline_a4b4g4r4 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		  const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t  r,g,b, a;
@@ -483,7 +483,7 @@ fbFetch_a4b4g4r4 (pixman_image_t *image, int x, int y, int width, uint32_t *buff
 }
 
 static void
-fbFetch_x4b4g4r4 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+fetch_scanline_x4b4g4r4 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		  const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t  r,g,b;
@@ -501,7 +501,7 @@ fbFetch_x4b4g4r4 (pixman_image_t *image, int x, int y, int width, uint32_t *buff
 }
 
 static void
-fbFetch_a8 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+fetch_scanline_a8 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 	    const uint32_t *mask, uint32_t mask_bits)
 {
     const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
@@ -513,7 +513,7 @@ fbFetch_a8 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 }
 
 static void
-fbFetch_r3g3b2 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+fetch_scanline_r3g3b2 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t  r,g,b;
@@ -534,7 +534,7 @@ fbFetch_r3g3b2 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer
 }
 
 static void
-fbFetch_b2g3r3 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+fetch_scanline_b2g3r3 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t  r,g,b;
@@ -557,7 +557,7 @@ fbFetch_b2g3r3 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer
 }
 
 static void
-fbFetch_a2r2g2b2 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+fetch_scanline_a2r2g2b2 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		  const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t   a,r,g,b;
@@ -576,7 +576,7 @@ fbFetch_a2r2g2b2 (pixman_image_t *image, int x, int y, int width, uint32_t *buff
 }
 
 static void
-fbFetch_a2b2g2r2 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+fetch_scanline_a2b2g2r2 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		  const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t   a,r,g,b;
@@ -595,7 +595,7 @@ fbFetch_a2b2g2r2 (pixman_image_t *image, int x, int y, int width, uint32_t *buff
 }
 
 static void
-fbFetch_c8 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+fetch_scanline_c8 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 	    const uint32_t *mask, uint32_t mask_bits)
 {
     const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
@@ -609,7 +609,7 @@ fbFetch_c8 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 }
 
 static void
-fbFetch_x4a4 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+fetch_scanline_x4a4 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 	      const uint32_t *mask, uint32_t mask_bits)
 {
     const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
@@ -621,21 +621,21 @@ fbFetch_x4a4 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
     }
 }
 
-#define Fetch8(img,l,o)    (READ(img, (uint8_t *)(l) + ((o) >> 2)))
+#define FETCH_8(img,l,o)    (READ(img, (uint8_t *)(l) + ((o) >> 2)))
 #ifdef WORDS_BIGENDIAN
-#define Fetch4(img,l,o)    ((o) & 2 ? Fetch8(img,l,o) & 0xf : Fetch8(img,l,o) >> 4)
+#define FETCH_4(img,l,o)    ((o) & 2 ? FETCH_8(img,l,o) & 0xf : FETCH_8(img,l,o) >> 4)
 #else
-#define Fetch4(img,l,o)    ((o) & 2 ? Fetch8(img,l,o) >> 4 : Fetch8(img,l,o) & 0xf)
+#define FETCH_4(img,l,o)    ((o) & 2 ? FETCH_8(img,l,o) >> 4 : FETCH_8(img,l,o) & 0xf)
 #endif
 
 static void
-fbFetch_a4 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+fetch_scanline_a4 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 	    const uint32_t *mask, uint32_t mask_bits)
 {
     const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     int i;
     for (i = 0; i < width; ++i) {
-	uint32_t  p = Fetch4(image, bits, i + x);
+	uint32_t  p = FETCH_4(image, bits, i + x);
 
 	p |= p << 4;
 	*buffer++ = p << 24;
@@ -643,14 +643,14 @@ fbFetch_a4 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 }
 
 static void
-fbFetch_r1g2b1 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+fetch_scanline_r1g2b1 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t  r,g,b;
     const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     int i;
     for (i = 0; i < width; ++i) {
-	uint32_t  p = Fetch4(image, bits, i + x);
+	uint32_t  p = FETCH_4(image, bits, i + x);
 
 	r = ((p & 0x8) * 0xff) << 13;
 	g = ((p & 0x6) * 0x55) << 7;
@@ -660,14 +660,14 @@ fbFetch_r1g2b1 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer
 }
 
 static void
-fbFetch_b1g2r1 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+fetch_scanline_b1g2r1 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t  r,g,b;
     const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     int i;
     for (i = 0; i < width; ++i) {
-	uint32_t  p = Fetch4(image, bits, i + x);
+	uint32_t  p = FETCH_4(image, bits, i + x);
 
 	b = ((p & 0x8) * 0xff) >> 3;
 	g = ((p & 0x6) * 0x55) << 7;
@@ -677,14 +677,14 @@ fbFetch_b1g2r1 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer
 }
 
 static void
-fbFetch_a1r1g1b1 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+fetch_scanline_a1r1g1b1 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		  const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t  a,r,g,b;
     const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     int i;
     for (i = 0; i < width; ++i) {
-	uint32_t  p = Fetch4(image, bits, i + x);
+	uint32_t  p = FETCH_4(image, bits, i + x);
 
 	a = ((p & 0x8) * 0xff) << 21;
 	r = ((p & 0x4) * 0xff) << 14;
@@ -695,14 +695,14 @@ fbFetch_a1r1g1b1 (pixman_image_t *image, int x, int y, int width, uint32_t *buff
 }
 
 static void
-fbFetch_a1b1g1r1 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+fetch_scanline_a1b1g1r1 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		  const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t  a,r,g,b;
     const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     int i;
     for (i = 0; i < width; ++i) {
-	uint32_t  p = Fetch4(image, bits, i + x);
+	uint32_t  p = FETCH_4(image, bits, i + x);
 
 	a = ((p & 0x8) * 0xff) << 21;
 	r = ((p & 0x4) * 0xff) >> 3;
@@ -713,14 +713,14 @@ fbFetch_a1b1g1r1 (pixman_image_t *image, int x, int y, int width, uint32_t *buff
 }
 
 static void
-fbFetch_c4 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+fetch_scanline_c4 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 	    const uint32_t *mask, uint32_t mask_bits)
 {
     const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
     const pixman_indexed_t * indexed = image->bits.indexed;
     int i;
     for (i = 0; i < width; ++i) {
-	uint32_t  p = Fetch4 (image, bits, i + x);
+	uint32_t  p = FETCH_4 (image, bits, i + x);
 
 	*buffer++ = indexed->rgba[p];
     }
@@ -728,7 +728,7 @@ fbFetch_c4 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 
 
 static void
-fbFetch_a1 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+fetch_scanline_a1 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 	    const uint32_t *mask, uint32_t mask_bits)
 {
     const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
@@ -750,7 +750,7 @@ fbFetch_a1 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 }
 
 static void
-fbFetch_g1 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+fetch_scanline_g1 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 	    const uint32_t *mask, uint32_t mask_bits)
 {
     const uint32_t *bits = image->bits.bits + y*image->bits.rowstride;
@@ -770,7 +770,7 @@ fbFetch_g1 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 }
 
 static void
-fbFetch_yuy2 (pixman_image_t *image, int x, int line, int width, uint32_t *buffer,
+fetch_scanline_yuy2 (pixman_image_t *image, int x, int line, int width, uint32_t *buffer,
 	      const uint32_t *mask, uint32_t mask_bits)
 {
     int16_t y, u, v;
@@ -800,22 +800,22 @@ fbFetch_yuy2 (pixman_image_t *image, int x, int line, int width, uint32_t *buffe
 }
 
 static void
-fbFetch_yv12 (pixman_image_t *image, int x, int line, int width, uint32_t *buffer,
+fetch_scanline_yv12 (pixman_image_t *image, int x, int line, int width, uint32_t *buffer,
 	      const uint32_t *mask, uint32_t mask_bits)
 {
     YV12_SETUP(image);
-    uint8_t *pY = YV12_Y (line);
-    uint8_t *pU = YV12_U (line);
-    uint8_t *pV = YV12_V (line);
+    uint8_t *y_line = YV12_Y (line);
+    uint8_t *u_line = YV12_U (line);
+    uint8_t *v_line = YV12_V (line);
     int16_t y, u, v;
     int32_t r, g, b;
     int   i;
 
     for (i = 0; i < width; i++)
     {
-	y = pY[x + i] - 16;
-	u = pU[(x + i) >> 1] - 128;
-	v = pV[(x + i) >> 1] - 128;
+	y = y_line[x + i] - 16;
+	u = u_line[(x + i) >> 1] - 128;
+	v = v_line[(x + i) >> 1] - 128;
 
 	/* R = 1.164(Y - 16) + 1.596(V - 128) */
 	r = 0x012b27 * y + 0x019a2e * v;
@@ -835,7 +835,7 @@ fbFetch_yv12 (pixman_image_t *image, int x, int line, int width, uint32_t *buffe
 
 /* Despite the type, expects a uint64_t buffer */
 static void
-fbFetchPixel_a2r10g10b10_64 (bits_image_t *pict, uint32_t *b, int n_pixels)
+fetch_pixels_a2r10g10b10_64 (bits_image_t *pict, uint32_t *b, int n_pixels)
 {
     int i;
     uint64_t *buffer = (uint64_t *)b;
@@ -874,7 +874,7 @@ fbFetchPixel_a2r10g10b10_64 (bits_image_t *pict, uint32_t *b, int n_pixels)
 
 /* Despite the type, this function expects a uint64_t buffer */
 static void
-fbFetchPixel_x2r10g10b10_64 (bits_image_t *pict, uint32_t *b, int n_pixels)
+fetch_pixels_x2r10g10b10_64 (bits_image_t *pict, uint32_t *b, int n_pixels)
 {
     uint64_t *buffer = (uint64_t *)b;
     int i;
@@ -907,7 +907,7 @@ fbFetchPixel_x2r10g10b10_64 (bits_image_t *pict, uint32_t *b, int n_pixels)
 
 /* Despite the type, expects a uint64_t buffer */
 static void
-fbFetchPixel_a2b10g10r10_64 (bits_image_t *pict, uint32_t *b, int n_pixels)
+fetch_pixels_a2b10g10r10_64 (bits_image_t *pict, uint32_t *b, int n_pixels)
 {
     int i;
     uint64_t *buffer = (uint64_t *)b;
@@ -946,7 +946,7 @@ fbFetchPixel_a2b10g10r10_64 (bits_image_t *pict, uint32_t *b, int n_pixels)
 
 /* Despite the type, this function expects a uint64_t buffer */
 static void
-fbFetchPixel_x2b10g10r10_64 (bits_image_t *pict, uint32_t *b, int n_pixels)
+fetch_pixels_x2b10g10r10_64 (bits_image_t *pict, uint32_t *b, int n_pixels)
 {
     uint64_t *buffer = (uint64_t *)b;
     int i;
@@ -978,7 +978,7 @@ fbFetchPixel_x2b10g10r10_64 (bits_image_t *pict, uint32_t *b, int n_pixels)
 }
 
 static void
-fbFetchPixel_a8r8g8b8 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_a8r8g8b8 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     int i;
     
@@ -1000,7 +1000,7 @@ fbFetchPixel_a8r8g8b8 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 }
 
 static void
-fbFetchPixel_x8r8g8b8 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_x8r8g8b8 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     int i;
     
@@ -1022,7 +1022,7 @@ fbFetchPixel_x8r8g8b8 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 }
 
 static void
-fbFetchPixel_a8b8g8r8 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_a8b8g8r8 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     int i;
     
@@ -1049,7 +1049,7 @@ fbFetchPixel_a8b8g8r8 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 }
 
 static void
-fbFetchPixel_x8b8g8r8 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_x8b8g8r8 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     int i;
     
@@ -1076,7 +1076,7 @@ fbFetchPixel_x8b8g8r8 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 }
 
 static void
-fbFetchPixel_b8g8r8a8 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_b8g8r8a8 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     int i;
 
@@ -1103,7 +1103,7 @@ fbFetchPixel_b8g8r8a8 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 }
 
 static void
-fbFetchPixel_b8g8r8x8 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_b8g8r8x8 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     int i;
 
@@ -1130,7 +1130,7 @@ fbFetchPixel_b8g8r8x8 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 }
 
 static void
-fbFetchPixel_r8g8b8 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_r8g8b8 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     int i;
 
@@ -1163,7 +1163,7 @@ fbFetchPixel_r8g8b8 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 }
 
 static void
-fbFetchPixel_b8g8r8 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_b8g8r8 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     int i;
 
@@ -1196,7 +1196,7 @@ fbFetchPixel_b8g8r8 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 }
 
 static void
-fbFetchPixel_r5g6b5 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_r5g6b5 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     int i;
 
@@ -1224,7 +1224,7 @@ fbFetchPixel_r5g6b5 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 }
 
 static void
-fbFetchPixel_b5g6r5 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_b5g6r5 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     int i;
 
@@ -1252,7 +1252,7 @@ fbFetchPixel_b5g6r5 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 }
 
 static void
-fbFetchPixel_a1r5g5b5 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_a1r5g5b5 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     int i;
 
@@ -1281,7 +1281,7 @@ fbFetchPixel_a1r5g5b5 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 }
 
 static void
-fbFetchPixel_x1r5g5b5 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_x1r5g5b5 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     int i;
 
@@ -1309,7 +1309,7 @@ fbFetchPixel_x1r5g5b5 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 }
 
 static void
-fbFetchPixel_a1b5g5r5 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_a1b5g5r5 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     int i;
 
@@ -1338,7 +1338,7 @@ fbFetchPixel_a1b5g5r5 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 }
 
 static void
-fbFetchPixel_x1b5g5r5 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_x1b5g5r5 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     int i;
 
@@ -1366,7 +1366,7 @@ fbFetchPixel_x1b5g5r5 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 }
 
 static void
-fbFetchPixel_a4r4g4b4 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_a4r4g4b4 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     int i;
 
@@ -1395,7 +1395,7 @@ fbFetchPixel_a4r4g4b4 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 }
 
 static void
-fbFetchPixel_x4r4g4b4 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_x4r4g4b4 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     int i;
 
@@ -1423,7 +1423,7 @@ fbFetchPixel_x4r4g4b4 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 }
 
 static void
-fbFetchPixel_a4b4g4r4 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_a4b4g4r4 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     int i;
 
@@ -1452,7 +1452,7 @@ fbFetchPixel_a4b4g4r4 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 }
 
 static void
-fbFetchPixel_x4b4g4r4 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_x4b4g4r4 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     int i;
 
@@ -1480,7 +1480,7 @@ fbFetchPixel_x4b4g4r4 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 }
 
 static void
-fbFetchPixel_a8 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_a8 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     int i;
 
@@ -1504,7 +1504,7 @@ fbFetchPixel_a8 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 }
 
 static void
-fbFetchPixel_r3g3b2 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_r3g3b2 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     int i;
 
@@ -1535,7 +1535,7 @@ fbFetchPixel_r3g3b2 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 }
 
 static void
-fbFetchPixel_b2g3r3 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_b2g3r3 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     int i;
 
@@ -1568,7 +1568,7 @@ fbFetchPixel_b2g3r3 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 }
 
 static void
-fbFetchPixel_a2r2g2b2 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_a2r2g2b2 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     int i;
 
@@ -1597,7 +1597,7 @@ fbFetchPixel_a2r2g2b2 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 }
 
 static void
-fbFetchPixel_a2b2g2r2 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_a2b2g2r2 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     int i;
 
@@ -1626,7 +1626,7 @@ fbFetchPixel_a2b2g2r2 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 }
 
 static void
-fbFetchPixel_c8 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_c8 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     int i;
 
@@ -1650,7 +1650,7 @@ fbFetchPixel_c8 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 }
 
 static void
-fbFetchPixel_x4a4 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_x4a4 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     int i;
 
@@ -1674,7 +1674,7 @@ fbFetchPixel_x4a4 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 }
 
 static void
-fbFetchPixel_a4 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_a4 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     int i;
 
@@ -1690,7 +1690,7 @@ fbFetchPixel_a4 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 	else
 	{
 	    uint32_t *bits = pict->bits + line*pict->rowstride;
-	    uint32_t  pixel = Fetch4 (pict, bits, offset);
+	    uint32_t  pixel = FETCH_4 (pict, bits, offset);
 	    
 	    pixel |= pixel << 4;
 	    buffer[i] = pixel << 24;
@@ -1699,7 +1699,7 @@ fbFetchPixel_a4 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 }
 
 static void
-fbFetchPixel_r1g2b1 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_r1g2b1 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     int i;
 
@@ -1716,7 +1716,7 @@ fbFetchPixel_r1g2b1 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 	{
 	    uint32_t  r,g,b;
 	    uint32_t *bits = pict->bits + line*pict->rowstride;
-	    uint32_t  pixel = Fetch4 (pict, bits, offset);
+	    uint32_t  pixel = FETCH_4 (pict, bits, offset);
 	    
 	    r = ((pixel & 0x8) * 0xff) << 13;
 	    g = ((pixel & 0x6) * 0x55) << 7;
@@ -1727,7 +1727,7 @@ fbFetchPixel_r1g2b1 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 }
 
 static void
-fbFetchPixel_b1g2r1 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_b1g2r1 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     int i;
 
@@ -1744,7 +1744,7 @@ fbFetchPixel_b1g2r1 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 	{
 	    uint32_t  r,g,b;
 	    uint32_t *bits = pict->bits + line*pict->rowstride;
-	    uint32_t  pixel = Fetch4 (pict, bits, offset);
+	    uint32_t  pixel = FETCH_4 (pict, bits, offset);
 	    
 	    b = ((pixel & 0x8) * 0xff) >> 3;
 	    g = ((pixel & 0x6) * 0x55) << 7;
@@ -1755,7 +1755,7 @@ fbFetchPixel_b1g2r1 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 }
 
 static void
-fbFetchPixel_a1r1g1b1 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_a1r1g1b1 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     int i;
 
@@ -1772,7 +1772,7 @@ fbFetchPixel_a1r1g1b1 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 	{
 	    uint32_t  a,r,g,b;
 	    uint32_t *bits = pict->bits + line*pict->rowstride;
-	    uint32_t  pixel = Fetch4 (pict, bits, offset);
+	    uint32_t  pixel = FETCH_4 (pict, bits, offset);
 	    
 	    a = ((pixel & 0x8) * 0xff) << 21;
 	    r = ((pixel & 0x4) * 0xff) << 14;
@@ -1784,7 +1784,7 @@ fbFetchPixel_a1r1g1b1 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 }
 
 static void
-fbFetchPixel_a1b1g1r1 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_a1b1g1r1 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     int i;
 
@@ -1801,7 +1801,7 @@ fbFetchPixel_a1b1g1r1 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 	{
 	    uint32_t  a,r,g,b;
 	    uint32_t *bits = pict->bits + line*pict->rowstride;
-	    uint32_t  pixel = Fetch4 (pict, bits, offset);
+	    uint32_t  pixel = FETCH_4 (pict, bits, offset);
 	    
 	    a = ((pixel & 0x8) * 0xff) << 21;
 	    r = ((pixel & 0x4) * 0xff) >> 3;
@@ -1813,7 +1813,7 @@ fbFetchPixel_a1b1g1r1 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 }
 
 static void
-fbFetchPixel_c4 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_c4 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     int i;
 
@@ -1829,7 +1829,7 @@ fbFetchPixel_c4 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 	else
 	{
 	    uint32_t *bits = pict->bits + line*pict->rowstride;
-	    uint32_t  pixel = Fetch4 (pict, bits, offset);
+	    uint32_t  pixel = FETCH_4 (pict, bits, offset);
 	    const pixman_indexed_t * indexed = pict->indexed;
 	    
 	    buffer[i] = indexed->rgba[pixel];
@@ -1839,7 +1839,7 @@ fbFetchPixel_c4 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 
 
 static void
-fbFetchPixel_a1 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_a1 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     int i;
 
@@ -1872,7 +1872,7 @@ fbFetchPixel_a1 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 }
 
 static void
-fbFetchPixel_g1 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_g1 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     int i;
 
@@ -1903,7 +1903,7 @@ fbFetchPixel_g1 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 }
 
 static void
-fbFetchPixel_yuy2 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_yuy2 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     int i;
 
@@ -1943,7 +1943,7 @@ fbFetchPixel_yuy2 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 }
 
 static void
-fbFetchPixel_yv12 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_yv12 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     int i;
 
@@ -1981,11 +1981,11 @@ fbFetchPixel_yv12 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 
 /*********************************** Store ************************************/
 
-#define Splita(v)	uint32_t	a = ((v) >> 24), r = ((v) >> 16) & 0xff, g = ((v) >> 8) & 0xff, b = (v) & 0xff
-#define Split(v)	uint32_t	r = ((v) >> 16) & 0xff, g = ((v) >> 8) & 0xff, b = (v) & 0xff
+#define SPLIT_A(v)	uint32_t	a = ((v) >> 24), r = ((v) >> 16) & 0xff, g = ((v) >> 8) & 0xff, b = (v) & 0xff
+#define SPLIT(v)	uint32_t	r = ((v) >> 16) & 0xff, g = ((v) >> 8) & 0xff, b = (v) & 0xff
 
 static void
-fbStore_a2r10g10b10 (bits_image_t *image, int x, int y, int width, const uint32_t *v)
+store_scanline_a2r10g10b10 (bits_image_t *image, int x, int y, int width, const uint32_t *v)
 {
     uint32_t *bits = image->bits + image->rowstride * y;
     uint32_t *pixel = bits + x;
@@ -2002,7 +2002,7 @@ fbStore_a2r10g10b10 (bits_image_t *image, int x, int y, int width, const uint32_
 }
 
 static void
-fbStore_x2r10g10b10 (bits_image_t *image, int x, int y, int width, const uint32_t *v)
+store_scanline_x2r10g10b10 (bits_image_t *image, int x, int y, int width, const uint32_t *v)
 {
     uint32_t *bits = image->bits + image->rowstride * y;
     uint64_t *values = (uint64_t *)v;
@@ -2018,7 +2018,7 @@ fbStore_x2r10g10b10 (bits_image_t *image, int x, int y, int width, const uint32_
 }
 
 static void
-fbStore_a2b10g10r10 (bits_image_t *image, int x, int y, int width, const uint32_t *v)
+store_scanline_a2b10g10r10 (bits_image_t *image, int x, int y, int width, const uint32_t *v)
 {
     uint32_t *bits = image->bits + image->rowstride * y;
     uint32_t *pixel = bits + x;
@@ -2035,7 +2035,7 @@ fbStore_a2b10g10r10 (bits_image_t *image, int x, int y, int width, const uint32_
 }
 
 static void
-fbStore_x2b10g10r10 (bits_image_t *image, int x, int y, int width, const uint32_t *v)
+store_scanline_x2b10g10r10 (bits_image_t *image, int x, int y, int width, const uint32_t *v)
 {
     uint32_t *bits = image->bits + image->rowstride * y;
     uint64_t *values = (uint64_t *)v;
@@ -2051,7 +2051,7 @@ fbStore_x2b10g10r10 (bits_image_t *image, int x, int y, int width, const uint32_
 }
 
 static void
-fbStore_a8r8g8b8 (bits_image_t *image,
+store_scanline_a8r8g8b8 (bits_image_t *image,
 		  int x, int y, int width,
 		  const uint32_t *values)
 {
@@ -2061,7 +2061,7 @@ fbStore_a8r8g8b8 (bits_image_t *image,
 }
 
 static void
-fbStore_x8r8g8b8 (bits_image_t *image,
+store_scanline_x8r8g8b8 (bits_image_t *image,
 		  int x, int y, int width,
 		  const uint32_t *values)
 {
@@ -2074,7 +2074,7 @@ fbStore_x8r8g8b8 (bits_image_t *image,
 }
 
 static void
-fbStore_a8b8g8r8 (bits_image_t *image,
+store_scanline_a8b8g8r8 (bits_image_t *image,
 		  int x, int y, int width,
 		  const uint32_t *values)
 {
@@ -2087,7 +2087,7 @@ fbStore_a8b8g8r8 (bits_image_t *image,
 }
 
 static void
-fbStore_x8b8g8r8 (bits_image_t *image,
+store_scanline_x8b8g8r8 (bits_image_t *image,
 		  int x, int y, int width,
 		  const uint32_t *values)
 {
@@ -2100,7 +2100,7 @@ fbStore_x8b8g8r8 (bits_image_t *image,
 }
 
 static void
-fbStore_b8g8r8a8 (bits_image_t *image,
+store_scanline_b8g8r8a8 (bits_image_t *image,
 		  int x, int y, int width,
 		  const uint32_t *values)
 {
@@ -2117,7 +2117,7 @@ fbStore_b8g8r8a8 (bits_image_t *image,
 }
 
 static void
-fbStore_b8g8r8x8 (bits_image_t *image,
+store_scanline_b8g8r8x8 (bits_image_t *image,
 		  int x, int y, int width,
 		  const uint32_t *values)
 {
@@ -2133,7 +2133,7 @@ fbStore_b8g8r8x8 (bits_image_t *image,
 }
 
 static void
-fbStore_r8g8b8 (bits_image_t *image,
+store_scanline_r8g8b8 (bits_image_t *image,
 		int x, int y, int width,
 		const uint32_t *values)
 {
@@ -2157,7 +2157,7 @@ fbStore_r8g8b8 (bits_image_t *image,
 }
 
 static void
-fbStore_b8g8r8 (bits_image_t *image,
+store_scanline_b8g8r8 (bits_image_t *image,
 		int x, int y, int width,
 		const uint32_t *values)
 {
@@ -2181,7 +2181,7 @@ fbStore_b8g8r8 (bits_image_t *image,
 }
 
 static void
-fbStore_r5g6b5 (bits_image_t *image,
+store_scanline_r5g6b5 (bits_image_t *image,
 		int x, int y, int width,
 		const uint32_t *values)
 {
@@ -2198,7 +2198,7 @@ fbStore_r5g6b5 (bits_image_t *image,
 }
 
 static void
-fbStore_b5g6r5 (bits_image_t *image,
+store_scanline_b5g6r5 (bits_image_t *image,
 		int x, int y, int width,
 		const uint32_t *values)
 {
@@ -2207,7 +2207,7 @@ fbStore_b5g6r5 (bits_image_t *image,
     int i;
 
     for (i = 0; i < width; ++i) {
-	Split(values[i]);
+	SPLIT(values[i]);
 	WRITE(image, pixel++, ((b << 8) & 0xf800) |
 	      ((g << 3) & 0x07e0) |
 	      ((r >> 3)         ));
@@ -2215,7 +2215,7 @@ fbStore_b5g6r5 (bits_image_t *image,
 }
 
 static void
-fbStore_a1r5g5b5 (bits_image_t *image,
+store_scanline_a1r5g5b5 (bits_image_t *image,
 		  int x, int y, int width,
 		  const uint32_t *values)
 {
@@ -2224,7 +2224,7 @@ fbStore_a1r5g5b5 (bits_image_t *image,
     int i;
 
     for (i = 0; i < width; ++i) {
-	Splita(values[i]);
+	SPLIT_A(values[i]);
 	WRITE(image, pixel++, ((a << 8) & 0x8000) |
 	      ((r << 7) & 0x7c00) |
 	      ((g << 2) & 0x03e0) |
@@ -2233,7 +2233,7 @@ fbStore_a1r5g5b5 (bits_image_t *image,
 }
 
 static void
-fbStore_x1r5g5b5 (bits_image_t *image,
+store_scanline_x1r5g5b5 (bits_image_t *image,
 		  int x, int y, int width,
 		  const uint32_t *values)
 {
@@ -2242,7 +2242,7 @@ fbStore_x1r5g5b5 (bits_image_t *image,
     int i;
 
     for (i = 0; i < width; ++i) {
-	Split(values[i]);
+	SPLIT(values[i]);
 	WRITE(image, pixel++, ((r << 7) & 0x7c00) |
 	      ((g << 2) & 0x03e0) |
 	      ((b >> 3)         ));
@@ -2250,7 +2250,7 @@ fbStore_x1r5g5b5 (bits_image_t *image,
 }
 
 static void
-fbStore_a1b5g5r5 (bits_image_t *image,
+store_scanline_a1b5g5r5 (bits_image_t *image,
 		  int x, int y, int width,
 		  const uint32_t *values)
 {
@@ -2259,7 +2259,7 @@ fbStore_a1b5g5r5 (bits_image_t *image,
     int i;
 
     for (i = 0; i < width; ++i) {
-	Splita(values[i]);
+	SPLIT_A(values[i]);
 	WRITE(image, pixel++, ((a << 8) & 0x8000) |
 	      ((b << 7) & 0x7c00) |
 	      ((g << 2) & 0x03e0) |
@@ -2268,7 +2268,7 @@ fbStore_a1b5g5r5 (bits_image_t *image,
 }
 
 static void
-fbStore_x1b5g5r5 (bits_image_t *image,
+store_scanline_x1b5g5r5 (bits_image_t *image,
 		  int x, int y, int width,
 		  const uint32_t *values)
 {
@@ -2277,7 +2277,7 @@ fbStore_x1b5g5r5 (bits_image_t *image,
     int i;
 
     for (i = 0; i < width; ++i) {
-	Split(values[i]);
+	SPLIT(values[i]);
 	WRITE(image, pixel++, ((b << 7) & 0x7c00) |
 	      ((g << 2) & 0x03e0) |
 	      ((r >> 3)         ));
@@ -2285,7 +2285,7 @@ fbStore_x1b5g5r5 (bits_image_t *image,
 }
 
 static void
-fbStore_a4r4g4b4 (bits_image_t *image,
+store_scanline_a4r4g4b4 (bits_image_t *image,
 		  int x, int y, int width,
 		  const uint32_t *values)
 {
@@ -2294,7 +2294,7 @@ fbStore_a4r4g4b4 (bits_image_t *image,
     int i;
 
     for (i = 0; i < width; ++i) {
-	Splita(values[i]);
+	SPLIT_A(values[i]);
 	WRITE(image, pixel++, ((a << 8) & 0xf000) |
 	      ((r << 4) & 0x0f00) |
 	      ((g     ) & 0x00f0) |
@@ -2303,7 +2303,7 @@ fbStore_a4r4g4b4 (bits_image_t *image,
 }
 
 static void
-fbStore_x4r4g4b4 (bits_image_t *image,
+store_scanline_x4r4g4b4 (bits_image_t *image,
 		  int x, int y, int width,
 		  const uint32_t *values)
 {
@@ -2312,7 +2312,7 @@ fbStore_x4r4g4b4 (bits_image_t *image,
     int i;
 
     for (i = 0; i < width; ++i) {
-	Split(values[i]);
+	SPLIT(values[i]);
 	WRITE(image, pixel++, ((r << 4) & 0x0f00) |
 	      ((g     ) & 0x00f0) |
 	      ((b >> 4)         ));
@@ -2320,7 +2320,7 @@ fbStore_x4r4g4b4 (bits_image_t *image,
 }
 
 static void
-fbStore_a4b4g4r4 (bits_image_t *image,
+store_scanline_a4b4g4r4 (bits_image_t *image,
 		  int x, int y, int width,
 		  const uint32_t *values)
 {
@@ -2329,7 +2329,7 @@ fbStore_a4b4g4r4 (bits_image_t *image,
     int i;
 
     for (i = 0; i < width; ++i) {
-	Splita(values[i]);
+	SPLIT_A(values[i]);
 	WRITE(image, pixel++, ((a << 8) & 0xf000) |
 	      ((b << 4) & 0x0f00) |
 	      ((g     ) & 0x00f0) |
@@ -2338,7 +2338,7 @@ fbStore_a4b4g4r4 (bits_image_t *image,
 }
 
 static void
-fbStore_x4b4g4r4 (bits_image_t *image,
+store_scanline_x4b4g4r4 (bits_image_t *image,
 		  int x, int y, int width,
 		  const uint32_t *values)
 {
@@ -2347,7 +2347,7 @@ fbStore_x4b4g4r4 (bits_image_t *image,
     int i;
 
     for (i = 0; i < width; ++i) {
-	Split(values[i]);
+	SPLIT(values[i]);
 	WRITE(image, pixel++, ((b << 4) & 0x0f00) |
 	      ((g     ) & 0x00f0) |
 	      ((r >> 4)         ));
@@ -2355,7 +2355,7 @@ fbStore_x4b4g4r4 (bits_image_t *image,
 }
 
 static void
-fbStore_a8 (bits_image_t *image,
+store_scanline_a8 (bits_image_t *image,
 	    int x, int y, int width,
 	    const uint32_t *values)
 {
@@ -2369,7 +2369,7 @@ fbStore_a8 (bits_image_t *image,
 }
 
 static void
-fbStore_r3g3b2 (bits_image_t *image,
+store_scanline_r3g3b2 (bits_image_t *image,
 		int x, int y, int width,
 		const uint32_t *values)
 {
@@ -2378,7 +2378,7 @@ fbStore_r3g3b2 (bits_image_t *image,
     int i;
 
     for (i = 0; i < width; ++i) {
-	Split(values[i]);
+	SPLIT(values[i]);
 	WRITE(image, pixel++,
 	      ((r     ) & 0xe0) |
 	      ((g >> 3) & 0x1c) |
@@ -2387,7 +2387,7 @@ fbStore_r3g3b2 (bits_image_t *image,
 }
 
 static void
-fbStore_b2g3r3 (bits_image_t *image,
+store_scanline_b2g3r3 (bits_image_t *image,
 		int x, int y, int width,
 		const uint32_t *values)
 {
@@ -2396,7 +2396,7 @@ fbStore_b2g3r3 (bits_image_t *image,
     int i;
 
     for (i = 0; i < width; ++i) {
-	Split(values[i]);
+	SPLIT(values[i]);
 	WRITE(image, pixel++,
 	      ((b     ) & 0xc0) |
 	      ((g >> 2) & 0x38) |
@@ -2405,7 +2405,7 @@ fbStore_b2g3r3 (bits_image_t *image,
 }
 
 static void
-fbStore_a2r2g2b2 (bits_image_t *image,
+store_scanline_a2r2g2b2 (bits_image_t *image,
 		  int x, int y, int width,
 		  const uint32_t *values)
 {
@@ -2414,7 +2414,7 @@ fbStore_a2r2g2b2 (bits_image_t *image,
     int i;
 
     for (i = 0; i < width; ++i) {
-	Splita(values[i]);
+	SPLIT_A(values[i]);
 	WRITE(image, pixel++, ((a     ) & 0xc0) |
 	      ((r >> 2) & 0x30) |
 	      ((g >> 4) & 0x0c) |
@@ -2423,7 +2423,7 @@ fbStore_a2r2g2b2 (bits_image_t *image,
 }
 
 static void
-fbStore_a2b2g2r2 (bits_image_t *image,
+store_scanline_a2b2g2r2 (bits_image_t *image,
 		  int x, int y, int width,
 		  const uint32_t *values)
 {
@@ -2432,7 +2432,7 @@ fbStore_a2b2g2r2 (bits_image_t *image,
     int i;
 
     for (i = 0; i < width; ++i) {
-	Splita(values[i]);
+	SPLIT_A(values[i]);
 	*(pixel++) =  ((a     ) & 0xc0) |
 	    ((b >> 2) & 0x30) |
 	    ((g >> 4) & 0x0c) |
@@ -2441,7 +2441,7 @@ fbStore_a2b2g2r2 (bits_image_t *image,
 }
 
 static void
-fbStore_c8 (bits_image_t *image,
+store_scanline_c8 (bits_image_t *image,
 	    int x, int y, int width,
 	    const uint32_t *values)
 {
@@ -2451,12 +2451,12 @@ fbStore_c8 (bits_image_t *image,
     int i;
     
     for (i = 0; i < width; ++i) {
-	WRITE(image, pixel++, miIndexToEnt24(indexed,values[i]));
+	WRITE(image, pixel++, RGB24_TO_ENTRY(indexed,values[i]));
     }
 }
 
 static void
-fbStore_x4a4 (bits_image_t *image,
+store_scanline_x4a4 (bits_image_t *image,
 	      int x, int y, int width,
 	      const uint32_t *values)
 {
@@ -2469,19 +2469,19 @@ fbStore_x4a4 (bits_image_t *image,
     }
 }
 
-#define Store8(img,l,o,v)  (WRITE(img, (uint8_t *)(l) + ((o) >> 3), (v)))
+#define STORE_8(img,l,o,v)  (WRITE(img, (uint8_t *)(l) + ((o) >> 3), (v)))
 #ifdef WORDS_BIGENDIAN
-#define Store4(img,l,o,v)  Store8(img,l,o,((o) & 4 ?				\
-				   (Fetch8(img,l,o) & 0xf0) | (v) :		\
-				   (Fetch8(img,l,o) & 0x0f) | ((v) << 4)))
+#define STORE_4(img,l,o,v)  STORE_8(img,l,o,((o) & 4 ?				\
+				   (FETCH_8(img,l,o) & 0xf0) | (v) :		\
+				   (FETCH_8(img,l,o) & 0x0f) | ((v) << 4)))
 #else
-#define Store4(img,l,o,v)  Store8(img,l,o,((o) & 4 ?			       \
-				   (Fetch8(img,l,o) & 0x0f) | ((v) << 4) : \
-				   (Fetch8(img,l,o) & 0xf0) | (v)))
+#define STORE_4(img,l,o,v)  STORE_8(img,l,o,((o) & 4 ?			       \
+				   (FETCH_8(img,l,o) & 0x0f) | ((v) << 4) : \
+				   (FETCH_8(img,l,o) & 0xf0) | (v)))
 #endif
 
 static void
-fbStore_a4 (bits_image_t *image,
+store_scanline_a4 (bits_image_t *image,
 	    int x, int y, int width,
 	    const uint32_t *values)
 {
@@ -2489,12 +2489,12 @@ fbStore_a4 (bits_image_t *image,
     int i;
     
     for (i = 0; i < width; ++i) {
-	Store4(image, bits, i + x, values[i]>>28);
+	STORE_4(image, bits, i + x, values[i]>>28);
     }
 }
 
 static void
-fbStore_r1g2b1 (bits_image_t *image,
+store_scanline_r1g2b1 (bits_image_t *image,
 		int x, int y, int width,
 		const uint32_t *values)
 {
@@ -2504,16 +2504,16 @@ fbStore_r1g2b1 (bits_image_t *image,
     for (i = 0; i < width; ++i) {
 	uint32_t  pixel;
 
-	Split(values[i]);
+	SPLIT(values[i]);
 	pixel = (((r >> 4) & 0x8) |
 		 ((g >> 5) & 0x6) |
 		 ((b >> 7)      ));
-	Store4(image, bits, i + x, pixel);
+	STORE_4(image, bits, i + x, pixel);
     }
 }
 
 static void
-fbStore_b1g2r1 (bits_image_t *image,
+store_scanline_b1g2r1 (bits_image_t *image,
 		int x, int y, int width,
 		const uint32_t *values)
 {
@@ -2523,16 +2523,16 @@ fbStore_b1g2r1 (bits_image_t *image,
     for (i = 0; i < width; ++i) {
 	uint32_t  pixel;
 
-	Split(values[i]);
+	SPLIT(values[i]);
 	pixel = (((b >> 4) & 0x8) |
 		 ((g >> 5) & 0x6) |
 		 ((r >> 7)      ));
-	Store4(image, bits, i + x, pixel);
+	STORE_4(image, bits, i + x, pixel);
     }
 }
 
 static void
-fbStore_a1r1g1b1 (bits_image_t *image,
+store_scanline_a1r1g1b1 (bits_image_t *image,
 		  int x, int y, int width,
 		  const uint32_t *values)
 {
@@ -2541,17 +2541,17 @@ fbStore_a1r1g1b1 (bits_image_t *image,
     
     for (i = 0; i < width; ++i) {
 	uint32_t  pixel;
-	Splita(values[i]);
+	SPLIT_A(values[i]);
 	pixel = (((a >> 4) & 0x8) |
 		 ((r >> 5) & 0x4) |
 		 ((g >> 6) & 0x2) |
 		 ((b >> 7)      ));
-	Store4(image, bits, i + x, pixel);
+	STORE_4(image, bits, i + x, pixel);
     }
 }
 
 static void
-fbStore_a1b1g1r1 (bits_image_t *image,
+store_scanline_a1b1g1r1 (bits_image_t *image,
 		  int x, int y, int width,
 		  const uint32_t *values)
 {
@@ -2560,17 +2560,17 @@ fbStore_a1b1g1r1 (bits_image_t *image,
     
     for (i = 0; i < width; ++i) {
 	uint32_t  pixel;
-	Splita(values[i]);
+	SPLIT_A(values[i]);
 	pixel = (((a >> 4) & 0x8) |
 		 ((b >> 5) & 0x4) |
 		 ((g >> 6) & 0x2) |
 		 ((r >> 7)      ));
-	Store4(image, bits, i + x, pixel);
+	STORE_4(image, bits, i + x, pixel);
     }
 }
 
 static void
-fbStore_c4 (bits_image_t *image,
+store_scanline_c4 (bits_image_t *image,
 	    int x, int y, int width,
 	    const uint32_t *values)
 {
@@ -2581,13 +2581,13 @@ fbStore_c4 (bits_image_t *image,
     for (i = 0; i < width; ++i) {
 	uint32_t  pixel;
 
-	pixel = miIndexToEnt24(indexed, values[i]);
-	Store4(image, bits, i + x, pixel);
+	pixel = RGB24_TO_ENTRY(indexed, values[i]);
+	STORE_4(image, bits, i + x, pixel);
     }
 }
 
 static void
-fbStore_a1 (bits_image_t *image,
+store_scanline_a1 (bits_image_t *image,
 	    int x, int y, int width,
 	    const uint32_t *values)
 {
@@ -2609,7 +2609,7 @@ fbStore_a1 (bits_image_t *image,
 }
 
 static void
-fbStore_g1 (bits_image_t *image,
+store_scanline_g1 (bits_image_t *image,
 	    int x, int y, int width,
 	    const uint32_t *values)
 {
@@ -2626,7 +2626,7 @@ fbStore_g1 (bits_image_t *image,
 #else
 	mask = 1 << ((i + x) & 0x1f);
 #endif
-	v = miIndexToEntY24 (indexed, values[i]) ? mask : 0;
+	v = RGB24_TO_ENTRY_Y (indexed, values[i]) ? mask : 0;
 	WRITE(image, pixel, (READ(image, pixel) & ~mask) | v);
     }
 }
@@ -2636,29 +2636,29 @@ fbStore_g1 (bits_image_t *image,
  * store proc. Despite the type, this function expects a uint64_t buffer.
  */
 static void
-fbStore64_generic (bits_image_t *image, int x, int y, int width, const uint32_t *values)
+store_scanline_generic_64 (bits_image_t *image, int x, int y, int width, const uint32_t *values)
 {
-    uint32_t *argb8Pixels;
+    uint32_t *argb8_pixels;
 
     assert(image->common.type == BITS);
 
-    argb8Pixels = pixman_malloc_ab (width, sizeof(uint32_t));
-    if (!argb8Pixels)
+    argb8_pixels = pixman_malloc_ab (width, sizeof(uint32_t));
+    if (!argb8_pixels)
 	return;
 
     /* Contract the scanline.  We could do this in place if values weren't
      * const.
      */
-    pixman_contract(argb8Pixels, (uint64_t *)values, width);
+    pixman_contract(argb8_pixels, (uint64_t *)values, width);
     
-    image->store_scanline_raw_32 (image, x, y, width, argb8Pixels);
+    image->store_scanline_raw_32 (image, x, y, width, argb8_pixels);
 
-    free(argb8Pixels);
+    free(argb8_pixels);
 }
 
 /* Despite the type, this function expects both buffer and mask to be uint64_t */
 static void
-fbFetch64_generic (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
+fetch_scanline_generic_64 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
 		   const uint32_t *mask, uint32_t mask_bits)
 {
     /* Fetch the pixels into the first half of buffer and then expand them in
@@ -2671,7 +2671,7 @@ fbFetch64_generic (pixman_image_t *image, int x, int y, int width, uint32_t *buf
 
 /* Despite the type, this function expects a uint64_t *buffer */
 static void
-fbFetchPixel64_generic (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_generic_64 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     pict->fetch_pixels_raw_32 (pict, buffer, n_pixels);
     
@@ -2685,7 +2685,7 @@ fbFetchPixel64_generic (bits_image_t *pict, uint32_t *buffer, int n_pixels)
  * WARNING: This function loses precision!
  */
 static void
-fbFetchPixel32_generic_lossy (bits_image_t *pict, uint32_t *buffer, int n_pixels)
+fetch_pixels_generic_lossy_32 (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 {
     /* Since buffer contains n_pixels coordinate pairs, it also has enough room for
      * n_pixels 64 bit pixels.
@@ -2709,9 +2709,9 @@ typedef struct
 #define FORMAT_INFO(format)						\
     {									\
 	PIXMAN_##format,						\
-	    fbFetch_##format, fbFetch64_generic,			\
-	    fbFetchPixel_##format, fbFetchPixel64_generic,		\
-	    fbStore_##format, fbStore64_generic				\
+	    fetch_scanline_##format, fetch_scanline_generic_64,			\
+	    fetch_pixels_##format, fetch_pixels_generic_64,		\
+	    store_scanline_##format, store_scanline_generic_64				\
     }
 
 static const format_info_t accessors[] =
@@ -2750,17 +2750,17 @@ static const format_info_t accessors[] =
     
     FORMAT_INFO (c8),
 
-#define fbFetch_g8 fbFetch_c8
-#define fbFetchPixel_g8 fbFetchPixel_c8
-#define fbStore_g8 fbStore_c8
+#define fetch_scanline_g8 fetch_scanline_c8
+#define fetch_pixels_g8 fetch_pixels_c8
+#define store_scanline_g8 store_scanline_c8
     FORMAT_INFO (g8),
-#define fbFetch_x4c4 fbFetch_c8
-#define fbFetchPixel_x4c4 fbFetchPixel_c8
-#define fbStore_x4c4 fbStore_c8
+#define fetch_scanline_x4c4 fetch_scanline_c8
+#define fetch_pixels_x4c4 fetch_pixels_c8
+#define store_scanline_x4c4 store_scanline_c8
     FORMAT_INFO (x4c4),
-#define fbFetch_x4g4 fbFetch_c8
-#define fbFetchPixel_x4g4 fbFetchPixel_c8
-#define fbStore_x4g4 fbStore_c8
+#define fetch_scanline_x4g4 fetch_scanline_c8
+#define fetch_pixels_x4g4 fetch_pixels_c8
+#define store_scanline_x4g4 store_scanline_c8
     FORMAT_INFO (x4g4),
     
     FORMAT_INFO (x4a4),
@@ -2773,9 +2773,9 @@ static const format_info_t accessors[] =
     FORMAT_INFO (a1b1g1r1),
     
     FORMAT_INFO (c4),
-#define fbFetch_g4 fbFetch_c4
-#define fbFetchPixel_g4 fbFetchPixel_c4
-#define fbStore_g4 fbStore_c4
+#define fetch_scanline_g4 fetch_scanline_c4
+#define fetch_pixels_g4 fetch_pixels_c4
+#define store_scanline_g4 store_scanline_c4
     FORMAT_INFO (g4),
     
 /* 1bpp formats */
@@ -2785,34 +2785,34 @@ static const format_info_t accessors[] =
 /* Wide formats */
 
     { PIXMAN_a2r10g10b10,
-      NULL, fbFetch_a2r10g10b10,
-      fbFetchPixel32_generic_lossy, fbFetchPixel_a2r10g10b10_64,
-      NULL, fbStore_a2r10g10b10 },
+      NULL, fetch_scanline_a2r10g10b10,
+      fetch_pixels_generic_lossy_32, fetch_pixels_a2r10g10b10_64,
+      NULL, store_scanline_a2r10g10b10 },
 
     { PIXMAN_x2r10g10b10,
-      NULL, fbFetch_x2r10g10b10,
-      fbFetchPixel32_generic_lossy, fbFetchPixel_x2r10g10b10_64,
-      NULL, fbStore_x2r10g10b10 },
+      NULL, fetch_scanline_x2r10g10b10,
+      fetch_pixels_generic_lossy_32, fetch_pixels_x2r10g10b10_64,
+      NULL, store_scanline_x2r10g10b10 },
 
     { PIXMAN_a2b10g10r10,
-      NULL, fbFetch_a2b10g10r10,
-      fbFetchPixel32_generic_lossy, fbFetchPixel_a2b10g10r10_64,
-      NULL, fbStore_a2b10g10r10 },
+      NULL, fetch_scanline_a2b10g10r10,
+      fetch_pixels_generic_lossy_32, fetch_pixels_a2b10g10r10_64,
+      NULL, store_scanline_a2b10g10r10 },
 
     { PIXMAN_x2b10g10r10,
-      NULL, fbFetch_x2b10g10r10,
-      fbFetchPixel32_generic_lossy, fbFetchPixel_x2b10g10r10_64,
-      NULL, fbStore_x2b10g10r10 },
+      NULL, fetch_scanline_x2b10g10r10,
+      fetch_pixels_generic_lossy_32, fetch_pixels_x2b10g10r10_64,
+      NULL, store_scanline_x2b10g10r10 },
 
 /* YUV formats */
     { PIXMAN_yuy2,
-      fbFetch_yuy2, fbFetch64_generic,
-      fbFetchPixel_yuy2, fbFetchPixel64_generic,
+      fetch_scanline_yuy2, fetch_scanline_generic_64,
+      fetch_pixels_yuy2, fetch_pixels_generic_64,
       NULL, NULL },
 
     { PIXMAN_yv12,
-      fbFetch_yv12, fbFetch64_generic,
-      fbFetchPixel_yv12, fbFetchPixel64_generic,
+      fetch_scanline_yv12, fetch_scanline_generic_64,
+      fetch_pixels_yv12, fetch_pixels_generic_64,
       NULL, NULL },
     
     { PIXMAN_null },

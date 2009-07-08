@@ -30,8 +30,7 @@
 #include <assert.h>
 
 #include "pixman-private.h"
-
-#define Alpha(x) ((x) >> 24)
+#include "pixman-combine32.h"
 
 pixman_bool_t
 _pixman_init_gradient (gradient_t     *gradient,
@@ -63,9 +62,9 @@ _pixman_init_gradient (gradient_t     *gradient,
  * depth, but that's a project for the future.
  */
 void
-_pixman_image_get_scanline_64_generic (pixman_image_t * pict, int x, int y,
+_pixman_image_get_scanline_generic_64 (pixman_image_t * pict, int x, int y,
 				       int width, uint32_t *buffer,
-				       const uint32_t *mask, uint32_t maskBits)
+				       const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t *mask8 = NULL;
 
@@ -81,7 +80,7 @@ _pixman_image_get_scanline_64_generic (pixman_image_t * pict, int x, int y,
 
     // Fetch the source image into the first half of buffer.
     _pixman_image_get_scanline_32 (pict, x, y, width, (uint32_t*)buffer, mask8,
-				   maskBits);
+				   mask_bits);
 
     // Expand from 32bpp to 64bpp in place.
     pixman_expand ((uint64_t *)buffer, buffer, PIXMAN_a8r8g8b8, width);
@@ -568,7 +567,7 @@ _pixman_image_is_opaque (pixman_image_t *image)
 	break;
 	
     case SOLID:
-	if (Alpha (image->solid.color) != 0xff)
+	if (ALPHA_8 (image->solid.color) != 0xff)
             return FALSE;
         break;
     }

@@ -31,10 +31,6 @@
 #include "pixman-private.h"
 #include "pixman-combine32.h"
 
-#define Red(x) (((x) >> 16) & 0xff)
-#define Green(x) (((x) >> 8) & 0xff)
-#define Blue(x) ((x) & 0xff)
-
 /* Store functions */
 
 static void
@@ -160,7 +156,7 @@ bits_image_fetch_alpha_pixels (bits_image_t *image, uint32_t *buffer, int n_pixe
 	    int a = alpha_pixels[j] >> 24;
 	    uint32_t p = buffer[2 * i - j] | 0xff000000;
 
-	    FbByteMul (p, a);
+	    UN8x4_MUL_UN8 (p, a);
 
 	    buffer[i++] = p;
 	}
@@ -324,19 +320,19 @@ bits_image_fetch_bilinear_pixels (bits_image_t *image, uint32_t *buffer, int n_p
 	    idistx = 256 - distx;
 	    idisty = 256 - disty;
 
-#define FbGet8(v,i)   ((uint16_t) (uint8_t) ((v) >> i))
+#define GET8(v,i)   ((uint16_t) (uint8_t) ((v) >> i))
 	    
-	    ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
-	    fb = FbGet8(bl,0) * idistx + FbGet8(br,0) * distx;
+	    ft = GET8(tl,0) * idistx + GET8(tr,0) * distx;
+	    fb = GET8(bl,0) * idistx + GET8(br,0) * distx;
 	    r = (((ft * idisty + fb * disty) >> 16) & 0xff);
-	    ft = FbGet8(tl,8) * idistx + FbGet8(tr,8) * distx;
-	    fb = FbGet8(bl,8) * idistx + FbGet8(br,8) * distx;
+	    ft = GET8(tl,8) * idistx + GET8(tr,8) * distx;
+	    fb = GET8(bl,8) * idistx + GET8(br,8) * distx;
 	    r |= (((ft * idisty + fb * disty) >> 8) & 0xff00);
-	    ft = FbGet8(tl,16) * idistx + FbGet8(tr,16) * distx;
-	    fb = FbGet8(bl,16) * idistx + FbGet8(br,16) * distx;
+	    ft = GET8(tl,16) * idistx + GET8(tr,16) * distx;
+	    fb = GET8(bl,16) * idistx + GET8(br,16) * distx;
 	    r |= (((ft * idisty + fb * disty)) & 0xff0000);
-	    ft = FbGet8(tl,24) * idistx + FbGet8(tr,24) * distx;
-	    fb = FbGet8(bl,24) * idistx + FbGet8(br,24) * distx;
+	    ft = GET8(tl,24) * idistx + GET8(tr,24) * distx;
+	    fb = GET8(bl,24) * idistx + GET8(br,24) * distx;
 	    r |= (((ft * idisty + fb * disty) << 8) & 0xff000000);
 
 	    buffer[i++] = r;
@@ -441,10 +437,10 @@ bits_image_fetch_convolution_pixels (bits_image_t *image,
 		{
 		    uint32_t c = *u++;
 
-		    srtot += Red(c) * f;
-		    sgtot += Green(c) * f;
-		    sbtot += Blue(c) * f;
-		    satot += Alpha(c) * f;
+		    srtot += RED_8(c) * f;
+		    sgtot += GREEN_8(c) * f;
+		    sbtot += BLUE_8(c) * f;
+		    satot += ALPHA_8(c) * f;
 		}
 	    }
 
@@ -494,7 +490,7 @@ bits_image_fetch_filtered (bits_image_t *pict, uint32_t *buffer, int n_pixels)
 static void
 bits_image_fetch_transformed (pixman_image_t * pict, int x, int y,
 			      int width, uint32_t *buffer,
-			      const uint32_t *mask, uint32_t maskBits)
+			      const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t     *bits;
     int32_t    stride;
@@ -589,7 +585,7 @@ bits_image_fetch_transformed (pixman_image_t * pict, int x, int y,
 static void
 bits_image_fetch_solid_32 (pixman_image_t * image, int x, int y,
 			   int width, uint32_t *buffer,
-			   const uint32_t *mask, uint32_t maskBits)
+			   const uint32_t *mask, uint32_t mask_bits)
 {
     uint32_t color[2];
     uint32_t *end;
@@ -700,7 +696,7 @@ bits_image_fetch_untransformed_repeat_normal (bits_image_t *image, pixman_bool_t
 static void
 bits_image_fetch_untransformed_32 (pixman_image_t * image, int x, int y,
 				   int width, uint32_t *buffer,
-				   const uint32_t *mask, uint32_t maskBits)
+				   const uint32_t *mask, uint32_t mask_bits)
 {
     if (image->common.repeat == PIXMAN_REPEAT_NONE)
     {
@@ -741,7 +737,7 @@ bits_image_property_changed (pixman_image_t *image)
     if (bits->common.alpha_map)
     {
 	image->common.get_scanline_64 =
-	    _pixman_image_get_scanline_64_generic;
+	    _pixman_image_get_scanline_generic_64;
 	image->common.get_scanline_32 =
 	    bits_image_fetch_transformed;
     }
@@ -763,7 +759,7 @@ bits_image_property_changed (pixman_image_t *image)
     else
     {
 	image->common.get_scanline_64 =
-	    _pixman_image_get_scanline_64_generic;
+	    _pixman_image_get_scanline_generic_64;
 	image->common.get_scanline_32 =
 	    bits_image_fetch_transformed;
     }

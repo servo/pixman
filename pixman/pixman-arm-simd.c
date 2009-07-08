@@ -30,36 +30,36 @@
 #include "pixman-private.h"
 
 static void
-fbCompositeSrcAdd_8000x8000arm (
+arm_composite_add_8000_8000 (
                             pixman_implementation_t * impl,
                             pixman_op_t op,
-				pixman_image_t * pSrc,
-				pixman_image_t * pMask,
-				pixman_image_t * pDst,
-				int32_t      xSrc,
-				int32_t      ySrc,
-				int32_t      xMask,
-				int32_t      yMask,
-				int32_t      xDst,
-				int32_t      yDst,
+				pixman_image_t * src_image,
+				pixman_image_t * mask_image,
+				pixman_image_t * dst_image,
+				int32_t      src_x,
+				int32_t      src_y,
+				int32_t      mask_x,
+				int32_t      mask_y,
+				int32_t      dest_x,
+				int32_t      dest_y,
 				int32_t      width,
 				int32_t      height)
 {
-    uint8_t	*dstLine, *dst;
-    uint8_t	*srcLine, *src;
-    int	dstStride, srcStride;
+    uint8_t	*dst_line, *dst;
+    uint8_t	*src_line, *src;
+    int	dst_stride, src_stride;
     uint16_t	w;
     uint8_t	s, d;
 
-    fbComposeGetStart (pSrc, xSrc, ySrc, uint8_t, srcStride, srcLine, 1);
-    fbComposeGetStart (pDst, xDst, yDst, uint8_t, dstStride, dstLine, 1);
+    PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint8_t, src_stride, src_line, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint8_t, dst_stride, dst_line, 1);
 
     while (height--)
     {
-	dst = dstLine;
-	dstLine += dstStride;
-	src = srcLine;
-	srcLine += srcStride;
+	dst = dst_line;
+	dst_line += dst_stride;
+	src = src_line;
+	src_line += src_stride;
 	w = width;
 
         /* ensure both src and dst are properly aligned before doing 32 bit reads
@@ -100,38 +100,38 @@ fbCompositeSrcAdd_8000x8000arm (
 }
 
 static void
-fbCompositeSrc_8888x8888arm (
+arm_composite_over_8888_8888 (
                             pixman_implementation_t * impl,
                             pixman_op_t op,
-			 pixman_image_t * pSrc,
-			 pixman_image_t * pMask,
-			 pixman_image_t * pDst,
-			 int32_t      xSrc,
-			 int32_t      ySrc,
-			 int32_t      xMask,
-			 int32_t      yMask,
-			 int32_t      xDst,
-			 int32_t      yDst,
+			 pixman_image_t * src_image,
+			 pixman_image_t * mask_image,
+			 pixman_image_t * dst_image,
+			 int32_t      src_x,
+			 int32_t      src_y,
+			 int32_t      mask_x,
+			 int32_t      mask_y,
+			 int32_t      dest_x,
+			 int32_t      dest_y,
 			 int32_t      width,
 			 int32_t      height)
 {
-    uint32_t	*dstLine, *dst;
-    uint32_t	*srcLine, *src;
-    int	dstStride, srcStride;
+    uint32_t	*dst_line, *dst;
+    uint32_t	*src_line, *src;
+    int	dst_stride, src_stride;
     uint16_t	w;
     uint32_t component_half = 0x800080;
     uint32_t upper_component_mask = 0xff00ff00;
     uint32_t alpha_mask = 0xff;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint32_t, dst_stride, dst_line, 1);
+    PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint32_t, src_stride, src_line, 1);
 
     while (height--)
     {
-	dst = dstLine;
-	dstLine += dstStride;
-	src = srcLine;
-	srcLine += srcStride;
+	dst = dst_line;
+	dst_line += dst_stride;
+	src = src_line;
+	src_line += src_stride;
 	w = width;
 
 //#define inner_branch
@@ -193,41 +193,41 @@ fbCompositeSrc_8888x8888arm (
 }
 
 static void
-fbCompositeSrc_8888x8x8888arm (
+arm_composite_over_8888_n_8888 (
                             pixman_implementation_t * impl,
                             pixman_op_t op,
-			       pixman_image_t * pSrc,
-			       pixman_image_t * pMask,
-			       pixman_image_t * pDst,
-			       int32_t	xSrc,
-			       int32_t	ySrc,
-			       int32_t      xMask,
-			       int32_t      yMask,
-			       int32_t      xDst,
-			       int32_t      yDst,
+			       pixman_image_t * src_image,
+			       pixman_image_t * mask_image,
+			       pixman_image_t * dst_image,
+			       int32_t	src_x,
+			       int32_t	src_y,
+			       int32_t      mask_x,
+			       int32_t      mask_y,
+			       int32_t      dest_x,
+			       int32_t      dest_y,
 			       int32_t      width,
 			       int32_t      height)
 {
-    uint32_t	*dstLine, *dst;
-    uint32_t	*srcLine, *src;
+    uint32_t	*dst_line, *dst;
+    uint32_t	*src_line, *src;
     uint32_t	mask;
-    int	dstStride, srcStride;
+    int	dst_stride, src_stride;
     uint16_t	w;
     uint32_t component_half = 0x800080;
     uint32_t alpha_mask = 0xff;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint32_t, dst_stride, dst_line, 1);
+    PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint32_t, src_stride, src_line, 1);
 
-    mask = _pixman_image_get_solid (pMask, pDst->bits.format);
+    mask = _pixman_image_get_solid (mask_image, dst_image->bits.format);
     mask = (mask) >> 24;
 
     while (height--)
     {
-	dst = dstLine;
-	dstLine += dstStride;
-	src = srcLine;
-	srcLine += srcStride;
+	dst = dst_line;
+	dst_line += dst_stride;
+	src = src_line;
+	src_line += src_stride;
 	w = width;
 
 //#define inner_branch
@@ -302,28 +302,28 @@ fbCompositeSrc_8888x8x8888arm (
 }
 
 static void
-fbCompositeSolidMask_nx8x8888arm (
+arm_composite_over_n_8_8888 (
                             pixman_implementation_t * impl,
                             pixman_op_t      op,
-			       pixman_image_t * pSrc,
-			       pixman_image_t * pMask,
-			       pixman_image_t * pDst,
-			       int32_t      xSrc,
-			       int32_t      ySrc,
-			       int32_t      xMask,
-			       int32_t      yMask,
-			       int32_t      xDst,
-			       int32_t      yDst,
+			       pixman_image_t * src_image,
+			       pixman_image_t * mask_image,
+			       pixman_image_t * dst_image,
+			       int32_t      src_x,
+			       int32_t      src_y,
+			       int32_t      mask_x,
+			       int32_t      mask_y,
+			       int32_t      dest_x,
+			       int32_t      dest_y,
 			       int32_t      width,
 			       int32_t      height)
 {
     uint32_t	 src, srca;
-    uint32_t	*dstLine, *dst;
-    uint8_t	*maskLine, *mask;
-    int		 dstStride, maskStride;
+    uint32_t	*dst_line, *dst;
+    uint8_t	*mask_line, *mask;
+    int		 dst_stride, mask_stride;
     uint16_t	 w;
 
-    src = _pixman_image_get_solid(pSrc, pDst->bits.format);
+    src = _pixman_image_get_solid(src_image, dst_image->bits.format);
 
     // bail out if fully transparent
     srca = src >> 24;
@@ -336,15 +336,15 @@ fbCompositeSolidMask_nx8x8888arm (
     uint32_t src_hi = (src >> 8) & component_mask;
     uint32_t src_lo = src & component_mask;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pMask, xMask, yMask, uint8_t, maskStride, maskLine, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint32_t, dst_stride, dst_line, 1);
+    PIXMAN_IMAGE_GET_LINE (mask_image, mask_x, mask_y, uint8_t, mask_stride, mask_line, 1);
 
     while (height--)
     {
-	dst = dstLine;
-	dstLine += dstStride;
-	mask = maskLine;
-	maskLine += maskStride;
+	dst = dst_line;
+	dst_line += dst_stride;
+	mask = mask_line;
+	mask_line += mask_stride;
 	w = width;
 
 //#define inner_branch
@@ -419,19 +419,19 @@ fbCompositeSolidMask_nx8x8888arm (
 
 static const pixman_fast_path_t arm_simd_fast_path_array[] =
 {
-    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,     PIXMAN_a8r8g8b8, fbCompositeSrc_8888x8888arm,      0 },
-    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,	PIXMAN_x8r8g8b8, fbCompositeSrc_8888x8888arm,	   0 },
-    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,	PIXMAN_a8b8g8r8, fbCompositeSrc_8888x8888arm,	   0 },
-    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,	PIXMAN_x8b8g8r8, fbCompositeSrc_8888x8888arm,	   0 },
-    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8,       PIXMAN_a8r8g8b8, fbCompositeSrc_8888x8x8888arm,    NEED_SOLID_MASK },
-    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8,       PIXMAN_x8r8g8b8, fbCompositeSrc_8888x8x8888arm,	   NEED_SOLID_MASK },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,     PIXMAN_a8r8g8b8, arm_composite_over_8888_8888,      0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,	PIXMAN_x8r8g8b8, arm_composite_over_8888_8888,	   0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,	PIXMAN_a8b8g8r8, arm_composite_over_8888_8888,	   0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,	PIXMAN_x8b8g8r8, arm_composite_over_8888_8888,	   0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8,       PIXMAN_a8r8g8b8, arm_composite_over_8888_n_8888,    NEED_SOLID_MASK },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8,       PIXMAN_x8r8g8b8, arm_composite_over_8888_n_8888,	   NEED_SOLID_MASK },
 
-    { PIXMAN_OP_ADD, PIXMAN_a8,        PIXMAN_null,     PIXMAN_a8,       fbCompositeSrcAdd_8000x8000arm,   0 },
+    { PIXMAN_OP_ADD, PIXMAN_a8,        PIXMAN_null,     PIXMAN_a8,       arm_composite_add_8000_8000,   0 },
 
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_a8r8g8b8, fbCompositeSolidMask_nx8x8888arm,     0 },
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_x8r8g8b8, fbCompositeSolidMask_nx8x8888arm,     0 },
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_a8b8g8r8, fbCompositeSolidMask_nx8x8888arm,     0 },
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_x8b8g8r8, fbCompositeSolidMask_nx8x8888arm,     0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_a8r8g8b8, arm_composite_over_n_8_8888,     0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_x8r8g8b8, arm_composite_over_n_8_8888,     0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_a8b8g8r8, arm_composite_over_n_8_8888,     0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_x8b8g8r8, arm_composite_over_n_8_8888,     0 },
 
     { PIXMAN_OP_NONE },
 };

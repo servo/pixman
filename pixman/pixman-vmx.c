@@ -217,7 +217,7 @@ over (vector unsigned int src, vector unsigned int srca,
         vec_st ((vector unsigned int) tmp1, 0, dest );
 
 static void
-vmxCombineOverUnomask (uint32_t *dest, const uint32_t *src, int width)
+vmx_combine_over_u_no_mask (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
     vector unsigned int  vdest, vsrc;
@@ -244,13 +244,13 @@ vmxCombineOverUnomask (uint32_t *dest, const uint32_t *src, int width)
         uint32_t d = dest[i];
         uint32_t ia = Alpha (~s);
 
-        FbByteMulAdd (d, ia, s);
+        UN8x4_MUL_UN8_ADD_UN8x4 (d, ia, s);
         dest[i] = d;
     }
 }
 
 static void
-vmxCombineOverUmask (uint32_t *dest,
+vmx_combine_over_u_mask (uint32_t *dest,
                      const uint32_t *src,
                      const uint32_t *mask,
                      int width)
@@ -282,28 +282,28 @@ vmxCombineOverUmask (uint32_t *dest,
         uint32_t d = dest[i];
         uint32_t ia;
 
-        FbByteMul (s, m);
+        UN8x4_MUL_UN8 (s, m);
 
         ia = Alpha (~s);
 
-        FbByteMulAdd (d, ia, s);
+        UN8x4_MUL_UN8_ADD_UN8x4 (d, ia, s);
         dest[i] = d;
     }
 }
 
 static void
-vmxCombineOverU(pixman_implementation_t *imp, pixman_op_t op,
+vmx_combine_over_u(pixman_implementation_t *imp, pixman_op_t op,
 		uint32_t *dest, const uint32_t *src, const uint32_t *mask,
                 int width)
 {
     if (mask)
-        vmxCombineOverUmask(dest, src, mask, width);
+        vmx_combine_over_u_mask(dest, src, mask, width);
     else
-        vmxCombineOverUnomask(dest, src, width);
+        vmx_combine_over_u_no_mask(dest, src, width);
 }
 
 static void
-vmxCombineOverReverseUnomask (uint32_t *dest, const uint32_t *src, int width)
+vmx_combine_over_reverse_u_no_mask (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
     vector unsigned int  vdest, vsrc;
@@ -330,13 +330,13 @@ vmxCombineOverReverseUnomask (uint32_t *dest, const uint32_t *src, int width)
         uint32_t d = dest[i];
         uint32_t ia = Alpha (~dest[i]);
 
-        FbByteMulAdd (s, ia, d);
+        UN8x4_MUL_UN8_ADD_UN8x4 (s, ia, d);
         dest[i] = s;
     }
 }
 
 static void
-vmxCombineOverReverseUmask (uint32_t *dest,
+vmx_combine_over_reverse_u_mask (uint32_t *dest,
                             const uint32_t *src,
                             const uint32_t *mask,
                             int width)
@@ -368,26 +368,26 @@ vmxCombineOverReverseUmask (uint32_t *dest,
         uint32_t d = dest[i];
         uint32_t ia = Alpha (~dest[i]);
 
-        FbByteMul (s, m);
+        UN8x4_MUL_UN8 (s, m);
 
-        FbByteMulAdd (s, ia, d);
+        UN8x4_MUL_UN8_ADD_UN8x4 (s, ia, d);
         dest[i] = s;
     }
 }
 
 static void
-vmxCombineOverReverseU (pixman_implementation_t *imp, pixman_op_t op,
+vmx_combine_over_reverse_u (pixman_implementation_t *imp, pixman_op_t op,
 			uint32_t *dest, const uint32_t *src,
                         const uint32_t *mask, int width)
 {
     if (mask)
-        vmxCombineOverReverseUmask(dest, src, mask, width);
+        vmx_combine_over_reverse_u_mask(dest, src, mask, width);
     else
-        vmxCombineOverReverseUnomask(dest, src, width);
+        vmx_combine_over_reverse_u_no_mask(dest, src, width);
 }
 
 static void
-vmxCombineInUnomask (uint32_t *dest, const uint32_t *src, int width)
+vmx_combine_in_u_no_mask (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
     vector unsigned int  vdest, vsrc;
@@ -413,13 +413,13 @@ vmxCombineInUnomask (uint32_t *dest, const uint32_t *src, int width)
 
         uint32_t s = src[i];
         uint32_t a = Alpha (dest[i]);
-        FbByteMul (s, a);
+        UN8x4_MUL_UN8 (s, a);
         dest[i] = s;
     }
 }
 
 static void
-vmxCombineInUmask (uint32_t *dest,
+vmx_combine_in_u_mask (uint32_t *dest,
                    const uint32_t *src,
                    const uint32_t *mask,
                    int width)
@@ -450,26 +450,26 @@ vmxCombineInUmask (uint32_t *dest,
         uint32_t s = src[i];
         uint32_t a = Alpha (dest[i]);
 
-        FbByteMul (s, m);
+        UN8x4_MUL_UN8 (s, m);
 
-        FbByteMul (s, a);
+        UN8x4_MUL_UN8 (s, a);
         dest[i] = s;
     }
 }
 
 static void
-vmxCombineInU (pixman_implementation_t *imp, pixman_op_t op,
+vmx_combine_in_u (pixman_implementation_t *imp, pixman_op_t op,
 	       uint32_t *dest, const uint32_t *src, const uint32_t *mask,
                int width)
 {
     if (mask)
-        vmxCombineInUmask(dest, src, mask, width);
+        vmx_combine_in_u_mask(dest, src, mask, width);
     else
-        vmxCombineInUnomask(dest, src, width);
+        vmx_combine_in_u_no_mask(dest, src, width);
 }
 
 static void
-vmxCombineInReverseUnomask (uint32_t *dest, const uint32_t *src, int width)
+vmx_combine_in_reverse_u_no_mask (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
     vector unsigned int  vdest, vsrc;
@@ -494,13 +494,13 @@ vmxCombineInReverseUnomask (uint32_t *dest, const uint32_t *src, int width)
     for (i = width%4; --i >=0;) {
         uint32_t d = dest[i];
         uint32_t a = Alpha (src[i]);
-        FbByteMul (d, a);
+        UN8x4_MUL_UN8 (d, a);
         dest[i] = d;
     }
 }
 
 static void
-vmxCombineInReverseUmask (uint32_t *dest,
+vmx_combine_in_reverse_u_mask (uint32_t *dest,
                           const uint32_t *src,
                           const uint32_t *mask,
                           int width)
@@ -531,27 +531,27 @@ vmxCombineInReverseUmask (uint32_t *dest,
         uint32_t d = dest[i];
         uint32_t a = src[i];
 
-        FbByteMul (a, m);
+        UN8x4_MUL_UN8 (a, m);
 
         a = Alpha (a);
-        FbByteMul (d, a);
+        UN8x4_MUL_UN8 (d, a);
         dest[i] = d;
     }
 }
 
 static void
-vmxCombineInReverseU (pixman_implementation_t *imp, pixman_op_t op,
+vmx_combine_in_reverse_u (pixman_implementation_t *imp, pixman_op_t op,
 		      uint32_t *dest, const uint32_t *src,
                       const uint32_t *mask, int width)
 {
     if (mask)
-        vmxCombineInReverseUmask(dest, src, mask, width);
+        vmx_combine_in_reverse_u_mask(dest, src, mask, width);
     else
-        vmxCombineInReverseUnomask(dest, src, width);
+        vmx_combine_in_reverse_u_no_mask(dest, src, width);
 }
 
 static void
-vmxCombineOutUnomask (uint32_t *dest, const uint32_t *src, int width)
+vmx_combine_out_u_no_mask (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
     vector unsigned int  vdest, vsrc;
@@ -576,13 +576,13 @@ vmxCombineOutUnomask (uint32_t *dest, const uint32_t *src, int width)
     for (i = width%4; --i >=0;) {
         uint32_t s = src[i];
         uint32_t a = Alpha (~dest[i]);
-        FbByteMul (s, a);
+        UN8x4_MUL_UN8 (s, a);
         dest[i] = s;
     }
 }
 
 static void
-vmxCombineOutUmask (uint32_t *dest,
+vmx_combine_out_u_mask (uint32_t *dest,
                     const uint32_t *src,
                     const uint32_t *mask,
                     int width)
@@ -613,26 +613,26 @@ vmxCombineOutUmask (uint32_t *dest,
         uint32_t s = src[i];
         uint32_t a = Alpha (~dest[i]);
 
-        FbByteMul (s, m);
+        UN8x4_MUL_UN8 (s, m);
 
-        FbByteMul (s, a);
+        UN8x4_MUL_UN8 (s, a);
         dest[i] = s;
     }
 }
 
 static void
-vmxCombineOutU (pixman_implementation_t *imp, pixman_op_t op,
+vmx_combine_out_u (pixman_implementation_t *imp, pixman_op_t op,
 		uint32_t *dest, const uint32_t *src, const uint32_t *mask,
                 int width)
 {
     if (mask)
-        vmxCombineOutUmask(dest, src, mask, width);
+        vmx_combine_out_u_mask(dest, src, mask, width);
     else
-        vmxCombineOutUnomask(dest, src, width);
+        vmx_combine_out_u_no_mask(dest, src, width);
 }
 
 static void
-vmxCombineOutReverseUnomask (uint32_t *dest, const uint32_t *src, int width)
+vmx_combine_out_reverse_u_no_mask (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
     vector unsigned int  vdest, vsrc;
@@ -657,13 +657,13 @@ vmxCombineOutReverseUnomask (uint32_t *dest, const uint32_t *src, int width)
     for (i = width%4; --i >=0;) {
         uint32_t d = dest[i];
         uint32_t a = Alpha (~src[i]);
-        FbByteMul (d, a);
+        UN8x4_MUL_UN8 (d, a);
         dest[i] = d;
     }
 }
 
 static void
-vmxCombineOutReverseUmask (uint32_t *dest,
+vmx_combine_out_reverse_u_mask (uint32_t *dest,
                            const uint32_t *src,
                            const uint32_t *mask,
                            int width)
@@ -694,29 +694,29 @@ vmxCombineOutReverseUmask (uint32_t *dest,
         uint32_t d = dest[i];
         uint32_t a = src[i];
 
-        FbByteMul (a, m);
+        UN8x4_MUL_UN8 (a, m);
 
         a = Alpha (~a);
-        FbByteMul (d, a);
+        UN8x4_MUL_UN8 (d, a);
         dest[i] = d;
     }
 }
 
 static void
-vmxCombineOutReverseU (pixman_implementation_t *imp, pixman_op_t op,
+vmx_combine_out_reverse_u (pixman_implementation_t *imp, pixman_op_t op,
 		       uint32_t *dest,
                        const uint32_t *src,
                        const uint32_t *mask,
                        int width)
 {
     if (mask)
-        vmxCombineOutReverseUmask(dest, src, mask, width);
+        vmx_combine_out_reverse_u_mask(dest, src, mask, width);
     else
-        vmxCombineOutReverseUnomask(dest, src, width);
+        vmx_combine_out_reverse_u_no_mask(dest, src, width);
 }
 
 static void
-vmxCombineAtopUnomask (uint32_t *dest, const uint32_t *src, int width)
+vmx_combine_atop_u_no_mask (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
     vector unsigned int  vdest, vsrc;
@@ -745,13 +745,13 @@ vmxCombineAtopUnomask (uint32_t *dest, const uint32_t *src, int width)
         uint32_t dest_a = Alpha (d);
         uint32_t src_ia = Alpha (~s);
 
-        FbByteAddMul (s, dest_a, d, src_ia);
+        UN8x4_MUL_UN8_ADD_UN8x4_MUL_UN8 (s, dest_a, d, src_ia);
         dest[i] = s;
     }
 }
 
 static void
-vmxCombineAtopUmask (uint32_t *dest,
+vmx_combine_atop_u_mask (uint32_t *dest,
                      const uint32_t *src,
                      const uint32_t *mask,
                      int width)
@@ -785,30 +785,30 @@ vmxCombineAtopUmask (uint32_t *dest,
         uint32_t dest_a = Alpha (d);
         uint32_t src_ia;
 
-        FbByteMul (s, m);
+        UN8x4_MUL_UN8 (s, m);
 
         src_ia = Alpha (~s);
 
-        FbByteAddMul (s, dest_a, d, src_ia);
+        UN8x4_MUL_UN8_ADD_UN8x4_MUL_UN8 (s, dest_a, d, src_ia);
         dest[i] = s;
     }
 }
 
 static void
-vmxCombineAtopU (pixman_implementation_t *imp, pixman_op_t op,
+vmx_combine_atop_u (pixman_implementation_t *imp, pixman_op_t op,
 		 uint32_t *dest,
                  const uint32_t *src,
                  const uint32_t *mask,
                  int width)
 {
     if (mask)
-        vmxCombineAtopUmask(dest, src, mask, width);
+        vmx_combine_atop_u_mask(dest, src, mask, width);
     else
-        vmxCombineAtopUnomask(dest, src, width);
+        vmx_combine_atop_u_no_mask(dest, src, width);
 }
 
 static void
-vmxCombineAtopReverseUnomask (uint32_t *dest, const uint32_t *src, int width)
+vmx_combine_atop_reverse_u_no_mask (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
     vector unsigned int  vdest, vsrc;
@@ -837,13 +837,13 @@ vmxCombineAtopReverseUnomask (uint32_t *dest, const uint32_t *src, int width)
         uint32_t src_a = Alpha (s);
         uint32_t dest_ia = Alpha (~d);
 
-        FbByteAddMul (s, dest_ia, d, src_a);
+        UN8x4_MUL_UN8_ADD_UN8x4_MUL_UN8 (s, dest_ia, d, src_a);
         dest[i] = s;
     }
 }
 
 static void
-vmxCombineAtopReverseUmask (uint32_t *dest,
+vmx_combine_atop_reverse_u_mask (uint32_t *dest,
                             const uint32_t *src,
                             const uint32_t *mask,
                             int width)
@@ -877,30 +877,30 @@ vmxCombineAtopReverseUmask (uint32_t *dest,
         uint32_t src_a;
         uint32_t dest_ia = Alpha (~d);
 
-        FbByteMul (s, m);
+        UN8x4_MUL_UN8 (s, m);
 
         src_a = Alpha (s);
 
-        FbByteAddMul (s, dest_ia, d, src_a);
+        UN8x4_MUL_UN8_ADD_UN8x4_MUL_UN8 (s, dest_ia, d, src_a);
         dest[i] = s;
     }
 }
 
 static void
-vmxCombineAtopReverseU (pixman_implementation_t *imp, pixman_op_t op,
+vmx_combine_atop_reverse_u (pixman_implementation_t *imp, pixman_op_t op,
 			uint32_t *dest,
                         const uint32_t *src,
                         const uint32_t *mask,
                         int width)
 {
     if (mask)
-        vmxCombineAtopReverseUmask(dest, src, mask, width);
+        vmx_combine_atop_reverse_u_mask(dest, src, mask, width);
     else
-        vmxCombineAtopReverseUnomask(dest, src, width);
+        vmx_combine_atop_reverse_u_no_mask(dest, src, width);
 }
 
 static void
-vmxCombineXorUnomask (uint32_t *dest, const uint32_t *src, int width)
+vmx_combine_xor_u_no_mask (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
     vector unsigned int  vdest, vsrc;
@@ -929,13 +929,13 @@ vmxCombineXorUnomask (uint32_t *dest, const uint32_t *src, int width)
         uint32_t src_ia = Alpha (~s);
         uint32_t dest_ia = Alpha (~d);
 
-        FbByteAddMul (s, dest_ia, d, src_ia);
+        UN8x4_MUL_UN8_ADD_UN8x4_MUL_UN8 (s, dest_ia, d, src_ia);
         dest[i] = s;
     }
 }
 
 static void
-vmxCombineXorUmask (uint32_t *dest,
+vmx_combine_xor_u_mask (uint32_t *dest,
                     const uint32_t *src,
                     const uint32_t *mask,
                     int width)
@@ -969,30 +969,30 @@ vmxCombineXorUmask (uint32_t *dest,
         uint32_t src_ia;
         uint32_t dest_ia = Alpha (~d);
 
-        FbByteMul (s, m);
+        UN8x4_MUL_UN8 (s, m);
 
         src_ia = Alpha (~s);
 
-        FbByteAddMul (s, dest_ia, d, src_ia);
+        UN8x4_MUL_UN8_ADD_UN8x4_MUL_UN8 (s, dest_ia, d, src_ia);
         dest[i] = s;
     }
 }
 
 static void
-vmxCombineXorU (pixman_implementation_t *imp, pixman_op_t op,
+vmx_combine_xor_u (pixman_implementation_t *imp, pixman_op_t op,
 		uint32_t *dest,
                 const uint32_t *src,
                 const uint32_t *mask,
                 int width)
 {
     if (mask)
-        vmxCombineXorUmask(dest, src, mask, width);
+        vmx_combine_xor_u_mask(dest, src, mask, width);
     else
-        vmxCombineXorUnomask(dest, src, width);
+        vmx_combine_xor_u_no_mask(dest, src, width);
 }
 
 static void
-vmxCombineAddUnomask (uint32_t *dest, const uint32_t *src, int width)
+vmx_combine_add_u_no_mask (uint32_t *dest, const uint32_t *src, int width)
 {
     int i;
     vector unsigned int  vdest, vsrc;
@@ -1016,13 +1016,13 @@ vmxCombineAddUnomask (uint32_t *dest, const uint32_t *src, int width)
     for (i = width%4; --i >=0;) {
         uint32_t s = src[i];
         uint32_t d = dest[i];
-        FbByteAdd (d, s);
+        UN8x4_ADD_UN8x4 (d, s);
         dest[i] = d;
     }
 }
 
 static void
-vmxCombineAddUmask (uint32_t *dest,
+vmx_combine_add_u_mask (uint32_t *dest,
                     const uint32_t *src,
                     const uint32_t *mask,
                     int width)
@@ -1053,28 +1053,28 @@ vmxCombineAddUmask (uint32_t *dest,
         uint32_t s = src[i];
         uint32_t d = dest[i];
 
-        FbByteMul (s, m);
+        UN8x4_MUL_UN8 (s, m);
 
-        FbByteAdd (d, s);
+        UN8x4_ADD_UN8x4 (d, s);
         dest[i] = d;
     }
 }
 
 static void
-vmxCombineAddU (pixman_implementation_t *imp, pixman_op_t op,
+vmx_combine_add_u (pixman_implementation_t *imp, pixman_op_t op,
 		uint32_t *dest,
                 const uint32_t *src,
                 const uint32_t *mask,
                 int width)
 {
     if (mask)
-        vmxCombineAddUmask(dest, src, mask, width);
+        vmx_combine_add_u_mask(dest, src, mask, width);
     else
-        vmxCombineAddUnomask(dest, src, width);
+        vmx_combine_add_u_no_mask(dest, src, width);
 }
 
 static void
-vmxCombineSrcC (pixman_implementation_t *imp, pixman_op_t op,
+vmx_combine_src_ca (pixman_implementation_t *imp, pixman_op_t op,
 		uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     int i;
@@ -1100,13 +1100,13 @@ vmxCombineSrcC (pixman_implementation_t *imp, pixman_op_t op,
     for (i = width%4; --i >=0;) {
         uint32_t a = mask[i];
         uint32_t s = src[i];
-        FbByteMulC (s, a);
+        UN8x4_MUL_UN8x4 (s, a);
         dest[i] = s;
     }
 }
 
 static void
-vmxCombineOverC (pixman_implementation_t *imp, pixman_op_t op,
+vmx_combine_over_ca (pixman_implementation_t *imp, pixman_op_t op,
 		 uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     int i;
@@ -1133,14 +1133,14 @@ vmxCombineOverC (pixman_implementation_t *imp, pixman_op_t op,
         uint32_t a = mask[i];
         uint32_t s = src[i];
         uint32_t d = dest[i];
-        FbByteMulC (s, a);
-        FbByteMulAddC (d, ~a, s);
+        UN8x4_MUL_UN8x4 (s, a);
+        UN8x4_MUL_UN8x4_ADD_UN8x4 (d, ~a, s);
         dest[i] = d;
     }
 }
 
 static void
-vmxCombineOverReverseC (pixman_implementation_t *imp, pixman_op_t op,
+vmx_combine_over_reverse_ca (pixman_implementation_t *imp, pixman_op_t op,
 			uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     int i;
@@ -1168,14 +1168,14 @@ vmxCombineOverReverseC (pixman_implementation_t *imp, pixman_op_t op,
         uint32_t s = src[i];
         uint32_t d = dest[i];
         uint32_t da = Alpha (d);
-        FbByteMulC (s, a);
-        FbByteMulAddC (s, ~da, d);
+        UN8x4_MUL_UN8x4 (s, a);
+        UN8x4_MUL_UN8x4_ADD_UN8x4 (s, ~da, d);
         dest[i] = s;
     }
 }
 
 static void
-vmxCombineInC (pixman_implementation_t *imp, pixman_op_t op,
+vmx_combine_in_ca (pixman_implementation_t *imp, pixman_op_t op,
 	       uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     int i;
@@ -1203,14 +1203,14 @@ vmxCombineInC (pixman_implementation_t *imp, pixman_op_t op,
         uint32_t a = mask[i];
         uint32_t s = src[i];
         uint32_t da = Alpha (dest[i]);
-        FbByteMul (s, a);
-        FbByteMul (s, da);
+        UN8x4_MUL_UN8 (s, a);
+        UN8x4_MUL_UN8 (s, da);
         dest[i] = s;
     }
 }
 
 static void
-vmxCombineInReverseC (pixman_implementation_t *imp, pixman_op_t op,
+vmx_combine_in_reverse_ca (pixman_implementation_t *imp, pixman_op_t op,
 		      uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     int i;
@@ -1238,14 +1238,14 @@ vmxCombineInReverseC (pixman_implementation_t *imp, pixman_op_t op,
         uint32_t a = mask[i];
         uint32_t d = dest[i];
         uint32_t sa = Alpha (src[i]);
-        FbByteMul (a, sa);
-        FbByteMulC (d, a);
+        UN8x4_MUL_UN8 (a, sa);
+        UN8x4_MUL_UN8x4 (d, a);
         dest[i] = d;
     }
 }
 
 static void
-vmxCombineOutC (pixman_implementation_t *imp, pixman_op_t op,
+vmx_combine_out_ca (pixman_implementation_t *imp, pixman_op_t op,
 		uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     int i;
@@ -1274,14 +1274,14 @@ vmxCombineOutC (pixman_implementation_t *imp, pixman_op_t op,
         uint32_t s = src[i];
         uint32_t d = dest[i];
         uint32_t da = Alpha (~d);
-        FbByteMulC (s, a);
-        FbByteMulC (s, da);
+        UN8x4_MUL_UN8x4 (s, a);
+        UN8x4_MUL_UN8x4 (s, da);
         dest[i] = s;
     }
 }
 
 static void
-vmxCombineOutReverseC (pixman_implementation_t *imp, pixman_op_t op,
+vmx_combine_out_reverse_ca (pixman_implementation_t *imp, pixman_op_t op,
 		       uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     int i;
@@ -1311,14 +1311,14 @@ vmxCombineOutReverseC (pixman_implementation_t *imp, pixman_op_t op,
         uint32_t s = src[i];
         uint32_t d = dest[i];
         uint32_t sa = Alpha (s);
-        FbByteMulC (a, sa);
-        FbByteMulC (d, ~a);
+        UN8x4_MUL_UN8x4 (a, sa);
+        UN8x4_MUL_UN8x4 (d, ~a);
         dest[i] = d;
     }
 }
 
 static void
-vmxCombineAtopC (pixman_implementation_t *imp, pixman_op_t op,
+vmx_combine_atop_ca (pixman_implementation_t *imp, pixman_op_t op,
 		 uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     int i;
@@ -1352,15 +1352,15 @@ vmxCombineAtopC (pixman_implementation_t *imp, pixman_op_t op,
         uint32_t sa = Alpha (s);
         uint32_t da = Alpha (d);
 
-        FbByteMulC (s, a);
-        FbByteMul (a, sa);
-        FbByteAddMulC (d, ~a, s, da);
+        UN8x4_MUL_UN8x4 (s, a);
+        UN8x4_MUL_UN8 (a, sa);
+        UN8x4_MUL_UN8x4_ADD_UN8x4_MUL_UN8 (d, ~a, s, da);
         dest[i] = d;
     }
 }
 
 static void
-vmxCombineAtopReverseC (pixman_implementation_t *imp, pixman_op_t op,
+vmx_combine_atop_reverse_ca (pixman_implementation_t *imp, pixman_op_t op,
 			uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     int i;
@@ -1394,15 +1394,15 @@ vmxCombineAtopReverseC (pixman_implementation_t *imp, pixman_op_t op,
         uint32_t sa = Alpha (s);
         uint32_t da = Alpha (d);
 
-        FbByteMulC (s, a);
-        FbByteMul (a, sa);
-        FbByteAddMulC (d, a, s, ~da);
+        UN8x4_MUL_UN8x4 (s, a);
+        UN8x4_MUL_UN8 (a, sa);
+        UN8x4_MUL_UN8x4_ADD_UN8x4_MUL_UN8 (d, a, s, ~da);
         dest[i] = d;
     }
 }
 
 static void
-vmxCombineXorC (pixman_implementation_t *imp, pixman_op_t op,
+vmx_combine_xor_ca (pixman_implementation_t *imp, pixman_op_t op,
 		uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     int i;
@@ -1436,15 +1436,15 @@ vmxCombineXorC (pixman_implementation_t *imp, pixman_op_t op,
         uint32_t sa = Alpha (s);
         uint32_t da = Alpha (d);
 
-        FbByteMulC (s, a);
-        FbByteMul (a, sa);
-        FbByteAddMulC (d, ~a, s, ~da);
+        UN8x4_MUL_UN8x4 (s, a);
+        UN8x4_MUL_UN8 (a, sa);
+        UN8x4_MUL_UN8x4_ADD_UN8x4_MUL_UN8 (d, ~a, s, ~da);
         dest[i] = d;
     }
 }
 
 static void
-vmxCombineAddC (pixman_implementation_t *imp, pixman_op_t op,
+vmx_combine_add_ca (pixman_implementation_t *imp, pixman_op_t op,
 		uint32_t *dest, const uint32_t *src, const uint32_t *mask, int width)
 {
     int i;
@@ -1473,8 +1473,8 @@ vmxCombineAddC (pixman_implementation_t *imp, pixman_op_t op,
         uint32_t s = src[i];
         uint32_t d = dest[i];
 
-        FbByteMulC (s, a);
-        FbByteAdd (s, d);
+        UN8x4_MUL_UN8x4 (s, a);
+        UN8x4_ADD_UN8x4 (s, d);
         dest[i] = s;
     }
 }
@@ -1482,69 +1482,69 @@ vmxCombineAddC (pixman_implementation_t *imp, pixman_op_t op,
 
 #if 0
 void
-fbCompositeSolid_nx8888vmx (pixman_operator_t	op,
-			    pixman_image_t * pSrc,
-			    pixman_image_t * pMask,
-			    pixman_image_t * pDst,
-			    int16_t	xSrc,
-			    int16_t	ySrc,
-			    int16_t	xMask,
-			    int16_t	yMask,
-			    int16_t	xDst,
-			    int16_t	yDst,
+vmx_composite_over_n_8888 (pixman_operator_t	op,
+			    pixman_image_t * src_image,
+			    pixman_image_t * mask_image,
+			    pixman_image_t * dst_image,
+			    int16_t	src_x,
+			    int16_t	src_y,
+			    int16_t	mask_x,
+			    int16_t	mask_y,
+			    int16_t	dest_x,
+			    int16_t	dest_y,
 			    uint16_t	width,
 			    uint16_t	height)
 {
     uint32_t	src;
-    uint32_t	*dstLine, *dst;
-    int	dstStride;
+    uint32_t	*dst_line, *dst;
+    int	dst_stride;
 
-    _pixman_image_get_solid (pSrc, pDst, src);
+    _pixman_image_get_solid (src_image, dst_image, src);
 
     if (src >> 24 == 0)
 	return;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint32_t, dst_stride, dst_line, 1);
 
     while (height--)
     {
-	dst = dstLine;
-	dstLine += dstStride;
-	/* XXX vmxCombineOverU (dst, src, width); */
+	dst = dst_line;
+	dst_line += dst_stride;
+	/* XXX vmx_combine_over_u (dst, src, width); */
     }
 }
 
 void
-fbCompositeSolid_nx0565vmx (pixman_operator_t	op,
-			    pixman_image_t * pSrc,
-			    pixman_image_t * pMask,
-			    pixman_image_t * pDst,
-			    int16_t	xSrc,
-			    int16_t	ySrc,
-			    int16_t	xMask,
-			    int16_t	yMask,
-			    int16_t	xDst,
-			    int16_t	yDst,
+vmx_composite_over_n_0565 (pixman_operator_t	op,
+			    pixman_image_t * src_image,
+			    pixman_image_t * mask_image,
+			    pixman_image_t * dst_image,
+			    int16_t	src_x,
+			    int16_t	src_y,
+			    int16_t	mask_x,
+			    int16_t	mask_y,
+			    int16_t	dest_x,
+			    int16_t	dest_y,
 			    uint16_t	width,
 			    uint16_t	height)
 {
     uint32_t	src;
-    uint16_t	*dstLine, *dst;
+    uint16_t	*dst_line, *dst;
     uint16_t	w;
-    int	dstStride;
+    int	dst_stride;
 
-    _pixman_image_get_solid (pSrc, pDst, src);
+    _pixman_image_get_solid (src_image, dst_image, src);
 
     if (src >> 24 == 0)
 	return;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint16_t, dstStride, dstLine, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint16_t, dst_stride, dst_line, 1);
 
     while (height--)
     {
-	dst = dstLine;
-	dstLine += dstStride;
-       vmxCombineOverU565(dst, src, width);
+	dst = dst_line;
+	dst_line += dst_stride;
+       vmx_combine_over_u565(dst, src, width);
     }
 }
 
@@ -1566,29 +1566,29 @@ _pixman_implementation_create_vmx (void)
     /* Set up function pointers */
     
     /* SSE code patch for fbcompose.c */
-    imp->combine_32[PIXMAN_OP_OVER] = vmxCombineOverU;
-    imp->combine_32[PIXMAN_OP_OVER_REVERSE] = vmxCombineOverReverseU;
-    imp->combine_32[PIXMAN_OP_IN] = vmxCombineInU;
-    imp->combine_32[PIXMAN_OP_IN_REVERSE] = vmxCombineInReverseU;
-    imp->combine_32[PIXMAN_OP_OUT] = vmxCombineOutU;
-    imp->combine_32[PIXMAN_OP_OUT_REVERSE] = vmxCombineOutReverseU;
-    imp->combine_32[PIXMAN_OP_ATOP] = vmxCombineAtopU;
-    imp->combine_32[PIXMAN_OP_ATOP_REVERSE] = vmxCombineAtopReverseU;
-    imp->combine_32[PIXMAN_OP_XOR] = vmxCombineXorU;
+    imp->combine_32[PIXMAN_OP_OVER] = vmx_combine_over_u;
+    imp->combine_32[PIXMAN_OP_OVER_REVERSE] = vmx_combine_over_reverse_u;
+    imp->combine_32[PIXMAN_OP_IN] = vmx_combine_in_u;
+    imp->combine_32[PIXMAN_OP_IN_REVERSE] = vmx_combine_in_reverse_u;
+    imp->combine_32[PIXMAN_OP_OUT] = vmx_combine_out_u;
+    imp->combine_32[PIXMAN_OP_OUT_REVERSE] = vmx_combine_out_reverse_u;
+    imp->combine_32[PIXMAN_OP_ATOP] = vmx_combine_atop_u;
+    imp->combine_32[PIXMAN_OP_ATOP_REVERSE] = vmx_combine_atop_reverse_u;
+    imp->combine_32[PIXMAN_OP_XOR] = vmx_combine_xor_u;
 
-    imp->combine_32[PIXMAN_OP_ADD] = vmxCombineAddU;
+    imp->combine_32[PIXMAN_OP_ADD] = vmx_combine_add_u;
 
-    imp->combine_32_ca[PIXMAN_OP_SRC] = vmxCombineSrcC;
-    imp->combine_32_ca[PIXMAN_OP_OVER] = vmxCombineOverC;
-    imp->combine_32_ca[PIXMAN_OP_OVER_REVERSE] = vmxCombineOverReverseC;
-    imp->combine_32_ca[PIXMAN_OP_IN] = vmxCombineInC;
-    imp->combine_32_ca[PIXMAN_OP_IN_REVERSE] = vmxCombineInReverseC;
-    imp->combine_32_ca[PIXMAN_OP_OUT] = vmxCombineOutC;
-    imp->combine_32_ca[PIXMAN_OP_OUT_REVERSE] = vmxCombineOutReverseC;
-    imp->combine_32_ca[PIXMAN_OP_ATOP] = vmxCombineAtopC;
-    imp->combine_32_ca[PIXMAN_OP_ATOP_REVERSE] = vmxCombineAtopReverseC;
-    imp->combine_32_ca[PIXMAN_OP_XOR] = vmxCombineXorC;
-    imp->combine_32_ca[PIXMAN_OP_ADD] = vmxCombineAddC;
+    imp->combine_32_ca[PIXMAN_OP_SRC] = vmx_combine_src_ca;
+    imp->combine_32_ca[PIXMAN_OP_OVER] = vmx_combine_over_ca;
+    imp->combine_32_ca[PIXMAN_OP_OVER_REVERSE] = vmx_combine_over_reverse_ca;
+    imp->combine_32_ca[PIXMAN_OP_IN] = vmx_combine_in_ca;
+    imp->combine_32_ca[PIXMAN_OP_IN_REVERSE] = vmx_combine_in_reverse_ca;
+    imp->combine_32_ca[PIXMAN_OP_OUT] = vmx_combine_out_ca;
+    imp->combine_32_ca[PIXMAN_OP_OUT_REVERSE] = vmx_combine_out_reverse_ca;
+    imp->combine_32_ca[PIXMAN_OP_ATOP] = vmx_combine_atop_ca;
+    imp->combine_32_ca[PIXMAN_OP_ATOP_REVERSE] = vmx_combine_atop_reverse_ca;
+    imp->combine_32_ca[PIXMAN_OP_XOR] = vmx_combine_xor_ca;
+    imp->combine_32_ca[PIXMAN_OP_ADD] = vmx_combine_add_ca;
     
     return imp;
 }

@@ -42,30 +42,30 @@
  * Locals
  */
 
-static __m64 xMask0080;
-static __m64 xMask00ff;
-static __m64 xMask0101;
-static __m64 xMaskAlpha;
+static __m64 mask_x0080;
+static __m64 mask_x00ff;
+static __m64 mask_x0101;
+static __m64 mask_x_alpha;
 
-static __m64 xMask565rgb;
-static __m64 xMask565Unpack;
+static __m64 mask_x565_rgb;
+static __m64 mask_x565_unpack;
 
-static __m128i Mask0080;
-static __m128i Mask00ff;
-static __m128i Mask0101;
-static __m128i Maskffff;
-static __m128i Maskff000000;
-static __m128i MaskAlpha;
+static __m128i mask_0080;
+static __m128i mask_00ff;
+static __m128i mask_0101;
+static __m128i mask_ffff;
+static __m128i mask_ff000000;
+static __m128i mask_alpha;
 
-static __m128i Mask565r;
-static __m128i Mask565g1, Mask565g2;
-static __m128i Mask565b;
-static __m128i MaskRed;
-static __m128i MaskGreen;
-static __m128i MaskBlue;
+static __m128i mask_565_r;
+static __m128i mask_565_g1, mask_565_g2;
+static __m128i mask_565_b;
+static __m128i mask_red;
+static __m128i mask_green;
+static __m128i mask_blue;
 
-static __m128i Mask565FixRB;
-static __m128i Mask565FixG;
+static __m128i mask_565_fix_rb;
+static __m128i mask_565_fix_g;
 
 /* -------------------------------------------------------------------------------------------------
  * SSE2 Inlines
@@ -77,27 +77,27 @@ unpack_32_1x128 (uint32_t data)
 }
 
 static force_inline void
-unpack_128_2x128 (__m128i data, __m128i* dataLo, __m128i* dataHi)
+unpack_128_2x128 (__m128i data, __m128i* data_lo, __m128i* data_hi)
 {
-    *dataLo = _mm_unpacklo_epi8 (data, _mm_setzero_si128 ());
-    *dataHi = _mm_unpackhi_epi8 (data, _mm_setzero_si128 ());
+    *data_lo = _mm_unpacklo_epi8 (data, _mm_setzero_si128 ());
+    *data_hi = _mm_unpackhi_epi8 (data, _mm_setzero_si128 ());
 }
 
 static force_inline __m128i
-unpack565to8888 (__m128i lo)
+unpack_565_to_8888 (__m128i lo)
 {
     __m128i r, g, b, rb, t;
     
-    r = _mm_and_si128 (_mm_slli_epi32 (lo, 8), MaskRed);
-    g = _mm_and_si128 (_mm_slli_epi32 (lo, 5), MaskGreen);
-    b = _mm_and_si128 (_mm_slli_epi32 (lo, 3), MaskBlue);
+    r = _mm_and_si128 (_mm_slli_epi32 (lo, 8), mask_red);
+    g = _mm_and_si128 (_mm_slli_epi32 (lo, 5), mask_green);
+    b = _mm_and_si128 (_mm_slli_epi32 (lo, 3), mask_blue);
 
     rb = _mm_or_si128 (r, b);
-    t  = _mm_and_si128 (rb, Mask565FixRB);
+    t  = _mm_and_si128 (rb, mask_565_fix_rb);
     t  = _mm_srli_epi32 (t, 5);
     rb = _mm_or_si128 (rb, t);
 
-    t  = _mm_and_si128 (g, Mask565FixG);
+    t  = _mm_and_si128 (g, mask_565_fix_g);
     t  = _mm_srli_epi32 (t, 6);
     g  = _mm_or_si128 (g, t);
     
@@ -105,22 +105,22 @@ unpack565to8888 (__m128i lo)
 }
 
 static force_inline void
-unpack565_128_4x128 (__m128i data, __m128i* data0, __m128i* data1, __m128i* data2, __m128i* data3)
+unpack_565_128_4x128 (__m128i data, __m128i* data0, __m128i* data1, __m128i* data2, __m128i* data3)
 {
     __m128i lo, hi;
 
     lo = _mm_unpacklo_epi16 (data, _mm_setzero_si128 ());
     hi = _mm_unpackhi_epi16 (data, _mm_setzero_si128 ());
 
-    lo = unpack565to8888 (lo);
-    hi = unpack565to8888 (hi);
+    lo = unpack_565_to_8888 (lo);
+    hi = unpack_565_to_8888 (hi);
 
     unpack_128_2x128 (lo, data0, data1);
     unpack_128_2x128 (hi, data2, data3);
 }
 
 static force_inline uint16_t
-pack565_32_16 (uint32_t pixel)
+pack_565_32_16 (uint32_t pixel)
 {
     return (uint16_t) (((pixel>>8) & 0xf800) | ((pixel>>5) & 0x07e0) | ((pixel>>3) & 0x001f));
 }
@@ -132,218 +132,218 @@ pack_2x128_128 (__m128i lo, __m128i hi)
 }
 
 static force_inline __m128i
-pack565_2x128_128 (__m128i lo, __m128i hi)
+pack_565_2x128_128 (__m128i lo, __m128i hi)
 {
     __m128i data;
     __m128i r, g1, g2, b;
 
     data = pack_2x128_128 ( lo, hi );
 
-    r  = _mm_and_si128 (data , Mask565r);
-    g1 = _mm_and_si128 (_mm_slli_epi32 (data , 3), Mask565g1);
-    g2 = _mm_and_si128 (_mm_srli_epi32 (data , 5), Mask565g2);
-    b  = _mm_and_si128 (_mm_srli_epi32 (data , 3), Mask565b);
+    r  = _mm_and_si128 (data , mask_565_r);
+    g1 = _mm_and_si128 (_mm_slli_epi32 (data , 3), mask_565_g1);
+    g2 = _mm_and_si128 (_mm_srli_epi32 (data , 5), mask_565_g2);
+    b  = _mm_and_si128 (_mm_srli_epi32 (data , 3), mask_565_b);
 
     return _mm_or_si128 (_mm_or_si128 (_mm_or_si128 (r, g1), g2), b);
 }
 
 static force_inline __m128i
-pack565_4x128_128 (__m128i* xmm0, __m128i* xmm1, __m128i* xmm2, __m128i* xmm3)
+pack_565_4x128_128 (__m128i* xmm0, __m128i* xmm1, __m128i* xmm2, __m128i* xmm3)
 {
-    return _mm_packus_epi16 (pack565_2x128_128 (*xmm0, *xmm1), pack565_2x128_128 (*xmm2, *xmm3));
+    return _mm_packus_epi16 (pack_565_2x128_128 (*xmm0, *xmm1), pack_565_2x128_128 (*xmm2, *xmm3));
 }
 
 static force_inline int
-isOpaque (__m128i x)
+is_opaque (__m128i x)
 {
     __m128i ffs = _mm_cmpeq_epi8 (x, x);
     return (_mm_movemask_epi8 (_mm_cmpeq_epi8 (x, ffs)) & 0x8888) == 0x8888;
 }
 
 static force_inline int
-isZero (__m128i x)
+is_zero (__m128i x)
 {
     return _mm_movemask_epi8 (_mm_cmpeq_epi8 (x, _mm_setzero_si128())) == 0xffff;
 }
 
 static force_inline int
-isTransparent (__m128i x)
+is_transparent (__m128i x)
 {
     return (_mm_movemask_epi8 (_mm_cmpeq_epi8 (x, _mm_setzero_si128())) & 0x8888) == 0x8888;
 }
 
 static force_inline __m128i
-expandPixel_32_1x128 (uint32_t data)
+expand_pixel_32_1x128 (uint32_t data)
 {
     return _mm_shuffle_epi32 (unpack_32_1x128 (data), _MM_SHUFFLE(1, 0, 1, 0));
 }
 
 static force_inline __m128i
-expandAlpha_1x128 (__m128i data)
+expand_alpha_1x128 (__m128i data)
 {
     return _mm_shufflehi_epi16 (_mm_shufflelo_epi16 (data, _MM_SHUFFLE(3, 3, 3, 3)), _MM_SHUFFLE(3, 3, 3, 3));
 }
 
 static force_inline void
-expandAlpha_2x128 (__m128i dataLo, __m128i dataHi, __m128i* alphaLo, __m128i* alphaHi)
+expand_alpha_2x128 (__m128i data_lo, __m128i data_hi, __m128i* alpha_lo, __m128i* alpha_hi)
 {
     __m128i lo, hi;
 
-    lo = _mm_shufflelo_epi16 (dataLo, _MM_SHUFFLE(3, 3, 3, 3));
-    hi = _mm_shufflelo_epi16 (dataHi, _MM_SHUFFLE(3, 3, 3, 3));
-    *alphaLo = _mm_shufflehi_epi16 (lo, _MM_SHUFFLE(3, 3, 3, 3));
-    *alphaHi = _mm_shufflehi_epi16 (hi, _MM_SHUFFLE(3, 3, 3, 3));
+    lo = _mm_shufflelo_epi16 (data_lo, _MM_SHUFFLE(3, 3, 3, 3));
+    hi = _mm_shufflelo_epi16 (data_hi, _MM_SHUFFLE(3, 3, 3, 3));
+    *alpha_lo = _mm_shufflehi_epi16 (lo, _MM_SHUFFLE(3, 3, 3, 3));
+    *alpha_hi = _mm_shufflehi_epi16 (hi, _MM_SHUFFLE(3, 3, 3, 3));
 }
 
 static force_inline void
-expandAlphaRev_2x128 (__m128i dataLo, __m128i dataHi, __m128i* alphaLo, __m128i* alphaHi)
+expand_alpha_rev_2x128 (__m128i data_lo, __m128i data_hi, __m128i* alpha_lo, __m128i* alpha_hi)
 {
     __m128i lo, hi;
 
-    lo = _mm_shufflelo_epi16 (dataLo, _MM_SHUFFLE(0, 0, 0, 0));
-    hi = _mm_shufflelo_epi16 (dataHi, _MM_SHUFFLE(0, 0, 0, 0));
-    *alphaLo = _mm_shufflehi_epi16 (lo, _MM_SHUFFLE(0, 0, 0, 0));
-    *alphaHi = _mm_shufflehi_epi16 (hi, _MM_SHUFFLE(0, 0, 0, 0));
+    lo = _mm_shufflelo_epi16 (data_lo, _MM_SHUFFLE(0, 0, 0, 0));
+    hi = _mm_shufflelo_epi16 (data_hi, _MM_SHUFFLE(0, 0, 0, 0));
+    *alpha_lo = _mm_shufflehi_epi16 (lo, _MM_SHUFFLE(0, 0, 0, 0));
+    *alpha_hi = _mm_shufflehi_epi16 (hi, _MM_SHUFFLE(0, 0, 0, 0));
 }
 
 static force_inline void
-pixMultiply_2x128 (__m128i* dataLo, __m128i* dataHi, __m128i* alphaLo, __m128i* alphaHi, __m128i* retLo, __m128i* retHi)
+pix_multiply_2x128 (__m128i* data_lo, __m128i* data_hi, __m128i* alpha_lo, __m128i* alpha_hi, __m128i* ret_lo, __m128i* ret_hi)
 {
     __m128i lo, hi;
 
-    lo = _mm_mullo_epi16 (*dataLo, *alphaLo);
-    hi = _mm_mullo_epi16 (*dataHi, *alphaHi);
-    lo = _mm_adds_epu16 (lo, Mask0080);
-    hi = _mm_adds_epu16 (hi, Mask0080);
-    *retLo = _mm_mulhi_epu16 (lo, Mask0101);
-    *retHi = _mm_mulhi_epu16 (hi, Mask0101);
+    lo = _mm_mullo_epi16 (*data_lo, *alpha_lo);
+    hi = _mm_mullo_epi16 (*data_hi, *alpha_hi);
+    lo = _mm_adds_epu16 (lo, mask_0080);
+    hi = _mm_adds_epu16 (hi, mask_0080);
+    *ret_lo = _mm_mulhi_epu16 (lo, mask_0101);
+    *ret_hi = _mm_mulhi_epu16 (hi, mask_0101);
 }
 
 static force_inline void
-pixAddMultiply_2x128 (__m128i* srcLo, __m128i* srcHi, __m128i* alphaDstLo, __m128i* alphaDstHi,
-                      __m128i* dstLo, __m128i* dstHi, __m128i* alphaSrcLo, __m128i* alphaSrcHi,
-                      __m128i* retLo, __m128i* retHi)
+pix_add_multiply_2x128 (__m128i* src_lo, __m128i* src_hi, __m128i* alpha_dst_lo, __m128i* alpha_dst_hi,
+                      __m128i* dst_lo, __m128i* dst_hi, __m128i* alpha_src_lo, __m128i* alpha_src_hi,
+                      __m128i* ret_lo, __m128i* ret_hi)
 {
     __m128i lo, hi;
-    __m128i mulLo, mulHi;
+    __m128i mul_lo, mul_hi;
 
-    lo = _mm_mullo_epi16 (*srcLo, *alphaDstLo);
-    hi = _mm_mullo_epi16 (*srcHi, *alphaDstHi);
-    mulLo = _mm_mullo_epi16 (*dstLo, *alphaSrcLo);
-    mulHi = _mm_mullo_epi16 (*dstHi, *alphaSrcHi);
-    lo = _mm_adds_epu16 (lo, Mask0080);
-    hi = _mm_adds_epu16 (hi, Mask0080);
-    lo = _mm_adds_epu16 (lo, mulLo);
-    hi = _mm_adds_epu16 (hi, mulHi);
-    *retLo = _mm_mulhi_epu16 (lo, Mask0101);
-    *retHi = _mm_mulhi_epu16 (hi, Mask0101);
+    lo = _mm_mullo_epi16 (*src_lo, *alpha_dst_lo);
+    hi = _mm_mullo_epi16 (*src_hi, *alpha_dst_hi);
+    mul_lo = _mm_mullo_epi16 (*dst_lo, *alpha_src_lo);
+    mul_hi = _mm_mullo_epi16 (*dst_hi, *alpha_src_hi);
+    lo = _mm_adds_epu16 (lo, mask_0080);
+    hi = _mm_adds_epu16 (hi, mask_0080);
+    lo = _mm_adds_epu16 (lo, mul_lo);
+    hi = _mm_adds_epu16 (hi, mul_hi);
+    *ret_lo = _mm_mulhi_epu16 (lo, mask_0101);
+    *ret_hi = _mm_mulhi_epu16 (hi, mask_0101);
 }
 
 static force_inline void
-negate_2x128 (__m128i dataLo, __m128i dataHi, __m128i* negLo, __m128i* negHi)
+negate_2x128 (__m128i data_lo, __m128i data_hi, __m128i* neg_lo, __m128i* neg_hi)
 {
-    *negLo = _mm_xor_si128 (dataLo, Mask00ff);
-    *negHi = _mm_xor_si128 (dataHi, Mask00ff);
+    *neg_lo = _mm_xor_si128 (data_lo, mask_00ff);
+    *neg_hi = _mm_xor_si128 (data_hi, mask_00ff);
 }
 
 static force_inline void
-invertColors_2x128 (__m128i dataLo, __m128i dataHi, __m128i* invLo, __m128i* invHi)
+invert_colors_2x128 (__m128i data_lo, __m128i data_hi, __m128i* inv_lo, __m128i* inv_hi)
 {
     __m128i lo, hi;
 
-    lo = _mm_shufflelo_epi16 (dataLo, _MM_SHUFFLE(3, 0, 1, 2));
-    hi = _mm_shufflelo_epi16 (dataHi, _MM_SHUFFLE(3, 0, 1, 2));
-    *invLo = _mm_shufflehi_epi16 (lo, _MM_SHUFFLE(3, 0, 1, 2));
-    *invHi = _mm_shufflehi_epi16 (hi, _MM_SHUFFLE(3, 0, 1, 2));
+    lo = _mm_shufflelo_epi16 (data_lo, _MM_SHUFFLE(3, 0, 1, 2));
+    hi = _mm_shufflelo_epi16 (data_hi, _MM_SHUFFLE(3, 0, 1, 2));
+    *inv_lo = _mm_shufflehi_epi16 (lo, _MM_SHUFFLE(3, 0, 1, 2));
+    *inv_hi = _mm_shufflehi_epi16 (hi, _MM_SHUFFLE(3, 0, 1, 2));
 }
 
 static force_inline void
-over_2x128 (__m128i* srcLo, __m128i* srcHi, __m128i* alphaLo, __m128i* alphaHi, __m128i* dstLo, __m128i* dstHi)
+over_2x128 (__m128i* src_lo, __m128i* src_hi, __m128i* alpha_lo, __m128i* alpha_hi, __m128i* dst_lo, __m128i* dst_hi)
 {
     __m128i t1, t2;
 
-    negate_2x128 (*alphaLo, *alphaHi, &t1, &t2);
+    negate_2x128 (*alpha_lo, *alpha_hi, &t1, &t2);
 
-    pixMultiply_2x128 (dstLo, dstHi, &t1, &t2, dstLo, dstHi);
+    pix_multiply_2x128 (dst_lo, dst_hi, &t1, &t2, dst_lo, dst_hi);
 
-    *dstLo = _mm_adds_epu8 (*srcLo, *dstLo);
-    *dstHi = _mm_adds_epu8 (*srcHi, *dstHi);
+    *dst_lo = _mm_adds_epu8 (*src_lo, *dst_lo);
+    *dst_hi = _mm_adds_epu8 (*src_hi, *dst_hi);
 }
 
 static force_inline void
-overRevNonPre_2x128 (__m128i srcLo, __m128i srcHi, __m128i* dstLo, __m128i* dstHi)
+over_rev_non_pre_2x128 (__m128i src_lo, __m128i src_hi, __m128i* dst_lo, __m128i* dst_hi)
 {
     __m128i lo, hi;
-    __m128i alphaLo, alphaHi;
+    __m128i alpha_lo, alpha_hi;
 
-    expandAlpha_2x128 (srcLo, srcHi, &alphaLo, &alphaHi);
+    expand_alpha_2x128 (src_lo, src_hi, &alpha_lo, &alpha_hi);
 
-    lo = _mm_or_si128 (alphaLo, MaskAlpha);
-    hi = _mm_or_si128 (alphaHi, MaskAlpha);
+    lo = _mm_or_si128 (alpha_lo, mask_alpha);
+    hi = _mm_or_si128 (alpha_hi, mask_alpha);
 
-    invertColors_2x128 (srcLo, srcHi, &srcLo, &srcHi);
+    invert_colors_2x128 (src_lo, src_hi, &src_lo, &src_hi);
 
-    pixMultiply_2x128 (&srcLo, &srcHi, &lo, &hi, &lo, &hi);
+    pix_multiply_2x128 (&src_lo, &src_hi, &lo, &hi, &lo, &hi);
 
-    over_2x128 (&lo, &hi, &alphaLo, &alphaHi, dstLo, dstHi);
+    over_2x128 (&lo, &hi, &alpha_lo, &alpha_hi, dst_lo, dst_hi);
 }
 
 static force_inline void
-inOver_2x128 (__m128i* srcLo,  __m128i* srcHi,  __m128i*  alphaLo, __m128i*  alphaHi,
-              __m128i* maskLo, __m128i* maskHi, __m128i* dstLo,   __m128i* dstHi)
+in_over_2x128 (__m128i* src_lo,  __m128i* src_hi,  __m128i*  alpha_lo, __m128i*  alpha_hi,
+              __m128i* mask_lo, __m128i* mask_hi, __m128i* dst_lo,   __m128i* dst_hi)
 {
-    __m128i sLo, sHi;
-    __m128i aLo, aHi;
+    __m128i s_lo, s_hi;
+    __m128i a_lo, a_hi;
 
-    pixMultiply_2x128 (  srcLo,   srcHi, maskLo, maskHi, &sLo, &sHi);
-    pixMultiply_2x128 (alphaLo, alphaHi, maskLo, maskHi, &aLo, &aHi);
+    pix_multiply_2x128 (  src_lo,   src_hi, mask_lo, mask_hi, &s_lo, &s_hi);
+    pix_multiply_2x128 (alpha_lo, alpha_hi, mask_lo, mask_hi, &a_lo, &a_hi);
 
-    over_2x128 (&sLo, &sHi, &aLo, &aHi, dstLo, dstHi);
+    over_2x128 (&s_lo, &s_hi, &a_lo, &a_hi, dst_lo, dst_hi);
 }
 
 static force_inline void
-cachePrefetch (__m128i* addr)
+cache_prefetch (__m128i* addr)
 {
     _mm_prefetch (addr, _MM_HINT_T0);
 }
 
 static force_inline void
-cachePrefetchNext (__m128i* addr)
+cache_prefetch_next (__m128i* addr)
 {
     _mm_prefetch (addr + 4, _MM_HINT_T0); // 64 bytes ahead
 }
 
 /* load 4 pixels from a 16-byte boundary aligned address */
 static force_inline __m128i
-load128Aligned (__m128i* src)
+load_128_aligned (__m128i* src)
 {
     return _mm_load_si128 (src);
 }
 
 /* load 4 pixels from a unaligned address */
 static force_inline __m128i
-load128Unaligned (const __m128i* src)
+load_128_unaligned (const __m128i* src)
 {
     return _mm_loadu_si128 (src);
 }
 
 /* save 4 pixels using Write Combining memory on a 16-byte boundary aligned address */
 static force_inline void
-save128WriteCombining (__m128i* dst, __m128i data)
+save_128_write_combining (__m128i* dst, __m128i data)
 {
     _mm_stream_si128 (dst, data);
 }
 
 /* save 4 pixels on a 16-byte boundary aligned address */
 static force_inline void
-save128Aligned (__m128i* dst, __m128i data)
+save_128_aligned (__m128i* dst, __m128i data)
 {
     _mm_store_si128 (dst, data);
 }
 
 /* save 4 pixels on a unaligned address */
 static force_inline void
-save128Unaligned (__m128i* dst, __m128i data)
+save_128_unaligned (__m128i* dst, __m128i data)
 {
     _mm_storeu_si128 (dst, data);
 }
@@ -359,48 +359,48 @@ unpack_32_1x64 (uint32_t data)
 }
 
 static force_inline __m64
-expandAlpha_1x64 (__m64 data)
+expand_alpha_1x64 (__m64 data)
 {
     return _mm_shuffle_pi16 (data, _MM_SHUFFLE(3, 3, 3, 3));
 }
 
 static force_inline __m64
-expandAlphaRev_1x64 (__m64 data)
+expand_alpha_rev_1x64 (__m64 data)
 {
     return _mm_shuffle_pi16 (data, _MM_SHUFFLE(0, 0, 0, 0));
 }
 
 static force_inline __m64
-expandPixel_8_1x64 (uint8_t data)
+expand_pixel_8_1x64 (uint8_t data)
 {
     return _mm_shuffle_pi16 (unpack_32_1x64 ((uint32_t)data), _MM_SHUFFLE(0, 0, 0, 0));
 }
 
 static force_inline __m64
-pixMultiply_1x64 (__m64 data, __m64 alpha)
+pix_multiply_1x64 (__m64 data, __m64 alpha)
 {
     return _mm_mulhi_pu16 (_mm_adds_pu16 (_mm_mullo_pi16 (data, alpha),
-                                          xMask0080),
-                           xMask0101);
+                                          mask_x0080),
+                           mask_x0101);
 }
 
 static force_inline __m64
-pixAddMultiply_1x64 (__m64* src, __m64* alphaDst, __m64* dst, __m64* alphaSrc)
+pix_add_multiply_1x64 (__m64* src, __m64* alpha_dst, __m64* dst, __m64* alpha_src)
 {
-    return _mm_mulhi_pu16 (_mm_adds_pu16 (_mm_adds_pu16 (_mm_mullo_pi16 (*src, *alphaDst),
-                                                         xMask0080),
-                                          _mm_mullo_pi16 (*dst, *alphaSrc)),
-                           xMask0101);
+    return _mm_mulhi_pu16 (_mm_adds_pu16 (_mm_adds_pu16 (_mm_mullo_pi16 (*src, *alpha_dst),
+                                                         mask_x0080),
+                                          _mm_mullo_pi16 (*dst, *alpha_src)),
+                           mask_x0101);
 }
 
 static force_inline __m64
 negate_1x64 (__m64 data)
 {
-    return _mm_xor_si64 (data, xMask00ff);
+    return _mm_xor_si64 (data, mask_x00ff);
 }
 
 static force_inline __m64
-invertColors_1x64 (__m64 data)
+invert_colors_1x64 (__m64 data)
 {
     return _mm_shuffle_pi16 (data, _MM_SHUFFLE(3, 0, 1, 2));
 }
@@ -408,24 +408,24 @@ invertColors_1x64 (__m64 data)
 static force_inline __m64
 over_1x64 (__m64 src, __m64 alpha, __m64 dst)
 {
-    return _mm_adds_pu8 (src, pixMultiply_1x64 (dst, negate_1x64 (alpha)));
+    return _mm_adds_pu8 (src, pix_multiply_1x64 (dst, negate_1x64 (alpha)));
 }
 
 static force_inline __m64
-inOver_1x64 (__m64* src, __m64* alpha, __m64* mask, __m64* dst)
+in_over_1x64 (__m64* src, __m64* alpha, __m64* mask, __m64* dst)
 {
-    return over_1x64 (pixMultiply_1x64 (*src, *mask),
-                      pixMultiply_1x64 (*alpha, *mask),
+    return over_1x64 (pix_multiply_1x64 (*src, *mask),
+                      pix_multiply_1x64 (*alpha, *mask),
                       *dst);
 }
 
 static force_inline __m64
-overRevNonPre_1x64 (__m64 src, __m64 dst)
+over_rev_non_pre_1x64 (__m64 src, __m64 dst)
 {
-    __m64 alpha = expandAlpha_1x64 (src);
+    __m64 alpha = expand_alpha_1x64 (src);
 
-    return over_1x64 (pixMultiply_1x64 (invertColors_1x64 (src),
-                                        _mm_or_si64 (alpha, xMaskAlpha)),
+    return over_1x64 (pix_multiply_1x64 (invert_colors_1x64 (src),
+                                        _mm_or_si64 (alpha, mask_x_alpha)),
                       alpha,
                       dst);
 }
@@ -463,8 +463,8 @@ expand565_16_1x64 (uint16_t pixel)
 
     p = _mm_or_si64 (t1, p);
     p = _mm_or_si64 (t2, p);
-    p = _mm_and_si64 (p, xMask565rgb);
-    p = _mm_mullo_pi16 (p, xMask565Unpack);
+    p = _mm_and_si64 (p, mask_x565_rgb);
+    p = _mm_mullo_pi16 (p, mask_x565_unpack);
 
     return _mm_srli_pi16 (p, 8);
 }
@@ -473,7 +473,7 @@ expand565_16_1x64 (uint16_t pixel)
  * Compose Core transformations
  */
 static force_inline uint32_t
-coreCombineOverUPixelsse2 (uint32_t src, uint32_t dst)
+core_combine_over_u_pixel_sse2 (uint32_t src, uint32_t dst)
 {
     uint8_t     a;
     __m64       ms;
@@ -487,7 +487,7 @@ coreCombineOverUPixelsse2 (uint32_t src, uint32_t dst)
     else if (src)
     {
         ms = unpack_32_1x64 (src);
-        return pack_1x64_32 (over_1x64 (ms, expandAlpha_1x64 (ms), unpack_32_1x64 (dst)));
+        return pack_1x64_32 (over_1x64 (ms, expand_alpha_1x64 (ms), unpack_32_1x64 (dst)));
     }
 
     return dst;
@@ -503,10 +503,10 @@ combine1 (const uint32_t *ps, const uint32_t *pm)
 	__m64 ms, mm;
 
 	mm = unpack_32_1x64 (*pm);
-	mm = expandAlpha_1x64 (mm);
+	mm = expand_alpha_1x64 (mm);
 	
 	ms = unpack_32_1x64 (s);
-	ms = pixMultiply_1x64 (ms, mm);
+	ms = pix_multiply_1x64 (ms, mm);
 
 	s = pack_1x64_32 (ms);
     }
@@ -517,48 +517,48 @@ combine1 (const uint32_t *ps, const uint32_t *pm)
 static force_inline __m128i
 combine4 (const __m128i *ps, const __m128i *pm)
 {
-    __m128i xmmSrcLo, xmmSrcHi;
-    __m128i xmmMskLo, xmmMskHi;
+    __m128i xmm_src_lo, xmm_src_hi;
+    __m128i xmm_msk_lo, xmm_msk_hi;
     __m128i s;
     
     if (pm)
     {
-	xmmMskLo = load128Unaligned (pm);
+	xmm_msk_lo = load_128_unaligned (pm);
 
-	if (isTransparent (xmmMskLo))
+	if (is_transparent (xmm_msk_lo))
 	    return _mm_setzero_si128 ();
     }
     
-    s = load128Unaligned (ps);
+    s = load_128_unaligned (ps);
 	
     if (pm)
     {
-	unpack_128_2x128 (s, &xmmSrcLo, &xmmSrcHi);
-	unpack_128_2x128 (xmmMskLo, &xmmMskLo, &xmmMskHi);
+	unpack_128_2x128 (s, &xmm_src_lo, &xmm_src_hi);
+	unpack_128_2x128 (xmm_msk_lo, &xmm_msk_lo, &xmm_msk_hi);
 	
-	expandAlpha_2x128 (xmmMskLo, xmmMskHi, &xmmMskLo, &xmmMskHi);
+	expand_alpha_2x128 (xmm_msk_lo, xmm_msk_hi, &xmm_msk_lo, &xmm_msk_hi);
 	
-	pixMultiply_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmMskLo, &xmmMskHi, &xmmSrcLo, &xmmSrcHi);
+	pix_multiply_2x128 (&xmm_src_lo, &xmm_src_hi, &xmm_msk_lo, &xmm_msk_hi, &xmm_src_lo, &xmm_src_hi);
 	
-	s = pack_2x128_128 (xmmSrcLo, xmmSrcHi);
+	s = pack_2x128_128 (xmm_src_lo, xmm_src_hi);
     }
 
     return s;
 }
 
 static force_inline void
-coreCombineOverUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm, int w)
+core_combine_over_u_sse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm, int w)
 {
     uint32_t s, d;
 
-    __m128i xmmDstLo, xmmDstHi;
-    __m128i xmmSrcLo, xmmSrcHi;
-    __m128i xmmAlphaLo, xmmAlphaHi;
+    __m128i xmm_dst_lo, xmm_dst_hi;
+    __m128i xmm_src_lo, xmm_src_hi;
+    __m128i xmm_alpha_lo, xmm_alpha_hi;
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     /* Align dst on a 16-byte boundary */
     while (w &&
@@ -567,7 +567,7 @@ coreCombineOverUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm, int 
         d = *pd;
         s = combine1 (ps, pm);
 
-        *pd++ = coreCombineOverUPixelsse2 (s, d);
+        *pd++ = core_combine_over_u_pixel_sse2 (s, d);
 	ps++;
 	if (pm)
 	    pm++;
@@ -575,37 +575,37 @@ coreCombineOverUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm, int 
     }
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w >= 4)
     {
         /* fill cache line with next memory */
-        cachePrefetchNext ((__m128i*)ps);
-        cachePrefetchNext ((__m128i*)pd);
-	cachePrefetchNext ((__m128i*)pm);
+        cache_prefetch_next ((__m128i*)ps);
+        cache_prefetch_next ((__m128i*)pd);
+	cache_prefetch_next ((__m128i*)pm);
 
         /* I'm loading unaligned because I'm not sure about the address alignment. */
-        xmmSrcHi = combine4 ((__m128i*)ps, (__m128i*)pm);
+        xmm_src_hi = combine4 ((__m128i*)ps, (__m128i*)pm);
 
-        if (isOpaque (xmmSrcHi))
+        if (is_opaque (xmm_src_hi))
         {
-            save128Aligned ((__m128i*)pd, xmmSrcHi);
+            save_128_aligned ((__m128i*)pd, xmm_src_hi);
         }
-        else if (!isZero (xmmSrcHi))
+        else if (!is_zero (xmm_src_hi))
         {
-            xmmDstHi = load128Aligned ((__m128i*) pd);
+            xmm_dst_hi = load_128_aligned ((__m128i*) pd);
 
-            unpack_128_2x128 (xmmSrcHi, &xmmSrcLo, &xmmSrcHi);
-            unpack_128_2x128 (xmmDstHi, &xmmDstLo, &xmmDstHi);
+            unpack_128_2x128 (xmm_src_hi, &xmm_src_lo, &xmm_src_hi);
+            unpack_128_2x128 (xmm_dst_hi, &xmm_dst_lo, &xmm_dst_hi);
 
-            expandAlpha_2x128 (xmmSrcLo, xmmSrcHi, &xmmAlphaLo, &xmmAlphaHi);
+            expand_alpha_2x128 (xmm_src_lo, xmm_src_hi, &xmm_alpha_lo, &xmm_alpha_hi);
 
-            over_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmAlphaLo, &xmmAlphaHi, &xmmDstLo, &xmmDstHi);
+            over_2x128 (&xmm_src_lo, &xmm_src_hi, &xmm_alpha_lo, &xmm_alpha_hi, &xmm_dst_lo, &xmm_dst_hi);
 
             /* rebuid the 4 pixel data and save*/
-            save128Aligned ((__m128i*)pd, pack_2x128_128 (xmmDstLo, xmmDstHi));
+            save_128_aligned ((__m128i*)pd, pack_2x128_128 (xmm_dst_lo, xmm_dst_hi));
         }
 
         w -= 4;
@@ -620,7 +620,7 @@ coreCombineOverUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm, int 
         d = *pd;
         s = combine1 (ps, pm);
 
-        *pd++ = coreCombineOverUPixelsse2 (s, d);
+        *pd++ = core_combine_over_u_pixel_sse2 (s, d);
 	ps++;
 	if (pm)
 	    pm++;
@@ -629,18 +629,18 @@ coreCombineOverUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm, int 
 }
 
 static force_inline void
-coreCombineOverReverseUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm, int w)
+core_combine_over_reverse_u_sse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm, int w)
 {
     uint32_t s, d;
 
-    __m128i xmmDstLo, xmmDstHi;
-    __m128i xmmSrcLo, xmmSrcHi;
-    __m128i xmmAlphaLo, xmmAlphaHi;
+    __m128i xmm_dst_lo, xmm_dst_hi;
+    __m128i xmm_src_lo, xmm_src_hi;
+    __m128i xmm_alpha_lo, xmm_alpha_hi;
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     /* Align dst on a 16-byte boundary */
     while (w &&
@@ -649,7 +649,7 @@ coreCombineOverReverseUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* p
         d = *pd;
         s = combine1 (ps, pm);
 
-        *pd++ = coreCombineOverUPixelsse2 (d, s);
+        *pd++ = core_combine_over_u_pixel_sse2 (d, s);
         w--;
 	ps++;
 	if (pm)
@@ -657,30 +657,30 @@ coreCombineOverReverseUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* p
     }
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w >= 4)
     {
         /* fill cache line with next memory */
-        cachePrefetchNext ((__m128i*)ps);
-        cachePrefetchNext ((__m128i*)pd);
-	cachePrefetchNext ((__m128i*)pm);
+        cache_prefetch_next ((__m128i*)ps);
+        cache_prefetch_next ((__m128i*)pd);
+	cache_prefetch_next ((__m128i*)pm);
 
         /* I'm loading unaligned because I'm not sure about the address alignment. */
-        xmmSrcHi = combine4 ((__m128i*)ps, (__m128i*)pm);
-        xmmDstHi = load128Aligned ((__m128i*) pd);
+        xmm_src_hi = combine4 ((__m128i*)ps, (__m128i*)pm);
+        xmm_dst_hi = load_128_aligned ((__m128i*) pd);
 
-        unpack_128_2x128 (xmmSrcHi, &xmmSrcLo, &xmmSrcHi);
-        unpack_128_2x128 (xmmDstHi, &xmmDstLo, &xmmDstHi);
+        unpack_128_2x128 (xmm_src_hi, &xmm_src_lo, &xmm_src_hi);
+        unpack_128_2x128 (xmm_dst_hi, &xmm_dst_lo, &xmm_dst_hi);
 
-        expandAlpha_2x128 (xmmDstLo, xmmDstHi, &xmmAlphaLo, &xmmAlphaHi);
+        expand_alpha_2x128 (xmm_dst_lo, xmm_dst_hi, &xmm_alpha_lo, &xmm_alpha_hi);
 
-        over_2x128 (&xmmDstLo, &xmmDstHi, &xmmAlphaLo, &xmmAlphaHi, &xmmSrcLo, &xmmSrcHi);
+        over_2x128 (&xmm_dst_lo, &xmm_dst_hi, &xmm_alpha_lo, &xmm_alpha_hi, &xmm_src_lo, &xmm_src_hi);
 
         /* rebuid the 4 pixel data and save*/
-        save128Aligned ((__m128i*)pd, pack_2x128_128 (xmmSrcLo, xmmSrcHi));
+        save_128_aligned ((__m128i*)pd, pack_2x128_128 (xmm_src_lo, xmm_src_hi));
 
         w -= 4;
         ps += 4;
@@ -694,7 +694,7 @@ coreCombineOverReverseUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* p
         d = *pd;
         s = combine1 (ps, pm);
 
-        *pd++ = coreCombineOverUPixelsse2 (d, s);
+        *pd++ = core_combine_over_u_pixel_sse2 (d, s);
 	ps++;
         w--;
 	if (pm)
@@ -703,7 +703,7 @@ coreCombineOverReverseUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* p
 }
 
 static force_inline uint32_t
-coreCombineInUPixelsse2 (uint32_t src, uint32_t dst)
+core_combine_in_u_pixelsse2 (uint32_t src, uint32_t dst)
 {
     uint32_t maska = src >> 24;
 
@@ -713,31 +713,31 @@ coreCombineInUPixelsse2 (uint32_t src, uint32_t dst)
     }
     else if (maska != 0xff)
     {
-        return pack_1x64_32(pixMultiply_1x64 (unpack_32_1x64 (dst), expandAlpha_1x64 (unpack_32_1x64 (src))));
+        return pack_1x64_32(pix_multiply_1x64 (unpack_32_1x64 (dst), expand_alpha_1x64 (unpack_32_1x64 (src))));
     }
 
     return dst;
 }
 
 static force_inline void
-coreCombineInUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm, int w)
+core_combine_in_u_sse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm, int w)
 {
     uint32_t s, d;
 
-    __m128i xmmSrcLo, xmmSrcHi;
-    __m128i xmmDstLo, xmmDstHi;
+    __m128i xmm_src_lo, xmm_src_hi;
+    __m128i xmm_dst_lo, xmm_dst_hi;
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w && ((unsigned long) pd & 15))
     {
         s = combine1 (ps, pm);
         d = *pd;
 
-        *pd++ = coreCombineInUPixelsse2 (d, s);
+        *pd++ = core_combine_in_u_pixelsse2 (d, s);
         w--;
 	ps++;
 	if (pm)
@@ -745,27 +745,27 @@ coreCombineInUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm, int w)
     }
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w >= 4)
     {
         /* fill cache line with next memory */
-        cachePrefetchNext ((__m128i*)ps);
-        cachePrefetchNext ((__m128i*)pd);
-	cachePrefetchNext ((__m128i*)pm);
+        cache_prefetch_next ((__m128i*)ps);
+        cache_prefetch_next ((__m128i*)pd);
+	cache_prefetch_next ((__m128i*)pm);
 
-        xmmDstHi = load128Aligned ((__m128i*) pd);
-        xmmSrcHi = combine4 ((__m128i*) ps, (__m128i*) pm);
+        xmm_dst_hi = load_128_aligned ((__m128i*) pd);
+        xmm_src_hi = combine4 ((__m128i*) ps, (__m128i*) pm);
 
-        unpack_128_2x128 (xmmDstHi, &xmmDstLo, &xmmDstHi);
-        expandAlpha_2x128 (xmmDstLo, xmmDstHi, &xmmDstLo, &xmmDstHi);
+        unpack_128_2x128 (xmm_dst_hi, &xmm_dst_lo, &xmm_dst_hi);
+        expand_alpha_2x128 (xmm_dst_lo, xmm_dst_hi, &xmm_dst_lo, &xmm_dst_hi);
 
-        unpack_128_2x128 (xmmSrcHi, &xmmSrcLo, &xmmSrcHi);
-        pixMultiply_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmDstLo, &xmmDstHi, &xmmDstLo, &xmmDstHi);
+        unpack_128_2x128 (xmm_src_hi, &xmm_src_lo, &xmm_src_hi);
+        pix_multiply_2x128 (&xmm_src_lo, &xmm_src_hi, &xmm_dst_lo, &xmm_dst_hi, &xmm_dst_lo, &xmm_dst_hi);
 
-        save128Aligned ((__m128i*)pd, pack_2x128_128 (xmmDstLo, xmmDstHi));
+        save_128_aligned ((__m128i*)pd, pack_2x128_128 (xmm_dst_lo, xmm_dst_hi));
 
         ps += 4;
         pd += 4;
@@ -779,7 +779,7 @@ coreCombineInUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm, int w)
         s = combine1 (ps, pm);
         d = *pd;
 
-        *pd++ = coreCombineInUPixelsse2 (d, s);
+        *pd++ = core_combine_in_u_pixelsse2 (d, s);
         w--;
 	ps++;
 	if (pm)
@@ -788,24 +788,24 @@ coreCombineInUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm, int w)
 }
 
 static force_inline void
-coreCombineReverseInUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t *pm, int w)
+core_combine_reverse_in_u_sse2 (uint32_t* pd, const uint32_t* ps, const uint32_t *pm, int w)
 {
     uint32_t s, d;
 
-    __m128i xmmSrcLo, xmmSrcHi;
-    __m128i xmmDstLo, xmmDstHi;
+    __m128i xmm_src_lo, xmm_src_hi;
+    __m128i xmm_dst_lo, xmm_dst_hi;
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w && ((unsigned long) pd & 15))
     {
         s = combine1 (ps, pm);
         d = *pd;
 
-        *pd++ = coreCombineInUPixelsse2 (s, d);
+        *pd++ = core_combine_in_u_pixelsse2 (s, d);
 	ps++;
         w--;
 	if (pm)
@@ -813,27 +813,27 @@ coreCombineReverseInUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t *pm,
     }
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w >= 4)
     {
         /* fill cache line with next memory */
-        cachePrefetchNext ((__m128i*)ps);
-        cachePrefetchNext ((__m128i*)pd);
-	cachePrefetchNext ((__m128i*)pm);
+        cache_prefetch_next ((__m128i*)ps);
+        cache_prefetch_next ((__m128i*)pd);
+	cache_prefetch_next ((__m128i*)pm);
 
-        xmmDstHi = load128Aligned ((__m128i*) pd);
-        xmmSrcHi = combine4 ((__m128i*) ps, (__m128i*)pm);
+        xmm_dst_hi = load_128_aligned ((__m128i*) pd);
+        xmm_src_hi = combine4 ((__m128i*) ps, (__m128i*)pm);
 
-        unpack_128_2x128 (xmmSrcHi, &xmmSrcLo, &xmmSrcHi);
-        expandAlpha_2x128 (xmmSrcLo, xmmSrcHi, &xmmSrcLo, &xmmSrcHi);
+        unpack_128_2x128 (xmm_src_hi, &xmm_src_lo, &xmm_src_hi);
+        expand_alpha_2x128 (xmm_src_lo, xmm_src_hi, &xmm_src_lo, &xmm_src_hi);
 
-        unpack_128_2x128 (xmmDstHi, &xmmDstLo, &xmmDstHi);
-        pixMultiply_2x128 (&xmmDstLo, &xmmDstHi, &xmmSrcLo, &xmmSrcHi, &xmmDstLo, &xmmDstHi);
+        unpack_128_2x128 (xmm_dst_hi, &xmm_dst_lo, &xmm_dst_hi);
+        pix_multiply_2x128 (&xmm_dst_lo, &xmm_dst_hi, &xmm_src_lo, &xmm_src_hi, &xmm_dst_lo, &xmm_dst_hi);
 
-        save128Aligned ((__m128i*)pd, pack_2x128_128 (xmmDstLo, xmmDstHi));
+        save_128_aligned ((__m128i*)pd, pack_2x128_128 (xmm_dst_lo, xmm_dst_hi));
 
         ps += 4;
         pd += 4;
@@ -847,7 +847,7 @@ coreCombineReverseInUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t *pm,
         s = combine1 (ps, pm);
         d = *pd;
 
-        *pd++ = coreCombineInUPixelsse2 (s, d);
+        *pd++ = core_combine_in_u_pixelsse2 (s, d);
         w--;
 	ps++;
 	if (pm)
@@ -856,19 +856,19 @@ coreCombineReverseInUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t *pm,
 }
 
 static force_inline void
-coreCombineReverseOutUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm, int w)
+core_combine_reverse_out_u_sse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm, int w)
 {
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w && ((unsigned long) pd & 15))
     {
         uint32_t s = combine1 (ps, pm);
         uint32_t d = *pd;
 
-        *pd++ = pack_1x64_32 (pixMultiply_1x64 (unpack_32_1x64 (d), negate_1x64 (expandAlpha_1x64 (unpack_32_1x64 (s)))));
+        *pd++ = pack_1x64_32 (pix_multiply_1x64 (unpack_32_1x64 (d), negate_1x64 (expand_alpha_1x64 (unpack_32_1x64 (s)))));
 	if (pm)
 	    pm++;
 	ps++;
@@ -876,32 +876,32 @@ coreCombineReverseOutUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm
     }
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w >= 4)
     {
-        __m128i xmmSrcLo, xmmSrcHi;
-        __m128i xmmDstLo, xmmDstHi;
+        __m128i xmm_src_lo, xmm_src_hi;
+        __m128i xmm_dst_lo, xmm_dst_hi;
 
         /* fill cache line with next memory */
-        cachePrefetchNext ((__m128i*)ps);
-        cachePrefetchNext ((__m128i*)pd);
-	cachePrefetchNext ((__m128i*)pm);
+        cache_prefetch_next ((__m128i*)ps);
+        cache_prefetch_next ((__m128i*)pd);
+	cache_prefetch_next ((__m128i*)pm);
 
-        xmmSrcHi = combine4 ((__m128i*)ps, (__m128i*)pm);
-        xmmDstHi = load128Aligned ((__m128i*) pd);
+        xmm_src_hi = combine4 ((__m128i*)ps, (__m128i*)pm);
+        xmm_dst_hi = load_128_aligned ((__m128i*) pd);
 
-        unpack_128_2x128 (xmmSrcHi, &xmmSrcLo, &xmmSrcHi);
-        unpack_128_2x128 (xmmDstHi, &xmmDstLo, &xmmDstHi);
+        unpack_128_2x128 (xmm_src_hi, &xmm_src_lo, &xmm_src_hi);
+        unpack_128_2x128 (xmm_dst_hi, &xmm_dst_lo, &xmm_dst_hi);
 
-        expandAlpha_2x128 (xmmSrcLo, xmmSrcHi, &xmmSrcLo, &xmmSrcHi);
-        negate_2x128      (xmmSrcLo, xmmSrcHi, &xmmSrcLo, &xmmSrcHi);
+        expand_alpha_2x128 (xmm_src_lo, xmm_src_hi, &xmm_src_lo, &xmm_src_hi);
+        negate_2x128      (xmm_src_lo, xmm_src_hi, &xmm_src_lo, &xmm_src_hi);
 
-        pixMultiply_2x128 (&xmmDstLo, &xmmDstHi, &xmmSrcLo, &xmmSrcHi, &xmmDstLo, &xmmDstHi);
+        pix_multiply_2x128 (&xmm_dst_lo, &xmm_dst_hi, &xmm_src_lo, &xmm_src_hi, &xmm_dst_lo, &xmm_dst_hi);
 
-        save128Aligned ((__m128i*)pd, pack_2x128_128 (xmmDstLo, xmmDstHi));
+        save_128_aligned ((__m128i*)pd, pack_2x128_128 (xmm_dst_lo, xmm_dst_hi));
 
         ps += 4;
         pd += 4;
@@ -915,7 +915,7 @@ coreCombineReverseOutUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm
         uint32_t s = combine1 (ps, pm);
         uint32_t d = *pd;
 
-        *pd++ = pack_1x64_32 (pixMultiply_1x64 (unpack_32_1x64 (d), negate_1x64 (expandAlpha_1x64 (unpack_32_1x64 (s)))));
+        *pd++ = pack_1x64_32 (pix_multiply_1x64 (unpack_32_1x64 (d), negate_1x64 (expand_alpha_1x64 (unpack_32_1x64 (s)))));
 	ps++;
 	if (pm)
 	    pm++;
@@ -924,19 +924,19 @@ coreCombineReverseOutUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm
 }
 
 static force_inline void
-coreCombineOutUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm, int w)
+core_combine_out_u_sse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm, int w)
 {
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w && ((unsigned long) pd & 15))
     {
         uint32_t s = combine1 (ps, pm);
         uint32_t d = *pd;
 
-        *pd++ = pack_1x64_32 (pixMultiply_1x64 (unpack_32_1x64 (s), negate_1x64 (expandAlpha_1x64 (unpack_32_1x64 (d)))));
+        *pd++ = pack_1x64_32 (pix_multiply_1x64 (unpack_32_1x64 (s), negate_1x64 (expand_alpha_1x64 (unpack_32_1x64 (d)))));
         w--;
 	ps++;
 	if (pm)
@@ -944,32 +944,32 @@ coreCombineOutUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm, int w
     }
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w >= 4)
     {
-        __m128i xmmSrcLo, xmmSrcHi;
-        __m128i xmmDstLo, xmmDstHi;
+        __m128i xmm_src_lo, xmm_src_hi;
+        __m128i xmm_dst_lo, xmm_dst_hi;
 
         /* fill cache line with next memory */
-        cachePrefetchNext ((__m128i*)ps);
-        cachePrefetchNext ((__m128i*)pd);
-	cachePrefetchNext ((__m128i*)pm);
+        cache_prefetch_next ((__m128i*)ps);
+        cache_prefetch_next ((__m128i*)pd);
+	cache_prefetch_next ((__m128i*)pm);
 
-        xmmSrcHi = combine4 ((__m128i*) ps, (__m128i*)pm);
-        xmmDstHi = load128Aligned ((__m128i*) pd);
+        xmm_src_hi = combine4 ((__m128i*) ps, (__m128i*)pm);
+        xmm_dst_hi = load_128_aligned ((__m128i*) pd);
 
-        unpack_128_2x128 (xmmSrcHi, &xmmSrcLo, &xmmSrcHi);
-        unpack_128_2x128 (xmmDstHi, &xmmDstLo, &xmmDstHi);
+        unpack_128_2x128 (xmm_src_hi, &xmm_src_lo, &xmm_src_hi);
+        unpack_128_2x128 (xmm_dst_hi, &xmm_dst_lo, &xmm_dst_hi);
 
-        expandAlpha_2x128 (xmmDstLo, xmmDstHi, &xmmDstLo, &xmmDstHi);
-        negate_2x128      (xmmDstLo, xmmDstHi, &xmmDstLo, &xmmDstHi);
+        expand_alpha_2x128 (xmm_dst_lo, xmm_dst_hi, &xmm_dst_lo, &xmm_dst_hi);
+        negate_2x128      (xmm_dst_lo, xmm_dst_hi, &xmm_dst_lo, &xmm_dst_hi);
 
-        pixMultiply_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmDstLo, &xmmDstHi, &xmmDstLo, &xmmDstHi);
+        pix_multiply_2x128 (&xmm_src_lo, &xmm_src_hi, &xmm_dst_lo, &xmm_dst_hi, &xmm_dst_lo, &xmm_dst_hi);
 
-        save128Aligned ((__m128i*)pd, pack_2x128_128 (xmmDstLo, xmmDstHi));
+        save_128_aligned ((__m128i*)pd, pack_2x128_128 (xmm_dst_lo, xmm_dst_hi));
 
         ps += 4;
         pd += 4;
@@ -983,7 +983,7 @@ coreCombineOutUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm, int w
         uint32_t s = combine1 (ps, pm);
         uint32_t d = *pd;
 
-        *pd++ = pack_1x64_32 (pixMultiply_1x64 (unpack_32_1x64 (s), negate_1x64 (expandAlpha_1x64 (unpack_32_1x64 (d)))));
+        *pd++ = pack_1x64_32 (pix_multiply_1x64 (unpack_32_1x64 (s), negate_1x64 (expand_alpha_1x64 (unpack_32_1x64 (d)))));
         w--;
 	ps++;
 	if (pm)
@@ -992,38 +992,38 @@ coreCombineOutUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm, int w
 }
 
 static force_inline uint32_t
-coreCombineAtopUPixelsse2 (uint32_t src, uint32_t dst)
+core_combine_atop_u_pixel_sse2 (uint32_t src, uint32_t dst)
 {
     __m64 s = unpack_32_1x64 (src);
     __m64 d = unpack_32_1x64 (dst);
 
-    __m64 sa = negate_1x64 (expandAlpha_1x64 (s));
-    __m64 da = expandAlpha_1x64 (d);
+    __m64 sa = negate_1x64 (expand_alpha_1x64 (s));
+    __m64 da = expand_alpha_1x64 (d);
 
-    return pack_1x64_32 (pixAddMultiply_1x64 (&s, &da, &d, &sa));
+    return pack_1x64_32 (pix_add_multiply_1x64 (&s, &da, &d, &sa));
 }
 
 static force_inline void
-coreCombineAtopUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm, int w)
+core_combine_atop_u_sse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm, int w)
 {
     uint32_t s, d;
 
-    __m128i xmmSrcLo, xmmSrcHi;
-    __m128i xmmDstLo, xmmDstHi;
-    __m128i xmmAlphaSrcLo, xmmAlphaSrcHi;
-    __m128i xmmAlphaDstLo, xmmAlphaDstHi;
+    __m128i xmm_src_lo, xmm_src_hi;
+    __m128i xmm_dst_lo, xmm_dst_hi;
+    __m128i xmm_alpha_src_lo, xmm_alpha_src_hi;
+    __m128i xmm_alpha_dst_lo, xmm_alpha_dst_hi;
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w && ((unsigned long) pd & 15))
     {
         s = combine1 (ps, pm);
         d = *pd;
 
-        *pd++ = coreCombineAtopUPixelsse2 (s, d);
+        *pd++ = core_combine_atop_u_pixel_sse2 (s, d);
         w--;
 	ps++;
 	if (pm)
@@ -1031,33 +1031,33 @@ coreCombineAtopUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm, int 
     }
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w >= 4)
     {
         /* fill cache line with next memory */
-        cachePrefetchNext ((__m128i*)ps);
-        cachePrefetchNext ((__m128i*)pd);
-	cachePrefetchNext ((__m128i*)pm);
+        cache_prefetch_next ((__m128i*)ps);
+        cache_prefetch_next ((__m128i*)pd);
+	cache_prefetch_next ((__m128i*)pm);
 
-        xmmSrcHi = combine4 ((__m128i*)ps, (__m128i*)pm);
-        xmmDstHi = load128Aligned ((__m128i*) pd);
+        xmm_src_hi = combine4 ((__m128i*)ps, (__m128i*)pm);
+        xmm_dst_hi = load_128_aligned ((__m128i*) pd);
 
-        unpack_128_2x128 (xmmSrcHi, &xmmSrcLo, &xmmSrcHi);
-        unpack_128_2x128 (xmmDstHi, &xmmDstLo, &xmmDstHi);
+        unpack_128_2x128 (xmm_src_hi, &xmm_src_lo, &xmm_src_hi);
+        unpack_128_2x128 (xmm_dst_hi, &xmm_dst_lo, &xmm_dst_hi);
 
-        expandAlpha_2x128 (xmmSrcLo, xmmSrcHi, &xmmAlphaSrcLo, &xmmAlphaSrcHi);
-        expandAlpha_2x128 (xmmDstLo, xmmDstHi, &xmmAlphaDstLo, &xmmAlphaDstHi);
+        expand_alpha_2x128 (xmm_src_lo, xmm_src_hi, &xmm_alpha_src_lo, &xmm_alpha_src_hi);
+        expand_alpha_2x128 (xmm_dst_lo, xmm_dst_hi, &xmm_alpha_dst_lo, &xmm_alpha_dst_hi);
 
-        negate_2x128 (xmmAlphaSrcLo, xmmAlphaSrcHi, &xmmAlphaSrcLo, &xmmAlphaSrcHi);
+        negate_2x128 (xmm_alpha_src_lo, xmm_alpha_src_hi, &xmm_alpha_src_lo, &xmm_alpha_src_hi);
 
-        pixAddMultiply_2x128 ( &xmmSrcLo, &xmmSrcHi, &xmmAlphaDstLo, &xmmAlphaDstHi,
-                               &xmmDstLo, &xmmDstHi, &xmmAlphaSrcLo, &xmmAlphaSrcHi,
-                               &xmmDstLo, &xmmDstHi );
+        pix_add_multiply_2x128 ( &xmm_src_lo, &xmm_src_hi, &xmm_alpha_dst_lo, &xmm_alpha_dst_hi,
+                               &xmm_dst_lo, &xmm_dst_hi, &xmm_alpha_src_lo, &xmm_alpha_src_hi,
+                               &xmm_dst_lo, &xmm_dst_hi );
 
-        save128Aligned ((__m128i*)pd, pack_2x128_128 (xmmDstLo, xmmDstHi));
+        save_128_aligned ((__m128i*)pd, pack_2x128_128 (xmm_dst_lo, xmm_dst_hi));
 
         ps += 4;
         pd += 4;
@@ -1071,7 +1071,7 @@ coreCombineAtopUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm, int 
         s = combine1 (ps, pm);
         d = *pd;
 
-        *pd++ = coreCombineAtopUPixelsse2 (s, d);
+        *pd++ = core_combine_atop_u_pixel_sse2 (s, d);
         w--;
 	ps++;
 	if (pm)
@@ -1080,38 +1080,38 @@ coreCombineAtopUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm, int 
 }
 
 static force_inline uint32_t
-coreCombineReverseAtopUPixelsse2 (uint32_t src, uint32_t dst)
+core_combine_reverse_atop_u_pixel_sse2 (uint32_t src, uint32_t dst)
 {
     __m64 s = unpack_32_1x64 (src);
     __m64 d = unpack_32_1x64 (dst);
 
-    __m64 sa = expandAlpha_1x64 (s);
-    __m64 da = negate_1x64 (expandAlpha_1x64 (d));
+    __m64 sa = expand_alpha_1x64 (s);
+    __m64 da = negate_1x64 (expand_alpha_1x64 (d));
 
-    return pack_1x64_32 (pixAddMultiply_1x64 (&s, &da, &d, &sa));
+    return pack_1x64_32 (pix_add_multiply_1x64 (&s, &da, &d, &sa));
 }
 
 static force_inline void
-coreCombineReverseAtopUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm, int w)
+core_combine_reverse_atop_u_sse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* pm, int w)
 {
     uint32_t s, d;
 
-    __m128i xmmSrcLo, xmmSrcHi;
-    __m128i xmmDstLo, xmmDstHi;
-    __m128i xmmAlphaSrcLo, xmmAlphaSrcHi;
-    __m128i xmmAlphaDstLo, xmmAlphaDstHi;
+    __m128i xmm_src_lo, xmm_src_hi;
+    __m128i xmm_dst_lo, xmm_dst_hi;
+    __m128i xmm_alpha_src_lo, xmm_alpha_src_hi;
+    __m128i xmm_alpha_dst_lo, xmm_alpha_dst_hi;
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w && ((unsigned long) pd & 15))
     {
         s = combine1 (ps, pm);
         d = *pd;
 
-        *pd++ = coreCombineReverseAtopUPixelsse2 (s, d);
+        *pd++ = core_combine_reverse_atop_u_pixel_sse2 (s, d);
 	ps++;
         w--;
 	if (pm)
@@ -1119,33 +1119,33 @@ coreCombineReverseAtopUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* p
     }
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w >= 4)
     {
         /* fill cache line with next memory */
-        cachePrefetchNext ((__m128i*)ps);
-        cachePrefetchNext ((__m128i*)pd);
-	cachePrefetchNext ((__m128i*)pm);
+        cache_prefetch_next ((__m128i*)ps);
+        cache_prefetch_next ((__m128i*)pd);
+	cache_prefetch_next ((__m128i*)pm);
 
-        xmmSrcHi = combine4 ((__m128i*)ps, (__m128i*)pm);
-        xmmDstHi = load128Aligned ((__m128i*) pd);
+        xmm_src_hi = combine4 ((__m128i*)ps, (__m128i*)pm);
+        xmm_dst_hi = load_128_aligned ((__m128i*) pd);
 
-        unpack_128_2x128 (xmmSrcHi, &xmmSrcLo, &xmmSrcHi);
-        unpack_128_2x128 (xmmDstHi, &xmmDstLo, &xmmDstHi);
+        unpack_128_2x128 (xmm_src_hi, &xmm_src_lo, &xmm_src_hi);
+        unpack_128_2x128 (xmm_dst_hi, &xmm_dst_lo, &xmm_dst_hi);
 
-        expandAlpha_2x128 (xmmSrcLo, xmmSrcHi, &xmmAlphaSrcLo, &xmmAlphaSrcHi);
-        expandAlpha_2x128 (xmmDstLo, xmmDstHi, &xmmAlphaDstLo, &xmmAlphaDstHi);
+        expand_alpha_2x128 (xmm_src_lo, xmm_src_hi, &xmm_alpha_src_lo, &xmm_alpha_src_hi);
+        expand_alpha_2x128 (xmm_dst_lo, xmm_dst_hi, &xmm_alpha_dst_lo, &xmm_alpha_dst_hi);
 
-        negate_2x128 (xmmAlphaDstLo, xmmAlphaDstHi, &xmmAlphaDstLo, &xmmAlphaDstHi);
+        negate_2x128 (xmm_alpha_dst_lo, xmm_alpha_dst_hi, &xmm_alpha_dst_lo, &xmm_alpha_dst_hi);
 
-        pixAddMultiply_2x128 ( &xmmSrcLo, &xmmSrcHi, &xmmAlphaDstLo, &xmmAlphaDstHi,
-                               &xmmDstLo, &xmmDstHi, &xmmAlphaSrcLo, &xmmAlphaSrcHi,
-                               &xmmDstLo, &xmmDstHi );
+        pix_add_multiply_2x128 ( &xmm_src_lo, &xmm_src_hi, &xmm_alpha_dst_lo, &xmm_alpha_dst_hi,
+                               &xmm_dst_lo, &xmm_dst_hi, &xmm_alpha_src_lo, &xmm_alpha_src_hi,
+                               &xmm_dst_lo, &xmm_dst_hi );
 
-        save128Aligned ((__m128i*)pd, pack_2x128_128 (xmmDstLo, xmmDstHi));
+        save_128_aligned ((__m128i*)pd, pack_2x128_128 (xmm_dst_lo, xmm_dst_hi));
 
         ps += 4;
         pd += 4;
@@ -1159,7 +1159,7 @@ coreCombineReverseAtopUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* p
         s = combine1 (ps, pm);
         d = *pd;
 
-        *pd++ = coreCombineReverseAtopUPixelsse2 (s, d);
+        *pd++ = core_combine_reverse_atop_u_pixel_sse2 (s, d);
 	ps++;
         w--;
 	if (pm)
@@ -1168,19 +1168,19 @@ coreCombineReverseAtopUsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t* p
 }
 
 static force_inline uint32_t
-coreCombineXorUPixelsse2 (uint32_t src, uint32_t dst)
+core_combine_xor_u_pixel_sse2 (uint32_t src, uint32_t dst)
 {
     __m64 s = unpack_32_1x64 (src);
     __m64 d = unpack_32_1x64 (dst);
 
-    __m64 negD = negate_1x64 (expandAlpha_1x64 (d));
-    __m64 negS = negate_1x64 (expandAlpha_1x64 (s));
+    __m64 neg_d = negate_1x64 (expand_alpha_1x64 (d));
+    __m64 neg_s = negate_1x64 (expand_alpha_1x64 (s));
 
-    return pack_1x64_32 (pixAddMultiply_1x64 (&s, &negD, &d, &negS));
+    return pack_1x64_32 (pix_add_multiply_1x64 (&s, &neg_d, &d, &neg_s));
 }
 
 static force_inline void
-coreCombineXorUsse2 (uint32_t* dst, const uint32_t* src, const uint32_t *mask, int width)
+core_combine_xor_u_sse2 (uint32_t* dst, const uint32_t* src, const uint32_t *mask, int width)
 {
     int w = width;
     uint32_t s, d;
@@ -1188,22 +1188,22 @@ coreCombineXorUsse2 (uint32_t* dst, const uint32_t* src, const uint32_t *mask, i
     const uint32_t* ps = src;
     const uint32_t* pm = mask;
     
-    __m128i xmmSrc, xmmSrcLo, xmmSrcHi;
-    __m128i xmmDst, xmmDstLo, xmmDstHi;
-    __m128i xmmAlphaSrcLo, xmmAlphaSrcHi;
-    __m128i xmmAlphaDstLo, xmmAlphaDstHi;
+    __m128i xmm_src, xmm_src_lo, xmm_src_hi;
+    __m128i xmm_dst, xmm_dst_lo, xmm_dst_hi;
+    __m128i xmm_alpha_src_lo, xmm_alpha_src_hi;
+    __m128i xmm_alpha_dst_lo, xmm_alpha_dst_hi;
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w && ((unsigned long) pd & 15))
     {
         s = combine1 (ps, pm);
         d = *pd;
 
-        *pd++ = coreCombineXorUPixelsse2 (s, d);
+        *pd++ = core_combine_xor_u_pixel_sse2 (s, d);
         w--;
 	ps++;
 	if (pm)
@@ -1211,34 +1211,34 @@ coreCombineXorUsse2 (uint32_t* dst, const uint32_t* src, const uint32_t *mask, i
     }
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w >= 4)
     {
         /* fill cache line with next memory */
-        cachePrefetchNext ((__m128i*)ps);
-        cachePrefetchNext ((__m128i*)pd);
-	cachePrefetchNext ((__m128i*)pm);
+        cache_prefetch_next ((__m128i*)ps);
+        cache_prefetch_next ((__m128i*)pd);
+	cache_prefetch_next ((__m128i*)pm);
 
-        xmmSrc = combine4 ((__m128i*) ps, (__m128i*) pm);
-        xmmDst = load128Aligned ((__m128i*) pd);
+        xmm_src = combine4 ((__m128i*) ps, (__m128i*) pm);
+        xmm_dst = load_128_aligned ((__m128i*) pd);
 
-        unpack_128_2x128 (xmmSrc, &xmmSrcLo, &xmmSrcHi);
-        unpack_128_2x128 (xmmDst, &xmmDstLo, &xmmDstHi);
+        unpack_128_2x128 (xmm_src, &xmm_src_lo, &xmm_src_hi);
+        unpack_128_2x128 (xmm_dst, &xmm_dst_lo, &xmm_dst_hi);
 
-        expandAlpha_2x128 (xmmSrcLo, xmmSrcHi, &xmmAlphaSrcLo, &xmmAlphaSrcHi);
-        expandAlpha_2x128 (xmmDstLo, xmmDstHi, &xmmAlphaDstLo, &xmmAlphaDstHi);
+        expand_alpha_2x128 (xmm_src_lo, xmm_src_hi, &xmm_alpha_src_lo, &xmm_alpha_src_hi);
+        expand_alpha_2x128 (xmm_dst_lo, xmm_dst_hi, &xmm_alpha_dst_lo, &xmm_alpha_dst_hi);
 
-        negate_2x128 (xmmAlphaSrcLo, xmmAlphaSrcHi, &xmmAlphaSrcLo, &xmmAlphaSrcHi);
-        negate_2x128 (xmmAlphaDstLo, xmmAlphaDstHi, &xmmAlphaDstLo, &xmmAlphaDstHi);
+        negate_2x128 (xmm_alpha_src_lo, xmm_alpha_src_hi, &xmm_alpha_src_lo, &xmm_alpha_src_hi);
+        negate_2x128 (xmm_alpha_dst_lo, xmm_alpha_dst_hi, &xmm_alpha_dst_lo, &xmm_alpha_dst_hi);
 
-        pixAddMultiply_2x128 ( &xmmSrcLo, &xmmSrcHi, &xmmAlphaDstLo, &xmmAlphaDstHi,
-                               &xmmDstLo, &xmmDstHi, &xmmAlphaSrcLo, &xmmAlphaSrcHi,
-                               &xmmDstLo, &xmmDstHi );
+        pix_add_multiply_2x128 ( &xmm_src_lo, &xmm_src_hi, &xmm_alpha_dst_lo, &xmm_alpha_dst_hi,
+                               &xmm_dst_lo, &xmm_dst_hi, &xmm_alpha_src_lo, &xmm_alpha_src_hi,
+                               &xmm_dst_lo, &xmm_dst_hi );
 
-        save128Aligned ((__m128i*)pd, pack_2x128_128 (xmmDstLo, xmmDstHi));
+        save_128_aligned ((__m128i*)pd, pack_2x128_128 (xmm_dst_lo, xmm_dst_hi));
 
         ps += 4;
         pd += 4;
@@ -1252,7 +1252,7 @@ coreCombineXorUsse2 (uint32_t* dst, const uint32_t* src, const uint32_t *mask, i
         s = combine1 (ps, pm);
         d = *pd;
 
-        *pd++ = coreCombineXorUPixelsse2 (s, d);
+        *pd++ = core_combine_xor_u_pixel_sse2 (s, d);
         w--;
 	ps++;
 	if (pm)
@@ -1261,7 +1261,7 @@ coreCombineXorUsse2 (uint32_t* dst, const uint32_t* src, const uint32_t *mask, i
 }
 
 static force_inline void
-coreCombineAddUsse2 (uint32_t* dst, const uint32_t* src, const uint32_t* mask, int width)
+core_combine_add_u_sse2 (uint32_t* dst, const uint32_t* src, const uint32_t* mask, int width)
 {
     int w = width;
     uint32_t s,d;
@@ -1270,9 +1270,9 @@ coreCombineAddUsse2 (uint32_t* dst, const uint32_t* src, const uint32_t* mask, i
     const uint32_t* pm = mask;
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w && (unsigned long)pd & 15)
     {
@@ -1286,23 +1286,23 @@ coreCombineAddUsse2 (uint32_t* dst, const uint32_t* src, const uint32_t* mask, i
     }
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w >= 4)
     {
 	__m128i s;
 	
         /* fill cache line with next memory */
-        cachePrefetchNext ((__m128i*)ps);
-        cachePrefetchNext ((__m128i*)pd);
-	cachePrefetchNext ((__m128i*)pm);
+        cache_prefetch_next ((__m128i*)ps);
+        cache_prefetch_next ((__m128i*)pd);
+	cache_prefetch_next ((__m128i*)pm);
 
 	s = combine4((__m128i*)ps,(__m128i*)pm);
 	
-        save128Aligned( (__m128i*)pd,
-                        _mm_adds_epu8( s, load128Aligned  ((__m128i*)pd)) );
+        save_128_aligned( (__m128i*)pd,
+                        _mm_adds_epu8( s, load_128_aligned  ((__m128i*)pd)) );
         pd += 4;
         ps += 4;
 	if (pm)
@@ -1322,7 +1322,7 @@ coreCombineAddUsse2 (uint32_t* dst, const uint32_t* src, const uint32_t* mask, i
 }
 
 static force_inline uint32_t
-coreCombineSaturateUPixelsse2 (uint32_t src, uint32_t dst)
+core_combine_saturate_u_pixel_sse2 (uint32_t src, uint32_t dst)
 {
     __m64 ms = unpack_32_1x64 (src);
     __m64 md = unpack_32_1x64 (dst);
@@ -1331,30 +1331,30 @@ coreCombineSaturateUPixelsse2 (uint32_t src, uint32_t dst)
 
     if (sa > da)
     {
-        ms = pixMultiply_1x64 (ms, expandAlpha_1x64 (unpack_32_1x64 (IntDiv(da, sa) << 24)));
+        ms = pix_multiply_1x64 (ms, expand_alpha_1x64 (unpack_32_1x64 (DIV_UN8(da, sa) << 24)));
     }
 
     return pack_1x64_32 (_mm_adds_pu16 (md, ms));
 }
 
 static force_inline void
-coreCombineSaturateUsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int w)
+core_combine_saturate_u_sse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int w)
 {
     uint32_t s,d;
 
-    uint32_t packCmp;
-    __m128i xmmSrc, xmmDst;
+    uint32_t pack_cmp;
+    __m128i xmm_src, xmm_dst;
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w && (unsigned long)pd & 15)
     {
         s = combine1 (ps, pm);
         d = *pd;
-        *pd++ = coreCombineSaturateUPixelsse2 (s, d);
+        *pd++ = core_combine_saturate_u_pixel_sse2 (s, d);
         w--;
 	ps++;
 	if (pm)
@@ -1362,53 +1362,53 @@ coreCombineSaturateUsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, 
     }
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w >= 4)
     {
         /* fill cache line with next memory */
-        cachePrefetchNext ((__m128i*)ps);
-        cachePrefetchNext ((__m128i*)pd);
-	cachePrefetchNext ((__m128i*)pm);
+        cache_prefetch_next ((__m128i*)ps);
+        cache_prefetch_next ((__m128i*)pd);
+	cache_prefetch_next ((__m128i*)pm);
 
-        xmmDst = load128Aligned  ((__m128i*)pd);
-        xmmSrc = combine4 ((__m128i*)ps, (__m128i*)pm);
+        xmm_dst = load_128_aligned  ((__m128i*)pd);
+        xmm_src = combine4 ((__m128i*)ps, (__m128i*)pm);
 
-        packCmp = _mm_movemask_epi8 (_mm_cmpgt_epi32 (_mm_srli_epi32 (xmmSrc, 24),
-                                                      _mm_srli_epi32 (_mm_xor_si128 (xmmDst, Maskff000000), 24)));
+        pack_cmp = _mm_movemask_epi8 (_mm_cmpgt_epi32 (_mm_srli_epi32 (xmm_src, 24),
+                                                      _mm_srli_epi32 (_mm_xor_si128 (xmm_dst, mask_ff000000), 24)));
 
         /* if some alpha src is grater than respective ~alpha dst */
-        if (packCmp)
+        if (pack_cmp)
         {
             s = combine1 (ps++, pm);
             d = *pd;
-            *pd++ = coreCombineSaturateUPixelsse2 (s, d);
+            *pd++ = core_combine_saturate_u_pixel_sse2 (s, d);
 	    if (pm)
 		pm++;
 
             s = combine1 (ps++, pm);
             d = *pd;
-            *pd++ = coreCombineSaturateUPixelsse2 (s, d);
+            *pd++ = core_combine_saturate_u_pixel_sse2 (s, d);
 	    if (pm)
 		pm++;
 
             s = combine1 (ps++, pm);
             d = *pd;
-            *pd++ = coreCombineSaturateUPixelsse2 (s, d);
+            *pd++ = core_combine_saturate_u_pixel_sse2 (s, d);
 	    if (pm)
 		pm++;
 
             s = combine1 (ps++, pm);
             d = *pd;
-            *pd++ = coreCombineSaturateUPixelsse2 (s, d);
+            *pd++ = core_combine_saturate_u_pixel_sse2 (s, d);
 	    if (pm)
 		pm++;
         }
         else
         {
-            save128Aligned ((__m128i*)pd, _mm_adds_epu8 (xmmDst, xmmSrc));
+            save_128_aligned ((__m128i*)pd, _mm_adds_epu8 (xmm_dst, xmm_src));
 
             pd += 4;
             ps += 4;
@@ -1423,7 +1423,7 @@ coreCombineSaturateUsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, 
     {
         s = combine1 (ps, pm);
         d = *pd;
-        *pd++ = coreCombineSaturateUPixelsse2 (s, d);
+        *pd++ = core_combine_saturate_u_pixel_sse2 (s, d);
 	ps++;
 	if (pm)
 	    pm++;
@@ -1431,48 +1431,48 @@ coreCombineSaturateUsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, 
 }
 
 static force_inline void
-coreCombineSrcCsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t *pm, int w)
+core_combine_src_ca_sse2 (uint32_t* pd, const uint32_t* ps, const uint32_t *pm, int w)
 {
     uint32_t s, m;
 
-    __m128i xmmSrcLo, xmmSrcHi;
-    __m128i xmmMaskLo, xmmMaskHi;
-    __m128i xmmDstLo, xmmDstHi;
+    __m128i xmm_src_lo, xmm_src_hi;
+    __m128i xmm_mask_lo, xmm_mask_hi;
+    __m128i xmm_dst_lo, xmm_dst_hi;
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w && (unsigned long)pd & 15)
     {
         s = *ps++;
         m = *pm++;
-        *pd++ = pack_1x64_32 (pixMultiply_1x64 (unpack_32_1x64 (s), unpack_32_1x64 (m)));
+        *pd++ = pack_1x64_32 (pix_multiply_1x64 (unpack_32_1x64 (s), unpack_32_1x64 (m)));
         w--;
     }
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w >= 4)
     {
         /* fill cache line with next memory */
-        cachePrefetchNext ((__m128i*)ps);
-        cachePrefetchNext ((__m128i*)pd);
-        cachePrefetchNext ((__m128i*)pm);
+        cache_prefetch_next ((__m128i*)ps);
+        cache_prefetch_next ((__m128i*)pd);
+        cache_prefetch_next ((__m128i*)pm);
 
-        xmmSrcHi = load128Unaligned ((__m128i*)ps);
-        xmmMaskHi = load128Unaligned ((__m128i*)pm);
+        xmm_src_hi = load_128_unaligned ((__m128i*)ps);
+        xmm_mask_hi = load_128_unaligned ((__m128i*)pm);
 
-        unpack_128_2x128 (xmmSrcHi, &xmmSrcLo, &xmmSrcHi);
-        unpack_128_2x128 (xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
+        unpack_128_2x128 (xmm_src_hi, &xmm_src_lo, &xmm_src_hi);
+        unpack_128_2x128 (xmm_mask_hi, &xmm_mask_lo, &xmm_mask_hi);
 
-        pixMultiply_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmMaskLo, &xmmMaskHi, &xmmDstLo, &xmmDstHi);
+        pix_multiply_2x128 (&xmm_src_lo, &xmm_src_hi, &xmm_mask_lo, &xmm_mask_hi, &xmm_dst_lo, &xmm_dst_hi);
 
-        save128Aligned( (__m128i*)pd, pack_2x128_128 (xmmDstLo, xmmDstHi));
+        save_128_aligned( (__m128i*)pd, pack_2x128_128 (xmm_dst_lo, xmm_dst_hi));
 
         ps += 4;
         pd += 4;
@@ -1484,36 +1484,36 @@ coreCombineSrcCsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t *pm, int w
     {
         s = *ps++;
         m = *pm++;
-        *pd++ = pack_1x64_32 (pixMultiply_1x64 (unpack_32_1x64 (s), unpack_32_1x64 (m)));
+        *pd++ = pack_1x64_32 (pix_multiply_1x64 (unpack_32_1x64 (s), unpack_32_1x64 (m)));
         w--;
     }
 }
 
 static force_inline uint32_t
-coreCombineOverCPixelsse2 (uint32_t src, uint32_t mask, uint32_t dst)
+core_combine_over_ca_pixel_sse2 (uint32_t src, uint32_t mask, uint32_t dst)
 {
     __m64 s = unpack_32_1x64 (src);
-    __m64 expAlpha = expandAlpha_1x64 (s);
-    __m64 unpkMask = unpack_32_1x64 (mask);
-    __m64 unpkDst  = unpack_32_1x64 (dst);
+    __m64 expAlpha = expand_alpha_1x64 (s);
+    __m64 unpk_mask = unpack_32_1x64 (mask);
+    __m64 unpk_dst  = unpack_32_1x64 (dst);
 
-    return pack_1x64_32 (inOver_1x64 (&s, &expAlpha, &unpkMask, &unpkDst));
+    return pack_1x64_32 (in_over_1x64 (&s, &expAlpha, &unpk_mask, &unpk_dst));
 }
 
 static force_inline void
-coreCombineOverCsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t *pm, int w)
+core_combine_over_ca_sse2 (uint32_t* pd, const uint32_t* ps, const uint32_t *pm, int w)
 {
     uint32_t s, m, d;
 
-    __m128i xmmAlphaLo, xmmAlphaHi;
-    __m128i xmmSrcLo, xmmSrcHi;
-    __m128i xmmDstLo, xmmDstHi;
-    __m128i xmmMaskLo, xmmMaskHi;
+    __m128i xmm_alpha_lo, xmm_alpha_hi;
+    __m128i xmm_src_lo, xmm_src_hi;
+    __m128i xmm_dst_lo, xmm_dst_hi;
+    __m128i xmm_mask_lo, xmm_mask_hi;
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w && (unsigned long)pd & 15)
     {
@@ -1521,35 +1521,35 @@ coreCombineOverCsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t *pm, int 
         m = *pm++;
         d = *pd;
 
-        *pd++ = coreCombineOverCPixelsse2 (s, m, d);
+        *pd++ = core_combine_over_ca_pixel_sse2 (s, m, d);
         w--;
     }
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w >= 4)
     {
         /* fill cache line with next memory */
-        cachePrefetchNext ((__m128i*)ps);
-        cachePrefetchNext ((__m128i*)pd);
-        cachePrefetchNext ((__m128i*)pm);
+        cache_prefetch_next ((__m128i*)ps);
+        cache_prefetch_next ((__m128i*)pd);
+        cache_prefetch_next ((__m128i*)pm);
 
-        xmmDstHi = load128Aligned ((__m128i*)pd);
-        xmmSrcHi = load128Unaligned ((__m128i*)ps);
-        xmmMaskHi = load128Unaligned ((__m128i*)pm);
+        xmm_dst_hi = load_128_aligned ((__m128i*)pd);
+        xmm_src_hi = load_128_unaligned ((__m128i*)ps);
+        xmm_mask_hi = load_128_unaligned ((__m128i*)pm);
 
-        unpack_128_2x128 (xmmDstHi, &xmmDstLo, &xmmDstHi);
-        unpack_128_2x128 (xmmSrcHi, &xmmSrcLo, &xmmSrcHi);
-        unpack_128_2x128 (xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
+        unpack_128_2x128 (xmm_dst_hi, &xmm_dst_lo, &xmm_dst_hi);
+        unpack_128_2x128 (xmm_src_hi, &xmm_src_lo, &xmm_src_hi);
+        unpack_128_2x128 (xmm_mask_hi, &xmm_mask_lo, &xmm_mask_hi);
 
-        expandAlpha_2x128 (xmmSrcLo, xmmSrcHi, &xmmAlphaLo, &xmmAlphaHi);
+        expand_alpha_2x128 (xmm_src_lo, xmm_src_hi, &xmm_alpha_lo, &xmm_alpha_hi);
 
-        inOver_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmAlphaLo, &xmmAlphaHi, &xmmMaskLo, &xmmMaskHi, &xmmDstLo, &xmmDstHi);
+        in_over_2x128 (&xmm_src_lo, &xmm_src_hi, &xmm_alpha_lo, &xmm_alpha_hi, &xmm_mask_lo, &xmm_mask_hi, &xmm_dst_lo, &xmm_dst_hi);
 
-        save128Aligned( (__m128i*)pd, pack_2x128_128 (xmmDstLo, xmmDstHi));
+        save_128_aligned( (__m128i*)pd, pack_2x128_128 (xmm_dst_lo, xmm_dst_hi));
 
         ps += 4;
         pd += 4;
@@ -1563,33 +1563,33 @@ coreCombineOverCsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t *pm, int 
         m = *pm++;
         d = *pd;
 
-        *pd++ = coreCombineOverCPixelsse2 (s, m, d);
+        *pd++ = core_combine_over_ca_pixel_sse2 (s, m, d);
         w--;
     }
 }
 
 static force_inline uint32_t
-coreCombineOverReverseCPixelsse2 (uint32_t src, uint32_t mask, uint32_t dst)
+core_combine_over_reverse_ca_pixel_sse2 (uint32_t src, uint32_t mask, uint32_t dst)
 {
     __m64 d = unpack_32_1x64 (dst);
 
-	return pack_1x64_32(over_1x64 (d, expandAlpha_1x64 (d), pixMultiply_1x64 (unpack_32_1x64 (src), unpack_32_1x64 (mask))));
+	return pack_1x64_32(over_1x64 (d, expand_alpha_1x64 (d), pix_multiply_1x64 (unpack_32_1x64 (src), unpack_32_1x64 (mask))));
 }
 
 static force_inline void
-coreCombineOverReverseCsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t *pm, int w)
+core_combine_over_reverse_ca_sse2 (uint32_t* pd, const uint32_t* ps, const uint32_t *pm, int w)
 {
     uint32_t s, m, d;
 
-    __m128i xmmAlphaLo, xmmAlphaHi;
-    __m128i xmmSrcLo, xmmSrcHi;
-    __m128i xmmDstLo, xmmDstHi;
-    __m128i xmmMaskLo, xmmMaskHi;
+    __m128i xmm_alpha_lo, xmm_alpha_hi;
+    __m128i xmm_src_lo, xmm_src_hi;
+    __m128i xmm_dst_lo, xmm_dst_hi;
+    __m128i xmm_mask_lo, xmm_mask_hi;
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w && (unsigned long)pd & 15)
     {
@@ -1597,36 +1597,36 @@ coreCombineOverReverseCsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t *p
         m = *pm++;
         d = *pd;
 
-        *pd++ = coreCombineOverReverseCPixelsse2 (s, m, d);
+        *pd++ = core_combine_over_reverse_ca_pixel_sse2 (s, m, d);
         w--;
     }
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w >= 4)
     {
         /* fill cache line with next memory */
-        cachePrefetchNext ((__m128i*)ps);
-        cachePrefetchNext ((__m128i*)pd);
-        cachePrefetchNext ((__m128i*)pm);
+        cache_prefetch_next ((__m128i*)ps);
+        cache_prefetch_next ((__m128i*)pd);
+        cache_prefetch_next ((__m128i*)pm);
 
-        xmmDstHi = load128Aligned ((__m128i*)pd);
-        xmmSrcHi = load128Unaligned ((__m128i*)ps);
-        xmmMaskHi = load128Unaligned ((__m128i*)pm);
+        xmm_dst_hi = load_128_aligned ((__m128i*)pd);
+        xmm_src_hi = load_128_unaligned ((__m128i*)ps);
+        xmm_mask_hi = load_128_unaligned ((__m128i*)pm);
 
-        unpack_128_2x128 (xmmDstHi, &xmmDstLo, &xmmDstHi);
-        unpack_128_2x128 (xmmSrcHi, &xmmSrcLo, &xmmSrcHi);
-        unpack_128_2x128 (xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
+        unpack_128_2x128 (xmm_dst_hi, &xmm_dst_lo, &xmm_dst_hi);
+        unpack_128_2x128 (xmm_src_hi, &xmm_src_lo, &xmm_src_hi);
+        unpack_128_2x128 (xmm_mask_hi, &xmm_mask_lo, &xmm_mask_hi);
 
-        expandAlpha_2x128 (xmmDstLo, xmmDstHi, &xmmAlphaLo, &xmmAlphaHi);
-        pixMultiply_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmMaskLo, &xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
+        expand_alpha_2x128 (xmm_dst_lo, xmm_dst_hi, &xmm_alpha_lo, &xmm_alpha_hi);
+        pix_multiply_2x128 (&xmm_src_lo, &xmm_src_hi, &xmm_mask_lo, &xmm_mask_hi, &xmm_mask_lo, &xmm_mask_hi);
 
-        over_2x128 (&xmmDstLo, &xmmDstHi, &xmmAlphaLo, &xmmAlphaHi, &xmmMaskLo, &xmmMaskHi);
+        over_2x128 (&xmm_dst_lo, &xmm_dst_hi, &xmm_alpha_lo, &xmm_alpha_hi, &xmm_mask_lo, &xmm_mask_hi);
 
-        save128Aligned( (__m128i*)pd, pack_2x128_128 (xmmMaskLo, xmmMaskHi));
+        save_128_aligned( (__m128i*)pd, pack_2x128_128 (xmm_mask_lo, xmm_mask_hi));
 
         ps += 4;
         pd += 4;
@@ -1640,25 +1640,25 @@ coreCombineOverReverseCsse2 (uint32_t* pd, const uint32_t* ps, const uint32_t *p
         m = *pm++;
         d = *pd;
 
-        *pd++ = coreCombineOverReverseCPixelsse2 (s, m, d);
+        *pd++ = core_combine_over_reverse_ca_pixel_sse2 (s, m, d);
         w--;
     }
 }
 
 static force_inline void
-coreCombineInCsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int w)
+core_combine_in_ca_sse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int w)
 {
     uint32_t s, m, d;
 
-    __m128i xmmAlphaLo, xmmAlphaHi;
-    __m128i xmmSrcLo, xmmSrcHi;
-    __m128i xmmDstLo, xmmDstHi;
-    __m128i xmmMaskLo, xmmMaskHi;
+    __m128i xmm_alpha_lo, xmm_alpha_hi;
+    __m128i xmm_src_lo, xmm_src_hi;
+    __m128i xmm_dst_lo, xmm_dst_hi;
+    __m128i xmm_mask_lo, xmm_mask_hi;
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w && (unsigned long)pd & 15)
     {
@@ -1666,37 +1666,37 @@ coreCombineInCsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int w)
         m = *pm++;
         d = *pd;
 
-        *pd++ = pack_1x64_32 (pixMultiply_1x64 (pixMultiply_1x64 (unpack_32_1x64 (s), unpack_32_1x64 (m)),
-                                                expandAlpha_1x64 (unpack_32_1x64 (d))));
+        *pd++ = pack_1x64_32 (pix_multiply_1x64 (pix_multiply_1x64 (unpack_32_1x64 (s), unpack_32_1x64 (m)),
+                                                expand_alpha_1x64 (unpack_32_1x64 (d))));
         w--;
     }
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w >= 4)
     {
         /* fill cache line with next memory */
-        cachePrefetchNext ((__m128i*)ps);
-        cachePrefetchNext ((__m128i*)pd);
-        cachePrefetchNext ((__m128i*)pm);
+        cache_prefetch_next ((__m128i*)ps);
+        cache_prefetch_next ((__m128i*)pd);
+        cache_prefetch_next ((__m128i*)pm);
 
-        xmmDstHi = load128Aligned ((__m128i*)pd);
-        xmmSrcHi = load128Unaligned ((__m128i*)ps);
-        xmmMaskHi = load128Unaligned ((__m128i*)pm);
+        xmm_dst_hi = load_128_aligned ((__m128i*)pd);
+        xmm_src_hi = load_128_unaligned ((__m128i*)ps);
+        xmm_mask_hi = load_128_unaligned ((__m128i*)pm);
 
-        unpack_128_2x128 (xmmDstHi, &xmmDstLo, &xmmDstHi);
-        unpack_128_2x128 (xmmSrcHi, &xmmSrcLo, &xmmSrcHi);
-        unpack_128_2x128 (xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
+        unpack_128_2x128 (xmm_dst_hi, &xmm_dst_lo, &xmm_dst_hi);
+        unpack_128_2x128 (xmm_src_hi, &xmm_src_lo, &xmm_src_hi);
+        unpack_128_2x128 (xmm_mask_hi, &xmm_mask_lo, &xmm_mask_hi);
 
-        expandAlpha_2x128 (xmmDstLo, xmmDstHi, &xmmAlphaLo, &xmmAlphaHi);
-        pixMultiply_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmMaskLo, &xmmMaskHi, &xmmDstLo, &xmmDstHi);
+        expand_alpha_2x128 (xmm_dst_lo, xmm_dst_hi, &xmm_alpha_lo, &xmm_alpha_hi);
+        pix_multiply_2x128 (&xmm_src_lo, &xmm_src_hi, &xmm_mask_lo, &xmm_mask_hi, &xmm_dst_lo, &xmm_dst_hi);
 
-        pixMultiply_2x128 (&xmmDstLo, &xmmDstHi, &xmmAlphaLo, &xmmAlphaHi, &xmmDstLo, &xmmDstHi);
+        pix_multiply_2x128 (&xmm_dst_lo, &xmm_dst_hi, &xmm_alpha_lo, &xmm_alpha_hi, &xmm_dst_lo, &xmm_dst_hi);
 
-        save128Aligned( (__m128i*)pd, pack_2x128_128 (xmmDstLo, xmmDstHi));
+        save_128_aligned( (__m128i*)pd, pack_2x128_128 (xmm_dst_lo, xmm_dst_hi));
 
         ps += 4;
         pd += 4;
@@ -1710,26 +1710,26 @@ coreCombineInCsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int w)
         m = *pm++;
         d = *pd;
 
-        *pd++ = pack_1x64_32 (pixMultiply_1x64 (pixMultiply_1x64 (unpack_32_1x64 (s), unpack_32_1x64 (m)),
-                                                expandAlpha_1x64 (unpack_32_1x64 (d))));
+        *pd++ = pack_1x64_32 (pix_multiply_1x64 (pix_multiply_1x64 (unpack_32_1x64 (s), unpack_32_1x64 (m)),
+                                                expand_alpha_1x64 (unpack_32_1x64 (d))));
         w--;
     }
 }
 
 static force_inline void
-coreCombineInReverseCsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int w)
+core_combine_in_reverse_ca_sse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int w)
 {
     uint32_t s, m, d;
 
-    __m128i xmmAlphaLo, xmmAlphaHi;
-    __m128i xmmSrcLo, xmmSrcHi;
-    __m128i xmmDstLo, xmmDstHi;
-    __m128i xmmMaskLo, xmmMaskHi;
+    __m128i xmm_alpha_lo, xmm_alpha_hi;
+    __m128i xmm_src_lo, xmm_src_hi;
+    __m128i xmm_dst_lo, xmm_dst_hi;
+    __m128i xmm_mask_lo, xmm_mask_hi;
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w && (unsigned long)pd & 15)
     {
@@ -1737,38 +1737,38 @@ coreCombineInReverseCsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm,
         m = *pm++;
         d = *pd;
 
-        *pd++ = pack_1x64_32 (pixMultiply_1x64 (unpack_32_1x64 (d),
-                                                pixMultiply_1x64 (unpack_32_1x64 (m),
-                                                                  expandAlpha_1x64 (unpack_32_1x64 (s)))));
+        *pd++ = pack_1x64_32 (pix_multiply_1x64 (unpack_32_1x64 (d),
+                                                pix_multiply_1x64 (unpack_32_1x64 (m),
+                                                                  expand_alpha_1x64 (unpack_32_1x64 (s)))));
         w--;
     }
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w >= 4)
     {
         /* fill cache line with next memory */
-        cachePrefetchNext ((__m128i*)ps);
-        cachePrefetchNext ((__m128i*)pd);
-        cachePrefetchNext ((__m128i*)pm);
+        cache_prefetch_next ((__m128i*)ps);
+        cache_prefetch_next ((__m128i*)pd);
+        cache_prefetch_next ((__m128i*)pm);
 
-        xmmDstHi = load128Aligned ((__m128i*)pd);
-        xmmSrcHi = load128Unaligned ((__m128i*)ps);
-        xmmMaskHi = load128Unaligned ((__m128i*)pm);
+        xmm_dst_hi = load_128_aligned ((__m128i*)pd);
+        xmm_src_hi = load_128_unaligned ((__m128i*)ps);
+        xmm_mask_hi = load_128_unaligned ((__m128i*)pm);
 
-        unpack_128_2x128 (xmmDstHi, &xmmDstLo, &xmmDstHi);
-        unpack_128_2x128 (xmmSrcHi, &xmmSrcLo, &xmmSrcHi);
-        unpack_128_2x128 (xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
+        unpack_128_2x128 (xmm_dst_hi, &xmm_dst_lo, &xmm_dst_hi);
+        unpack_128_2x128 (xmm_src_hi, &xmm_src_lo, &xmm_src_hi);
+        unpack_128_2x128 (xmm_mask_hi, &xmm_mask_lo, &xmm_mask_hi);
 
-        expandAlpha_2x128 (xmmSrcLo, xmmSrcHi, &xmmAlphaLo, &xmmAlphaHi);
-        pixMultiply_2x128 (&xmmMaskLo, &xmmMaskHi, &xmmAlphaLo, &xmmAlphaHi, &xmmAlphaLo, &xmmAlphaHi);
+        expand_alpha_2x128 (xmm_src_lo, xmm_src_hi, &xmm_alpha_lo, &xmm_alpha_hi);
+        pix_multiply_2x128 (&xmm_mask_lo, &xmm_mask_hi, &xmm_alpha_lo, &xmm_alpha_hi, &xmm_alpha_lo, &xmm_alpha_hi);
 
-        pixMultiply_2x128 (&xmmDstLo, &xmmDstHi, &xmmAlphaLo, &xmmAlphaHi, &xmmDstLo, &xmmDstHi);
+        pix_multiply_2x128 (&xmm_dst_lo, &xmm_dst_hi, &xmm_alpha_lo, &xmm_alpha_hi, &xmm_dst_lo, &xmm_dst_hi);
 
-        save128Aligned( (__m128i*)pd, pack_2x128_128 (xmmDstLo, xmmDstHi));
+        save_128_aligned( (__m128i*)pd, pack_2x128_128 (xmm_dst_lo, xmm_dst_hi));
 
         ps += 4;
         pd += 4;
@@ -1782,27 +1782,27 @@ coreCombineInReverseCsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm,
         m = *pm++;
         d = *pd;
 
-        *pd++ = pack_1x64_32 (pixMultiply_1x64 (unpack_32_1x64 (d),
-                                                pixMultiply_1x64 (unpack_32_1x64 (m),
-                                                                  expandAlpha_1x64 (unpack_32_1x64 (s)))));
+        *pd++ = pack_1x64_32 (pix_multiply_1x64 (unpack_32_1x64 (d),
+                                                pix_multiply_1x64 (unpack_32_1x64 (m),
+                                                                  expand_alpha_1x64 (unpack_32_1x64 (s)))));
         w--;
     }
 }
 
 static force_inline void
-coreCombineOutCsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int w)
+core_combine_out_ca_sse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int w)
 {
     uint32_t s, m, d;
 
-    __m128i xmmAlphaLo, xmmAlphaHi;
-    __m128i xmmSrcLo, xmmSrcHi;
-    __m128i xmmDstLo, xmmDstHi;
-    __m128i xmmMaskLo, xmmMaskHi;
+    __m128i xmm_alpha_lo, xmm_alpha_hi;
+    __m128i xmm_src_lo, xmm_src_hi;
+    __m128i xmm_dst_lo, xmm_dst_hi;
+    __m128i xmm_mask_lo, xmm_mask_hi;
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w && (unsigned long)pd & 15)
     {
@@ -1810,38 +1810,38 @@ coreCombineOutCsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int w
         m = *pm++;
         d = *pd;
 
-        *pd++ = pack_1x64_32 (pixMultiply_1x64 (pixMultiply_1x64 (unpack_32_1x64 (s), unpack_32_1x64 (m)),
-                                                negate_1x64 (expandAlpha_1x64 (unpack_32_1x64 (d)))));
+        *pd++ = pack_1x64_32 (pix_multiply_1x64 (pix_multiply_1x64 (unpack_32_1x64 (s), unpack_32_1x64 (m)),
+                                                negate_1x64 (expand_alpha_1x64 (unpack_32_1x64 (d)))));
         w--;
     }
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w >= 4)
     {
         /* fill cache line with next memory */
-        cachePrefetchNext ((__m128i*)ps);
-        cachePrefetchNext ((__m128i*)pd);
-        cachePrefetchNext ((__m128i*)pm);
+        cache_prefetch_next ((__m128i*)ps);
+        cache_prefetch_next ((__m128i*)pd);
+        cache_prefetch_next ((__m128i*)pm);
 
-        xmmDstHi = load128Aligned ((__m128i*)pd);
-        xmmSrcHi = load128Unaligned ((__m128i*)ps);
-        xmmMaskHi = load128Unaligned ((__m128i*)pm);
+        xmm_dst_hi = load_128_aligned ((__m128i*)pd);
+        xmm_src_hi = load_128_unaligned ((__m128i*)ps);
+        xmm_mask_hi = load_128_unaligned ((__m128i*)pm);
 
-        unpack_128_2x128 (xmmDstHi, &xmmDstLo, &xmmDstHi);
-        unpack_128_2x128 (xmmSrcHi, &xmmSrcLo, &xmmSrcHi);
-        unpack_128_2x128 (xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
+        unpack_128_2x128 (xmm_dst_hi, &xmm_dst_lo, &xmm_dst_hi);
+        unpack_128_2x128 (xmm_src_hi, &xmm_src_lo, &xmm_src_hi);
+        unpack_128_2x128 (xmm_mask_hi, &xmm_mask_lo, &xmm_mask_hi);
 
-        expandAlpha_2x128 (xmmDstLo, xmmDstHi, &xmmAlphaLo, &xmmAlphaHi);
-        negate_2x128 (xmmAlphaLo, xmmAlphaHi, &xmmAlphaLo, &xmmAlphaHi);
+        expand_alpha_2x128 (xmm_dst_lo, xmm_dst_hi, &xmm_alpha_lo, &xmm_alpha_hi);
+        negate_2x128 (xmm_alpha_lo, xmm_alpha_hi, &xmm_alpha_lo, &xmm_alpha_hi);
 
-        pixMultiply_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmMaskLo, &xmmMaskHi, &xmmDstLo, &xmmDstHi);
-        pixMultiply_2x128 (&xmmDstLo, &xmmDstHi, &xmmAlphaLo, &xmmAlphaHi, &xmmDstLo, &xmmDstHi);
+        pix_multiply_2x128 (&xmm_src_lo, &xmm_src_hi, &xmm_mask_lo, &xmm_mask_hi, &xmm_dst_lo, &xmm_dst_hi);
+        pix_multiply_2x128 (&xmm_dst_lo, &xmm_dst_hi, &xmm_alpha_lo, &xmm_alpha_hi, &xmm_dst_lo, &xmm_dst_hi);
 
-        save128Aligned( (__m128i*)pd, pack_2x128_128 (xmmDstLo, xmmDstHi));
+        save_128_aligned( (__m128i*)pd, pack_2x128_128 (xmm_dst_lo, xmm_dst_hi));
 
         ps += 4;
         pd += 4;
@@ -1855,26 +1855,26 @@ coreCombineOutCsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int w
         m = *pm++;
         d = *pd;
 
-        *pd++ = pack_1x64_32 (pixMultiply_1x64 (pixMultiply_1x64 (unpack_32_1x64 (s), unpack_32_1x64 (m)),
-                                                negate_1x64 (expandAlpha_1x64 (unpack_32_1x64 (d)))));
+        *pd++ = pack_1x64_32 (pix_multiply_1x64 (pix_multiply_1x64 (unpack_32_1x64 (s), unpack_32_1x64 (m)),
+                                                negate_1x64 (expand_alpha_1x64 (unpack_32_1x64 (d)))));
         w--;
     }
 }
 
 static force_inline void
-coreCombineOutReverseCsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int w)
+core_combine_out_reverse_ca_sse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int w)
 {
     uint32_t s, m, d;
 
-    __m128i xmmAlphaLo, xmmAlphaHi;
-    __m128i xmmSrcLo, xmmSrcHi;
-    __m128i xmmDstLo, xmmDstHi;
-    __m128i xmmMaskLo, xmmMaskHi;
+    __m128i xmm_alpha_lo, xmm_alpha_hi;
+    __m128i xmm_src_lo, xmm_src_hi;
+    __m128i xmm_dst_lo, xmm_dst_hi;
+    __m128i xmm_mask_lo, xmm_mask_hi;
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w && (unsigned long)pd & 15)
     {
@@ -1882,41 +1882,41 @@ coreCombineOutReverseCsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm
         m = *pm++;
         d = *pd;
 
-        *pd++ = pack_1x64_32 (pixMultiply_1x64 (unpack_32_1x64 (d),
-                                                negate_1x64 (pixMultiply_1x64 (unpack_32_1x64 (m),
-                                                                               expandAlpha_1x64 (unpack_32_1x64 (s))))));
+        *pd++ = pack_1x64_32 (pix_multiply_1x64 (unpack_32_1x64 (d),
+                                                negate_1x64 (pix_multiply_1x64 (unpack_32_1x64 (m),
+                                                                               expand_alpha_1x64 (unpack_32_1x64 (s))))));
         w--;
     }
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w >= 4)
     {
         /* fill cache line with next memory */
-        cachePrefetchNext ((__m128i*)ps);
-        cachePrefetchNext ((__m128i*)pd);
-        cachePrefetchNext ((__m128i*)pm);
+        cache_prefetch_next ((__m128i*)ps);
+        cache_prefetch_next ((__m128i*)pd);
+        cache_prefetch_next ((__m128i*)pm);
 
-        xmmDstHi = load128Aligned ((__m128i*)pd);
-        xmmSrcHi = load128Unaligned ((__m128i*)ps);
-        xmmMaskHi = load128Unaligned ((__m128i*)pm);
+        xmm_dst_hi = load_128_aligned ((__m128i*)pd);
+        xmm_src_hi = load_128_unaligned ((__m128i*)ps);
+        xmm_mask_hi = load_128_unaligned ((__m128i*)pm);
 
-        unpack_128_2x128 (xmmDstHi, &xmmDstLo, &xmmDstHi);
-        unpack_128_2x128 (xmmSrcHi, &xmmSrcLo, &xmmSrcHi);
-        unpack_128_2x128 (xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
+        unpack_128_2x128 (xmm_dst_hi, &xmm_dst_lo, &xmm_dst_hi);
+        unpack_128_2x128 (xmm_src_hi, &xmm_src_lo, &xmm_src_hi);
+        unpack_128_2x128 (xmm_mask_hi, &xmm_mask_lo, &xmm_mask_hi);
 
-        expandAlpha_2x128 (xmmSrcLo, xmmSrcHi, &xmmAlphaLo, &xmmAlphaHi);
+        expand_alpha_2x128 (xmm_src_lo, xmm_src_hi, &xmm_alpha_lo, &xmm_alpha_hi);
 
-        pixMultiply_2x128 (&xmmMaskLo, &xmmMaskHi, &xmmAlphaLo, &xmmAlphaHi, &xmmMaskLo, &xmmMaskHi);
+        pix_multiply_2x128 (&xmm_mask_lo, &xmm_mask_hi, &xmm_alpha_lo, &xmm_alpha_hi, &xmm_mask_lo, &xmm_mask_hi);
 
-        negate_2x128 (xmmMaskLo, xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
+        negate_2x128 (xmm_mask_lo, xmm_mask_hi, &xmm_mask_lo, &xmm_mask_hi);
 
-        pixMultiply_2x128 (&xmmDstLo, &xmmDstHi, &xmmMaskLo, &xmmMaskHi, &xmmDstLo, &xmmDstHi);
+        pix_multiply_2x128 (&xmm_dst_lo, &xmm_dst_hi, &xmm_mask_lo, &xmm_mask_hi, &xmm_dst_lo, &xmm_dst_hi);
 
-        save128Aligned( (__m128i*)pd, pack_2x128_128 (xmmDstLo, xmmDstHi));
+        save_128_aligned( (__m128i*)pd, pack_2x128_128 (xmm_dst_lo, xmm_dst_hi));
 
         ps += 4;
         pd += 4;
@@ -1930,43 +1930,43 @@ coreCombineOutReverseCsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm
         m = *pm++;
         d = *pd;
 
-        *pd++ = pack_1x64_32 (pixMultiply_1x64 (unpack_32_1x64 (d),
-                                                negate_1x64 (pixMultiply_1x64 (unpack_32_1x64 (m),
-                                                                               expandAlpha_1x64 (unpack_32_1x64 (s))))));
+        *pd++ = pack_1x64_32 (pix_multiply_1x64 (unpack_32_1x64 (d),
+                                                negate_1x64 (pix_multiply_1x64 (unpack_32_1x64 (m),
+                                                                               expand_alpha_1x64 (unpack_32_1x64 (s))))));
         w--;
     }
 }
 
 static force_inline uint32_t
-coreCombineAtopCPixelsse2 (uint32_t src, uint32_t mask, uint32_t dst)
+core_combine_atop_ca_pixel_sse2 (uint32_t src, uint32_t mask, uint32_t dst)
 {
     __m64 m = unpack_32_1x64 (mask);
     __m64 s = unpack_32_1x64 (src);
     __m64 d = unpack_32_1x64 (dst);
-    __m64 sa = expandAlpha_1x64 (s);
-    __m64 da = expandAlpha_1x64 (d);
+    __m64 sa = expand_alpha_1x64 (s);
+    __m64 da = expand_alpha_1x64 (d);
 
-    s = pixMultiply_1x64 (s, m);
-    m = negate_1x64 (pixMultiply_1x64 (m, sa));
+    s = pix_multiply_1x64 (s, m);
+    m = negate_1x64 (pix_multiply_1x64 (m, sa));
 
-    return pack_1x64_32 (pixAddMultiply_1x64 (&d, &m, &s, &da));
+    return pack_1x64_32 (pix_add_multiply_1x64 (&d, &m, &s, &da));
 }
 
 static force_inline void
-coreCombineAtopCsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int w)
+core_combine_atop_ca_sse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int w)
 {
     uint32_t s, m, d;
 
-    __m128i xmmSrcLo, xmmSrcHi;
-    __m128i xmmDstLo, xmmDstHi;
-    __m128i xmmAlphaSrcLo, xmmAlphaSrcHi;
-    __m128i xmmAlphaDstLo, xmmAlphaDstHi;
-    __m128i xmmMaskLo, xmmMaskHi;
+    __m128i xmm_src_lo, xmm_src_hi;
+    __m128i xmm_dst_lo, xmm_dst_hi;
+    __m128i xmm_alpha_src_lo, xmm_alpha_src_hi;
+    __m128i xmm_alpha_dst_lo, xmm_alpha_dst_hi;
+    __m128i xmm_mask_lo, xmm_mask_hi;
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w && (unsigned long)pd & 15)
     {
@@ -1974,43 +1974,43 @@ coreCombineAtopCsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int 
         m = *pm++;
         d = *pd;
 
-        *pd++ = coreCombineAtopCPixelsse2 (s, m, d);
+        *pd++ = core_combine_atop_ca_pixel_sse2 (s, m, d);
         w--;
     }
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w >= 4)
     {
         /* fill cache line with next memory */
-        cachePrefetchNext ((__m128i*)ps);
-        cachePrefetchNext ((__m128i*)pd);
-        cachePrefetchNext ((__m128i*)pm);
+        cache_prefetch_next ((__m128i*)ps);
+        cache_prefetch_next ((__m128i*)pd);
+        cache_prefetch_next ((__m128i*)pm);
 
-        xmmDstHi = load128Aligned ((__m128i*)pd);
-        xmmSrcHi = load128Unaligned ((__m128i*)ps);
-        xmmMaskHi = load128Unaligned ((__m128i*)pm);
+        xmm_dst_hi = load_128_aligned ((__m128i*)pd);
+        xmm_src_hi = load_128_unaligned ((__m128i*)ps);
+        xmm_mask_hi = load_128_unaligned ((__m128i*)pm);
 
-        unpack_128_2x128 (xmmDstHi, &xmmDstLo, &xmmDstHi);
-        unpack_128_2x128 (xmmSrcHi, &xmmSrcLo, &xmmSrcHi);
-        unpack_128_2x128 (xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
+        unpack_128_2x128 (xmm_dst_hi, &xmm_dst_lo, &xmm_dst_hi);
+        unpack_128_2x128 (xmm_src_hi, &xmm_src_lo, &xmm_src_hi);
+        unpack_128_2x128 (xmm_mask_hi, &xmm_mask_lo, &xmm_mask_hi);
 
-        expandAlpha_2x128 (xmmSrcLo, xmmSrcHi, &xmmAlphaSrcLo, &xmmAlphaSrcHi);
-        expandAlpha_2x128 (xmmDstLo, xmmDstHi, &xmmAlphaDstLo, &xmmAlphaDstHi);
+        expand_alpha_2x128 (xmm_src_lo, xmm_src_hi, &xmm_alpha_src_lo, &xmm_alpha_src_hi);
+        expand_alpha_2x128 (xmm_dst_lo, xmm_dst_hi, &xmm_alpha_dst_lo, &xmm_alpha_dst_hi);
 
-        pixMultiply_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmMaskLo, &xmmMaskHi, &xmmSrcLo, &xmmSrcHi);
-        pixMultiply_2x128 (&xmmMaskLo, &xmmMaskHi, &xmmAlphaSrcLo, &xmmAlphaSrcHi, &xmmMaskLo, &xmmMaskHi);
+        pix_multiply_2x128 (&xmm_src_lo, &xmm_src_hi, &xmm_mask_lo, &xmm_mask_hi, &xmm_src_lo, &xmm_src_hi);
+        pix_multiply_2x128 (&xmm_mask_lo, &xmm_mask_hi, &xmm_alpha_src_lo, &xmm_alpha_src_hi, &xmm_mask_lo, &xmm_mask_hi);
 
-        negate_2x128 (xmmMaskLo, xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
+        negate_2x128 (xmm_mask_lo, xmm_mask_hi, &xmm_mask_lo, &xmm_mask_hi);
 
-        pixAddMultiply_2x128 (&xmmDstLo, &xmmDstHi, &xmmMaskLo, &xmmMaskHi,
-                              &xmmSrcLo, &xmmSrcHi, &xmmAlphaDstLo, &xmmAlphaDstHi,
-                              &xmmDstLo, &xmmDstHi);
+        pix_add_multiply_2x128 (&xmm_dst_lo, &xmm_dst_hi, &xmm_mask_lo, &xmm_mask_hi,
+                              &xmm_src_lo, &xmm_src_hi, &xmm_alpha_dst_lo, &xmm_alpha_dst_hi,
+                              &xmm_dst_lo, &xmm_dst_hi);
 
-        save128Aligned( (__m128i*)pd, pack_2x128_128 (xmmDstLo, xmmDstHi));
+        save_128_aligned( (__m128i*)pd, pack_2x128_128 (xmm_dst_lo, xmm_dst_hi));
 
         ps += 4;
         pd += 4;
@@ -2024,42 +2024,42 @@ coreCombineAtopCsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int 
         m = *pm++;
         d = *pd;
 
-        *pd++ = coreCombineAtopCPixelsse2 (s, m, d);
+        *pd++ = core_combine_atop_ca_pixel_sse2 (s, m, d);
         w--;
     }
 }
 
 static force_inline uint32_t
-coreCombineReverseAtopCPixelsse2 (uint32_t src, uint32_t mask, uint32_t dst)
+core_combine_reverse_atop_ca_pixel_sse2 (uint32_t src, uint32_t mask, uint32_t dst)
 {
     __m64 m = unpack_32_1x64 (mask);
     __m64 s = unpack_32_1x64 (src);
     __m64 d = unpack_32_1x64 (dst);
 
-    __m64 da = negate_1x64 (expandAlpha_1x64 (d));
-    __m64 sa = expandAlpha_1x64 (s);
+    __m64 da = negate_1x64 (expand_alpha_1x64 (d));
+    __m64 sa = expand_alpha_1x64 (s);
 
-    s = pixMultiply_1x64 (s, m);
-    m = pixMultiply_1x64 (m, sa);
+    s = pix_multiply_1x64 (s, m);
+    m = pix_multiply_1x64 (m, sa);
 
-    return pack_1x64_32 (pixAddMultiply_1x64 (&d, &m, &s, &da));
+    return pack_1x64_32 (pix_add_multiply_1x64 (&d, &m, &s, &da));
 }
 
 static force_inline void
-coreCombineReverseAtopCsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int w)
+core_combine_reverse_atop_ca_sse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int w)
 {
     uint32_t s, m, d;
 
-    __m128i xmmSrcLo, xmmSrcHi;
-    __m128i xmmDstLo, xmmDstHi;
-    __m128i xmmAlphaSrcLo, xmmAlphaSrcHi;
-    __m128i xmmAlphaDstLo, xmmAlphaDstHi;
-    __m128i xmmMaskLo, xmmMaskHi;
+    __m128i xmm_src_lo, xmm_src_hi;
+    __m128i xmm_dst_lo, xmm_dst_hi;
+    __m128i xmm_alpha_src_lo, xmm_alpha_src_hi;
+    __m128i xmm_alpha_dst_lo, xmm_alpha_dst_hi;
+    __m128i xmm_mask_lo, xmm_mask_hi;
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w && (unsigned long)pd & 15)
     {
@@ -2067,43 +2067,43 @@ coreCombineReverseAtopCsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *p
         m = *pm++;
         d = *pd;
 
-        *pd++ = coreCombineReverseAtopCPixelsse2 (s, m, d);
+        *pd++ = core_combine_reverse_atop_ca_pixel_sse2 (s, m, d);
         w--;
     }
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w >= 4)
     {
         /* fill cache line with next memory */
-        cachePrefetchNext ((__m128i*)ps);
-        cachePrefetchNext ((__m128i*)pd);
-        cachePrefetchNext ((__m128i*)pm);
+        cache_prefetch_next ((__m128i*)ps);
+        cache_prefetch_next ((__m128i*)pd);
+        cache_prefetch_next ((__m128i*)pm);
 
-        xmmDstHi = load128Aligned ((__m128i*)pd);
-        xmmSrcHi = load128Unaligned ((__m128i*)ps);
-        xmmMaskHi = load128Unaligned ((__m128i*)pm);
+        xmm_dst_hi = load_128_aligned ((__m128i*)pd);
+        xmm_src_hi = load_128_unaligned ((__m128i*)ps);
+        xmm_mask_hi = load_128_unaligned ((__m128i*)pm);
 
-        unpack_128_2x128 (xmmDstHi, &xmmDstLo, &xmmDstHi);
-        unpack_128_2x128 (xmmSrcHi, &xmmSrcLo, &xmmSrcHi);
-        unpack_128_2x128 (xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
+        unpack_128_2x128 (xmm_dst_hi, &xmm_dst_lo, &xmm_dst_hi);
+        unpack_128_2x128 (xmm_src_hi, &xmm_src_lo, &xmm_src_hi);
+        unpack_128_2x128 (xmm_mask_hi, &xmm_mask_lo, &xmm_mask_hi);
 
-        expandAlpha_2x128 (xmmSrcLo, xmmSrcHi, &xmmAlphaSrcLo, &xmmAlphaSrcHi);
-        expandAlpha_2x128 (xmmDstLo, xmmDstHi, &xmmAlphaDstLo, &xmmAlphaDstHi);
+        expand_alpha_2x128 (xmm_src_lo, xmm_src_hi, &xmm_alpha_src_lo, &xmm_alpha_src_hi);
+        expand_alpha_2x128 (xmm_dst_lo, xmm_dst_hi, &xmm_alpha_dst_lo, &xmm_alpha_dst_hi);
 
-        pixMultiply_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmMaskLo, &xmmMaskHi, &xmmSrcLo, &xmmSrcHi);
-        pixMultiply_2x128 (&xmmMaskLo, &xmmMaskHi, &xmmAlphaSrcLo, &xmmAlphaSrcHi, &xmmMaskLo, &xmmMaskHi);
+        pix_multiply_2x128 (&xmm_src_lo, &xmm_src_hi, &xmm_mask_lo, &xmm_mask_hi, &xmm_src_lo, &xmm_src_hi);
+        pix_multiply_2x128 (&xmm_mask_lo, &xmm_mask_hi, &xmm_alpha_src_lo, &xmm_alpha_src_hi, &xmm_mask_lo, &xmm_mask_hi);
 
-        negate_2x128 (xmmAlphaDstLo, xmmAlphaDstHi, &xmmAlphaDstLo, &xmmAlphaDstHi);
+        negate_2x128 (xmm_alpha_dst_lo, xmm_alpha_dst_hi, &xmm_alpha_dst_lo, &xmm_alpha_dst_hi);
 
-        pixAddMultiply_2x128 (&xmmDstLo, &xmmDstHi, &xmmMaskLo, &xmmMaskHi,
-                              &xmmSrcLo, &xmmSrcHi, &xmmAlphaDstLo, &xmmAlphaDstHi,
-                              &xmmDstLo, &xmmDstHi);
+        pix_add_multiply_2x128 (&xmm_dst_lo, &xmm_dst_hi, &xmm_mask_lo, &xmm_mask_hi,
+                              &xmm_src_lo, &xmm_src_hi, &xmm_alpha_dst_lo, &xmm_alpha_dst_hi,
+                              &xmm_dst_lo, &xmm_dst_hi);
 
-        save128Aligned( (__m128i*)pd, pack_2x128_128 (xmmDstLo, xmmDstHi));
+        save_128_aligned( (__m128i*)pd, pack_2x128_128 (xmm_dst_lo, xmm_dst_hi));
 
         ps += 4;
         pd += 4;
@@ -2117,43 +2117,43 @@ coreCombineReverseAtopCsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *p
         m = *pm++;
         d = *pd;
 
-        *pd++ = coreCombineReverseAtopCPixelsse2 (s, m, d);
+        *pd++ = core_combine_reverse_atop_ca_pixel_sse2 (s, m, d);
         w--;
     }
 }
 
 static force_inline uint32_t
-coreCombineXorCPixelsse2 (uint32_t src, uint32_t mask, uint32_t dst)
+core_combine_xor_ca_pixel_sse2 (uint32_t src, uint32_t mask, uint32_t dst)
 {
     __m64 a = unpack_32_1x64 (mask);
     __m64 s = unpack_32_1x64 (src);
     __m64 d = unpack_32_1x64 (dst);
 
-    __m64 alphaDst = negate_1x64 (pixMultiply_1x64 (a, expandAlpha_1x64 (s)));
-    __m64 dest      = pixMultiply_1x64 (s, a);
-    __m64 alphaSrc = negate_1x64 (expandAlpha_1x64 (d));
+    __m64 alpha_dst = negate_1x64 (pix_multiply_1x64 (a, expand_alpha_1x64 (s)));
+    __m64 dest      = pix_multiply_1x64 (s, a);
+    __m64 alpha_src = negate_1x64 (expand_alpha_1x64 (d));
 
-    return pack_1x64_32 (pixAddMultiply_1x64 (&d,
-                                              &alphaDst,
+    return pack_1x64_32 (pix_add_multiply_1x64 (&d,
+                                              &alpha_dst,
                                               &dest,
-                                              &alphaSrc));
+                                              &alpha_src));
 }
 
 static force_inline void
-coreCombineXorCsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int w)
+core_combine_xor_ca_sse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int w)
 {
     uint32_t s, m, d;
 
-    __m128i xmmSrcLo, xmmSrcHi;
-    __m128i xmmDstLo, xmmDstHi;
-    __m128i xmmAlphaSrcLo, xmmAlphaSrcHi;
-    __m128i xmmAlphaDstLo, xmmAlphaDstHi;
-    __m128i xmmMaskLo, xmmMaskHi;
+    __m128i xmm_src_lo, xmm_src_hi;
+    __m128i xmm_dst_lo, xmm_dst_hi;
+    __m128i xmm_alpha_src_lo, xmm_alpha_src_hi;
+    __m128i xmm_alpha_dst_lo, xmm_alpha_dst_hi;
+    __m128i xmm_mask_lo, xmm_mask_hi;
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w && (unsigned long)pd & 15)
     {
@@ -2161,44 +2161,44 @@ coreCombineXorCsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int w
         m = *pm++;
         d = *pd;
 
-        *pd++ = coreCombineXorCPixelsse2 (s, m, d);
+        *pd++ = core_combine_xor_ca_pixel_sse2 (s, m, d);
         w--;
     }
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w >= 4)
     {
         /* fill cache line with next memory */
-        cachePrefetchNext ((__m128i*)ps);
-        cachePrefetchNext ((__m128i*)pd);
-        cachePrefetchNext ((__m128i*)pm);
+        cache_prefetch_next ((__m128i*)ps);
+        cache_prefetch_next ((__m128i*)pd);
+        cache_prefetch_next ((__m128i*)pm);
 
-        xmmDstHi = load128Aligned ((__m128i*)pd);
-        xmmSrcHi = load128Unaligned ((__m128i*)ps);
-        xmmMaskHi = load128Unaligned ((__m128i*)pm);
+        xmm_dst_hi = load_128_aligned ((__m128i*)pd);
+        xmm_src_hi = load_128_unaligned ((__m128i*)ps);
+        xmm_mask_hi = load_128_unaligned ((__m128i*)pm);
 
-        unpack_128_2x128 (xmmDstHi, &xmmDstLo, &xmmDstHi);
-        unpack_128_2x128 (xmmSrcHi, &xmmSrcLo, &xmmSrcHi);
-        unpack_128_2x128 (xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
+        unpack_128_2x128 (xmm_dst_hi, &xmm_dst_lo, &xmm_dst_hi);
+        unpack_128_2x128 (xmm_src_hi, &xmm_src_lo, &xmm_src_hi);
+        unpack_128_2x128 (xmm_mask_hi, &xmm_mask_lo, &xmm_mask_hi);
 
-        expandAlpha_2x128 (xmmSrcLo, xmmSrcHi, &xmmAlphaSrcLo, &xmmAlphaSrcHi);
-        expandAlpha_2x128 (xmmDstLo, xmmDstHi, &xmmAlphaDstLo, &xmmAlphaDstHi);
+        expand_alpha_2x128 (xmm_src_lo, xmm_src_hi, &xmm_alpha_src_lo, &xmm_alpha_src_hi);
+        expand_alpha_2x128 (xmm_dst_lo, xmm_dst_hi, &xmm_alpha_dst_lo, &xmm_alpha_dst_hi);
 
-        pixMultiply_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmMaskLo, &xmmMaskHi, &xmmSrcLo, &xmmSrcHi);
-        pixMultiply_2x128 (&xmmMaskLo, &xmmMaskHi, &xmmAlphaSrcLo, &xmmAlphaSrcHi, &xmmMaskLo, &xmmMaskHi);
+        pix_multiply_2x128 (&xmm_src_lo, &xmm_src_hi, &xmm_mask_lo, &xmm_mask_hi, &xmm_src_lo, &xmm_src_hi);
+        pix_multiply_2x128 (&xmm_mask_lo, &xmm_mask_hi, &xmm_alpha_src_lo, &xmm_alpha_src_hi, &xmm_mask_lo, &xmm_mask_hi);
 
-        negate_2x128 (xmmAlphaDstLo, xmmAlphaDstHi, &xmmAlphaDstLo, &xmmAlphaDstHi);
-        negate_2x128 (xmmMaskLo, xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
+        negate_2x128 (xmm_alpha_dst_lo, xmm_alpha_dst_hi, &xmm_alpha_dst_lo, &xmm_alpha_dst_hi);
+        negate_2x128 (xmm_mask_lo, xmm_mask_hi, &xmm_mask_lo, &xmm_mask_hi);
 
-        pixAddMultiply_2x128 (&xmmDstLo, &xmmDstHi, &xmmMaskLo, &xmmMaskHi,
-                              &xmmSrcLo, &xmmSrcHi, &xmmAlphaDstLo, &xmmAlphaDstHi,
-                              &xmmDstLo, &xmmDstHi);
+        pix_add_multiply_2x128 (&xmm_dst_lo, &xmm_dst_hi, &xmm_mask_lo, &xmm_mask_hi,
+                              &xmm_src_lo, &xmm_src_hi, &xmm_alpha_dst_lo, &xmm_alpha_dst_hi,
+                              &xmm_dst_lo, &xmm_dst_hi);
 
-        save128Aligned( (__m128i*)pd, pack_2x128_128 (xmmDstLo, xmmDstHi));
+        save_128_aligned( (__m128i*)pd, pack_2x128_128 (xmm_dst_lo, xmm_dst_hi));
 
         ps += 4;
         pd += 4;
@@ -2212,24 +2212,24 @@ coreCombineXorCsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int w
         m = *pm++;
         d = *pd;
 
-        *pd++ = coreCombineXorCPixelsse2 (s, m, d);
+        *pd++ = core_combine_xor_ca_pixel_sse2 (s, m, d);
         w--;
     }
 }
 
 static force_inline void
-coreCombineAddCsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int w)
+core_combine_add_ca_sse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int w)
 {
     uint32_t s, m, d;
 
-    __m128i xmmSrcLo, xmmSrcHi;
-    __m128i xmmDstLo, xmmDstHi;
-    __m128i xmmMaskLo, xmmMaskHi;
+    __m128i xmm_src_lo, xmm_src_hi;
+    __m128i xmm_dst_lo, xmm_dst_hi;
+    __m128i xmm_mask_lo, xmm_mask_hi;
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w && (unsigned long)pd & 15)
     {
@@ -2237,36 +2237,36 @@ coreCombineAddCsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int w
         m = *pm++;
         d = *pd;
 
-        *pd++ = pack_1x64_32 (_mm_adds_pu8 (pixMultiply_1x64 (unpack_32_1x64 (s),
+        *pd++ = pack_1x64_32 (_mm_adds_pu8 (pix_multiply_1x64 (unpack_32_1x64 (s),
                                                               unpack_32_1x64 (m)),
                                             unpack_32_1x64 (d)));
         w--;
     }
 
     /* call prefetch hint to optimize cache load*/
-    cachePrefetch ((__m128i*)ps);
-    cachePrefetch ((__m128i*)pd);
-    cachePrefetch ((__m128i*)pm);
+    cache_prefetch ((__m128i*)ps);
+    cache_prefetch ((__m128i*)pd);
+    cache_prefetch ((__m128i*)pm);
 
     while (w >= 4)
     {
         /* fill cache line with next memory */
-        cachePrefetchNext ((__m128i*)ps);
-        cachePrefetchNext ((__m128i*)pd);
-        cachePrefetchNext ((__m128i*)pm);
+        cache_prefetch_next ((__m128i*)ps);
+        cache_prefetch_next ((__m128i*)pd);
+        cache_prefetch_next ((__m128i*)pm);
 
-        xmmSrcHi = load128Unaligned ((__m128i*)ps);
-        xmmMaskHi = load128Unaligned ((__m128i*)pm);
-        xmmDstHi = load128Aligned ((__m128i*)pd);
+        xmm_src_hi = load_128_unaligned ((__m128i*)ps);
+        xmm_mask_hi = load_128_unaligned ((__m128i*)pm);
+        xmm_dst_hi = load_128_aligned ((__m128i*)pd);
 
-        unpack_128_2x128 (xmmSrcHi, &xmmSrcLo, &xmmSrcHi);
-        unpack_128_2x128 (xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
-        unpack_128_2x128 (xmmDstHi, &xmmDstLo, &xmmDstHi);
+        unpack_128_2x128 (xmm_src_hi, &xmm_src_lo, &xmm_src_hi);
+        unpack_128_2x128 (xmm_mask_hi, &xmm_mask_lo, &xmm_mask_hi);
+        unpack_128_2x128 (xmm_dst_hi, &xmm_dst_lo, &xmm_dst_hi);
 
-        pixMultiply_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmMaskLo, &xmmMaskHi, &xmmSrcLo, &xmmSrcHi);
+        pix_multiply_2x128 (&xmm_src_lo, &xmm_src_hi, &xmm_mask_lo, &xmm_mask_hi, &xmm_src_lo, &xmm_src_hi);
 
-        save128Aligned( (__m128i*)pd, pack_2x128_128 (_mm_adds_epu8 (xmmSrcLo, xmmDstLo),
-                                                      _mm_adds_epu8 (xmmSrcHi, xmmDstHi)));
+        save_128_aligned( (__m128i*)pd, pack_2x128_128 (_mm_adds_epu8 (xmm_src_lo, xmm_dst_lo),
+                                                      _mm_adds_epu8 (xmm_src_hi, xmm_dst_hi)));
 
         ps += 4;
         pd += 4;
@@ -2280,7 +2280,7 @@ coreCombineAddCsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int w
         m = *pm++;
         d = *pd;
 
-        *pd++ = pack_1x64_32 (_mm_adds_pu8 (pixMultiply_1x64 (unpack_32_1x64 (s),
+        *pd++ = pack_1x64_32 (_mm_adds_pu8 (pix_multiply_1x64 (unpack_32_1x64 (s),
                                                               unpack_32_1x64 (m)),
                                             unpack_32_1x64 (d)));
         w--;
@@ -2288,28 +2288,28 @@ coreCombineAddCsse2 (uint32_t *pd, const uint32_t *ps, const uint32_t *pm, int w
 }
 
 /* -------------------------------------------------------------------------------------------------
- * fbComposeSetupSSE2
+ * fb_compose_setup_sSE2
  */
 static force_inline __m64
-createMask_16_64 (uint16_t mask)
+create_mask_16_64 (uint16_t mask)
 {
     return _mm_set1_pi16 (mask);
 }
 
 static force_inline __m128i
-createMask_16_128 (uint16_t mask)
+create_mask_16_128 (uint16_t mask)
 {
     return _mm_set1_epi16 (mask);
 }
 
 static force_inline __m64
-createMask_2x32_64 (uint32_t mask0, uint32_t mask1)
+create_mask_2x32_64 (uint32_t mask0, uint32_t mask1)
 {
     return _mm_set_pi32 (mask0, mask1);
 }
 
 static force_inline __m128i
-createMask_2x32_128 (uint32_t mask0, uint32_t mask1)
+create_mask_2x32_128 (uint32_t mask0, uint32_t mask1)
 {
     return _mm_set_epi32 (mask0, mask1, mask0, mask1);
 }
@@ -2317,251 +2317,251 @@ createMask_2x32_128 (uint32_t mask0, uint32_t mask1)
 /* SSE2 code patch for fbcompose.c */
 
 static void
-sse2CombineOverU (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_over_u (pixman_implementation_t *imp, pixman_op_t op,
 		  uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
-    coreCombineOverUsse2 (dst, src, mask, width);
+    core_combine_over_u_sse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static void
-sse2CombineOverReverseU (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_over_reverse_u (pixman_implementation_t *imp, pixman_op_t op,
 			 uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
-    coreCombineOverReverseUsse2 (dst, src, mask, width);
+    core_combine_over_reverse_u_sse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static void
-sse2CombineInU (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_in_u (pixman_implementation_t *imp, pixman_op_t op,
 		uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
-    coreCombineInUsse2 (dst, src, mask, width);
+    core_combine_in_u_sse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static void
-sse2CombineInReverseU (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_in_reverse_u (pixman_implementation_t *imp, pixman_op_t op,
 		       uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
-    coreCombineReverseInUsse2 (dst, src, mask, width);
+    core_combine_reverse_in_u_sse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static void
-sse2CombineOutU (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_out_u (pixman_implementation_t *imp, pixman_op_t op,
 		 uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
-    coreCombineOutUsse2 (dst, src, mask, width);
+    core_combine_out_u_sse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static void
-sse2CombineOutReverseU (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_out_reverse_u (pixman_implementation_t *imp, pixman_op_t op,
 			uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
-    coreCombineReverseOutUsse2 (dst, src, mask, width);
+    core_combine_reverse_out_u_sse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static void
-sse2CombineAtopU (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_atop_u (pixman_implementation_t *imp, pixman_op_t op,
 		  uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
-    coreCombineAtopUsse2 (dst, src, mask, width);
+    core_combine_atop_u_sse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static void
-sse2CombineAtopReverseU (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_atop_reverse_u (pixman_implementation_t *imp, pixman_op_t op,
 			 uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
-    coreCombineReverseAtopUsse2 (dst, src, mask, width);
+    core_combine_reverse_atop_u_sse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static void
-sse2CombineXorU (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_xor_u (pixman_implementation_t *imp, pixman_op_t op,
 		 uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
-    coreCombineXorUsse2 (dst, src, mask, width);
+    core_combine_xor_u_sse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static void
-sse2CombineAddU (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_add_u (pixman_implementation_t *imp, pixman_op_t op,
 		 uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
-    coreCombineAddUsse2 (dst, src, mask, width);
+    core_combine_add_u_sse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static void
-sse2CombineSaturateU (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_saturate_u (pixman_implementation_t *imp, pixman_op_t op,
 		      uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
-    coreCombineSaturateUsse2 (dst, src, mask, width);
+    core_combine_saturate_u_sse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static void
-sse2CombineSrcC (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_src_ca (pixman_implementation_t *imp, pixman_op_t op,
 		 uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
-    coreCombineSrcCsse2 (dst, src, mask, width);
+    core_combine_src_ca_sse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static void
-sse2CombineOverC (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_over_ca (pixman_implementation_t *imp, pixman_op_t op,
 		  uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
-    coreCombineOverCsse2 (dst, src, mask, width);
+    core_combine_over_ca_sse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static void
-sse2CombineOverReverseC (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_over_reverse_ca (pixman_implementation_t *imp, pixman_op_t op,
 			 uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
-    coreCombineOverReverseCsse2 (dst, src, mask, width);
+    core_combine_over_reverse_ca_sse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static void
-sse2CombineInC (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_in_ca (pixman_implementation_t *imp, pixman_op_t op,
 		uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
-    coreCombineInCsse2 (dst, src, mask, width);
+    core_combine_in_ca_sse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static void
-sse2CombineInReverseC (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_in_reverse_ca (pixman_implementation_t *imp, pixman_op_t op,
 		       uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
-    coreCombineInReverseCsse2 (dst, src, mask, width);
+    core_combine_in_reverse_ca_sse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static void
-sse2CombineOutC (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_out_ca (pixman_implementation_t *imp, pixman_op_t op,
 		 uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
-    coreCombineOutCsse2 (dst, src, mask, width);
+    core_combine_out_ca_sse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static void
-sse2CombineOutReverseC (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_out_reverse_ca (pixman_implementation_t *imp, pixman_op_t op,
 			uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
-    coreCombineOutReverseCsse2 (dst, src, mask, width);
+    core_combine_out_reverse_ca_sse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static void
-sse2CombineAtopC (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_atop_ca (pixman_implementation_t *imp, pixman_op_t op,
 		  uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
-    coreCombineAtopCsse2 (dst, src, mask, width);
+    core_combine_atop_ca_sse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static void
-sse2CombineAtopReverseC (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_atop_reverse_ca (pixman_implementation_t *imp, pixman_op_t op,
 			 uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
-    coreCombineReverseAtopCsse2 (dst, src, mask, width);
+    core_combine_reverse_atop_ca_sse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static void
-sse2CombineXorC (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_xor_ca (pixman_implementation_t *imp, pixman_op_t op,
 		 uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
-    coreCombineXorCsse2 (dst, src, mask, width);
+    core_combine_xor_ca_sse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 static void
-sse2CombineAddC (pixman_implementation_t *imp, pixman_op_t op,
+sse2_combine_add_ca (pixman_implementation_t *imp, pixman_op_t op,
 		 uint32_t *dst, const uint32_t *src, const uint32_t *mask, int width)
 {
-    coreCombineAddCsse2 (dst, src, mask, width);
+    core_combine_add_ca_sse2 (dst, src, mask, width);
     _mm_empty();
 }
 
 /* -------------------------------------------------------------------------------------------------
- * fbCompositeSolid_nx8888
+ * fast_composite_over_n_8888
  */
 
 static void
-fbCompositeSolid_nx8888sse2 (pixman_implementation_t *imp,
+sse2_composite_over_n_8888 (pixman_implementation_t *imp,
 			     pixman_op_t op,
-			    pixman_image_t * pSrc,
-			    pixman_image_t * pMask,
-			    pixman_image_t * pDst,
-			    int32_t	xSrc,
-			    int32_t	ySrc,
-			    int32_t	xMask,
-			    int32_t	yMask,
-			    int32_t	xDst,
-			    int32_t	yDst,
+			    pixman_image_t * src_image,
+			    pixman_image_t * mask_image,
+			    pixman_image_t * dst_image,
+			    int32_t	src_x,
+			    int32_t	src_y,
+			    int32_t	mask_x,
+			    int32_t	mask_y,
+			    int32_t	dest_x,
+			    int32_t	dest_y,
 			    int32_t	width,
 			    int32_t	height)
 {
     uint32_t	src;
-    uint32_t	*dstLine, *dst, d;
+    uint32_t	*dst_line, *dst, d;
     uint16_t	w;
-    int	dstStride;
-    __m128i xmmSrc, xmmAlpha;
-    __m128i xmmDst, xmmDstLo, xmmDstHi;
+    int	dst_stride;
+    __m128i xmm_src, xmm_alpha;
+    __m128i xmm_dst, xmm_dst_lo, xmm_dst_hi;
 
-    src = _pixman_image_get_solid(pSrc, pDst->bits.format);
+    src = _pixman_image_get_solid(src_image, dst_image->bits.format);
 
     if (src == 0)
 	return;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint32_t, dst_stride, dst_line, 1);
 
-    xmmSrc = expandPixel_32_1x128 (src);
-    xmmAlpha = expandAlpha_1x128 (xmmSrc);
+    xmm_src = expand_pixel_32_1x128 (src);
+    xmm_alpha = expand_alpha_1x128 (xmm_src);
 
     while (height--)
     {
-        dst = dstLine;
+        dst = dst_line;
 
         /* call prefetch hint to optimize cache load*/
-        cachePrefetch ((__m128i*)dst);
+        cache_prefetch ((__m128i*)dst);
 
-        dstLine += dstStride;
+        dst_line += dst_stride;
         w = width;
 
         while (w && (unsigned long)dst & 15)
         {
             d = *dst;
-            *dst++ = pack_1x64_32 (over_1x64 (_mm_movepi64_pi64 (xmmSrc),
-                                              _mm_movepi64_pi64 (xmmAlpha),
+            *dst++ = pack_1x64_32 (over_1x64 (_mm_movepi64_pi64 (xmm_src),
+                                              _mm_movepi64_pi64 (xmm_alpha),
                                               unpack_32_1x64 (d)));
             w--;
         }
 
-        cachePrefetch ((__m128i*)dst);
+        cache_prefetch ((__m128i*)dst);
 
         while (w >= 4)
         {
             /* fill cache line with next memory */
-            cachePrefetchNext ((__m128i*)dst);
+            cache_prefetch_next ((__m128i*)dst);
 
-            xmmDst = load128Aligned ((__m128i*)dst);
+            xmm_dst = load_128_aligned ((__m128i*)dst);
 
-            unpack_128_2x128 (xmmDst, &xmmDstLo, &xmmDstHi);
+            unpack_128_2x128 (xmm_dst, &xmm_dst_lo, &xmm_dst_hi);
 
-            over_2x128 (&xmmSrc, &xmmSrc, &xmmAlpha, &xmmAlpha, &xmmDstLo, &xmmDstHi);
+            over_2x128 (&xmm_src, &xmm_src, &xmm_alpha, &xmm_alpha, &xmm_dst_lo, &xmm_dst_hi);
 
             /* rebuid the 4 pixel data and save*/
-            save128Aligned ((__m128i*)dst, pack_2x128_128 (xmmDstLo, xmmDstHi));
+            save_128_aligned ((__m128i*)dst, pack_2x128_128 (xmm_dst_lo, xmm_dst_hi));
 
             w -= 4;
             dst += 4;
@@ -2570,8 +2570,8 @@ fbCompositeSolid_nx8888sse2 (pixman_implementation_t *imp,
         while (w)
         {
             d = *dst;
-            *dst++ = pack_1x64_32 (over_1x64 (_mm_movepi64_pi64 (xmmSrc),
-                                              _mm_movepi64_pi64 (xmmAlpha),
+            *dst++ = pack_1x64_32 (over_1x64 (_mm_movepi64_pi64 (xmm_src),
+                                              _mm_movepi64_pi64 (xmm_alpha),
                                               unpack_32_1x64 (d)));
             w--;
         }
@@ -2581,77 +2581,77 @@ fbCompositeSolid_nx8888sse2 (pixman_implementation_t *imp,
 }
 
 /* -------------------------------------------------------------------------------------------------
- * fbCompositeSolid_nx0565
+ * fast_composite_over_n_0565
  */
 static void
-fbCompositeSolid_nx0565sse2 (pixman_implementation_t *imp,
+sse2_composite_over_n_0565 (pixman_implementation_t *imp,
 			     pixman_op_t op,
-			    pixman_image_t * pSrc,
-			    pixman_image_t * pMask,
-			    pixman_image_t * pDst,
-			    int32_t	xSrc,
-			    int32_t	ySrc,
-			    int32_t	xMask,
-			    int32_t	yMask,
-			    int32_t	xDst,
-			    int32_t	yDst,
+			    pixman_image_t * src_image,
+			    pixman_image_t * mask_image,
+			    pixman_image_t * dst_image,
+			    int32_t	src_x,
+			    int32_t	src_y,
+			    int32_t	mask_x,
+			    int32_t	mask_y,
+			    int32_t	dest_x,
+			    int32_t	dest_y,
 			    int32_t	width,
 			    int32_t	height)
 {
     uint32_t	src;
-    uint16_t	*dstLine, *dst, d;
+    uint16_t	*dst_line, *dst, d;
     uint16_t	w;
-    int	        dstStride;
-    __m128i xmmSrc, xmmAlpha;
-    __m128i xmmDst, xmmDst0, xmmDst1, xmmDst2, xmmDst3;
+    int	        dst_stride;
+    __m128i xmm_src, xmm_alpha;
+    __m128i xmm_dst, xmm_dst0, xmm_dst1, xmm_dst2, xmm_dst3;
 
-    src = _pixman_image_get_solid(pSrc, pDst->bits.format);
+    src = _pixman_image_get_solid(src_image, dst_image->bits.format);
 
     if (src == 0)
         return;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint16_t, dstStride, dstLine, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint16_t, dst_stride, dst_line, 1);
 
-    xmmSrc = expandPixel_32_1x128 (src);
-    xmmAlpha = expandAlpha_1x128 (xmmSrc);
+    xmm_src = expand_pixel_32_1x128 (src);
+    xmm_alpha = expand_alpha_1x128 (xmm_src);
 
     while (height--)
     {
-        dst = dstLine;
+        dst = dst_line;
 
         /* call prefetch hint to optimize cache load*/
-        cachePrefetch ((__m128i*)dst);
+        cache_prefetch ((__m128i*)dst);
 
-        dstLine += dstStride;
+        dst_line += dst_stride;
         w = width;
 
         while (w && (unsigned long)dst & 15)
         {
             d = *dst;
 
-            *dst++ = pack565_32_16 (pack_1x64_32 (over_1x64 (_mm_movepi64_pi64 (xmmSrc),
-                                                             _mm_movepi64_pi64 (xmmAlpha),
+            *dst++ = pack_565_32_16 (pack_1x64_32 (over_1x64 (_mm_movepi64_pi64 (xmm_src),
+                                                             _mm_movepi64_pi64 (xmm_alpha),
                                                              expand565_16_1x64 (d))));
             w--;
         }
 
         /* call prefetch hint to optimize cache load*/
-        cachePrefetch ((__m128i*)dst);
+        cache_prefetch ((__m128i*)dst);
 
         while (w >= 8)
         {
             /* fill cache line with next memory */
-            cachePrefetchNext ((__m128i*)dst);
+            cache_prefetch_next ((__m128i*)dst);
 
-	    xmmDst = load128Aligned ((__m128i*)dst);
+	    xmm_dst = load_128_aligned ((__m128i*)dst);
 	    
-	    unpack565_128_4x128 (xmmDst, &xmmDst0, &xmmDst1, &xmmDst2, &xmmDst3);
+	    unpack_565_128_4x128 (xmm_dst, &xmm_dst0, &xmm_dst1, &xmm_dst2, &xmm_dst3);
 	    
-            over_2x128 (&xmmSrc, &xmmSrc, &xmmAlpha, &xmmAlpha, &xmmDst0, &xmmDst1);
-            over_2x128 (&xmmSrc, &xmmSrc, &xmmAlpha, &xmmAlpha, &xmmDst2, &xmmDst3);
+            over_2x128 (&xmm_src, &xmm_src, &xmm_alpha, &xmm_alpha, &xmm_dst0, &xmm_dst1);
+            over_2x128 (&xmm_src, &xmm_src, &xmm_alpha, &xmm_alpha, &xmm_dst2, &xmm_dst3);
 
-            xmmDst = pack565_4x128_128 (&xmmDst0, &xmmDst1, &xmmDst2, &xmmDst3);
-            save128Aligned ((__m128i*)dst, xmmDst);
+            xmm_dst = pack_565_4x128_128 (&xmm_dst0, &xmm_dst1, &xmm_dst2, &xmm_dst3);
+            save_128_aligned ((__m128i*)dst, xmm_dst);
 
             dst += 8;
             w -= 8;
@@ -2660,8 +2660,8 @@ fbCompositeSolid_nx0565sse2 (pixman_implementation_t *imp,
         while (w--)
         {
             d = *dst;
-            *dst++ = pack565_32_16 (pack_1x64_32 (over_1x64 (_mm_movepi64_pi64 (xmmSrc),
-                                                             _mm_movepi64_pi64 (xmmAlpha),
+            *dst++ = pack_565_32_16 (pack_1x64_32 (over_1x64 (_mm_movepi64_pi64 (xmm_src),
+                                                             _mm_movepi64_pi64 (xmm_alpha),
                                                              expand565_16_1x64 (d))));
         }
     }
@@ -2670,61 +2670,61 @@ fbCompositeSolid_nx0565sse2 (pixman_implementation_t *imp,
 }
 
 /* -------------------------------------------------------------------------------------------------
- * fbCompositeSolidMask_nx8888x8888C
+ * fast_composite_over_n_8888_8888_ca
  */
 
 static void
-fbCompositeSolidMask_nx8888x8888Csse2 (pixman_implementation_t *imp,
+sse2_composite_over_n_8888_8888_ca (pixman_implementation_t *imp,
 				       pixman_op_t op,
-				      pixman_image_t * pSrc,
-				      pixman_image_t * pMask,
-				      pixman_image_t * pDst,
-				      int32_t	xSrc,
-				      int32_t	ySrc,
-				      int32_t	xMask,
-				      int32_t	yMask,
-				      int32_t	xDst,
-				      int32_t	yDst,
+				      pixman_image_t * src_image,
+				      pixman_image_t * mask_image,
+				      pixman_image_t * dst_image,
+				      int32_t	src_x,
+				      int32_t	src_y,
+				      int32_t	mask_x,
+				      int32_t	mask_y,
+				      int32_t	dest_x,
+				      int32_t	dest_y,
 				      int32_t	width,
 				      int32_t	height)
 {
     uint32_t	src;
-    uint32_t	*dstLine, d;
-    uint32_t	*maskLine, m;
-    uint32_t    packCmp;
-    int	dstStride, maskStride;
+    uint32_t	*dst_line, d;
+    uint32_t	*mask_line, m;
+    uint32_t    pack_cmp;
+    int	dst_stride, mask_stride;
 
-    __m128i xmmSrc, xmmAlpha;
-    __m128i xmmDst, xmmDstLo, xmmDstHi;
-    __m128i xmmMask, xmmMaskLo, xmmMaskHi;
+    __m128i xmm_src, xmm_alpha;
+    __m128i xmm_dst, xmm_dst_lo, xmm_dst_hi;
+    __m128i xmm_mask, xmm_mask_lo, xmm_mask_hi;
 
-    __m64 mmxSrc, mmxAlpha, mmxMask, mmxDst;
+    __m64 mmx_src, mmx_alpha, mmx_mask, mmx_dest;
 
-    src = _pixman_image_get_solid(pSrc, pDst->bits.format);
+    src = _pixman_image_get_solid(src_image, dst_image->bits.format);
 
     if (src == 0)
 	return;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pMask, xMask, yMask, uint32_t, maskStride, maskLine, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint32_t, dst_stride, dst_line, 1);
+    PIXMAN_IMAGE_GET_LINE (mask_image, mask_x, mask_y, uint32_t, mask_stride, mask_line, 1);
 
-    xmmSrc = _mm_unpacklo_epi8 (createMask_2x32_128 (src, src), _mm_setzero_si128 ());
-    xmmAlpha = expandAlpha_1x128 (xmmSrc);
-    mmxSrc   = _mm_movepi64_pi64 (xmmSrc);
-    mmxAlpha = _mm_movepi64_pi64 (xmmAlpha);
+    xmm_src = _mm_unpacklo_epi8 (create_mask_2x32_128 (src, src), _mm_setzero_si128 ());
+    xmm_alpha = expand_alpha_1x128 (xmm_src);
+    mmx_src   = _mm_movepi64_pi64 (xmm_src);
+    mmx_alpha = _mm_movepi64_pi64 (xmm_alpha);
 
     while (height--)
     {
         int w = width;
-        const uint32_t *pm = (uint32_t *)maskLine;
-        uint32_t *pd = (uint32_t *)dstLine;
+        const uint32_t *pm = (uint32_t *)mask_line;
+        uint32_t *pd = (uint32_t *)dst_line;
 
-        dstLine += dstStride;
-        maskLine += maskStride;
+        dst_line += dst_stride;
+        mask_line += mask_stride;
 
         /* call prefetch hint to optimize cache load*/
-        cachePrefetch ((__m128i*)pd);
-        cachePrefetch ((__m128i*)pm);
+        cache_prefetch ((__m128i*)pd);
+        cache_prefetch ((__m128i*)pm);
 
         while (w && (unsigned long)pd & 15)
         {
@@ -2733,13 +2733,13 @@ fbCompositeSolidMask_nx8888x8888Csse2 (pixman_implementation_t *imp,
             if (m)
             {
                 d = *pd;
-                mmxMask = unpack_32_1x64 (m);
-                mmxDst = unpack_32_1x64 (d);
+                mmx_mask = unpack_32_1x64 (m);
+                mmx_dest = unpack_32_1x64 (d);
 
-                *pd = pack_1x64_32 (inOver_1x64 (&mmxSrc,
-                                                 &mmxAlpha,
-                                                 &mmxMask,
-                                                 &mmxDst));
+                *pd = pack_1x64_32 (in_over_1x64 (&mmx_src,
+                                                 &mmx_alpha,
+                                                 &mmx_mask,
+                                                 &mmx_dest));
             }
 
             pd++;
@@ -2747,30 +2747,30 @@ fbCompositeSolidMask_nx8888x8888Csse2 (pixman_implementation_t *imp,
         }
 
         /* call prefetch hint to optimize cache load*/
-        cachePrefetch ((__m128i*)pd);
-        cachePrefetch ((__m128i*)pm);
+        cache_prefetch ((__m128i*)pd);
+        cache_prefetch ((__m128i*)pm);
 
         while (w >= 4)
         {
             /* fill cache line with next memory */
-            cachePrefetchNext ((__m128i*)pd);
-            cachePrefetchNext ((__m128i*)pm);
+            cache_prefetch_next ((__m128i*)pd);
+            cache_prefetch_next ((__m128i*)pm);
 
-            xmmMask = load128Unaligned ((__m128i*)pm);
+            xmm_mask = load_128_unaligned ((__m128i*)pm);
 
-            packCmp = _mm_movemask_epi8 (_mm_cmpeq_epi32 (xmmMask, _mm_setzero_si128()));
+            pack_cmp = _mm_movemask_epi8 (_mm_cmpeq_epi32 (xmm_mask, _mm_setzero_si128()));
 
-            /* if all bits in mask are zero, packCmp are equal to 0xffff */
-            if (packCmp != 0xffff)
+            /* if all bits in mask are zero, pack_cmp are equal to 0xffff */
+            if (pack_cmp != 0xffff)
             {
-                xmmDst = load128Aligned ((__m128i*)pd);
+                xmm_dst = load_128_aligned ((__m128i*)pd);
 
-                unpack_128_2x128 (xmmMask, &xmmMaskLo, &xmmMaskHi);
-                unpack_128_2x128 (xmmDst, &xmmDstLo, &xmmDstHi);
+                unpack_128_2x128 (xmm_mask, &xmm_mask_lo, &xmm_mask_hi);
+                unpack_128_2x128 (xmm_dst, &xmm_dst_lo, &xmm_dst_hi);
 
-                inOver_2x128 (&xmmSrc, &xmmSrc, &xmmAlpha, &xmmAlpha, &xmmMaskLo, &xmmMaskHi, &xmmDstLo, &xmmDstHi);
+                in_over_2x128 (&xmm_src, &xmm_src, &xmm_alpha, &xmm_alpha, &xmm_mask_lo, &xmm_mask_hi, &xmm_dst_lo, &xmm_dst_hi);
 
-                save128Aligned ((__m128i*)pd, pack_2x128_128 (xmmDstLo, xmmDstHi));
+                save_128_aligned ((__m128i*)pd, pack_2x128_128 (xmm_dst_lo, xmm_dst_hi));
             }
 
             pd += 4;
@@ -2785,13 +2785,13 @@ fbCompositeSolidMask_nx8888x8888Csse2 (pixman_implementation_t *imp,
             if (m)
             {
                 d = *pd;
-                mmxMask = unpack_32_1x64 (m);
-                mmxDst = unpack_32_1x64 (d);
+                mmx_mask = unpack_32_1x64 (m);
+                mmx_dest = unpack_32_1x64 (d);
 
-                *pd = pack_1x64_32 (inOver_1x64 (&mmxSrc,
-                                                 &mmxAlpha,
-                                                 &mmxMask,
-                                                 &mmxDst));
+                *pd = pack_1x64_32 (in_over_1x64 (&mmx_src,
+                                                 &mmx_alpha,
+                                                 &mmx_mask,
+                                                 &mmx_dest));
             }
 
             pd++;
@@ -2804,52 +2804,52 @@ fbCompositeSolidMask_nx8888x8888Csse2 (pixman_implementation_t *imp,
 
 
 /* -------------------------------------------------------------------------------------------------
- * fbCompositeSrc_8888x8x8888
+ * fast_composite_over_8888_n_8888
  */
 
 static void
-fbCompositeSrc_8888x8x8888sse2 (pixman_implementation_t *imp,
+sse2_composite_over_8888_n_8888 (pixman_implementation_t *imp,
 				pixman_op_t op,
-			       pixman_image_t * pSrc,
-			       pixman_image_t * pMask,
-			       pixman_image_t * pDst,
-			       int32_t	xSrc,
-			       int32_t	ySrc,
-			       int32_t      xMask,
-			       int32_t      yMask,
-			       int32_t      xDst,
-			       int32_t      yDst,
+			       pixman_image_t * src_image,
+			       pixman_image_t * mask_image,
+			       pixman_image_t * dst_image,
+			       int32_t	src_x,
+			       int32_t	src_y,
+			       int32_t      mask_x,
+			       int32_t      mask_y,
+			       int32_t      dest_x,
+			       int32_t      dest_y,
 			       int32_t     width,
 			       int32_t     height)
 {
-    uint32_t	*dstLine, *dst;
-    uint32_t	*srcLine, *src;
+    uint32_t	*dst_line, *dst;
+    uint32_t	*src_line, *src;
     uint32_t	mask;
     uint16_t	w;
-    int	dstStride, srcStride;
+    int	dst_stride, src_stride;
 
-    __m128i xmmMask;
-    __m128i xmmSrc, xmmSrcLo, xmmSrcHi;
-    __m128i xmmDst, xmmDstLo, xmmDstHi;
-    __m128i xmmAlphaLo, xmmAlphaHi;
+    __m128i xmm_mask;
+    __m128i xmm_src, xmm_src_lo, xmm_src_hi;
+    __m128i xmm_dst, xmm_dst_lo, xmm_dst_hi;
+    __m128i xmm_alpha_lo, xmm_alpha_hi;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
-    mask = _pixman_image_get_solid (pMask, pDst->bits.format);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint32_t, dst_stride, dst_line, 1);
+    PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint32_t, src_stride, src_line, 1);
+    mask = _pixman_image_get_solid (mask_image, dst_image->bits.format);
 
-    xmmMask = createMask_16_128 (mask >> 24);
+    xmm_mask = create_mask_16_128 (mask >> 24);
 
     while (height--)
     {
-        dst = dstLine;
-        dstLine += dstStride;
-        src = srcLine;
-        srcLine += srcStride;
+        dst = dst_line;
+        dst_line += dst_stride;
+        src = src_line;
+        src_line += src_stride;
         w = width;
 
         /* call prefetch hint to optimize cache load*/
-        cachePrefetch ((__m128i*)dst);
-        cachePrefetch ((__m128i*)src);
+        cache_prefetch ((__m128i*)dst);
+        cache_prefetch ((__m128i*)src);
 
         while (w && (unsigned long)dst & 15)
         {
@@ -2857,38 +2857,38 @@ fbCompositeSrc_8888x8x8888sse2 (pixman_implementation_t *imp,
             uint32_t d = *dst;
 
             __m64 ms = unpack_32_1x64 (s);
-            __m64 alpha    = expandAlpha_1x64 (ms);
-            __m64 dest     = _mm_movepi64_pi64 (xmmMask);
-            __m64 alphaDst = unpack_32_1x64 (d);
+            __m64 alpha    = expand_alpha_1x64 (ms);
+            __m64 dest     = _mm_movepi64_pi64 (xmm_mask);
+            __m64 alpha_dst = unpack_32_1x64 (d);
 
-            *dst++ = pack_1x64_32 (inOver_1x64 (&ms,
+            *dst++ = pack_1x64_32 (in_over_1x64 (&ms,
                                                 &alpha,
                                                 &dest,
-                                                &alphaDst));
+                                                &alpha_dst));
 
             w--;
         }
 
         /* call prefetch hint to optimize cache load*/
-        cachePrefetch ((__m128i*)dst);
-        cachePrefetch ((__m128i*)src);
+        cache_prefetch ((__m128i*)dst);
+        cache_prefetch ((__m128i*)src);
 
         while (w >= 4)
         {
             /* fill cache line with next memory */
-            cachePrefetchNext ((__m128i*)dst);
-            cachePrefetchNext ((__m128i*)src);
+            cache_prefetch_next ((__m128i*)dst);
+            cache_prefetch_next ((__m128i*)src);
 
-            xmmSrc = load128Unaligned ((__m128i*)src);
-            xmmDst = load128Aligned ((__m128i*)dst);
+            xmm_src = load_128_unaligned ((__m128i*)src);
+            xmm_dst = load_128_aligned ((__m128i*)dst);
 
-            unpack_128_2x128 (xmmSrc, &xmmSrcLo, &xmmSrcHi);
-            unpack_128_2x128 (xmmDst, &xmmDstLo, &xmmDstHi);
-            expandAlpha_2x128 (xmmSrcLo, xmmSrcHi, &xmmAlphaLo, &xmmAlphaHi);
+            unpack_128_2x128 (xmm_src, &xmm_src_lo, &xmm_src_hi);
+            unpack_128_2x128 (xmm_dst, &xmm_dst_lo, &xmm_dst_hi);
+            expand_alpha_2x128 (xmm_src_lo, xmm_src_hi, &xmm_alpha_lo, &xmm_alpha_hi);
 
-            inOver_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmAlphaLo, &xmmAlphaHi, &xmmMask, &xmmMask, &xmmDstLo, &xmmDstHi);
+            in_over_2x128 (&xmm_src_lo, &xmm_src_hi, &xmm_alpha_lo, &xmm_alpha_hi, &xmm_mask, &xmm_mask, &xmm_dst_lo, &xmm_dst_hi);
 
-            save128Aligned( (__m128i*)dst, pack_2x128_128 (xmmDstLo, xmmDstHi));
+            save_128_aligned( (__m128i*)dst, pack_2x128_128 (xmm_dst_lo, xmm_dst_hi));
 
             dst += 4;
             src += 4;
@@ -2901,11 +2901,11 @@ fbCompositeSrc_8888x8x8888sse2 (pixman_implementation_t *imp,
             uint32_t d = *dst;
 
             __m64 ms = unpack_32_1x64 (s);
-            __m64 alpha = expandAlpha_1x64 (ms);
-            __m64 mask  = _mm_movepi64_pi64 (xmmMask);
+            __m64 alpha = expand_alpha_1x64 (ms);
+            __m64 mask  = _mm_movepi64_pi64 (xmm_mask);
             __m64 dest  = unpack_32_1x64 (d);
 
-            *dst++ = pack_1x64_32 (inOver_1x64 (&ms,
+            *dst++ = pack_1x64_32 (in_over_1x64 (&ms,
                                                 &alpha,
                                                 &mask,
                                                 &dest));
@@ -2918,51 +2918,51 @@ fbCompositeSrc_8888x8x8888sse2 (pixman_implementation_t *imp,
 }
 
 /* -------------------------------------------------------------------------------------------------
- * fbCompositeSrc_x888xnx8888
+ * fast_composite_over_x888_n_8888
  */
 static void
-fbCompositeSrc_x888xnx8888sse2 (pixman_implementation_t *imp,
+sse2_composite_over_x888_n_8888 (pixman_implementation_t *imp,
 				pixman_op_t op,
-			       pixman_image_t * pSrc,
-			       pixman_image_t * pMask,
-			       pixman_image_t * pDst,
-			       int32_t	xSrc,
-			       int32_t	ySrc,
-			       int32_t      xMask,
-			       int32_t      yMask,
-			       int32_t      xDst,
-			       int32_t      yDst,
+			       pixman_image_t * src_image,
+			       pixman_image_t * mask_image,
+			       pixman_image_t * dst_image,
+			       int32_t	src_x,
+			       int32_t	src_y,
+			       int32_t      mask_x,
+			       int32_t      mask_y,
+			       int32_t      dest_x,
+			       int32_t      dest_y,
 			       int32_t     width,
 			       int32_t     height)
 {
-    uint32_t	*dstLine, *dst;
-    uint32_t	*srcLine, *src;
+    uint32_t	*dst_line, *dst;
+    uint32_t	*src_line, *src;
     uint32_t	mask;
-    int	dstStride, srcStride;
+    int	dst_stride, src_stride;
     uint16_t	w;
 
-    __m128i xmmMask, xmmAlpha;
-    __m128i xmmSrc, xmmSrcLo, xmmSrcHi;
-    __m128i xmmDst, xmmDstLo, xmmDstHi;
+    __m128i xmm_mask, xmm_alpha;
+    __m128i xmm_src, xmm_src_lo, xmm_src_hi;
+    __m128i xmm_dst, xmm_dst_lo, xmm_dst_hi;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
-    mask = _pixman_image_get_solid (pMask, pDst->bits.format);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint32_t, dst_stride, dst_line, 1);
+    PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint32_t, src_stride, src_line, 1);
+    mask = _pixman_image_get_solid (mask_image, dst_image->bits.format);
 
-    xmmMask = createMask_16_128 (mask >> 24);
-    xmmAlpha = Mask00ff;
+    xmm_mask = create_mask_16_128 (mask >> 24);
+    xmm_alpha = mask_00ff;
 
     while (height--)
     {
-        dst = dstLine;
-        dstLine += dstStride;
-        src = srcLine;
-        srcLine += srcStride;
+        dst = dst_line;
+        dst_line += dst_stride;
+        src = src_line;
+        src_line += src_stride;
         w = width;
 
         /* call prefetch hint to optimize cache load*/
-        cachePrefetch ((__m128i*)dst);
-        cachePrefetch ((__m128i*)src);
+        cache_prefetch ((__m128i*)dst);
+        cache_prefetch ((__m128i*)src);
 
         while (w && (unsigned long)dst & 15)
         {
@@ -2970,11 +2970,11 @@ fbCompositeSrc_x888xnx8888sse2 (pixman_implementation_t *imp,
             uint32_t d = *dst;
 
             __m64 src   = unpack_32_1x64 (s);
-            __m64 alpha = _mm_movepi64_pi64 (xmmAlpha);
-            __m64 mask  = _mm_movepi64_pi64 (xmmMask);
+            __m64 alpha = _mm_movepi64_pi64 (xmm_alpha);
+            __m64 mask  = _mm_movepi64_pi64 (xmm_mask);
             __m64 dest  = unpack_32_1x64 (d);
 
-            *dst++ = pack_1x64_32 (inOver_1x64 (&src,
+            *dst++ = pack_1x64_32 (in_over_1x64 (&src,
                                                 &alpha,
                                                 &mask,
                                                 &dest));
@@ -2983,24 +2983,24 @@ fbCompositeSrc_x888xnx8888sse2 (pixman_implementation_t *imp,
         }
 
         /* call prefetch hint to optimize cache load*/
-        cachePrefetch ((__m128i*)dst);
-        cachePrefetch ((__m128i*)src);
+        cache_prefetch ((__m128i*)dst);
+        cache_prefetch ((__m128i*)src);
 
         while (w >= 4)
         {
             /* fill cache line with next memory */
-            cachePrefetchNext ((__m128i*)dst);
-            cachePrefetchNext ((__m128i*)src);
+            cache_prefetch_next ((__m128i*)dst);
+            cache_prefetch_next ((__m128i*)src);
 
-            xmmSrc = _mm_or_si128 (load128Unaligned ((__m128i*)src), Maskff000000);
-            xmmDst = load128Aligned ((__m128i*)dst);
+            xmm_src = _mm_or_si128 (load_128_unaligned ((__m128i*)src), mask_ff000000);
+            xmm_dst = load_128_aligned ((__m128i*)dst);
 
-            unpack_128_2x128 (xmmSrc, &xmmSrcLo, &xmmSrcHi);
-            unpack_128_2x128 (xmmDst, &xmmDstLo, &xmmDstHi);
+            unpack_128_2x128 (xmm_src, &xmm_src_lo, &xmm_src_hi);
+            unpack_128_2x128 (xmm_dst, &xmm_dst_lo, &xmm_dst_hi);
 
-            inOver_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmAlpha, &xmmAlpha, &xmmMask, &xmmMask, &xmmDstLo, &xmmDstHi);
+            in_over_2x128 (&xmm_src_lo, &xmm_src_hi, &xmm_alpha, &xmm_alpha, &xmm_mask, &xmm_mask, &xmm_dst_lo, &xmm_dst_hi);
 
-            save128Aligned( (__m128i*)dst, pack_2x128_128 (xmmDstLo, xmmDstHi));
+            save_128_aligned( (__m128i*)dst, pack_2x128_128 (xmm_dst_lo, xmm_dst_hi));
 
             dst += 4;
             src += 4;
@@ -3014,11 +3014,11 @@ fbCompositeSrc_x888xnx8888sse2 (pixman_implementation_t *imp,
             uint32_t d = *dst;
 
             __m64 src  = unpack_32_1x64 (s);
-            __m64 alpha = _mm_movepi64_pi64 (xmmAlpha);
-            __m64 mask  = _mm_movepi64_pi64 (xmmMask);
+            __m64 alpha = _mm_movepi64_pi64 (xmm_alpha);
+            __m64 mask  = _mm_movepi64_pi64 (xmm_mask);
             __m64 dest  = unpack_32_1x64 (d);
 
-            *dst++ = pack_1x64_32 (inOver_1x64 (&src,
+            *dst++ = pack_1x64_32 (in_over_1x64 (&src,
                                                 &alpha,
                                                 &mask,
                                                 &dest));
@@ -3031,83 +3031,83 @@ fbCompositeSrc_x888xnx8888sse2 (pixman_implementation_t *imp,
 }
 
 /* -------------------------------------------------------------------------------------------------
- * fbCompositeSrc_8888x8888
+ * fast_composite_over_8888_8888
  */
 static void
-fbCompositeSrc_8888x8888sse2 (pixman_implementation_t *imp,
+sse2_composite_over_8888_8888 (pixman_implementation_t *imp,
 			      pixman_op_t op,
-			     pixman_image_t * pSrc,
-			     pixman_image_t * pMask,
-			     pixman_image_t * pDst,
-			     int32_t	xSrc,
-			     int32_t	ySrc,
-			     int32_t      xMask,
-			     int32_t      yMask,
-			     int32_t      xDst,
-			     int32_t      yDst,
+			     pixman_image_t * src_image,
+			     pixman_image_t * mask_image,
+			     pixman_image_t * dst_image,
+			     int32_t	src_x,
+			     int32_t	src_y,
+			     int32_t      mask_x,
+			     int32_t      mask_y,
+			     int32_t      dest_x,
+			     int32_t      dest_y,
 			     int32_t     width,
 			     int32_t     height)
 {
-    int	        dstStride, srcStride;
-    uint32_t	*dstLine, *dst;
-    uint32_t	*srcLine, *src;
+    int	        dst_stride, src_stride;
+    uint32_t	*dst_line, *dst;
+    uint32_t	*src_line, *src;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint32_t, dst_stride, dst_line, 1);
+    PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint32_t, src_stride, src_line, 1);
 
-    dst = dstLine;
-    src = srcLine;
+    dst = dst_line;
+    src = src_line;
 
     while (height--)
     {
-        coreCombineOverUsse2 (dst, src, NULL, width);
+        core_combine_over_u_sse2 (dst, src, NULL, width);
 
-        dst += dstStride;
-        src += srcStride;
+        dst += dst_stride;
+        src += src_stride;
     }
     _mm_empty();
 }
 
 /* -------------------------------------------------------------------------------------------------
- * fbCompositeSrc_8888x0565
+ * fast_composite_over_8888_0565
  */
 static force_inline uint16_t
-fbCompositeSrc_8888x0565pixel (uint32_t src, uint16_t dst)
+fast_composite_over_8888_0565pixel (uint32_t src, uint16_t dst)
 {
     __m64       ms;
 
     ms = unpack_32_1x64 (src);
-    return pack565_32_16( pack_1x64_32 (over_1x64 (ms,
-                                                   expandAlpha_1x64 (ms),
+    return pack_565_32_16( pack_1x64_32 (over_1x64 (ms,
+                                                   expand_alpha_1x64 (ms),
                                                    expand565_16_1x64 (dst))));
 }
 
 static void
-fbCompositeSrc_8888x0565sse2 (pixman_implementation_t *imp,
+sse2_composite_over_8888_0565 (pixman_implementation_t *imp,
 			      pixman_op_t op,
-			     pixman_image_t * pSrc,
-			     pixman_image_t * pMask,
-			     pixman_image_t * pDst,
-			     int32_t      xSrc,
-			     int32_t      ySrc,
-			     int32_t      xMask,
-			     int32_t      yMask,
-			     int32_t      xDst,
-			     int32_t      yDst,
+			     pixman_image_t * src_image,
+			     pixman_image_t * mask_image,
+			     pixman_image_t * dst_image,
+			     int32_t      src_x,
+			     int32_t      src_y,
+			     int32_t      mask_x,
+			     int32_t      mask_y,
+			     int32_t      dest_x,
+			     int32_t      dest_y,
 			     int32_t     width,
 			     int32_t     height)
 {
-    uint16_t	*dstLine, *dst, d;
-    uint32_t	*srcLine, *src, s;
-    int	dstStride, srcStride;
+    uint16_t	*dst_line, *dst, d;
+    uint32_t	*src_line, *src, s;
+    int	dst_stride, src_stride;
     uint16_t	w;
 
-    __m128i xmmAlphaLo, xmmAlphaHi;
-    __m128i xmmSrc, xmmSrcLo, xmmSrcHi;
-    __m128i xmmDst, xmmDst0, xmmDst1, xmmDst2, xmmDst3;
+    __m128i xmm_alpha_lo, xmm_alpha_hi;
+    __m128i xmm_src, xmm_src_lo, xmm_src_hi;
+    __m128i xmm_dst, xmm_dst0, xmm_dst1, xmm_dst2, xmm_dst3;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint16_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint16_t, dst_stride, dst_line, 1);
+    PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint32_t, src_stride, src_line, 1);
 
 #if 0
     /* FIXME
@@ -3115,20 +3115,20 @@ fbCompositeSrc_8888x0565sse2 (pixman_implementation_t *imp,
      * I copy the code from MMX one and keep the fixme.
      * If it's a problem there, probably is a problem here.
      */
-    assert (pSrc->pDrawable == pMask->pDrawable);
+    assert (src_image->drawable == mask_image->drawable);
 #endif
 
     while (height--)
     {
-        dst = dstLine;
-        src = srcLine;
+        dst = dst_line;
+        src = src_line;
 
         /* call prefetch hint to optimize cache load*/
-        cachePrefetch ((__m128i*)src);
-        cachePrefetch ((__m128i*)dst);
+        cache_prefetch ((__m128i*)src);
+        cache_prefetch ((__m128i*)dst);
 
-        dstLine += dstStride;
-        srcLine += srcStride;
+        dst_line += dst_stride;
+        src_line += src_stride;
         w = width;
 
         /* Align dst on a 16-byte boundary */
@@ -3138,42 +3138,42 @@ fbCompositeSrc_8888x0565sse2 (pixman_implementation_t *imp,
             s = *src++;
             d = *dst;
 
-            *dst++ = fbCompositeSrc_8888x0565pixel (s, d);
+            *dst++ = fast_composite_over_8888_0565pixel (s, d);
             w--;
         }
 
         /* call prefetch hint to optimize cache load*/
-        cachePrefetch ((__m128i*)src);
-        cachePrefetch ((__m128i*)dst);
+        cache_prefetch ((__m128i*)src);
+        cache_prefetch ((__m128i*)dst);
 
         /* It's a 8 pixel loop */
         while (w >= 8)
         {
             /* fill cache line with next memory */
-            cachePrefetchNext ((__m128i*)src);
-            cachePrefetchNext ((__m128i*)dst);
+            cache_prefetch_next ((__m128i*)src);
+            cache_prefetch_next ((__m128i*)dst);
 
             /* I'm loading unaligned because I'm not sure about the address alignment. */
-            xmmSrc = load128Unaligned ((__m128i*) src);
-            xmmDst = load128Aligned ((__m128i*) dst);
+            xmm_src = load_128_unaligned ((__m128i*) src);
+            xmm_dst = load_128_aligned ((__m128i*) dst);
 
             /* Unpacking */
-            unpack_128_2x128 (xmmSrc, &xmmSrcLo, &xmmSrcHi);
-            unpack565_128_4x128 (xmmDst, &xmmDst0, &xmmDst1, &xmmDst2, &xmmDst3);
-            expandAlpha_2x128 (xmmSrcLo, xmmSrcHi, &xmmAlphaLo, &xmmAlphaHi);
+            unpack_128_2x128 (xmm_src, &xmm_src_lo, &xmm_src_hi);
+            unpack_565_128_4x128 (xmm_dst, &xmm_dst0, &xmm_dst1, &xmm_dst2, &xmm_dst3);
+            expand_alpha_2x128 (xmm_src_lo, xmm_src_hi, &xmm_alpha_lo, &xmm_alpha_hi);
 
             /* I'm loading next 4 pixels from memory before to optimze the memory read. */
-            xmmSrc = load128Unaligned ((__m128i*) (src+4));
+            xmm_src = load_128_unaligned ((__m128i*) (src+4));
 
-            over_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmAlphaLo, &xmmAlphaHi, &xmmDst0, &xmmDst1);
+            over_2x128 (&xmm_src_lo, &xmm_src_hi, &xmm_alpha_lo, &xmm_alpha_hi, &xmm_dst0, &xmm_dst1);
 
             /* Unpacking */
-            unpack_128_2x128 (xmmSrc, &xmmSrcLo, &xmmSrcHi);
-            expandAlpha_2x128 (xmmSrcLo, xmmSrcHi, &xmmAlphaLo, &xmmAlphaHi);
+            unpack_128_2x128 (xmm_src, &xmm_src_lo, &xmm_src_hi);
+            expand_alpha_2x128 (xmm_src_lo, xmm_src_hi, &xmm_alpha_lo, &xmm_alpha_hi);
 
-            over_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmAlphaLo, &xmmAlphaHi, &xmmDst2, &xmmDst3);
+            over_2x128 (&xmm_src_lo, &xmm_src_hi, &xmm_alpha_lo, &xmm_alpha_hi, &xmm_dst2, &xmm_dst3);
 
-            save128Aligned ((__m128i*)dst, pack565_4x128_128 (&xmmDst0, &xmmDst1, &xmmDst2, &xmmDst3));
+            save_128_aligned ((__m128i*)dst, pack_565_4x128_128 (&xmm_dst0, &xmm_dst1, &xmm_dst2, &xmm_dst3));
 
             w -= 8;
             dst += 8;
@@ -3185,7 +3185,7 @@ fbCompositeSrc_8888x0565sse2 (pixman_implementation_t *imp,
             s = *src++;
             d = *dst;
 
-            *dst++ = fbCompositeSrc_8888x0565pixel (s, d);
+            *dst++ = fast_composite_over_8888_0565pixel (s, d);
         }
     }
 
@@ -3193,63 +3193,63 @@ fbCompositeSrc_8888x0565sse2 (pixman_implementation_t *imp,
 }
 
 /* -------------------------------------------------------------------------------------------------
- * fbCompositeSolidMask_nx8x8888
+ * fast_composite_over_n_8_8888
  */
 
 static void
-fbCompositeSolidMask_nx8x8888sse2 (pixman_implementation_t *imp,
+sse2_composite_over_n_8_8888 (pixman_implementation_t *imp,
 				   pixman_op_t op,
-				  pixman_image_t * pSrc,
-				  pixman_image_t * pMask,
-				  pixman_image_t * pDst,
-				  int32_t      xSrc,
-				  int32_t      ySrc,
-				  int32_t      xMask,
-				  int32_t      yMask,
-				  int32_t      xDst,
-				  int32_t      yDst,
+				  pixman_image_t * src_image,
+				  pixman_image_t * mask_image,
+				  pixman_image_t * dst_image,
+				  int32_t      src_x,
+				  int32_t      src_y,
+				  int32_t      mask_x,
+				  int32_t      mask_y,
+				  int32_t      dest_x,
+				  int32_t      dest_y,
 				  int32_t     width,
 				  int32_t     height)
 {
     uint32_t	src, srca;
-    uint32_t	*dstLine, *dst;
-    uint8_t	*maskLine, *mask;
-    int	dstStride, maskStride;
+    uint32_t	*dst_line, *dst;
+    uint8_t	*mask_line, *mask;
+    int	dst_stride, mask_stride;
     uint16_t	w;
     uint32_t m, d;
 
-    __m128i xmmSrc, xmmAlpha, xmmDef;
-    __m128i xmmDst, xmmDstLo, xmmDstHi;
-    __m128i xmmMask, xmmMaskLo, xmmMaskHi;
+    __m128i xmm_src, xmm_alpha, xmm_def;
+    __m128i xmm_dst, xmm_dst_lo, xmm_dst_hi;
+    __m128i xmm_mask, xmm_mask_lo, xmm_mask_hi;
 
-    __m64 mmxSrc, mmxAlpha, mmxMask, mmxDest;
+    __m64 mmx_src, mmx_alpha, mmx_mask, mmx_dest;
 
-    src = _pixman_image_get_solid(pSrc, pDst->bits.format);
+    src = _pixman_image_get_solid(src_image, dst_image->bits.format);
 
     srca = src >> 24;
     if (src == 0)
 	return;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pMask, xMask, yMask, uint8_t, maskStride, maskLine, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint32_t, dst_stride, dst_line, 1);
+    PIXMAN_IMAGE_GET_LINE (mask_image, mask_x, mask_y, uint8_t, mask_stride, mask_line, 1);
 
-    xmmDef = createMask_2x32_128 (src, src);
-    xmmSrc = expandPixel_32_1x128 (src);
-    xmmAlpha = expandAlpha_1x128 (xmmSrc);
-    mmxSrc   = _mm_movepi64_pi64 (xmmSrc);
-    mmxAlpha = _mm_movepi64_pi64 (xmmAlpha);
+    xmm_def = create_mask_2x32_128 (src, src);
+    xmm_src = expand_pixel_32_1x128 (src);
+    xmm_alpha = expand_alpha_1x128 (xmm_src);
+    mmx_src   = _mm_movepi64_pi64 (xmm_src);
+    mmx_alpha = _mm_movepi64_pi64 (xmm_alpha);
 
     while (height--)
     {
-        dst = dstLine;
-        dstLine += dstStride;
-        mask = maskLine;
-        maskLine += maskStride;
+        dst = dst_line;
+        dst_line += dst_stride;
+        mask = mask_line;
+        mask_line += mask_stride;
         w = width;
 
         /* call prefetch hint to optimize cache load*/
-        cachePrefetch ((__m128i*)mask);
-        cachePrefetch ((__m128i*)dst);
+        cache_prefetch ((__m128i*)mask);
+        cache_prefetch ((__m128i*)dst);
 
         while (w && (unsigned long)dst & 15)
         {
@@ -3258,13 +3258,13 @@ fbCompositeSolidMask_nx8x8888sse2 (pixman_implementation_t *imp,
             if (m)
             {
                 d = *dst;
-                mmxMask = expandPixel_8_1x64 (m);
-                mmxDest = unpack_32_1x64 (d);
+                mmx_mask = expand_pixel_8_1x64 (m);
+                mmx_dest = unpack_32_1x64 (d);
 
-                *dst = pack_1x64_32 (inOver_1x64 (&mmxSrc,
-                                                  &mmxAlpha,
-                                                  &mmxMask,
-                                                  &mmxDest));
+                *dst = pack_1x64_32 (in_over_1x64 (&mmx_src,
+                                                  &mmx_alpha,
+                                                  &mmx_mask,
+                                                  &mmx_dest));
             }
 
             w--;
@@ -3272,36 +3272,36 @@ fbCompositeSolidMask_nx8x8888sse2 (pixman_implementation_t *imp,
         }
 
         /* call prefetch hint to optimize cache load*/
-        cachePrefetch ((__m128i*)mask);
-        cachePrefetch ((__m128i*)dst);
+        cache_prefetch ((__m128i*)mask);
+        cache_prefetch ((__m128i*)dst);
 
         while (w >= 4)
         {
             /* fill cache line with next memory */
-            cachePrefetchNext ((__m128i*)mask);
-            cachePrefetchNext ((__m128i*)dst);
+            cache_prefetch_next ((__m128i*)mask);
+            cache_prefetch_next ((__m128i*)dst);
 
             m = *((uint32_t*)mask);
 
             if (srca == 0xff && m == 0xffffffff)
             {
-                save128Aligned ((__m128i*)dst, xmmDef);
+                save_128_aligned ((__m128i*)dst, xmm_def);
             }
             else if (m)
             {
-                xmmDst = load128Aligned ((__m128i*) dst);
-                xmmMask = unpack_32_1x128 (m);
-                xmmMask = _mm_unpacklo_epi8 (xmmMask, _mm_setzero_si128());
+                xmm_dst = load_128_aligned ((__m128i*) dst);
+                xmm_mask = unpack_32_1x128 (m);
+                xmm_mask = _mm_unpacklo_epi8 (xmm_mask, _mm_setzero_si128());
 
                 /* Unpacking */
-                unpack_128_2x128 (xmmDst, &xmmDstLo, &xmmDstHi);
-                unpack_128_2x128 (xmmMask, &xmmMaskLo, &xmmMaskHi);
+                unpack_128_2x128 (xmm_dst, &xmm_dst_lo, &xmm_dst_hi);
+                unpack_128_2x128 (xmm_mask, &xmm_mask_lo, &xmm_mask_hi);
 
-                expandAlphaRev_2x128 (xmmMaskLo, xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
+                expand_alpha_rev_2x128 (xmm_mask_lo, xmm_mask_hi, &xmm_mask_lo, &xmm_mask_hi);
 
-                inOver_2x128 (&xmmSrc, &xmmSrc, &xmmAlpha, &xmmAlpha, &xmmMaskLo, &xmmMaskHi, &xmmDstLo, &xmmDstHi);
+                in_over_2x128 (&xmm_src, &xmm_src, &xmm_alpha, &xmm_alpha, &xmm_mask_lo, &xmm_mask_hi, &xmm_dst_lo, &xmm_dst_hi);
 
-                save128Aligned ((__m128i*)dst, pack_2x128_128 (xmmDstLo, xmmDstHi));
+                save_128_aligned ((__m128i*)dst, pack_2x128_128 (xmm_dst_lo, xmm_dst_hi));
             }
 
             w -= 4;
@@ -3316,13 +3316,13 @@ fbCompositeSolidMask_nx8x8888sse2 (pixman_implementation_t *imp,
             if (m)
             {
                 d = *dst;
-                mmxMask = expandPixel_8_1x64 (m);
-                mmxDest = unpack_32_1x64 (d);
+                mmx_mask = expand_pixel_8_1x64 (m);
+                mmx_dest = unpack_32_1x64 (d);
 
-                *dst = pack_1x64_32 (inOver_1x64 (&mmxSrc,
-                                                  &mmxAlpha,
-                                                  &mmxMask,
-                                                  &mmxDest));
+                *dst = pack_1x64_32 (in_over_1x64 (&mmx_src,
+                                                  &mmx_alpha,
+                                                  &mmx_mask,
+                                                  &mmx_dest));
             }
 
             w--;
@@ -3334,11 +3334,11 @@ fbCompositeSolidMask_nx8x8888sse2 (pixman_implementation_t *imp,
 }
 
 /* -------------------------------------------------------------------------------------------------
- * fbCompositeSolidMask_nx8x8888
+ * fast_composite_over_n_8_8888
  */
 
 pixman_bool_t
-pixmanFillsse2 (uint32_t *bits,
+pixman_fill_sse2 (uint32_t *bits,
 		 int stride,
 		 int bpp,
 		 int x,
@@ -3350,7 +3350,7 @@ pixmanFillsse2 (uint32_t *bits,
     uint32_t	byte_width;
     uint8_t	    *byte_line;
 
-    __m128i xmmDef;
+    __m128i xmm_def;
 
     if (bpp == 16 && (data >> 16 != (data & 0xffff)))
 	return FALSE;
@@ -3373,8 +3373,8 @@ pixmanFillsse2 (uint32_t *bits,
         stride *= 4;
     }
 
-    cachePrefetch ((__m128i*)byte_line);
-    xmmDef = createMask_2x32_128 (data, data);
+    cache_prefetch ((__m128i*)byte_line);
+    xmm_def = create_mask_2x32_128 (data, data);
 
     while (height--)
     {
@@ -3384,7 +3384,7 @@ pixmanFillsse2 (uint32_t *bits,
         w = byte_width;
 
 
-        cachePrefetchNext ((__m128i*)d);
+        cache_prefetch_next ((__m128i*)d);
 
         while (w >= 2 && ((unsigned long)d & 3))
         {
@@ -3401,20 +3401,20 @@ pixmanFillsse2 (uint32_t *bits,
             d += 4;
         }
 
-        cachePrefetchNext ((__m128i*)d);
+        cache_prefetch_next ((__m128i*)d);
 
         while (w >= 128)
         {
-            cachePrefetch (((__m128i*)d) + 12);
+            cache_prefetch (((__m128i*)d) + 12);
 
-            save128Aligned ((__m128i*)(d),     xmmDef);
-            save128Aligned ((__m128i*)(d+16),  xmmDef);
-            save128Aligned ((__m128i*)(d+32),  xmmDef);
-            save128Aligned ((__m128i*)(d+48),  xmmDef);
-            save128Aligned ((__m128i*)(d+64),  xmmDef);
-            save128Aligned ((__m128i*)(d+80),  xmmDef);
-            save128Aligned ((__m128i*)(d+96),  xmmDef);
-            save128Aligned ((__m128i*)(d+112), xmmDef);
+            save_128_aligned ((__m128i*)(d),     xmm_def);
+            save_128_aligned ((__m128i*)(d+16),  xmm_def);
+            save_128_aligned ((__m128i*)(d+32),  xmm_def);
+            save_128_aligned ((__m128i*)(d+48),  xmm_def);
+            save_128_aligned ((__m128i*)(d+64),  xmm_def);
+            save_128_aligned ((__m128i*)(d+80),  xmm_def);
+            save_128_aligned ((__m128i*)(d+96),  xmm_def);
+            save_128_aligned ((__m128i*)(d+112), xmm_def);
 
             d += 128;
             w -= 128;
@@ -3422,23 +3422,23 @@ pixmanFillsse2 (uint32_t *bits,
 
         if (w >= 64)
         {
-            cachePrefetch (((__m128i*)d) + 8);
+            cache_prefetch (((__m128i*)d) + 8);
 
-            save128Aligned ((__m128i*)(d),     xmmDef);
-            save128Aligned ((__m128i*)(d+16),  xmmDef);
-            save128Aligned ((__m128i*)(d+32),  xmmDef);
-            save128Aligned ((__m128i*)(d+48),  xmmDef);
+            save_128_aligned ((__m128i*)(d),     xmm_def);
+            save_128_aligned ((__m128i*)(d+16),  xmm_def);
+            save_128_aligned ((__m128i*)(d+32),  xmm_def);
+            save_128_aligned ((__m128i*)(d+48),  xmm_def);
 
             d += 64;
             w -= 64;
         }
 
-        cachePrefetchNext ((__m128i*)d);
+        cache_prefetch_next ((__m128i*)d);
 
         if (w >= 32)
         {
-            save128Aligned ((__m128i*)(d),     xmmDef);
-            save128Aligned ((__m128i*)(d+16),  xmmDef);
+            save_128_aligned ((__m128i*)(d),     xmm_def);
+            save_128_aligned ((__m128i*)(d+16),  xmm_def);
 
             d += 32;
             w -= 32;
@@ -3446,13 +3446,13 @@ pixmanFillsse2 (uint32_t *bits,
 
         if (w >= 16)
         {
-            save128Aligned ((__m128i*)(d),     xmmDef);
+            save_128_aligned ((__m128i*)(d),     xmm_def);
 
             d += 16;
             w -= 16;
         }
 
-        cachePrefetchNext ((__m128i*)d);
+        cache_prefetch_next ((__m128i*)d);
 
         while (w >= 4)
         {
@@ -3475,58 +3475,58 @@ pixmanFillsse2 (uint32_t *bits,
 }
 
 static void
-fbCompositeSolidMaskSrc_nx8x8888sse2 (pixman_implementation_t *imp,
+sse2_composite_src_n_8_8888 (pixman_implementation_t *imp,
 				      pixman_op_t op,
-				     pixman_image_t * pSrc,
-				     pixman_image_t * pMask,
-				     pixman_image_t * pDst,
-				     int32_t      xSrc,
-				     int32_t      ySrc,
-				     int32_t      xMask,
-				     int32_t      yMask,
-				     int32_t      xDst,
-				     int32_t      yDst,
+				     pixman_image_t * src_image,
+				     pixman_image_t * mask_image,
+				     pixman_image_t * dst_image,
+				     int32_t      src_x,
+				     int32_t      src_y,
+				     int32_t      mask_x,
+				     int32_t      mask_y,
+				     int32_t      dest_x,
+				     int32_t      dest_y,
 				     int32_t     width,
 				     int32_t     height)
 {
     uint32_t	src, srca;
-    uint32_t	*dstLine, *dst;
-    uint8_t	*maskLine, *mask;
-    int	dstStride, maskStride;
+    uint32_t	*dst_line, *dst;
+    uint8_t	*mask_line, *mask;
+    int	dst_stride, mask_stride;
     uint16_t	w;
     uint32_t    m;
 
-    __m128i xmmSrc, xmmDef;
-    __m128i xmmMask, xmmMaskLo, xmmMaskHi;
+    __m128i xmm_src, xmm_def;
+    __m128i xmm_mask, xmm_mask_lo, xmm_mask_hi;
 
-    src = _pixman_image_get_solid(pSrc, pDst->bits.format);
+    src = _pixman_image_get_solid(src_image, dst_image->bits.format);
 
     srca = src >> 24;
     if (src == 0)
     {
-        pixmanFillsse2 (pDst->bits.bits, pDst->bits.rowstride,
-                        PIXMAN_FORMAT_BPP (pDst->bits.format),
-                        xDst, yDst, width, height, 0);
+        pixman_fill_sse2 (dst_image->bits.bits, dst_image->bits.rowstride,
+                        PIXMAN_FORMAT_BPP (dst_image->bits.format),
+                        dest_x, dest_y, width, height, 0);
         return;
     }
 
-    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pMask, xMask, yMask, uint8_t, maskStride, maskLine, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint32_t, dst_stride, dst_line, 1);
+    PIXMAN_IMAGE_GET_LINE (mask_image, mask_x, mask_y, uint8_t, mask_stride, mask_line, 1);
 
-    xmmDef = createMask_2x32_128 (src, src);
-    xmmSrc = expandPixel_32_1x128 (src);
+    xmm_def = create_mask_2x32_128 (src, src);
+    xmm_src = expand_pixel_32_1x128 (src);
 
     while (height--)
     {
-        dst = dstLine;
-        dstLine += dstStride;
-        mask = maskLine;
-        maskLine += maskStride;
+        dst = dst_line;
+        dst_line += dst_stride;
+        mask = mask_line;
+        mask_line += mask_stride;
         w = width;
 
         /* call prefetch hint to optimize cache load*/
-        cachePrefetch ((__m128i*)mask);
-        cachePrefetch ((__m128i*)dst);
+        cache_prefetch ((__m128i*)mask);
+        cache_prefetch ((__m128i*)dst);
 
         while (w && (unsigned long)dst & 15)
         {
@@ -3534,7 +3534,7 @@ fbCompositeSolidMaskSrc_nx8x8888sse2 (pixman_implementation_t *imp,
 
             if (m)
             {
-                *dst = pack_1x64_32 (pixMultiply_1x64 (_mm_movepi64_pi64 (xmmSrc), expandPixel_8_1x64 (m)));
+                *dst = pack_1x64_32 (pix_multiply_1x64 (_mm_movepi64_pi64 (xmm_src), expand_pixel_8_1x64 (m)));
             }
             else
             {
@@ -3546,38 +3546,38 @@ fbCompositeSolidMaskSrc_nx8x8888sse2 (pixman_implementation_t *imp,
         }
 
         /* call prefetch hint to optimize cache load*/
-        cachePrefetch ((__m128i*)mask);
-        cachePrefetch ((__m128i*)dst);
+        cache_prefetch ((__m128i*)mask);
+        cache_prefetch ((__m128i*)dst);
 
         while (w >= 4)
         {
             /* fill cache line with next memory */
-            cachePrefetchNext ((__m128i*)mask);
-            cachePrefetchNext ((__m128i*)dst);
+            cache_prefetch_next ((__m128i*)mask);
+            cache_prefetch_next ((__m128i*)dst);
 
             m = *((uint32_t*)mask);
 
             if (srca == 0xff && m == 0xffffffff)
             {
-                save128Aligned ((__m128i*)dst, xmmDef);
+                save_128_aligned ((__m128i*)dst, xmm_def);
             }
             else if (m)
             {
-                xmmMask = unpack_32_1x128 (m);
-                xmmMask = _mm_unpacklo_epi8 (xmmMask, _mm_setzero_si128());
+                xmm_mask = unpack_32_1x128 (m);
+                xmm_mask = _mm_unpacklo_epi8 (xmm_mask, _mm_setzero_si128());
 
                 /* Unpacking */
-                unpack_128_2x128 (xmmMask, &xmmMaskLo, &xmmMaskHi);
+                unpack_128_2x128 (xmm_mask, &xmm_mask_lo, &xmm_mask_hi);
 
-                expandAlphaRev_2x128 (xmmMaskLo, xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
+                expand_alpha_rev_2x128 (xmm_mask_lo, xmm_mask_hi, &xmm_mask_lo, &xmm_mask_hi);
 
-                pixMultiply_2x128 (&xmmSrc, &xmmSrc, &xmmMaskLo, &xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
+                pix_multiply_2x128 (&xmm_src, &xmm_src, &xmm_mask_lo, &xmm_mask_hi, &xmm_mask_lo, &xmm_mask_hi);
 
-                save128Aligned ((__m128i*)dst, pack_2x128_128 (xmmMaskLo, xmmMaskHi));
+                save_128_aligned ((__m128i*)dst, pack_2x128_128 (xmm_mask_lo, xmm_mask_hi));
             }
             else
             {
-                save128Aligned ((__m128i*)dst, _mm_setzero_si128());
+                save_128_aligned ((__m128i*)dst, _mm_setzero_si128());
             }
 
             w -= 4;
@@ -3591,7 +3591,7 @@ fbCompositeSolidMaskSrc_nx8x8888sse2 (pixman_implementation_t *imp,
 
             if (m)
             {
-                *dst = pack_1x64_32 (pixMultiply_1x64 (_mm_movepi64_pi64 (xmmSrc), expandPixel_8_1x64 (m)));
+                *dst = pack_1x64_32 (pix_multiply_1x64 (_mm_movepi64_pi64 (xmm_src), expand_pixel_8_1x64 (m)));
             }
             else
             {
@@ -3607,61 +3607,61 @@ fbCompositeSolidMaskSrc_nx8x8888sse2 (pixman_implementation_t *imp,
 }
 
 /* -------------------------------------------------------------------------------------------------
- * fbCompositeSolidMask_nx8x0565
+ * fast_composite_over_n_8_0565
  */
 
 static void
-fbCompositeSolidMask_nx8x0565sse2 (pixman_implementation_t *imp,
+sse2_composite_over_n_8_0565 (pixman_implementation_t *imp,
 				   pixman_op_t op,
-				  pixman_image_t * pSrc,
-				  pixman_image_t * pMask,
-				  pixman_image_t * pDst,
-				  int32_t      xSrc,
-				  int32_t      ySrc,
-				  int32_t      xMask,
-				  int32_t      yMask,
-				  int32_t      xDst,
-				  int32_t      yDst,
+				  pixman_image_t * src_image,
+				  pixman_image_t * mask_image,
+				  pixman_image_t * dst_image,
+				  int32_t      src_x,
+				  int32_t      src_y,
+				  int32_t      mask_x,
+				  int32_t      mask_y,
+				  int32_t      dest_x,
+				  int32_t      dest_y,
 				  int32_t     width,
 				  int32_t     height)
 {
     uint32_t	src, srca;
-    uint16_t	*dstLine, *dst, d;
-    uint8_t	*maskLine, *mask;
-    int	dstStride, maskStride;
+    uint16_t	*dst_line, *dst, d;
+    uint8_t	*mask_line, *mask;
+    int	dst_stride, mask_stride;
     uint16_t	w;
     uint32_t m;
-    __m64 mmxSrc, mmxAlpha, mmxMask, mmxDest;
+    __m64 mmx_src, mmx_alpha, mmx_mask, mmx_dest;
 
-    __m128i xmmSrc, xmmAlpha;
-    __m128i xmmMask, xmmMaskLo, xmmMaskHi;
-    __m128i xmmDst, xmmDst0, xmmDst1, xmmDst2, xmmDst3;
+    __m128i xmm_src, xmm_alpha;
+    __m128i xmm_mask, xmm_mask_lo, xmm_mask_hi;
+    __m128i xmm_dst, xmm_dst0, xmm_dst1, xmm_dst2, xmm_dst3;
 
-    src = _pixman_image_get_solid(pSrc, pDst->bits.format);
+    src = _pixman_image_get_solid(src_image, dst_image->bits.format);
 
     srca = src >> 24;
     if (src == 0)
 	return;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint16_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pMask, xMask, yMask, uint8_t, maskStride, maskLine, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint16_t, dst_stride, dst_line, 1);
+    PIXMAN_IMAGE_GET_LINE (mask_image, mask_x, mask_y, uint8_t, mask_stride, mask_line, 1);
 
-    xmmSrc = expandPixel_32_1x128 (src);
-    xmmAlpha = expandAlpha_1x128 (xmmSrc);
-    mmxSrc = _mm_movepi64_pi64 (xmmSrc);
-    mmxAlpha = _mm_movepi64_pi64 (xmmAlpha);
+    xmm_src = expand_pixel_32_1x128 (src);
+    xmm_alpha = expand_alpha_1x128 (xmm_src);
+    mmx_src = _mm_movepi64_pi64 (xmm_src);
+    mmx_alpha = _mm_movepi64_pi64 (xmm_alpha);
 
     while (height--)
     {
-        dst = dstLine;
-        dstLine += dstStride;
-        mask = maskLine;
-        maskLine += maskStride;
+        dst = dst_line;
+        dst_line += dst_stride;
+        mask = mask_line;
+        mask_line += mask_stride;
         w = width;
 
         /* call prefetch hint to optimize cache load*/
-        cachePrefetch ((__m128i*)mask);
-        cachePrefetch ((__m128i*)dst);
+        cache_prefetch ((__m128i*)mask);
+        cache_prefetch ((__m128i*)dst);
 
         while (w && (unsigned long)dst & 15)
         {
@@ -3670,13 +3670,13 @@ fbCompositeSolidMask_nx8x0565sse2 (pixman_implementation_t *imp,
             if (m)
             {
                 d = *dst;
-                mmxMask = expandAlphaRev_1x64 (unpack_32_1x64 (m));
-                mmxDest = expand565_16_1x64 (d);
+                mmx_mask = expand_alpha_rev_1x64 (unpack_32_1x64 (m));
+                mmx_dest = expand565_16_1x64 (d);
 
-                *dst = pack565_32_16 (pack_1x64_32 (inOver_1x64 (&mmxSrc,
-                                                                 &mmxAlpha,
-                                                                 &mmxMask,
-                                                                 &mmxDest)));
+                *dst = pack_565_32_16 (pack_1x64_32 (in_over_1x64 (&mmx_src,
+                                                                 &mmx_alpha,
+                                                                 &mmx_mask,
+                                                                 &mmx_dest)));
             }
 
             w--;
@@ -3684,31 +3684,31 @@ fbCompositeSolidMask_nx8x0565sse2 (pixman_implementation_t *imp,
         }
 
         /* call prefetch hint to optimize cache load*/
-        cachePrefetch ((__m128i*)mask);
-        cachePrefetch ((__m128i*)dst);
+        cache_prefetch ((__m128i*)mask);
+        cache_prefetch ((__m128i*)dst);
 
         while (w >= 8)
         {
             /* fill cache line with next memory */
-            cachePrefetchNext ((__m128i*)mask);
-            cachePrefetchNext ((__m128i*)dst);
+            cache_prefetch_next ((__m128i*)mask);
+            cache_prefetch_next ((__m128i*)dst);
 
-            xmmDst = load128Aligned ((__m128i*) dst);
-            unpack565_128_4x128 (xmmDst, &xmmDst0, &xmmDst1, &xmmDst2, &xmmDst3);
+            xmm_dst = load_128_aligned ((__m128i*) dst);
+            unpack_565_128_4x128 (xmm_dst, &xmm_dst0, &xmm_dst1, &xmm_dst2, &xmm_dst3);
 
             m = *((uint32_t*)mask);
             mask += 4;
 
             if (m)
             {
-                xmmMask = unpack_32_1x128 (m);
-                xmmMask = _mm_unpacklo_epi8 (xmmMask, _mm_setzero_si128());
+                xmm_mask = unpack_32_1x128 (m);
+                xmm_mask = _mm_unpacklo_epi8 (xmm_mask, _mm_setzero_si128());
 
                 /* Unpacking */
-                unpack_128_2x128 (xmmMask, &xmmMaskLo, &xmmMaskHi);
+                unpack_128_2x128 (xmm_mask, &xmm_mask_lo, &xmm_mask_hi);
 
-                expandAlphaRev_2x128 (xmmMaskLo, xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
-                inOver_2x128 (&xmmSrc, &xmmSrc, &xmmAlpha, &xmmAlpha, &xmmMaskLo, &xmmMaskHi, &xmmDst0, &xmmDst1);
+                expand_alpha_rev_2x128 (xmm_mask_lo, xmm_mask_hi, &xmm_mask_lo, &xmm_mask_hi);
+                in_over_2x128 (&xmm_src, &xmm_src, &xmm_alpha, &xmm_alpha, &xmm_mask_lo, &xmm_mask_hi, &xmm_dst0, &xmm_dst1);
             }
 
             m = *((uint32_t*)mask);
@@ -3716,17 +3716,17 @@ fbCompositeSolidMask_nx8x0565sse2 (pixman_implementation_t *imp,
 
             if (m)
             {
-                xmmMask = unpack_32_1x128 (m);
-                xmmMask = _mm_unpacklo_epi8 (xmmMask, _mm_setzero_si128());
+                xmm_mask = unpack_32_1x128 (m);
+                xmm_mask = _mm_unpacklo_epi8 (xmm_mask, _mm_setzero_si128());
 
                 /* Unpacking */
-                unpack_128_2x128 (xmmMask, &xmmMaskLo, &xmmMaskHi);
+                unpack_128_2x128 (xmm_mask, &xmm_mask_lo, &xmm_mask_hi);
 
-                expandAlphaRev_2x128 (xmmMaskLo, xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
-                inOver_2x128 (&xmmSrc, &xmmSrc, &xmmAlpha, &xmmAlpha, &xmmMaskLo, &xmmMaskHi, &xmmDst2, &xmmDst3);
+                expand_alpha_rev_2x128 (xmm_mask_lo, xmm_mask_hi, &xmm_mask_lo, &xmm_mask_hi);
+                in_over_2x128 (&xmm_src, &xmm_src, &xmm_alpha, &xmm_alpha, &xmm_mask_lo, &xmm_mask_hi, &xmm_dst2, &xmm_dst3);
             }
 
-            save128Aligned ((__m128i*)dst, pack565_4x128_128 (&xmmDst0, &xmmDst1, &xmmDst2, &xmmDst3));
+            save_128_aligned ((__m128i*)dst, pack_565_4x128_128 (&xmm_dst0, &xmm_dst1, &xmm_dst2, &xmm_dst3));
 
             w -= 8;
             dst += 8;
@@ -3739,13 +3739,13 @@ fbCompositeSolidMask_nx8x0565sse2 (pixman_implementation_t *imp,
             if (m)
             {
                 d = *dst;
-                mmxMask = expandAlphaRev_1x64 (unpack_32_1x64 (m));
-                mmxDest = expand565_16_1x64 (d);
+                mmx_mask = expand_alpha_rev_1x64 (unpack_32_1x64 (m));
+                mmx_dest = expand565_16_1x64 (d);
 
-                *dst = pack565_32_16 (pack_1x64_32 (inOver_1x64 (&mmxSrc,
-                                                                 &mmxAlpha,
-                                                                 &mmxMask,
-                                                                 &mmxDest)));
+                *dst = pack_565_32_16 (pack_1x64_32 (in_over_1x64 (&mmx_src,
+                                                                 &mmx_alpha,
+                                                                 &mmx_mask,
+                                                                 &mmx_dest)));
             }
 
             w--;
@@ -3757,36 +3757,36 @@ fbCompositeSolidMask_nx8x0565sse2 (pixman_implementation_t *imp,
 }
 
 /* -------------------------------------------------------------------------------------------------
- * fbCompositeSrc_8888RevNPx0565
+ * fast_composite_over_pixbuf_0565
  */
 
 static void
-fbCompositeSrc_8888RevNPx0565sse2 (pixman_implementation_t *imp,
+sse2_composite_over_pixbuf_0565 (pixman_implementation_t *imp,
 				   pixman_op_t op,
-				  pixman_image_t * pSrc,
-				  pixman_image_t * pMask,
-				  pixman_image_t * pDst,
-				  int32_t      xSrc,
-				  int32_t      ySrc,
-				  int32_t      xMask,
-				  int32_t      yMask,
-				  int32_t      xDst,
-				  int32_t      yDst,
+				  pixman_image_t * src_image,
+				  pixman_image_t * mask_image,
+				  pixman_image_t * dst_image,
+				  int32_t      src_x,
+				  int32_t      src_y,
+				  int32_t      mask_x,
+				  int32_t      mask_y,
+				  int32_t      dest_x,
+				  int32_t      dest_y,
 				  int32_t     width,
 				  int32_t     height)
 {
-    uint16_t	*dstLine, *dst, d;
-    uint32_t	*srcLine, *src, s;
-    int		dstStride, srcStride;
+    uint16_t	*dst_line, *dst, d;
+    uint32_t	*src_line, *src, s;
+    int		dst_stride, src_stride;
     uint16_t	w;
     uint32_t    opaque, zero;
 
     __m64 ms;
-    __m128i xmmSrc, xmmSrcLo, xmmSrcHi;
-    __m128i xmmDst, xmmDst0, xmmDst1, xmmDst2, xmmDst3;
+    __m128i xmm_src, xmm_src_lo, xmm_src_hi;
+    __m128i xmm_dst, xmm_dst0, xmm_dst1, xmm_dst2, xmm_dst3;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint16_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint16_t, dst_stride, dst_line, 1);
+    PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint32_t, src_stride, src_line, 1);
 
 #if 0
     /* FIXME
@@ -3794,20 +3794,20 @@ fbCompositeSrc_8888RevNPx0565sse2 (pixman_implementation_t *imp,
      * I copy the code from MMX one and keep the fixme.
      * If it's a problem there, probably is a problem here.
      */
-    assert (pSrc->pDrawable == pMask->pDrawable);
+    assert (src_image->drawable == mask_image->drawable);
 #endif
 
     while (height--)
     {
-        dst = dstLine;
-        dstLine += dstStride;
-        src = srcLine;
-        srcLine += srcStride;
+        dst = dst_line;
+        dst_line += dst_stride;
+        src = src_line;
+        src_line += src_stride;
         w = width;
 
         /* call prefetch hint to optimize cache load*/
-        cachePrefetch ((__m128i*)src);
-        cachePrefetch ((__m128i*)dst);
+        cache_prefetch ((__m128i*)src);
+        cache_prefetch ((__m128i*)dst);
 
         while (w && (unsigned long)dst & 15)
         {
@@ -3816,58 +3816,58 @@ fbCompositeSrc_8888RevNPx0565sse2 (pixman_implementation_t *imp,
 
             ms = unpack_32_1x64 (s);
 
-            *dst++ = pack565_32_16 (pack_1x64_32 (overRevNonPre_1x64(ms, expand565_16_1x64 (d))));
+            *dst++ = pack_565_32_16 (pack_1x64_32 (over_rev_non_pre_1x64(ms, expand565_16_1x64 (d))));
             w--;
         }
 
         /* call prefetch hint to optimize cache load*/
-        cachePrefetch ((__m128i*)src);
-        cachePrefetch ((__m128i*)dst);
+        cache_prefetch ((__m128i*)src);
+        cache_prefetch ((__m128i*)dst);
 
         while (w >= 8)
         {
             /* fill cache line with next memory */
-            cachePrefetchNext ((__m128i*)src);
-            cachePrefetchNext ((__m128i*)dst);
+            cache_prefetch_next ((__m128i*)src);
+            cache_prefetch_next ((__m128i*)dst);
 
             /* First round */
-            xmmSrc = load128Unaligned((__m128i*)src);
-            xmmDst = load128Aligned  ((__m128i*)dst);
+            xmm_src = load_128_unaligned((__m128i*)src);
+            xmm_dst = load_128_aligned  ((__m128i*)dst);
 
-            opaque = isOpaque (xmmSrc);
-	    zero = isZero (xmmSrc);
+            opaque = is_opaque (xmm_src);
+	    zero = is_zero (xmm_src);
 
-	    unpack565_128_4x128 (xmmDst, &xmmDst0, &xmmDst1, &xmmDst2, &xmmDst3);
-            unpack_128_2x128 (xmmSrc, &xmmSrcLo, &xmmSrcHi);
+	    unpack_565_128_4x128 (xmm_dst, &xmm_dst0, &xmm_dst1, &xmm_dst2, &xmm_dst3);
+            unpack_128_2x128 (xmm_src, &xmm_src_lo, &xmm_src_hi);
 
             /* preload next round*/
-            xmmSrc = load128Unaligned((__m128i*)(src+4));
+            xmm_src = load_128_unaligned((__m128i*)(src+4));
 	    
             if (opaque)
             {
-                invertColors_2x128 (xmmSrcLo, xmmSrcHi, &xmmDst0, &xmmDst1);
+                invert_colors_2x128 (xmm_src_lo, xmm_src_hi, &xmm_dst0, &xmm_dst1);
             }
             else if (!zero)
             {
-                overRevNonPre_2x128 (xmmSrcLo, xmmSrcHi, &xmmDst0, &xmmDst1);
+                over_rev_non_pre_2x128 (xmm_src_lo, xmm_src_hi, &xmm_dst0, &xmm_dst1);
             }
 
             /* Second round */
-	    opaque = isOpaque (xmmSrc);
-	    zero = isZero (xmmSrc);
+	    opaque = is_opaque (xmm_src);
+	    zero = is_zero (xmm_src);
 
-            unpack_128_2x128 (xmmSrc, &xmmSrcLo, &xmmSrcHi);
+            unpack_128_2x128 (xmm_src, &xmm_src_lo, &xmm_src_hi);
 
             if (opaque)
             {
-                invertColors_2x128 (xmmSrcLo, xmmSrcHi, &xmmDst2, &xmmDst3);
+                invert_colors_2x128 (xmm_src_lo, xmm_src_hi, &xmm_dst2, &xmm_dst3);
             }
             else if (zero)
             {
-                overRevNonPre_2x128 (xmmSrcLo, xmmSrcHi, &xmmDst2, &xmmDst3);
+                over_rev_non_pre_2x128 (xmm_src_lo, xmm_src_hi, &xmm_dst2, &xmm_dst3);
             }
 
-            save128Aligned ((__m128i*)dst, pack565_4x128_128 (&xmmDst0, &xmmDst1, &xmmDst2, &xmmDst3));
+            save_128_aligned ((__m128i*)dst, pack_565_4x128_128 (&xmm_dst0, &xmm_dst1, &xmm_dst2, &xmm_dst3));
 
             w -= 8;
             src += 8;
@@ -3881,7 +3881,7 @@ fbCompositeSrc_8888RevNPx0565sse2 (pixman_implementation_t *imp,
 
             ms = unpack_32_1x64 (s);
 
-            *dst++ = pack565_32_16 (pack_1x64_32 (overRevNonPre_1x64(ms, expand565_16_1x64 (d))));
+            *dst++ = pack_565_32_16 (pack_1x64_32 (over_rev_non_pre_1x64(ms, expand565_16_1x64 (d))));
             w--;
         }
     }
@@ -3889,38 +3889,36 @@ fbCompositeSrc_8888RevNPx0565sse2 (pixman_implementation_t *imp,
     _mm_empty();
 }
 
-/* "8888RevNP" is GdkPixbuf's format: ABGR, non premultiplied */
-
 /* -------------------------------------------------------------------------------------------------
- * fbCompositeSrc_8888RevNPx8888
+ * fast_composite_over_pixbuf_8888
  */
 
 static void
-fbCompositeSrc_8888RevNPx8888sse2 (pixman_implementation_t *imp,
+sse2_composite_over_pixbuf_8888 (pixman_implementation_t *imp,
 				   pixman_op_t op,
-				  pixman_image_t * pSrc,
-				  pixman_image_t * pMask,
-				  pixman_image_t * pDst,
-				  int32_t      xSrc,
-				  int32_t      ySrc,
-				  int32_t      xMask,
-				  int32_t      yMask,
-				  int32_t      xDst,
-				  int32_t      yDst,
+				  pixman_image_t * src_image,
+				  pixman_image_t * mask_image,
+				  pixman_image_t * dst_image,
+				  int32_t      src_x,
+				  int32_t      src_y,
+				  int32_t      mask_x,
+				  int32_t      mask_y,
+				  int32_t      dest_x,
+				  int32_t      dest_y,
 				  int32_t     width,
 				  int32_t     height)
 {
-    uint32_t	*dstLine, *dst, d;
-    uint32_t	*srcLine, *src, s;
-    int	dstStride, srcStride;
+    uint32_t	*dst_line, *dst, d;
+    uint32_t	*src_line, *src, s;
+    int	dst_stride, src_stride;
     uint16_t	w;
     uint32_t    opaque, zero;
 
-    __m128i xmmSrcLo, xmmSrcHi;
-    __m128i xmmDstLo, xmmDstHi;
+    __m128i xmm_src_lo, xmm_src_hi;
+    __m128i xmm_dst_lo, xmm_dst_hi;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint32_t, dst_stride, dst_line, 1);
+    PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint32_t, src_stride, src_line, 1);
 
 #if 0
     /* FIXME
@@ -3928,63 +3926,63 @@ fbCompositeSrc_8888RevNPx8888sse2 (pixman_implementation_t *imp,
      * I copy the code from MMX one and keep the fixme.
      * If it's a problem there, probably is a problem here.
      */
-    assert (pSrc->pDrawable == pMask->pDrawable);
+    assert (src_image->drawable == mask_image->drawable);
 #endif
 
     while (height--)
     {
-        dst = dstLine;
-        dstLine += dstStride;
-        src = srcLine;
-        srcLine += srcStride;
+        dst = dst_line;
+        dst_line += dst_stride;
+        src = src_line;
+        src_line += src_stride;
         w = width;
 
         /* call prefetch hint to optimize cache load*/
-        cachePrefetch ((__m128i*)src);
-        cachePrefetch ((__m128i*)dst);
+        cache_prefetch ((__m128i*)src);
+        cache_prefetch ((__m128i*)dst);
 
         while (w && (unsigned long)dst & 15)
         {
             s = *src++;
             d = *dst;
 
-            *dst++ = pack_1x64_32 (overRevNonPre_1x64 (unpack_32_1x64 (s), unpack_32_1x64 (d)));
+            *dst++ = pack_1x64_32 (over_rev_non_pre_1x64 (unpack_32_1x64 (s), unpack_32_1x64 (d)));
 
             w--;
         }
 
         /* call prefetch hint to optimize cache load*/
-        cachePrefetch ((__m128i*)src);
-        cachePrefetch ((__m128i*)dst);
+        cache_prefetch ((__m128i*)src);
+        cache_prefetch ((__m128i*)dst);
 
         while (w >= 4)
         {
             /* fill cache line with next memory */
-            cachePrefetchNext ((__m128i*)src);
-            cachePrefetchNext ((__m128i*)dst);
+            cache_prefetch_next ((__m128i*)src);
+            cache_prefetch_next ((__m128i*)dst);
 
-            xmmSrcHi = load128Unaligned((__m128i*)src);
+            xmm_src_hi = load_128_unaligned((__m128i*)src);
 
-            opaque = isOpaque (xmmSrcHi);
-	    zero = isZero (xmmSrcHi);
+            opaque = is_opaque (xmm_src_hi);
+	    zero = is_zero (xmm_src_hi);
 
-            unpack_128_2x128 (xmmSrcHi, &xmmSrcLo, &xmmSrcHi);
+            unpack_128_2x128 (xmm_src_hi, &xmm_src_lo, &xmm_src_hi);
 
             if (opaque)
             {
-                invertColors_2x128( xmmSrcLo, xmmSrcHi, &xmmDstLo, &xmmDstHi);
+                invert_colors_2x128( xmm_src_lo, xmm_src_hi, &xmm_dst_lo, &xmm_dst_hi);
 
-                save128Aligned ((__m128i*)dst, pack_2x128_128 (xmmDstLo, xmmDstHi));
+                save_128_aligned ((__m128i*)dst, pack_2x128_128 (xmm_dst_lo, xmm_dst_hi));
             }
             else if (!zero)
             {
-                xmmDstHi = load128Aligned  ((__m128i*)dst);
+                xmm_dst_hi = load_128_aligned  ((__m128i*)dst);
 
-                unpack_128_2x128 (xmmDstHi, &xmmDstLo, &xmmDstHi);
+                unpack_128_2x128 (xmm_dst_hi, &xmm_dst_lo, &xmm_dst_hi);
 
-                overRevNonPre_2x128 (xmmSrcLo, xmmSrcHi, &xmmDstLo, &xmmDstHi);
+                over_rev_non_pre_2x128 (xmm_src_lo, xmm_src_hi, &xmm_dst_lo, &xmm_dst_hi);
 
-                save128Aligned ((__m128i*)dst, pack_2x128_128 (xmmDstLo, xmmDstHi));
+                save_128_aligned ((__m128i*)dst, pack_2x128_128 (xmm_dst_lo, xmm_dst_hi));
             }
 
             w -= 4;
@@ -3997,7 +3995,7 @@ fbCompositeSrc_8888RevNPx8888sse2 (pixman_implementation_t *imp,
             s = *src++;
             d = *dst;
 
-            *dst++ = pack_1x64_32 (overRevNonPre_1x64 (unpack_32_1x64 (s), unpack_32_1x64 (d)));
+            *dst++ = pack_1x64_32 (over_rev_non_pre_1x64 (unpack_32_1x64 (s), unpack_32_1x64 (d)));
 
             w--;
         }
@@ -4007,61 +4005,61 @@ fbCompositeSrc_8888RevNPx8888sse2 (pixman_implementation_t *imp,
 }
 
 /* -------------------------------------------------------------------------------------------------
- * fbCompositeSolidMask_nx8888x0565C
+ * fast_composite_over_n_8888_0565_ca
  */
 
 static void
-fbCompositeSolidMask_nx8888x0565Csse2 (pixman_implementation_t *imp,
+sse2_composite_over_n_8888_0565_ca (pixman_implementation_t *imp,
 				       pixman_op_t op,
-				      pixman_image_t * pSrc,
-				      pixman_image_t * pMask,
-				      pixman_image_t * pDst,
-				      int32_t      xSrc,
-				      int32_t      ySrc,
-				      int32_t      xMask,
-				      int32_t      yMask,
-				      int32_t      xDst,
-				      int32_t      yDst,
+				      pixman_image_t * src_image,
+				      pixman_image_t * mask_image,
+				      pixman_image_t * dst_image,
+				      int32_t      src_x,
+				      int32_t      src_y,
+				      int32_t      mask_x,
+				      int32_t      mask_y,
+				      int32_t      dest_x,
+				      int32_t      dest_y,
 				      int32_t     width,
 				      int32_t     height)
 {
     uint32_t	src;
-    uint16_t	*dstLine, *dst, d;
-    uint32_t	*maskLine, *mask, m;
-    int	dstStride, maskStride;
+    uint16_t	*dst_line, *dst, d;
+    uint32_t	*mask_line, *mask, m;
+    int	dst_stride, mask_stride;
     int w;
-    uint32_t packCmp;
+    uint32_t pack_cmp;
 
-    __m128i xmmSrc, xmmAlpha;
-    __m128i xmmMask, xmmMaskLo, xmmMaskHi;
-    __m128i xmmDst, xmmDst0, xmmDst1, xmmDst2, xmmDst3;
+    __m128i xmm_src, xmm_alpha;
+    __m128i xmm_mask, xmm_mask_lo, xmm_mask_hi;
+    __m128i xmm_dst, xmm_dst0, xmm_dst1, xmm_dst2, xmm_dst3;
 
-    __m64 mmxSrc, mmxAlpha, mmxMask, mmxDest;
+    __m64 mmx_src, mmx_alpha, mmx_mask, mmx_dest;
 
-    src = _pixman_image_get_solid(pSrc, pDst->bits.format);
+    src = _pixman_image_get_solid(src_image, dst_image->bits.format);
 
     if (src == 0)
         return;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint16_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pMask, xMask, yMask, uint32_t, maskStride, maskLine, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint16_t, dst_stride, dst_line, 1);
+    PIXMAN_IMAGE_GET_LINE (mask_image, mask_x, mask_y, uint32_t, mask_stride, mask_line, 1);
 
-    xmmSrc = expandPixel_32_1x128 (src);
-    xmmAlpha = expandAlpha_1x128 (xmmSrc);
-    mmxSrc = _mm_movepi64_pi64 (xmmSrc);
-    mmxAlpha = _mm_movepi64_pi64 (xmmAlpha);
+    xmm_src = expand_pixel_32_1x128 (src);
+    xmm_alpha = expand_alpha_1x128 (xmm_src);
+    mmx_src = _mm_movepi64_pi64 (xmm_src);
+    mmx_alpha = _mm_movepi64_pi64 (xmm_alpha);
 
     while (height--)
     {
         w = width;
-        mask = maskLine;
-        dst = dstLine;
-        maskLine += maskStride;
-        dstLine += dstStride;
+        mask = mask_line;
+        dst = dst_line;
+        mask_line += mask_stride;
+        dst_line += dst_stride;
 
         /* call prefetch hint to optimize cache load*/
-        cachePrefetch ((__m128i*)mask);
-        cachePrefetch ((__m128i*)dst);
+        cache_prefetch ((__m128i*)mask);
+        cache_prefetch ((__m128i*)dst);
 
         while (w && ((unsigned long)dst & 15))
         {
@@ -4070,13 +4068,13 @@ fbCompositeSolidMask_nx8888x0565Csse2 (pixman_implementation_t *imp,
             if (m)
             {
                 d = *dst;
-                mmxMask = unpack_32_1x64 (m);
-                mmxDest = expand565_16_1x64 (d);
+                mmx_mask = unpack_32_1x64 (m);
+                mmx_dest = expand565_16_1x64 (d);
 
-                *dst = pack565_32_16 (pack_1x64_32 (inOver_1x64 (&mmxSrc,
-                                                                 &mmxAlpha,
-                                                                 &mmxMask,
-                                                                 &mmxDest)));
+                *dst = pack_565_32_16 (pack_1x64_32 (in_over_1x64 (&mmx_src,
+                                                                 &mmx_alpha,
+                                                                 &mmx_mask,
+                                                                 &mmx_dest)));
             }
 
             w--;
@@ -4085,44 +4083,44 @@ fbCompositeSolidMask_nx8888x0565Csse2 (pixman_implementation_t *imp,
         }
 
         /* call prefetch hint to optimize cache load*/
-        cachePrefetch ((__m128i*)mask);
-        cachePrefetch ((__m128i*)dst);
+        cache_prefetch ((__m128i*)mask);
+        cache_prefetch ((__m128i*)dst);
 
         while (w >= 8)
         {
             /* fill cache line with next memory */
-            cachePrefetchNext ((__m128i*)mask);
-            cachePrefetchNext ((__m128i*)dst);
+            cache_prefetch_next ((__m128i*)mask);
+            cache_prefetch_next ((__m128i*)dst);
 
             /* First round */
-            xmmMask = load128Unaligned((__m128i*)mask);
-            xmmDst = load128Aligned((__m128i*)dst);
+            xmm_mask = load_128_unaligned((__m128i*)mask);
+            xmm_dst = load_128_aligned((__m128i*)dst);
 
-            packCmp = _mm_movemask_epi8 (_mm_cmpeq_epi32 (xmmMask, _mm_setzero_si128()));
+            pack_cmp = _mm_movemask_epi8 (_mm_cmpeq_epi32 (xmm_mask, _mm_setzero_si128()));
 
-            unpack565_128_4x128 (xmmDst, &xmmDst0, &xmmDst1, &xmmDst2, &xmmDst3);
-            unpack_128_2x128 (xmmMask, &xmmMaskLo, &xmmMaskHi);
+            unpack_565_128_4x128 (xmm_dst, &xmm_dst0, &xmm_dst1, &xmm_dst2, &xmm_dst3);
+            unpack_128_2x128 (xmm_mask, &xmm_mask_lo, &xmm_mask_hi);
 
             /* preload next round*/
-            xmmMask = load128Unaligned((__m128i*)(mask+4));
+            xmm_mask = load_128_unaligned((__m128i*)(mask+4));
             /* preload next round*/
 
-            if (packCmp != 0xffff)
+            if (pack_cmp != 0xffff)
             {
-                inOver_2x128(&xmmSrc, &xmmSrc, &xmmAlpha, &xmmAlpha, &xmmMaskLo, &xmmMaskHi, &xmmDst0, &xmmDst1);
+                in_over_2x128(&xmm_src, &xmm_src, &xmm_alpha, &xmm_alpha, &xmm_mask_lo, &xmm_mask_hi, &xmm_dst0, &xmm_dst1);
             }
 
             /* Second round */
-            packCmp = _mm_movemask_epi8 (_mm_cmpeq_epi32 (xmmMask, _mm_setzero_si128()));
+            pack_cmp = _mm_movemask_epi8 (_mm_cmpeq_epi32 (xmm_mask, _mm_setzero_si128()));
 
-            unpack_128_2x128 (xmmMask, &xmmMaskLo, &xmmMaskHi);
+            unpack_128_2x128 (xmm_mask, &xmm_mask_lo, &xmm_mask_hi);
 
-            if (packCmp != 0xffff)
+            if (pack_cmp != 0xffff)
             {
-                inOver_2x128(&xmmSrc, &xmmSrc, &xmmAlpha, &xmmAlpha, &xmmMaskLo, &xmmMaskHi, &xmmDst2, &xmmDst3);
+                in_over_2x128(&xmm_src, &xmm_src, &xmm_alpha, &xmm_alpha, &xmm_mask_lo, &xmm_mask_hi, &xmm_dst2, &xmm_dst3);
             }
 
-            save128Aligned ((__m128i*)dst, pack565_4x128_128 (&xmmDst0, &xmmDst1, &xmmDst2, &xmmDst3));
+            save_128_aligned ((__m128i*)dst, pack_565_4x128_128 (&xmm_dst0, &xmm_dst1, &xmm_dst2, &xmm_dst3));
 
             w -= 8;
             dst += 8;
@@ -4136,13 +4134,13 @@ fbCompositeSolidMask_nx8888x0565Csse2 (pixman_implementation_t *imp,
             if (m)
             {
                 d = *dst;
-                mmxMask = unpack_32_1x64 (m);
-                mmxDest = expand565_16_1x64 (d);
+                mmx_mask = unpack_32_1x64 (m);
+                mmx_dest = expand565_16_1x64 (d);
 
-                *dst = pack565_32_16 (pack_1x64_32 (inOver_1x64 (&mmxSrc,
-                                                                 &mmxAlpha,
-                                                                 &mmxMask,
-                                                                 &mmxDest)));
+                *dst = pack_565_32_16 (pack_1x64_32 (in_over_1x64 (&mmx_src,
+                                                                 &mmx_alpha,
+                                                                 &mmx_mask,
+                                                                 &mmx_dest)));
             }
 
             w--;
@@ -4155,88 +4153,88 @@ fbCompositeSolidMask_nx8888x0565Csse2 (pixman_implementation_t *imp,
 }
 
 /* -------------------------------------------------------------------------------------------------
- * fbCompositeIn_nx8x8
+ * fast_composite_in_n_8_8
  */
 
 static void
-fbCompositeIn_nx8x8sse2 (pixman_implementation_t *imp,
+sse2_composite_in_n_8_8 (pixman_implementation_t *imp,
 			 pixman_op_t op,
-			pixman_image_t * pSrc,
-			pixman_image_t * pMask,
-			pixman_image_t * pDst,
-			int32_t      xSrc,
-			int32_t      ySrc,
-			int32_t      xMask,
-			int32_t      yMask,
-			int32_t      xDst,
-			int32_t      yDst,
+			pixman_image_t * src_image,
+			pixman_image_t * mask_image,
+			pixman_image_t * dst_image,
+			int32_t      src_x,
+			int32_t      src_y,
+			int32_t      mask_x,
+			int32_t      mask_y,
+			int32_t      dest_x,
+			int32_t      dest_y,
 			int32_t     width,
 			int32_t     height)
 {
-    uint8_t	*dstLine, *dst;
-    uint8_t	*maskLine, *mask;
-    int	dstStride, maskStride;
+    uint8_t	*dst_line, *dst;
+    uint8_t	*mask_line, *mask;
+    int	dst_stride, mask_stride;
     uint16_t	w, d, m;
     uint32_t	src;
     uint8_t	sa;
 
-    __m128i xmmAlpha;
-    __m128i xmmMask, xmmMaskLo, xmmMaskHi;
-    __m128i xmmDst, xmmDstLo, xmmDstHi;
+    __m128i xmm_alpha;
+    __m128i xmm_mask, xmm_mask_lo, xmm_mask_hi;
+    __m128i xmm_dst, xmm_dst_lo, xmm_dst_hi;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint8_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pMask, xMask, yMask, uint8_t, maskStride, maskLine, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint8_t, dst_stride, dst_line, 1);
+    PIXMAN_IMAGE_GET_LINE (mask_image, mask_x, mask_y, uint8_t, mask_stride, mask_line, 1);
 
-    src = _pixman_image_get_solid(pSrc, pDst->bits.format);
+    src = _pixman_image_get_solid(src_image, dst_image->bits.format);
 
     sa = src >> 24;
     if (sa == 0)
         return;
 
-    xmmAlpha = expandAlpha_1x128 (expandPixel_32_1x128 (src));
+    xmm_alpha = expand_alpha_1x128 (expand_pixel_32_1x128 (src));
 
     while (height--)
     {
-        dst = dstLine;
-        dstLine += dstStride;
-        mask = maskLine;
-        maskLine += maskStride;
+        dst = dst_line;
+        dst_line += dst_stride;
+        mask = mask_line;
+        mask_line += mask_stride;
         w = width;
 
         /* call prefetch hint to optimize cache load*/
-        cachePrefetch ((__m128i*)mask);
-        cachePrefetch ((__m128i*)dst);
+        cache_prefetch ((__m128i*)mask);
+        cache_prefetch ((__m128i*)dst);
 
         while (w && ((unsigned long)dst & 15))
         {
             m = (uint32_t) *mask++;
             d = (uint32_t) *dst;
 
-            *dst++ = (uint8_t) pack_1x64_32 (pixMultiply_1x64 (pixMultiply_1x64 (_mm_movepi64_pi64 (xmmAlpha), unpack_32_1x64 (m)),
+            *dst++ = (uint8_t) pack_1x64_32 (pix_multiply_1x64 (pix_multiply_1x64 (_mm_movepi64_pi64 (xmm_alpha), unpack_32_1x64 (m)),
                                                                unpack_32_1x64 (d)));
             w--;
         }
 
         /* call prefetch hint to optimize cache load*/
-        cachePrefetch ((__m128i*)mask);
-        cachePrefetch ((__m128i*)dst);
+        cache_prefetch ((__m128i*)mask);
+        cache_prefetch ((__m128i*)dst);
 
         while (w >= 16)
         {
             /* fill cache line with next memory */
-            cachePrefetchNext ((__m128i*)mask);
-            cachePrefetchNext ((__m128i*)dst);
+            cache_prefetch_next ((__m128i*)mask);
+            cache_prefetch_next ((__m128i*)dst);
 
-            xmmMask = load128Unaligned((__m128i*)mask);
-            xmmDst = load128Aligned((__m128i*)dst);
+            xmm_mask = load_128_unaligned((__m128i*)mask);
+            xmm_dst = load_128_aligned((__m128i*)dst);
 
-            unpack_128_2x128 (xmmMask, &xmmMaskLo, &xmmMaskHi);
-            unpack_128_2x128 (xmmDst, &xmmDstLo, &xmmDstHi);
+            unpack_128_2x128 (xmm_mask, &xmm_mask_lo, &xmm_mask_hi);
+            unpack_128_2x128 (xmm_dst, &xmm_dst_lo, &xmm_dst_hi);
 
-            pixMultiply_2x128 (&xmmAlpha, &xmmAlpha, &xmmMaskLo, &xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
-            pixMultiply_2x128 (&xmmMaskLo, &xmmMaskHi, &xmmDstLo, &xmmDstHi, &xmmDstLo, &xmmDstHi);
+            pix_multiply_2x128 (&xmm_alpha, &xmm_alpha, &xmm_mask_lo, &xmm_mask_hi, &xmm_mask_lo, &xmm_mask_hi);
+            pix_multiply_2x128 (&xmm_mask_lo, &xmm_mask_hi, &xmm_dst_lo, &xmm_dst_hi, &xmm_dst_lo, &xmm_dst_hi);
 
-            save128Aligned ((__m128i*)dst, pack_2x128_128 (xmmDstLo, xmmDstHi));
+            save_128_aligned ((__m128i*)dst, pack_2x128_128 (xmm_dst_lo, xmm_dst_hi));
 
             mask += 16;
             dst += 16;
@@ -4248,7 +4246,7 @@ fbCompositeIn_nx8x8sse2 (pixman_implementation_t *imp,
             m = (uint32_t) *mask++;
             d = (uint32_t) *dst;
 
-            *dst++ = (uint8_t) pack_1x64_32 (pixMultiply_1x64 (pixMultiply_1x64 (_mm_movepi64_pi64 (xmmAlpha), unpack_32_1x64 (m)),
+            *dst++ = (uint8_t) pack_1x64_32 (pix_multiply_1x64 (pix_multiply_1x64 (_mm_movepi64_pi64 (xmm_alpha), unpack_32_1x64 (m)),
                                                                unpack_32_1x64 (d)));
             w--;
         }
@@ -4258,76 +4256,76 @@ fbCompositeIn_nx8x8sse2 (pixman_implementation_t *imp,
 }
 
 /* -------------------------------------------------------------------------------------------------
- * fbCompositeIn_8x8
+ * fast_composite_in_8_8
  */
 
 static void
-fbCompositeIn_8x8sse2 (pixman_implementation_t *imp,
+sse2_composite_in_8_8 (pixman_implementation_t *imp,
 		       pixman_op_t op,
-		      pixman_image_t * pSrc,
-		      pixman_image_t * pMask,
-		      pixman_image_t * pDst,
-		      int32_t      xSrc,
-		      int32_t      ySrc,
-		      int32_t      xMask,
-		      int32_t      yMask,
-		      int32_t      xDst,
-		      int32_t      yDst,
+		      pixman_image_t * src_image,
+		      pixman_image_t * mask_image,
+		      pixman_image_t * dst_image,
+		      int32_t      src_x,
+		      int32_t      src_y,
+		      int32_t      mask_x,
+		      int32_t      mask_y,
+		      int32_t      dest_x,
+		      int32_t      dest_y,
 		      int32_t     width,
 		      int32_t     height)
 {
-    uint8_t	*dstLine, *dst;
-    uint8_t	*srcLine, *src;
-    int	srcStride, dstStride;
+    uint8_t	*dst_line, *dst;
+    uint8_t	*src_line, *src;
+    int	src_stride, dst_stride;
     uint16_t	w;
     uint32_t    s, d;
 
-    __m128i xmmSrc, xmmSrcLo, xmmSrcHi;
-    __m128i xmmDst, xmmDstLo, xmmDstHi;
+    __m128i xmm_src, xmm_src_lo, xmm_src_hi;
+    __m128i xmm_dst, xmm_dst_lo, xmm_dst_hi;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint8_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pSrc, xSrc, ySrc, uint8_t, srcStride, srcLine, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint8_t, dst_stride, dst_line, 1);
+    PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint8_t, src_stride, src_line, 1);
 
     while (height--)
     {
-        dst = dstLine;
-        dstLine += dstStride;
-        src = srcLine;
-        srcLine += srcStride;
+        dst = dst_line;
+        dst_line += dst_stride;
+        src = src_line;
+        src_line += src_stride;
         w = width;
 
         /* call prefetch hint to optimize cache load*/
-        cachePrefetch ((__m128i*)src);
-        cachePrefetch ((__m128i*)dst);
+        cache_prefetch ((__m128i*)src);
+        cache_prefetch ((__m128i*)dst);
 
         while (w && ((unsigned long)dst & 15))
         {
             s = (uint32_t) *src++;
             d = (uint32_t) *dst;
 
-            *dst++ = (uint8_t) pack_1x64_32 (pixMultiply_1x64 (unpack_32_1x64 (s),unpack_32_1x64 (d)));
+            *dst++ = (uint8_t) pack_1x64_32 (pix_multiply_1x64 (unpack_32_1x64 (s),unpack_32_1x64 (d)));
             w--;
         }
 
         /* call prefetch hint to optimize cache load*/
-        cachePrefetch ((__m128i*)src);
-        cachePrefetch ((__m128i*)dst);
+        cache_prefetch ((__m128i*)src);
+        cache_prefetch ((__m128i*)dst);
 
         while (w >= 16)
         {
             /* fill cache line with next memory */
-            cachePrefetchNext ((__m128i*)src);
-            cachePrefetchNext ((__m128i*)dst);
+            cache_prefetch_next ((__m128i*)src);
+            cache_prefetch_next ((__m128i*)dst);
 
-            xmmSrc = load128Unaligned((__m128i*)src);
-            xmmDst = load128Aligned((__m128i*)dst);
+            xmm_src = load_128_unaligned((__m128i*)src);
+            xmm_dst = load_128_aligned((__m128i*)dst);
 
-            unpack_128_2x128 (xmmSrc, &xmmSrcLo, &xmmSrcHi);
-            unpack_128_2x128 (xmmDst, &xmmDstLo, &xmmDstHi);
+            unpack_128_2x128 (xmm_src, &xmm_src_lo, &xmm_src_hi);
+            unpack_128_2x128 (xmm_dst, &xmm_dst_lo, &xmm_dst_hi);
 
-            pixMultiply_2x128 (&xmmSrcLo, &xmmSrcHi, &xmmDstLo, &xmmDstHi, &xmmDstLo, &xmmDstHi);
+            pix_multiply_2x128 (&xmm_src_lo, &xmm_src_hi, &xmm_dst_lo, &xmm_dst_hi, &xmm_dst_lo, &xmm_dst_hi);
 
-            save128Aligned ((__m128i*)dst, pack_2x128_128 (xmmDstLo, xmmDstHi));
+            save_128_aligned ((__m128i*)dst, pack_2x128_128 (xmm_dst_lo, xmm_dst_hi));
 
             src += 16;
             dst += 16;
@@ -4339,7 +4337,7 @@ fbCompositeIn_8x8sse2 (pixman_implementation_t *imp,
             s = (uint32_t) *src++;
             d = (uint32_t) *dst;
 
-            *dst++ = (uint8_t) pack_1x64_32 (pixMultiply_1x64 (unpack_32_1x64 (s),unpack_32_1x64 (d)));
+            *dst++ = (uint8_t) pack_1x64_32 (pix_multiply_1x64 (unpack_32_1x64 (s),unpack_32_1x64 (d)));
             w--;
         }
     }
@@ -4348,91 +4346,91 @@ fbCompositeIn_8x8sse2 (pixman_implementation_t *imp,
 }
 
 /* -------------------------------------------------------------------------------------------------
- * fbCompositeSrcAdd_8888x8x8
+ * fast_composite_add_8888_8_8
  */
 
 static void
-fbCompositeSrcAdd_8888x8x8sse2 (pixman_implementation_t *imp,
+sse2_composite_add_8888_8_8 (pixman_implementation_t *imp,
 				pixman_op_t op,
-			       pixman_image_t * pSrc,
-			       pixman_image_t * pMask,
-			       pixman_image_t * pDst,
-			       int32_t      xSrc,
-			       int32_t      ySrc,
-			       int32_t      xMask,
-			       int32_t      yMask,
-			       int32_t      xDst,
-			       int32_t      yDst,
+			       pixman_image_t * src_image,
+			       pixman_image_t * mask_image,
+			       pixman_image_t * dst_image,
+			       int32_t      src_x,
+			       int32_t      src_y,
+			       int32_t      mask_x,
+			       int32_t      mask_y,
+			       int32_t      dest_x,
+			       int32_t      dest_y,
 			       int32_t     width,
 			       int32_t     height)
 {
-    uint8_t	*dstLine, *dst;
-    uint8_t	*maskLine, *mask;
-    int	dstStride, maskStride;
+    uint8_t	*dst_line, *dst;
+    uint8_t	*mask_line, *mask;
+    int	dst_stride, mask_stride;
     uint16_t	w;
     uint32_t	src;
     uint8_t	sa;
     uint32_t m, d;
 
-    __m128i xmmAlpha;
-    __m128i xmmMask, xmmMaskLo, xmmMaskHi;
-    __m128i xmmDst, xmmDstLo, xmmDstHi;
+    __m128i xmm_alpha;
+    __m128i xmm_mask, xmm_mask_lo, xmm_mask_hi;
+    __m128i xmm_dst, xmm_dst_lo, xmm_dst_hi;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint8_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pMask, xMask, yMask, uint8_t, maskStride, maskLine, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint8_t, dst_stride, dst_line, 1);
+    PIXMAN_IMAGE_GET_LINE (mask_image, mask_x, mask_y, uint8_t, mask_stride, mask_line, 1);
 
-    src = _pixman_image_get_solid(pSrc, pDst->bits.format);
+    src = _pixman_image_get_solid(src_image, dst_image->bits.format);
 
     sa = src >> 24;
     if (sa == 0)
         return;
 
-    xmmAlpha = expandAlpha_1x128 (expandPixel_32_1x128 (src));
+    xmm_alpha = expand_alpha_1x128 (expand_pixel_32_1x128 (src));
 
     while (height--)
     {
-        dst = dstLine;
-        dstLine += dstStride;
-        mask = maskLine;
-        maskLine += maskStride;
+        dst = dst_line;
+        dst_line += dst_stride;
+        mask = mask_line;
+        mask_line += mask_stride;
         w = width;
 
         /* call prefetch hint to optimize cache load*/
-        cachePrefetch ((__m128i*)mask);
-        cachePrefetch ((__m128i*)dst);
+        cache_prefetch ((__m128i*)mask);
+        cache_prefetch ((__m128i*)dst);
 
         while (w && ((unsigned long)dst & 15))
         {
             m = (uint32_t) *mask++;
             d = (uint32_t) *dst;
 
-            *dst++ = (uint8_t) pack_1x64_32 (_mm_adds_pu16 (pixMultiply_1x64 (_mm_movepi64_pi64 (xmmAlpha), unpack_32_1x64 (m)),
+            *dst++ = (uint8_t) pack_1x64_32 (_mm_adds_pu16 (pix_multiply_1x64 (_mm_movepi64_pi64 (xmm_alpha), unpack_32_1x64 (m)),
                                                                               unpack_32_1x64 (d)));
             w--;
         }
 
         /* call prefetch hint to optimize cache load*/
-        cachePrefetch ((__m128i*)mask);
-        cachePrefetch ((__m128i*)dst);
+        cache_prefetch ((__m128i*)mask);
+        cache_prefetch ((__m128i*)dst);
 
         while (w >= 16)
         {
             /* fill cache line with next memory */
-            cachePrefetchNext ((__m128i*)mask);
-            cachePrefetchNext ((__m128i*)dst);
+            cache_prefetch_next ((__m128i*)mask);
+            cache_prefetch_next ((__m128i*)dst);
 
-            xmmMask = load128Unaligned((__m128i*)mask);
-            xmmDst = load128Aligned((__m128i*)dst);
+            xmm_mask = load_128_unaligned((__m128i*)mask);
+            xmm_dst = load_128_aligned((__m128i*)dst);
 
-            unpack_128_2x128 (xmmMask, &xmmMaskLo, &xmmMaskHi);
-            unpack_128_2x128 (xmmDst, &xmmDstLo, &xmmDstHi);
+            unpack_128_2x128 (xmm_mask, &xmm_mask_lo, &xmm_mask_hi);
+            unpack_128_2x128 (xmm_dst, &xmm_dst_lo, &xmm_dst_hi);
 
-            pixMultiply_2x128 (&xmmAlpha, &xmmAlpha, &xmmMaskLo, &xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
+            pix_multiply_2x128 (&xmm_alpha, &xmm_alpha, &xmm_mask_lo, &xmm_mask_hi, &xmm_mask_lo, &xmm_mask_hi);
 
-            xmmDstLo = _mm_adds_epu16 (xmmMaskLo, xmmDstLo);
-            xmmDstHi = _mm_adds_epu16 (xmmMaskHi, xmmDstHi);
+            xmm_dst_lo = _mm_adds_epu16 (xmm_mask_lo, xmm_dst_lo);
+            xmm_dst_hi = _mm_adds_epu16 (xmm_mask_hi, xmm_dst_hi);
 
-            save128Aligned ((__m128i*)dst, pack_2x128_128 (xmmDstLo, xmmDstHi));
+            save_128_aligned ((__m128i*)dst, pack_2x128_128 (xmm_dst_lo, xmm_dst_hi));
 
             mask += 16;
             dst += 16;
@@ -4444,7 +4442,7 @@ fbCompositeSrcAdd_8888x8x8sse2 (pixman_implementation_t *imp,
             m = (uint32_t) *mask++;
             d = (uint32_t) *dst;
 
-            *dst++ = (uint8_t) pack_1x64_32 (_mm_adds_pu16 (pixMultiply_1x64 (_mm_movepi64_pi64 (xmmAlpha), unpack_32_1x64 (m)),
+            *dst++ = (uint8_t) pack_1x64_32 (_mm_adds_pu16 (pix_multiply_1x64 (_mm_movepi64_pi64 (xmm_alpha), unpack_32_1x64 (m)),
                                                                               unpack_32_1x64 (d)));
             w--;
         }
@@ -4454,44 +4452,44 @@ fbCompositeSrcAdd_8888x8x8sse2 (pixman_implementation_t *imp,
 }
 
 /* -------------------------------------------------------------------------------------------------
- * fbCompositeSrcAdd_8000x8000
+ * fast_composite_add_8000_8000
  */
 
 static void
-fbCompositeSrcAdd_8000x8000sse2 (pixman_implementation_t *imp,
+sse2_composite_add_8000_8000 (pixman_implementation_t *imp,
 				 pixman_op_t op,
-				pixman_image_t * pSrc,
-				pixman_image_t * pMask,
-				pixman_image_t * pDst,
-				int32_t      xSrc,
-				int32_t      ySrc,
-				int32_t      xMask,
-				int32_t      yMask,
-				int32_t      xDst,
-				int32_t      yDst,
+				pixman_image_t * src_image,
+				pixman_image_t * mask_image,
+				pixman_image_t * dst_image,
+				int32_t      src_x,
+				int32_t      src_y,
+				int32_t      mask_x,
+				int32_t      mask_y,
+				int32_t      dest_x,
+				int32_t      dest_y,
 				int32_t     width,
 				int32_t     height)
 {
-    uint8_t	*dstLine, *dst;
-    uint8_t	*srcLine, *src;
-    int	dstStride, srcStride;
+    uint8_t	*dst_line, *dst;
+    uint8_t	*src_line, *src;
+    int	dst_stride, src_stride;
     uint16_t	w;
     uint16_t	t;
 
-    fbComposeGetStart (pSrc, xSrc, ySrc, uint8_t, srcStride, srcLine, 1);
-    fbComposeGetStart (pDst, xDst, yDst, uint8_t, dstStride, dstLine, 1);
+    PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint8_t, src_stride, src_line, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint8_t, dst_stride, dst_line, 1);
 
     while (height--)
     {
-        dst = dstLine;
-        src = srcLine;
+        dst = dst_line;
+        src = src_line;
 
         /* call prefetch hint to optimize cache load*/
-        cachePrefetch ((__m128i*)src);
-        cachePrefetch ((__m128i*)dst);
+        cache_prefetch ((__m128i*)src);
+        cache_prefetch ((__m128i*)dst);
 
-        dstLine += dstStride;
-        srcLine += srcStride;
+        dst_line += dst_stride;
+        src_line += src_stride;
         w = width;
 
         /* Small head */
@@ -4502,7 +4500,7 @@ fbCompositeSrcAdd_8000x8000sse2 (pixman_implementation_t *imp,
             w--;
         }
 
-        coreCombineAddUsse2 ((uint32_t*)dst, (uint32_t*)src, NULL, w >> 2);
+        core_combine_add_u_sse2 ((uint32_t*)dst, (uint32_t*)src, NULL, w >> 2);
 
         /* Small tail */
         dst += w & 0xfffc;
@@ -4522,49 +4520,49 @@ fbCompositeSrcAdd_8000x8000sse2 (pixman_implementation_t *imp,
 }
 
 /* -------------------------------------------------------------------------------------------------
- * fbCompositeSrcAdd_8888x8888
+ * fast_composite_add_8888_8888
  */
 static void
-fbCompositeSrcAdd_8888x8888sse2 (pixman_implementation_t *imp,
+sse2_composite_add_8888_8888 (pixman_implementation_t *imp,
 				 pixman_op_t 	op,
-				pixman_image_t *	pSrc,
-				pixman_image_t *	pMask,
-				pixman_image_t *	 pDst,
-				int32_t		 xSrc,
-				int32_t      ySrc,
-				int32_t      xMask,
-				int32_t      yMask,
-				int32_t      xDst,
-				int32_t      yDst,
+				pixman_image_t *	src_image,
+				pixman_image_t *	mask_image,
+				pixman_image_t *	 dst_image,
+				int32_t		 src_x,
+				int32_t      src_y,
+				int32_t      mask_x,
+				int32_t      mask_y,
+				int32_t      dest_x,
+				int32_t      dest_y,
 				int32_t     width,
 				int32_t     height)
 {
-    uint32_t	*dstLine, *dst;
-    uint32_t	*srcLine, *src;
-    int	dstStride, srcStride;
+    uint32_t	*dst_line, *dst;
+    uint32_t	*src_line, *src;
+    int	dst_stride, src_stride;
 
-    fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
-    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
+    PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint32_t, src_stride, src_line, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint32_t, dst_stride, dst_line, 1);
 
     while (height--)
     {
-        dst = dstLine;
-        dstLine += dstStride;
-        src = srcLine;
-        srcLine += srcStride;
+        dst = dst_line;
+        dst_line += dst_stride;
+        src = src_line;
+        src_line += src_stride;
 
-        coreCombineAddUsse2 (dst, src, NULL, width);
+        core_combine_add_u_sse2 (dst, src, NULL, width);
     }
 
     _mm_empty();
 }
 
 /* -------------------------------------------------------------------------------------------------
- * fbCompositeCopyAreasse2
+ * sse2_composite_copy_area
  */
 
 static pixman_bool_t
-pixmanBltsse2 (uint32_t *src_bits,
+pixman_blt_sse2 (uint32_t *src_bits,
 	       uint32_t *dst_bits,
 	       int src_stride,
 	       int dst_stride,
@@ -4606,8 +4604,8 @@ pixmanBltsse2 (uint32_t *src_bits,
         return FALSE;
     }
 
-    cachePrefetch ((__m128i*)src_bytes);
-    cachePrefetch ((__m128i*)dst_bytes);
+    cache_prefetch ((__m128i*)src_bytes);
+    cache_prefetch ((__m128i*)dst_bytes);
 
     while (height--)
     {
@@ -4618,8 +4616,8 @@ pixmanBltsse2 (uint32_t *src_bits,
         dst_bytes += dst_stride;
         w = byte_width;
 
-        cachePrefetchNext ((__m128i*)s);
-        cachePrefetchNext ((__m128i*)d);
+        cache_prefetch_next ((__m128i*)s);
+        cache_prefetch_next ((__m128i*)d);
 
         while (w >= 2 && ((unsigned long)d & 3))
         {
@@ -4638,46 +4636,46 @@ pixmanBltsse2 (uint32_t *src_bits,
             d += 4;
         }
 
-        cachePrefetchNext ((__m128i*)s);
-        cachePrefetchNext ((__m128i*)d);
+        cache_prefetch_next ((__m128i*)s);
+        cache_prefetch_next ((__m128i*)d);
 
         while (w >= 64)
         {
             __m128i xmm0, xmm1, xmm2, xmm3;
 
             /* 128 bytes ahead */
-            cachePrefetch (((__m128i*)s) + 8);
-            cachePrefetch (((__m128i*)d) + 8);
+            cache_prefetch (((__m128i*)s) + 8);
+            cache_prefetch (((__m128i*)d) + 8);
 
-            xmm0 = load128Unaligned ((__m128i*)(s));
-            xmm1 = load128Unaligned ((__m128i*)(s+16));
-            xmm2 = load128Unaligned ((__m128i*)(s+32));
-            xmm3 = load128Unaligned ((__m128i*)(s+48));
+            xmm0 = load_128_unaligned ((__m128i*)(s));
+            xmm1 = load_128_unaligned ((__m128i*)(s+16));
+            xmm2 = load_128_unaligned ((__m128i*)(s+32));
+            xmm3 = load_128_unaligned ((__m128i*)(s+48));
 
-            save128Aligned ((__m128i*)(d),    xmm0);
-            save128Aligned ((__m128i*)(d+16), xmm1);
-            save128Aligned ((__m128i*)(d+32), xmm2);
-            save128Aligned ((__m128i*)(d+48), xmm3);
+            save_128_aligned ((__m128i*)(d),    xmm0);
+            save_128_aligned ((__m128i*)(d+16), xmm1);
+            save_128_aligned ((__m128i*)(d+32), xmm2);
+            save_128_aligned ((__m128i*)(d+48), xmm3);
 
             s += 64;
             d += 64;
             w -= 64;
         }
 
-        cachePrefetchNext ((__m128i*)s);
-        cachePrefetchNext ((__m128i*)d);
+        cache_prefetch_next ((__m128i*)s);
+        cache_prefetch_next ((__m128i*)d);
 
         while (w >= 16)
         {
-            save128Aligned ((__m128i*)d, load128Unaligned ((__m128i*)s) );
+            save_128_aligned ((__m128i*)d, load_128_unaligned ((__m128i*)s) );
 
             w -= 16;
             d += 16;
             s += 16;
         }
 
-        cachePrefetchNext ((__m128i*)s);
-        cachePrefetchNext ((__m128i*)d);
+        cache_prefetch_next ((__m128i*)s);
+        cache_prefetch_next ((__m128i*)d);
 
         while (w >= 4)
         {
@@ -4703,76 +4701,76 @@ pixmanBltsse2 (uint32_t *src_bits,
 }
 
 static void
-fbCompositeCopyAreasse2 (pixman_implementation_t *imp,
+sse2_composite_copy_area (pixman_implementation_t *imp,
 			 pixman_op_t       op,
-			pixman_image_t *	pSrc,
-			pixman_image_t *	pMask,
-			pixman_image_t *	pDst,
-			int32_t		xSrc,
-			int32_t		ySrc,
-			int32_t		xMask,
-			int32_t		yMask,
-			int32_t		xDst,
-			int32_t		yDst,
+			pixman_image_t *	src_image,
+			pixman_image_t *	mask_image,
+			pixman_image_t *	dst_image,
+			int32_t		src_x,
+			int32_t		src_y,
+			int32_t		mask_x,
+			int32_t		mask_y,
+			int32_t		dest_x,
+			int32_t		dest_y,
 			int32_t		width,
 			int32_t		height)
 {
-    pixmanBltsse2 (pSrc->bits.bits,
-		    pDst->bits.bits,
-		    pSrc->bits.rowstride,
-		    pDst->bits.rowstride,
-		    PIXMAN_FORMAT_BPP (pSrc->bits.format),
-		    PIXMAN_FORMAT_BPP (pDst->bits.format),
-		    xSrc, ySrc, xDst, yDst, width, height);
+    pixman_blt_sse2 (src_image->bits.bits,
+		    dst_image->bits.bits,
+		    src_image->bits.rowstride,
+		    dst_image->bits.rowstride,
+		    PIXMAN_FORMAT_BPP (src_image->bits.format),
+		    PIXMAN_FORMAT_BPP (dst_image->bits.format),
+		    src_x, src_y, dest_x, dest_y, width, height);
 }
 
 #if 0
 /* This code are buggy in MMX version, now the bug was translated to SSE2 version */
 void
-fbCompositeOver_x888x8x8888sse2 (pixman_implementation_t *imp,
+sse2_composite_over_x888_8_8888 (pixman_implementation_t *imp,
 				 pixman_op_t      op,
-				pixman_image_t * pSrc,
-				pixman_image_t * pMask,
-				pixman_image_t * pDst,
-				int32_t      xSrc,
-				int32_t      ySrc,
-				int32_t      xMask,
-				int32_t      yMask,
-				int32_t      xDst,
-				int32_t      yDst,
+				pixman_image_t * src_image,
+				pixman_image_t * mask_image,
+				pixman_image_t * dst_image,
+				int32_t      src_x,
+				int32_t      src_y,
+				int32_t      mask_x,
+				int32_t      mask_y,
+				int32_t      dest_x,
+				int32_t      dest_y,
 				int32_t     width,
 				int32_t     height)
 {
-    uint32_t	*src, *srcLine, s;
-    uint32_t    *dst, *dstLine, d;
-    uint8_t	    *mask, *maskLine;
+    uint32_t	*src, *src_line, s;
+    uint32_t    *dst, *dst_line, d;
+    uint8_t	    *mask, *mask_line;
     uint32_t    m;
-    int		 srcStride, maskStride, dstStride;
+    int		 src_stride, mask_stride, dst_stride;
     uint16_t w;
 
-    __m128i xmmSrc, xmmSrcLo, xmmSrcHi;
-    __m128i xmmDst, xmmDstLo, xmmDstHi;
-    __m128i xmmMask, xmmMaskLo, xmmMaskHi;
+    __m128i xmm_src, xmm_src_lo, xmm_src_hi;
+    __m128i xmm_dst, xmm_dst_lo, xmm_dst_hi;
+    __m128i xmm_mask, xmm_mask_lo, xmm_mask_hi;
 
-    fbComposeGetStart (pDst, xDst, yDst, uint32_t, dstStride, dstLine, 1);
-    fbComposeGetStart (pMask, xMask, yMask, uint8_t, maskStride, maskLine, 1);
-    fbComposeGetStart (pSrc, xSrc, ySrc, uint32_t, srcStride, srcLine, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint32_t, dst_stride, dst_line, 1);
+    PIXMAN_IMAGE_GET_LINE (mask_image, mask_x, mask_y, uint8_t, mask_stride, mask_line, 1);
+    PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint32_t, src_stride, src_line, 1);
 
     while (height--)
     {
-        src = srcLine;
-        srcLine += srcStride;
-        dst = dstLine;
-        dstLine += dstStride;
-        mask = maskLine;
-        maskLine += maskStride;
+        src = src_line;
+        src_line += src_stride;
+        dst = dst_line;
+        dst_line += dst_stride;
+        mask = mask_line;
+        mask_line += mask_stride;
 
         w = width;
 
         /* call prefetch hint to optimize cache load*/
-        cachePrefetch ((__m128i*)src);
-        cachePrefetch ((__m128i*)dst);
-        cachePrefetch ((__m128i*)mask);
+        cache_prefetch ((__m128i*)src);
+        cache_prefetch ((__m128i*)dst);
+        cache_prefetch ((__m128i*)mask);
 
         while (w && (unsigned long)dst & 15)
         {
@@ -4784,9 +4782,9 @@ fbCompositeOver_x888x8x8888sse2 (pixman_implementation_t *imp,
 
             if (m != 0xff)
             {
-                ms = inOver_1x64 (ms,
-                                  xMask00ff,
-                                  expandAlphaRev_1x64 (unpack_32_1x64 (m)),
+                ms = in_over_1x64 (ms,
+                                  mask_x00ff,
+                                  expand_alpha_rev_1x64 (unpack_32_1x64 (m)),
                                   unpack_32_1x64 (d));
             }
 
@@ -4795,39 +4793,39 @@ fbCompositeOver_x888x8x8888sse2 (pixman_implementation_t *imp,
         }
 
         /* call prefetch hint to optimize cache load*/
-        cachePrefetch ((__m128i*)src);
-        cachePrefetch ((__m128i*)dst);
-        cachePrefetch ((__m128i*)mask);
+        cache_prefetch ((__m128i*)src);
+        cache_prefetch ((__m128i*)dst);
+        cache_prefetch ((__m128i*)mask);
 
         while (w >= 4)
         {
             /* fill cache line with next memory */
-            cachePrefetchNext ((__m128i*)src);
-            cachePrefetchNext ((__m128i*)dst);
-            cachePrefetchNext ((__m128i*)mask);
+            cache_prefetch_next ((__m128i*)src);
+            cache_prefetch_next ((__m128i*)dst);
+            cache_prefetch_next ((__m128i*)mask);
 
             m = *(uint32_t*) mask;
-            xmmSrc = _mm_or_si128 (load128Unaligned ((__m128i*)src), Maskff000000);
+            xmm_src = _mm_or_si128 (load_128_unaligned ((__m128i*)src), mask_ff000000);
 
             if (m == 0xffffffff)
             {
-                save128Aligned ((__m128i*)dst, xmmSrc);
+                save_128_aligned ((__m128i*)dst, xmm_src);
             }
             else
             {
-                xmmDst = load128Aligned ((__m128i*)dst);
+                xmm_dst = load_128_aligned ((__m128i*)dst);
 
-                xmmMask = _mm_unpacklo_epi16 (unpack_32_1x128 (m), _mm_setzero_si128());
+                xmm_mask = _mm_unpacklo_epi16 (unpack_32_1x128 (m), _mm_setzero_si128());
 
-                unpack_128_2x128 (xmmSrc, &xmmSrcLo, &xmmSrcHi);
-                unpack_128_2x128 (xmmMask, &xmmMaskLo, &xmmMaskHi);
-                unpack_128_2x128 (xmmDst, &xmmDstLo, &xmmDstHi);
+                unpack_128_2x128 (xmm_src, &xmm_src_lo, &xmm_src_hi);
+                unpack_128_2x128 (xmm_mask, &xmm_mask_lo, &xmm_mask_hi);
+                unpack_128_2x128 (xmm_dst, &xmm_dst_lo, &xmm_dst_hi);
 
-                expandAlphaRev_2x128 (xmmMaskLo, xmmMaskHi, &xmmMaskLo, &xmmMaskHi);
+                expand_alpha_rev_2x128 (xmm_mask_lo, xmm_mask_hi, &xmm_mask_lo, &xmm_mask_hi);
 
-                inOver_2x128 (xmmSrcLo, xmmSrcHi, Mask00ff, Mask00ff, xmmMaskLo, xmmMaskHi, &xmmDstLo, &xmmDstHi);
+                in_over_2x128 (xmm_src_lo, xmm_src_hi, mask_00ff, mask_00ff, xmm_mask_lo, xmm_mask_hi, &xmm_dst_lo, &xmm_dst_hi);
 
-                save128Aligned( (__m128i*)dst, pack_2x128_128 (xmmDstLo, xmmDstHi));
+                save_128_aligned( (__m128i*)dst, pack_2x128_128 (xmm_dst_lo, xmm_dst_hi));
             }
 
             src += 4;
@@ -4852,9 +4850,9 @@ fbCompositeOver_x888x8x8888sse2 (pixman_implementation_t *imp,
                 {
                     d = *dst;
 
-                    *dst = pack_1x64_32 (inOver_1x64 (unpack_32_1x64 (s),
-                                                      xMask00ff,
-                                                      expandAlphaRev_1x64 (unpack_32_1x64 (m)),
+                    *dst = pack_1x64_32 (in_over_1x64 (unpack_32_1x64 (s),
+                                                      mask_x00ff,
+                                                      expand_alpha_rev_1x64 (unpack_32_1x64 (m)),
                                                       unpack_32_1x64 (d)));
                 }
 
@@ -4872,77 +4870,77 @@ fbCompositeOver_x888x8x8888sse2 (pixman_implementation_t *imp,
 
 static const pixman_fast_path_t sse2_fast_paths[] =
 {
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_r5g6b5,   fbCompositeSolidMask_nx8x0565sse2,     0 },
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_b5g6r5,   fbCompositeSolidMask_nx8x0565sse2,     0 },
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_null,     PIXMAN_a8r8g8b8, fbCompositeSolid_nx8888sse2,           0 },
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_null,     PIXMAN_x8r8g8b8, fbCompositeSolid_nx8888sse2,           0 },
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_null,     PIXMAN_r5g6b5,   fbCompositeSolid_nx0565sse2,           0 },
-    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,     PIXMAN_a8r8g8b8, fbCompositeSrc_8888x8888sse2,          0 },
-    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,     PIXMAN_x8r8g8b8, fbCompositeSrc_8888x8888sse2,          0 },
-    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,     PIXMAN_a8b8g8r8, fbCompositeSrc_8888x8888sse2,          0 },
-    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,     PIXMAN_x8b8g8r8, fbCompositeSrc_8888x8888sse2,          0 },
-    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,     PIXMAN_r5g6b5,   fbCompositeSrc_8888x0565sse2,          0 },
-    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,     PIXMAN_b5g6r5,   fbCompositeSrc_8888x0565sse2,          0 },
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_a8r8g8b8, fbCompositeSolidMask_nx8x8888sse2,     0 },
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_x8r8g8b8, fbCompositeSolidMask_nx8x8888sse2,     0 },
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_a8b8g8r8, fbCompositeSolidMask_nx8x8888sse2,     0 },
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_x8b8g8r8, fbCompositeSolidMask_nx8x8888sse2,     0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_r5g6b5,   sse2_composite_over_n_8_0565,     0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_b5g6r5,   sse2_composite_over_n_8_0565,     0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_null,     PIXMAN_a8r8g8b8, sse2_composite_over_n_8888,           0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_null,     PIXMAN_x8r8g8b8, sse2_composite_over_n_8888,           0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_null,     PIXMAN_r5g6b5,   sse2_composite_over_n_0565,           0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,     PIXMAN_a8r8g8b8, sse2_composite_over_8888_8888,          0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,     PIXMAN_x8r8g8b8, sse2_composite_over_8888_8888,          0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,     PIXMAN_a8b8g8r8, sse2_composite_over_8888_8888,          0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,     PIXMAN_x8b8g8r8, sse2_composite_over_8888_8888,          0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,     PIXMAN_r5g6b5,   sse2_composite_over_8888_0565,          0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,     PIXMAN_b5g6r5,   sse2_composite_over_8888_0565,          0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_a8r8g8b8, sse2_composite_over_n_8_8888,     0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_x8r8g8b8, sse2_composite_over_n_8_8888,     0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_a8b8g8r8, sse2_composite_over_n_8_8888,     0 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_x8b8g8r8, sse2_composite_over_n_8_8888,     0 },
 #if 0
     /* FIXME: This code are buggy in MMX version, now the bug was translated to SSE2 version */
-    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8,       PIXMAN_x8r8g8b8, fbCompositeOver_x888x8x8888sse2,       0 },
-    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8,       PIXMAN_a8r8g8b8, fbCompositeOver_x888x8x8888sse2,       0 },
-    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8,       PIXMAN_x8b8g8r8, fbCompositeOver_x888x8x8888sse2,       0 },
-    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8,       PIXMAN_a8r8g8b8, fbCompositeOver_x888x8x8888sse2,       0 },
+    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8,       PIXMAN_x8r8g8b8, sse2_composite_over_x888_8_8888,       0 },
+    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8,       PIXMAN_a8r8g8b8, sse2_composite_over_x888_8_8888,       0 },
+    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8,       PIXMAN_x8b8g8r8, sse2_composite_over_x888_8_8888,       0 },
+    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8,       PIXMAN_a8r8g8b8, sse2_composite_over_x888_8_8888,       0 },
 #endif
-    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8,       PIXMAN_a8r8g8b8, fbCompositeSrc_x888xnx8888sse2,        NEED_SOLID_MASK },
-    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8,       PIXMAN_x8r8g8b8, fbCompositeSrc_x888xnx8888sse2,        NEED_SOLID_MASK },
-    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8,       PIXMAN_a8b8g8r8, fbCompositeSrc_x888xnx8888sse2,        NEED_SOLID_MASK },
-    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8,       PIXMAN_x8b8g8r8, fbCompositeSrc_x888xnx8888sse2,        NEED_SOLID_MASK },
-    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8,       PIXMAN_a8r8g8b8, fbCompositeSrc_8888x8x8888sse2,        NEED_SOLID_MASK },
-    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8,       PIXMAN_x8r8g8b8, fbCompositeSrc_8888x8x8888sse2,        NEED_SOLID_MASK },
-    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_a8,       PIXMAN_a8b8g8r8, fbCompositeSrc_8888x8x8888sse2,        NEED_SOLID_MASK },
-    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_a8,       PIXMAN_x8b8g8r8, fbCompositeSrc_8888x8x8888sse2,        NEED_SOLID_MASK },
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8r8g8b8, PIXMAN_a8r8g8b8, fbCompositeSolidMask_nx8888x8888Csse2, NEED_COMPONENT_ALPHA },
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8r8g8b8, PIXMAN_x8r8g8b8, fbCompositeSolidMask_nx8888x8888Csse2, NEED_COMPONENT_ALPHA },
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8b8g8r8, PIXMAN_a8b8g8r8, fbCompositeSolidMask_nx8888x8888Csse2, NEED_COMPONENT_ALPHA },
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8b8g8r8, PIXMAN_x8b8g8r8, fbCompositeSolidMask_nx8888x8888Csse2, NEED_COMPONENT_ALPHA },
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8r8g8b8, PIXMAN_r5g6b5,   fbCompositeSolidMask_nx8888x0565Csse2, NEED_COMPONENT_ALPHA },
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8b8g8r8, PIXMAN_b5g6r5,   fbCompositeSolidMask_nx8888x0565Csse2, NEED_COMPONENT_ALPHA },
-    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8r8g8b8, PIXMAN_a8r8g8b8, fbCompositeSrc_8888RevNPx8888sse2,     NEED_PIXBUF },
-    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8b8g8r8, PIXMAN_a8r8g8b8, fbCompositeSrc_8888RevNPx8888sse2,     NEED_PIXBUF },
-    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8r8g8b8, PIXMAN_x8r8g8b8, fbCompositeSrc_8888RevNPx8888sse2,     NEED_PIXBUF },
-    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8b8g8r8, PIXMAN_x8r8g8b8, fbCompositeSrc_8888RevNPx8888sse2,     NEED_PIXBUF },
-    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8r8g8b8, PIXMAN_a8b8g8r8, fbCompositeSrc_8888RevNPx8888sse2,     NEED_PIXBUF },
-    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8b8g8r8, PIXMAN_a8b8g8r8, fbCompositeSrc_8888RevNPx8888sse2,     NEED_PIXBUF },
-    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8r8g8b8, PIXMAN_x8b8g8r8, fbCompositeSrc_8888RevNPx8888sse2,     NEED_PIXBUF },
-    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8b8g8r8, PIXMAN_x8b8g8r8, fbCompositeSrc_8888RevNPx8888sse2,     NEED_PIXBUF },
-    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8r8g8b8, PIXMAN_r5g6b5,   fbCompositeSrc_8888RevNPx0565sse2,     NEED_PIXBUF },
-    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8b8g8r8, PIXMAN_r5g6b5,   fbCompositeSrc_8888RevNPx0565sse2,     NEED_PIXBUF },
-    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8r8g8b8, PIXMAN_b5g6r5,   fbCompositeSrc_8888RevNPx0565sse2,     NEED_PIXBUF },
-    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8b8g8r8, PIXMAN_b5g6r5,   fbCompositeSrc_8888RevNPx0565sse2,     NEED_PIXBUF },
-    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_null,     PIXMAN_x8r8g8b8, fbCompositeCopyAreasse2,               0 },
-    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_null,     PIXMAN_x8b8g8r8, fbCompositeCopyAreasse2,               0 },
+    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8,       PIXMAN_a8r8g8b8, sse2_composite_over_x888_n_8888,        NEED_SOLID_MASK },
+    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8,       PIXMAN_x8r8g8b8, sse2_composite_over_x888_n_8888,        NEED_SOLID_MASK },
+    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8,       PIXMAN_a8b8g8r8, sse2_composite_over_x888_n_8888,        NEED_SOLID_MASK },
+    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8,       PIXMAN_x8b8g8r8, sse2_composite_over_x888_n_8888,        NEED_SOLID_MASK },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8,       PIXMAN_a8r8g8b8, sse2_composite_over_8888_n_8888,        NEED_SOLID_MASK },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8,       PIXMAN_x8r8g8b8, sse2_composite_over_8888_n_8888,        NEED_SOLID_MASK },
+    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_a8,       PIXMAN_a8b8g8r8, sse2_composite_over_8888_n_8888,        NEED_SOLID_MASK },
+    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_a8,       PIXMAN_x8b8g8r8, sse2_composite_over_8888_n_8888,        NEED_SOLID_MASK },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8r8g8b8, PIXMAN_a8r8g8b8, sse2_composite_over_n_8888_8888_ca, NEED_COMPONENT_ALPHA },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8r8g8b8, PIXMAN_x8r8g8b8, sse2_composite_over_n_8888_8888_ca, NEED_COMPONENT_ALPHA },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8b8g8r8, PIXMAN_a8b8g8r8, sse2_composite_over_n_8888_8888_ca, NEED_COMPONENT_ALPHA },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8b8g8r8, PIXMAN_x8b8g8r8, sse2_composite_over_n_8888_8888_ca, NEED_COMPONENT_ALPHA },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8r8g8b8, PIXMAN_r5g6b5,   sse2_composite_over_n_8888_0565_ca, NEED_COMPONENT_ALPHA },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8b8g8r8, PIXMAN_b5g6r5,   sse2_composite_over_n_8888_0565_ca, NEED_COMPONENT_ALPHA },
+    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8r8g8b8, PIXMAN_a8r8g8b8, sse2_composite_over_pixbuf_8888,     NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8b8g8r8, PIXMAN_a8r8g8b8, sse2_composite_over_pixbuf_8888,     NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8r8g8b8, PIXMAN_x8r8g8b8, sse2_composite_over_pixbuf_8888,     NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8b8g8r8, PIXMAN_x8r8g8b8, sse2_composite_over_pixbuf_8888,     NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8r8g8b8, PIXMAN_a8b8g8r8, sse2_composite_over_pixbuf_8888,     NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8b8g8r8, PIXMAN_a8b8g8r8, sse2_composite_over_pixbuf_8888,     NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8r8g8b8, PIXMAN_x8b8g8r8, sse2_composite_over_pixbuf_8888,     NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8b8g8r8, PIXMAN_x8b8g8r8, sse2_composite_over_pixbuf_8888,     NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8r8g8b8, PIXMAN_r5g6b5,   sse2_composite_over_pixbuf_0565,     NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8b8g8r8, PIXMAN_r5g6b5,   sse2_composite_over_pixbuf_0565,     NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8r8g8b8, PIXMAN_b5g6r5,   sse2_composite_over_pixbuf_0565,     NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8b8g8r8, PIXMAN_b5g6r5,   sse2_composite_over_pixbuf_0565,     NEED_PIXBUF },
+    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_null,     PIXMAN_x8r8g8b8, sse2_composite_copy_area,               0 },
+    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_null,     PIXMAN_x8b8g8r8, sse2_composite_copy_area,               0 },
 
-    { PIXMAN_OP_ADD,  PIXMAN_a8,       PIXMAN_null,     PIXMAN_a8,       fbCompositeSrcAdd_8000x8000sse2,       0 },
-    { PIXMAN_OP_ADD,  PIXMAN_a8r8g8b8, PIXMAN_null,     PIXMAN_a8r8g8b8, fbCompositeSrcAdd_8888x8888sse2,       0 },
-    { PIXMAN_OP_ADD,  PIXMAN_a8b8g8r8, PIXMAN_null,     PIXMAN_a8b8g8r8, fbCompositeSrcAdd_8888x8888sse2,       0 },
-    { PIXMAN_OP_ADD,  PIXMAN_solid,    PIXMAN_a8,       PIXMAN_a8,       fbCompositeSrcAdd_8888x8x8sse2,        0 },
+    { PIXMAN_OP_ADD,  PIXMAN_a8,       PIXMAN_null,     PIXMAN_a8,       sse2_composite_add_8000_8000,       0 },
+    { PIXMAN_OP_ADD,  PIXMAN_a8r8g8b8, PIXMAN_null,     PIXMAN_a8r8g8b8, sse2_composite_add_8888_8888,       0 },
+    { PIXMAN_OP_ADD,  PIXMAN_a8b8g8r8, PIXMAN_null,     PIXMAN_a8b8g8r8, sse2_composite_add_8888_8888,       0 },
+    { PIXMAN_OP_ADD,  PIXMAN_solid,    PIXMAN_a8,       PIXMAN_a8,       sse2_composite_add_8888_8_8,        0 },
 
-    { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_a8,       PIXMAN_a8r8g8b8, fbCompositeSolidMaskSrc_nx8x8888sse2,  0 },
-    { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_a8,       PIXMAN_x8r8g8b8, fbCompositeSolidMaskSrc_nx8x8888sse2,  0 },
-    { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_a8,       PIXMAN_a8b8g8r8, fbCompositeSolidMaskSrc_nx8x8888sse2,  0 },
-    { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_a8,       PIXMAN_x8b8g8r8, fbCompositeSolidMaskSrc_nx8x8888sse2,  0 },
-    { PIXMAN_OP_SRC, PIXMAN_a8r8g8b8,  PIXMAN_null,     PIXMAN_a8r8g8b8, fbCompositeCopyAreasse2,               0 },
-    { PIXMAN_OP_SRC, PIXMAN_a8b8g8r8,  PIXMAN_null,     PIXMAN_a8b8g8r8, fbCompositeCopyAreasse2,               0 },
-    { PIXMAN_OP_SRC, PIXMAN_a8r8g8b8,  PIXMAN_null,     PIXMAN_x8r8g8b8, fbCompositeCopyAreasse2,		0 },
-    { PIXMAN_OP_SRC, PIXMAN_a8b8g8r8,  PIXMAN_null,	PIXMAN_x8b8g8r8, fbCompositeCopyAreasse2,		0 },
-    { PIXMAN_OP_SRC, PIXMAN_x8r8g8b8,  PIXMAN_null,     PIXMAN_x8r8g8b8, fbCompositeCopyAreasse2,               0 },
-    { PIXMAN_OP_SRC, PIXMAN_x8b8g8r8,  PIXMAN_null,     PIXMAN_x8b8g8r8, fbCompositeCopyAreasse2,               0 },
-    { PIXMAN_OP_SRC, PIXMAN_r5g6b5,    PIXMAN_null,     PIXMAN_r5g6b5,   fbCompositeCopyAreasse2,               0 },
-    { PIXMAN_OP_SRC, PIXMAN_b5g6r5,    PIXMAN_null,     PIXMAN_b5g6r5,   fbCompositeCopyAreasse2,               0 },
+    { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_a8,       PIXMAN_a8r8g8b8, sse2_composite_src_n_8_8888,  0 },
+    { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_a8,       PIXMAN_x8r8g8b8, sse2_composite_src_n_8_8888,  0 },
+    { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_a8,       PIXMAN_a8b8g8r8, sse2_composite_src_n_8_8888,  0 },
+    { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_a8,       PIXMAN_x8b8g8r8, sse2_composite_src_n_8_8888,  0 },
+    { PIXMAN_OP_SRC, PIXMAN_a8r8g8b8,  PIXMAN_null,     PIXMAN_a8r8g8b8, sse2_composite_copy_area,               0 },
+    { PIXMAN_OP_SRC, PIXMAN_a8b8g8r8,  PIXMAN_null,     PIXMAN_a8b8g8r8, sse2_composite_copy_area,               0 },
+    { PIXMAN_OP_SRC, PIXMAN_a8r8g8b8,  PIXMAN_null,     PIXMAN_x8r8g8b8, sse2_composite_copy_area,		0 },
+    { PIXMAN_OP_SRC, PIXMAN_a8b8g8r8,  PIXMAN_null,	PIXMAN_x8b8g8r8, sse2_composite_copy_area,		0 },
+    { PIXMAN_OP_SRC, PIXMAN_x8r8g8b8,  PIXMAN_null,     PIXMAN_x8r8g8b8, sse2_composite_copy_area,               0 },
+    { PIXMAN_OP_SRC, PIXMAN_x8b8g8r8,  PIXMAN_null,     PIXMAN_x8b8g8r8, sse2_composite_copy_area,               0 },
+    { PIXMAN_OP_SRC, PIXMAN_r5g6b5,    PIXMAN_null,     PIXMAN_r5g6b5,   sse2_composite_copy_area,               0 },
+    { PIXMAN_OP_SRC, PIXMAN_b5g6r5,    PIXMAN_null,     PIXMAN_b5g6r5,   sse2_composite_copy_area,               0 },
 
-    { PIXMAN_OP_IN,  PIXMAN_a8,        PIXMAN_null,     PIXMAN_a8,       fbCompositeIn_8x8sse2,                 0 },
-    { PIXMAN_OP_IN,  PIXMAN_solid,     PIXMAN_a8,       PIXMAN_a8,       fbCompositeIn_nx8x8sse2,               0 },
+    { PIXMAN_OP_IN,  PIXMAN_a8,        PIXMAN_null,     PIXMAN_a8,       sse2_composite_in_8_8,                 0 },
+    { PIXMAN_OP_IN,  PIXMAN_solid,     PIXMAN_a8,       PIXMAN_a8,       sse2_composite_in_n_8_8,               0 },
 
     { PIXMAN_OP_NONE },
 };
@@ -5014,7 +5012,7 @@ sse2_blt (pixman_implementation_t *imp,
 	  int dst_x, int dst_y,
 	  int width, int height)
 {
-    if (!pixmanBltsse2 (
+    if (!pixman_blt_sse2 (
 	    src_bits, dst_bits, src_stride, dst_stride, src_bpp, dst_bpp,
 	    src_x, src_y, dst_x, dst_y, width, height))
 
@@ -5042,7 +5040,7 @@ sse2_fill (pixman_implementation_t *imp,
 	   int height,
 	   uint32_t xor)
 {
-    if (!pixmanFillsse2 (bits, stride, bpp, x, y, width, height, xor))
+    if (!pixman_fill_sse2 (bits, stride, bpp, x, y, width, height, xor))
     {
 	return _pixman_implementation_fill (
 	    imp->delegate, bits, stride, bpp, x, y, width, height, xor);
@@ -5058,60 +5056,60 @@ _pixman_implementation_create_sse2 (void)
     pixman_implementation_t *imp = _pixman_implementation_create (mmx);
 
     /* SSE2 constants */
-    Mask565r  = createMask_2x32_128 (0x00f80000, 0x00f80000);
-    Mask565g1 = createMask_2x32_128 (0x00070000, 0x00070000);
-    Mask565g2 = createMask_2x32_128 (0x000000e0, 0x000000e0);
-    Mask565b  = createMask_2x32_128 (0x0000001f, 0x0000001f);
-    MaskRed   = createMask_2x32_128 (0x00f80000, 0x00f80000);
-    MaskGreen = createMask_2x32_128 (0x0000fc00, 0x0000fc00);
-    MaskBlue  = createMask_2x32_128 (0x000000f8, 0x000000f8);
-    Mask565FixRB = createMask_2x32_128 (0x00e000e0, 0x00e000e0);
-    Mask565FixG = createMask_2x32_128  (0x0000c000, 0x0000c000);
-    Mask0080 = createMask_16_128 (0x0080);
-    Mask00ff = createMask_16_128 (0x00ff);
-    Mask0101 = createMask_16_128 (0x0101);
-    Maskffff = createMask_16_128 (0xffff);
-    Maskff000000 = createMask_2x32_128 (0xff000000, 0xff000000);
-    MaskAlpha = createMask_2x32_128 (0x00ff0000, 0x00000000);
+    mask_565_r  = create_mask_2x32_128 (0x00f80000, 0x00f80000);
+    mask_565_g1 = create_mask_2x32_128 (0x00070000, 0x00070000);
+    mask_565_g2 = create_mask_2x32_128 (0x000000e0, 0x000000e0);
+    mask_565_b  = create_mask_2x32_128 (0x0000001f, 0x0000001f);
+    mask_red   = create_mask_2x32_128 (0x00f80000, 0x00f80000);
+    mask_green = create_mask_2x32_128 (0x0000fc00, 0x0000fc00);
+    mask_blue  = create_mask_2x32_128 (0x000000f8, 0x000000f8);
+    mask_565_fix_rb = create_mask_2x32_128 (0x00e000e0, 0x00e000e0);
+    mask_565_fix_g = create_mask_2x32_128  (0x0000c000, 0x0000c000);
+    mask_0080 = create_mask_16_128 (0x0080);
+    mask_00ff = create_mask_16_128 (0x00ff);
+    mask_0101 = create_mask_16_128 (0x0101);
+    mask_ffff = create_mask_16_128 (0xffff);
+    mask_ff000000 = create_mask_2x32_128 (0xff000000, 0xff000000);
+    mask_alpha = create_mask_2x32_128 (0x00ff0000, 0x00000000);
     
     /* MMX constants */
-    xMask565rgb = createMask_2x32_64 (0x000001f0, 0x003f001f);
-    xMask565Unpack = createMask_2x32_64 (0x00000084, 0x04100840);
+    mask_x565_rgb = create_mask_2x32_64 (0x000001f0, 0x003f001f);
+    mask_x565_unpack = create_mask_2x32_64 (0x00000084, 0x04100840);
     
-    xMask0080 = createMask_16_64 (0x0080);
-    xMask00ff = createMask_16_64 (0x00ff);
-    xMask0101 = createMask_16_64 (0x0101);
-    xMaskAlpha = createMask_2x32_64 (0x00ff0000, 0x00000000);
+    mask_x0080 = create_mask_16_64 (0x0080);
+    mask_x00ff = create_mask_16_64 (0x00ff);
+    mask_x0101 = create_mask_16_64 (0x0101);
+    mask_x_alpha = create_mask_2x32_64 (0x00ff0000, 0x00000000);
 
     _mm_empty();
 
     /* Set up function pointers */
     
     /* SSE code patch for fbcompose.c */
-    imp->combine_32[PIXMAN_OP_OVER] = sse2CombineOverU;
-    imp->combine_32[PIXMAN_OP_OVER_REVERSE] = sse2CombineOverReverseU;
-    imp->combine_32[PIXMAN_OP_IN] = sse2CombineInU;
-    imp->combine_32[PIXMAN_OP_IN_REVERSE] = sse2CombineInReverseU;
-    imp->combine_32[PIXMAN_OP_OUT] = sse2CombineOutU;
-    imp->combine_32[PIXMAN_OP_OUT_REVERSE] = sse2CombineOutReverseU;
-    imp->combine_32[PIXMAN_OP_ATOP] = sse2CombineAtopU;
-    imp->combine_32[PIXMAN_OP_ATOP_REVERSE] = sse2CombineAtopReverseU;
-    imp->combine_32[PIXMAN_OP_XOR] = sse2CombineXorU;
-    imp->combine_32[PIXMAN_OP_ADD] = sse2CombineAddU;
+    imp->combine_32[PIXMAN_OP_OVER] = sse2_combine_over_u;
+    imp->combine_32[PIXMAN_OP_OVER_REVERSE] = sse2_combine_over_reverse_u;
+    imp->combine_32[PIXMAN_OP_IN] = sse2_combine_in_u;
+    imp->combine_32[PIXMAN_OP_IN_REVERSE] = sse2_combine_in_reverse_u;
+    imp->combine_32[PIXMAN_OP_OUT] = sse2_combine_out_u;
+    imp->combine_32[PIXMAN_OP_OUT_REVERSE] = sse2_combine_out_reverse_u;
+    imp->combine_32[PIXMAN_OP_ATOP] = sse2_combine_atop_u;
+    imp->combine_32[PIXMAN_OP_ATOP_REVERSE] = sse2_combine_atop_reverse_u;
+    imp->combine_32[PIXMAN_OP_XOR] = sse2_combine_xor_u;
+    imp->combine_32[PIXMAN_OP_ADD] = sse2_combine_add_u;
     
-    imp->combine_32[PIXMAN_OP_SATURATE] = sse2CombineSaturateU;
+    imp->combine_32[PIXMAN_OP_SATURATE] = sse2_combine_saturate_u;
     
-    imp->combine_32_ca[PIXMAN_OP_SRC] = sse2CombineSrcC;
-    imp->combine_32_ca[PIXMAN_OP_OVER] = sse2CombineOverC;
-    imp->combine_32_ca[PIXMAN_OP_OVER_REVERSE] = sse2CombineOverReverseC;
-    imp->combine_32_ca[PIXMAN_OP_IN] = sse2CombineInC;
-    imp->combine_32_ca[PIXMAN_OP_IN_REVERSE] = sse2CombineInReverseC;
-    imp->combine_32_ca[PIXMAN_OP_OUT] = sse2CombineOutC;
-    imp->combine_32_ca[PIXMAN_OP_OUT_REVERSE] = sse2CombineOutReverseC;
-    imp->combine_32_ca[PIXMAN_OP_ATOP] = sse2CombineAtopC;
-    imp->combine_32_ca[PIXMAN_OP_ATOP_REVERSE] = sse2CombineAtopReverseC;
-    imp->combine_32_ca[PIXMAN_OP_XOR] = sse2CombineXorC;
-    imp->combine_32_ca[PIXMAN_OP_ADD] = sse2CombineAddC;
+    imp->combine_32_ca[PIXMAN_OP_SRC] = sse2_combine_src_ca;
+    imp->combine_32_ca[PIXMAN_OP_OVER] = sse2_combine_over_ca;
+    imp->combine_32_ca[PIXMAN_OP_OVER_REVERSE] = sse2_combine_over_reverse_ca;
+    imp->combine_32_ca[PIXMAN_OP_IN] = sse2_combine_in_ca;
+    imp->combine_32_ca[PIXMAN_OP_IN_REVERSE] = sse2_combine_in_reverse_ca;
+    imp->combine_32_ca[PIXMAN_OP_OUT] = sse2_combine_out_ca;
+    imp->combine_32_ca[PIXMAN_OP_OUT_REVERSE] = sse2_combine_out_reverse_ca;
+    imp->combine_32_ca[PIXMAN_OP_ATOP] = sse2_combine_atop_ca;
+    imp->combine_32_ca[PIXMAN_OP_ATOP_REVERSE] = sse2_combine_atop_reverse_ca;
+    imp->combine_32_ca[PIXMAN_OP_XOR] = sse2_combine_xor_ca;
+    imp->combine_32_ca[PIXMAN_OP_ADD] = sse2_combine_add_ca;
     
     imp->composite = sse2_composite;
     imp->blt = sse2_blt;

@@ -89,7 +89,7 @@ linear_gradient_classify (pixman_image_t *image,
 
 static void
 linear_gradient_get_scanline_32 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
-				 const uint32_t *mask, uint32_t maskBits)
+				 const uint32_t *mask, uint32_t mask_bits)
 {
     pixman_vector_t v, unit;
     pixman_fixed_32_32_t l;
@@ -156,7 +156,7 @@ linear_gradient_get_scanline_32 (pixman_image_t *image, int x, int y, int width,
 		}
 	    } else {
 		while (buffer < end) {
-		    if (*mask++ & maskBits)
+		    if (*mask++ & mask_bits)
 		    {
 			*(buffer) = _pixman_gradient_walker_pixel (&walker, t);
 		    }
@@ -195,7 +195,7 @@ linear_gradient_get_scanline_32 (pixman_image_t *image, int x, int y, int width,
 	{
 	    while (buffer < end)
 	    {
-		if (!mask || *mask++ & maskBits)
+		if (!mask || *mask++ & mask_bits)
 		{
 		    if (v.vector[2] == 0) {
 			t = 0;
@@ -220,7 +220,7 @@ static void
 linear_gradient_property_changed (pixman_image_t *image)
 {
     image->common.get_scanline_32 = linear_gradient_get_scanline_32;
-    image->common.get_scanline_64 = _pixman_image_get_scanline_64_generic;
+    image->common.get_scanline_64 = _pixman_image_get_scanline_generic_64;
 }
 
 PIXMAN_EXPORT pixman_image_t *

@@ -64,6 +64,11 @@ while (<STDIN>) {
     s/\bFbComposeFunctions\b/FbComposeFunctions$pixel_size/;
     s/combine_width/combine_$pixel_size/;
     s/_pixman_setup_combiner_functions_width/_pixman_setup_combiner_functions_$pixel_size/;
+    s/UNc/UN$size/g;
+    s/ALPHA_c/ALPHA_$size/g;
+    s/RED_c/RED_$size/g;
+    s/GREEN_c/GREEN_$size/g;
+    s/BLUE_c/BLUE_$size/g;
 
     # Convert comp*_t values into the appropriate real types.
     s/comp1_t/uint${size}_t/g;

@@ -289,16 +289,17 @@ pixman_have_arm_neon (void)
 #include <sys/auxv.h>
 #endif
 
-enum CPUFeatures {
-    NoFeatures = 0,
+typedef enum {
+    NO_FEATURES = 0,
     MMX = 0x1,
-    MMX_Extensions = 0x2,
+    MMX_EXTENSIONS = 0x2,
     SSE = 0x6,
     SSE2 = 0x8,
     CMOV = 0x10
-};
+} cpu_features_t;
+    
 
-static unsigned int detectCPUFeatures(void) {
+static unsigned int detect_cpu_features(void) {
     unsigned int features = 0;
     unsigned int result = 0;
 
@@ -309,7 +310,7 @@ static unsigned int detectCPUFeatures(void) {
         if (result & AV_386_MMX)
             features |= MMX;
         if (result & AV_386_AMD_MMX)
-            features |= MMX_Extensions;
+            features |= MMX_EXTENSIONS;
         if (result & AV_386_SSE)
             features |= SSE;
         if (result & AV_386_SSE2)
@@ -453,7 +454,7 @@ static unsigned int detectCPUFeatures(void) {
             }
 #endif
             if (result & (1<<22))
-                features |= MMX_Extensions;
+                features |= MMX_EXTENSIONS;
         }
     }
 #endif /* HAVE_GETISAX */
@@ -469,8 +470,8 @@ pixman_have_mmx (void)
 
     if (!initialized)
     {
-        unsigned int features = detectCPUFeatures();
-	mmx_present = (features & (MMX|MMX_Extensions)) == (MMX|MMX_Extensions);
+        unsigned int features = detect_cpu_features();
+	mmx_present = (features & (MMX|MMX_EXTENSIONS)) == (MMX|MMX_EXTENSIONS);
         initialized = TRUE;
     }
 
@@ -486,8 +487,8 @@ pixman_have_sse2 (void)
 
     if (!initialized)
     {
-        unsigned int features = detectCPUFeatures();
-        sse2_present = (features & (MMX|MMX_Extensions|SSE|SSE2)) == (MMX|MMX_Extensions|SSE|SSE2);
+        unsigned int features = detect_cpu_features();
+        sse2_present = (features & (MMX|MMX_EXTENSIONS|SSE|SSE2)) == (MMX|MMX_EXTENSIONS|SSE|SSE2);
         initialized = TRUE;
     }
 

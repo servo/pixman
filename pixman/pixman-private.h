@@ -196,13 +196,13 @@ void
 _pixman_bits_image_setup_raw_accessors (bits_image_t   *image);
 
 void
-_pixman_image_get_scanline_64_generic  (pixman_image_t *pict,
+_pixman_image_get_scanline_generic_64  (pixman_image_t *pict,
 					int             x,
 					int             y,
 					int             width,
 					uint32_t       *buffer,
 					const uint32_t *mask,
-					uint32_t        maskBits);
+					uint32_t        mask_bits);
 
 source_pict_class_t
 _pixman_image_classify (pixman_image_t *image,
@@ -256,7 +256,7 @@ uint32_t
 _pixman_image_get_solid (pixman_image_t *image,
 			pixman_format_code_t format);
 
-#define fbComposeGetStart(pict,x,y,type,out_stride,line,mul) do {	\
+#define PIXMAN_IMAGE_GET_LINE(pict,x,y,type,out_stride,line,mul) do {	\
 	uint32_t	*__bits__;					\
 	int		__stride__;					\
 									\
@@ -320,7 +320,7 @@ _pixman_gradient_walker_pixel (pixman_gradient_walker_t       *walker,
 #define X_FRAC_FIRST(n)	(STEP_X_SMALL(n) / 2)
 #define X_FRAC_LAST(n)	(X_FRAC_FIRST(n) + (N_X_FRAC(n) - 1) * STEP_X_SMALL(n))
 
-#define RenderSamplesX(x,n)	((n) == 1 ? 0 : (pixman_fixed_frac (x) + X_FRAC_FIRST(n)) / STEP_X_SMALL(n))
+#define RENDER_SAMPLES_X(x,n)	((n) == 1 ? 0 : (pixman_fixed_frac (x) + X_FRAC_FIRST(n)) / STEP_X_SMALL(n))
 
 void
 pixman_rasterize_edges_accessors (pixman_image_t *image,
@@ -562,18 +562,18 @@ _pixman_run_fast_path (const pixman_fast_path_t *paths,
 void
 _pixman_walk_composite_region (pixman_implementation_t *imp,
 			       pixman_op_t op,
-			       pixman_image_t * pSrc,
-			       pixman_image_t * pMask,
-			       pixman_image_t * pDst,
-			       int16_t xSrc,
-			       int16_t ySrc,
-			       int16_t xMask,
-			       int16_t yMask,
-			       int16_t xDst,
-			       int16_t yDst,
+			       pixman_image_t * src_image,
+			       pixman_image_t * mask_image,
+			       pixman_image_t * dst_image,
+			       int16_t src_x,
+			       int16_t src_y,
+			       int16_t mask_x,
+			       int16_t mask_y,
+			       int16_t dest_x,
+			       int16_t dest_y,
 			       uint16_t width,
 			       uint16_t height,
-			       pixman_composite_func_t compositeRect);
+			       pixman_composite_func_t composite_rect);
 
 void
 pixman_expand (uint64_t *dst, const uint32_t *src, pixman_format_code_t, int width);
@@ -621,10 +621,10 @@ pixman_region16_copy_from_region32 (pixman_region16_t *dst,
 
 /* Conversion between 8888 and 0565 */
 
-#define cvt8888to0565(s)    ((((s) >> 3) & 0x001f) | \
+#define CONVERT_8888_TO_0565(s)    ((((s) >> 3) & 0x001f) | \
 			     (((s) >> 5) & 0x07e0) | \
 			     (((s) >> 8) & 0xf800))
-#define cvt0565to0888(s)    (((((s) << 3) & 0xf8) | (((s) >> 2) & 0x7)) | \
+#define CONVERT_0565_TO_0888(s)    (((((s) << 3) & 0xf8) | (((s) >> 2) & 0x7)) | \
 			     ((((s) << 5) & 0xfc00) | (((s) >> 1) & 0x300)) | \
 			     ((((s) << 8) & 0xf80000) | (((s) << 3) & 0x70000)))
 
