@@ -30,8 +30,6 @@ TESTPROGRAMS +=			\
 	convolution-test	\
 	trap-test
 
-noinst_PROGRAMS = $(TESTPROGRAMS)
-
 INCLUDES += $(GTK_CFLAGS)
 
 gradient_test_LDADD = $(GTK_LDADD)
@@ -59,4 +57,6 @@ convolution_test_LDADD = $(GTK_LDADD)
 convolution_test_SOURCES = convolution-test.c utils.c utils.h
 
 endif
+
+noinst_PROGRAMS = $(TESTPROGRAMS)
 
