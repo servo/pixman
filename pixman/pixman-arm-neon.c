@@ -1781,8 +1781,8 @@ neon_composite_over_n_8_0565 (
 		}
 
 		// We should avoid reading beyond scanline ends for safety
-		if(aligned_line < (dst_line - x_dst) ||
-			(aligned_line + (copy_count * 16 / sizeof(*dst_line))) > ((dst_line - x_dst) + p_dst->bits.width))
+		if(aligned_line < (dst_line - dest_x) ||
+			(aligned_line + (copy_count * 16 / sizeof(*dst_line))) > ((dst_line - dest_x) + dst_image->bits.width))
 		{
 			// switch to precise read
 			copy_offset = kernel_offset = 0;
@@ -1934,8 +1934,8 @@ neon_composite_over_n_0565 (
 		}
 
 		// We should avoid reading beyond scanline ends for safety
-		if(aligned_line < (dst_line - x_dst) ||
-			(aligned_line + (copy_count * 16 / sizeof(*dst_line))) > ((dst_line - x_dst) + p_dst->bits.width))
+		if(aligned_line < (dst_line - dest_x) ||
+			(aligned_line + (copy_count * 16 / sizeof(*dst_line))) > ((dst_line - dest_x) + dst_image->bits.width))
 		{
 			// switch to precise read
 			copy_offset = kernel_offset = 0;
@@ -2071,8 +2071,8 @@ neon_composite_over_8888_0565 (
 		}
 
 		// We should avoid reading beyond scanline ends for safety
-		if(aligned_line < (dst_line - x_dst) ||
-			(aligned_line + (copy_count * 16 / sizeof(*dst_line))) > ((dst_line - x_dst) + p_dst->bits.width))
+		if(aligned_line < (dst_line - dest_x) ||
+			(aligned_line + (copy_count * 16 / sizeof(*dst_line))) > ((dst_line - dest_x) + dst_image->bits.width))
 		{
 			// switch to precise read
 			copy_offset = kernel_offset = 0;
