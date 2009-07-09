@@ -329,7 +329,8 @@ int main(int argc, char *argv[])
         if (n == 3000000) {
             /* predefined value for running with all the fastpath functions disabled  */
             /* it needs to be updated every time changes are introduced to this program! */
-            if (crc == 0xC950E5BB) {
+
+	    if (crc == 0x0B633CF4) {
                 printf("scaling test passed\n");
             } else {
                 printf("scaling test failed!\n");
