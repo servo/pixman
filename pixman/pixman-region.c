@@ -2142,9 +2142,7 @@ PREFIX(_init_rects) (region_type_t *region,
     if (region->data->numRects == 0)
     {
 	FREE_DATA (region);
-	region->data = NULL;
-
-	GOOD (region);
+	PREFIX(_init) (region);
 	
 	return TRUE;
     }

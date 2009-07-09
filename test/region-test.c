@@ -14,6 +14,14 @@ main ()
 	{ 30, 30, 30, 40 },
 	{ 50, 45, 60, 44 },
     };
+    pixman_box32_t boxes2[] = {
+	{ 2, 6, 7, 6 },
+	{ 4, 1, 6, 7 },
+    };
+    pixman_box32_t boxes3[] = {
+	{ 2, 6, 7, 6 },
+	{ 4, 1, 6, 1 },
+    };
     int i;
     pixman_box32_t *b;
 
@@ -43,6 +51,28 @@ main ()
 	assert (b[i].x1 < b[i].x2);
 	assert (b[i].y1 < b[i].y2);
     }
+
+    /* This would produce a rectangle containing the bounding box
+     * of the two rectangles. The correct result is to eliminate
+     * the broken rectangle.
+     */
+    pixman_region32_init_rects (&r1, boxes2, 2);
+
+    b = pixman_region32_rectangles (&r1, &i);
+
+    assert (i == 1);
+
+    assert (b[0].x1 == 4);
+    assert (b[0].y1 == 1);
+    assert (b[0].x2 == 6);
+    assert (b[0].y2 == 7);
+
+    /* This should produce an empty region */
+    pixman_region32_init_rects (&r1, boxes3, 2);
+
+    b = pixman_region32_rectangles (&r1, &i);
+
+    assert (i == 0);
 
     return 0;
 }
