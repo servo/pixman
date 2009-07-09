@@ -434,6 +434,9 @@ void                    pixman_region_set_static_pointers (pixman_box16_t       
 							   pixman_region16_data_t *broken_data);
 
 
+
+void           pixman_disable_out_of_bounds_workaround (void);
+
 /* creation/destruction */
 void                    pixman_region_init                (pixman_region16_t      *region);
 void                    pixman_region_init_rect           (pixman_region16_t      *region,

@@ -310,6 +310,8 @@ int main(int argc, char *argv[])
     int i, n = 0;
     uint32_t crc = 0;
 
+    pixman_disable_out_of_bounds_workaround();
+    
     if (argc >= 2)
         n = atoi(argv[1]);
 

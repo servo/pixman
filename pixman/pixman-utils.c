@@ -30,6 +30,26 @@
 
 #include "pixman-private.h"
 
+static pixman_bool_t out_of_bounds_workaround = TRUE;
+
+/* Old X servers rely on out-of-bounds accesses when they are asked
+ * to composite with a window as the source. They create a pixman image
+ * pointing to some bogus position in memory, but then they set a clip
+ * region to the position where the actual bits are.
+ *
+ * Due to a bug in old versions of pixman, where it would not clip
+ * against the image bounds when a clip region was set, this would
+ * actually work. So by default we allow certain out-of-bound access
+ * to happen unless explicitly disabled.
+ *
+ * Fixed X servers should call this function to disable the workaround.
+ */
+PIXMAN_EXPORT void
+pixman_disable_out_of_bounds_workaround (void)
+{
+    out_of_bounds_workaround = FALSE;
+}
+
 /*
  * Computing composite region
  */
@@ -131,9 +151,13 @@ pixman_compute_composite_region32 (pixman_region32_t *	region,
     /* Some X servers rely on an old bug, where pixman would just believe the
      * set clip_region and not clip against the destination geometry. So, 
      * since only X servers set "source clip", we don't clip against
-     * destination geometry when that is set.
+     * destination geometry when that is set and when the workaround has
+     * not been explicitly disabled by
+     *
+     *      pixman_disable_out_of_bounds_workaround();
+     *
      */
-    if (!dst_image->common.clip_sources)
+    if (!(dst_image->common.clip_sources && out_of_bounds_workaround))
     {
 	region->extents.x2 = MIN (region->extents.x2, dst_image->bits.width);
 	region->extents.y2 = MIN (region->extents.y2, dst_image->bits.height);
@@ -477,7 +501,9 @@ _pixman_walk_composite_region (pixman_implementation_t *imp,
     pixman_region32_init (&region);
 
     if (pixman_compute_composite_region32 (
-	    &region, src_image, mask_image, dst_image, src_x, src_y, mask_x, mask_y, dest_x, dest_y, width, height))
+	    &region, src_image, mask_image, dst_image,
+	    src_x, src_y, mask_x, mask_y, dest_x, dest_y,
+	    width, height))
     {
 	walk_region_internal (imp, op,
 			      src_image, mask_image, dst_image,
@@ -584,6 +610,38 @@ image_covers (pixman_image_t *image, pixman_box32_t *extents, int x, int y)
     return TRUE;
 }
 
+static pixman_bool_t
+source_image_needs_out_of_bounds_workaround (pixman_image_t *image)
+{
+    if (image->common.clip_sources		&&
+	!image->common.client_clip		&&
+	image->common.have_clip_region)
+    {
+	const pixman_box32_t *boxes;
+	int n;
+
+	/* There is no client clip, so the drawable in question
+	 * is a window if the clip region is different from the
+	 * full drawable
+	 */
+	boxes = pixman_region32_rectangles (&image->common.clip_region, &n);
+	if (n == 1)
+	{
+	    if (boxes[0].x1 == 0 && boxes[0].y1 == 0 &&
+		boxes[0].x2 == image->bits.width &&
+		boxes[0].y2 == image->bits.height)
+	    {
+		/* pixmap */
+		return FALSE;
+	    }
+	}
+
+	return TRUE;
+    }
+	
+    return FALSE;
+}
+
 pixman_bool_t
 _pixman_run_fast_path (const pixman_fast_path_t *paths,
 		       pixman_implementation_t *imp,
@@ -677,8 +735,9 @@ _pixman_run_fast_path (const pixman_fast_path_t *paths,
 	{
 	    pixman_box32_t *extents = pixman_region32_extents (&region);
 
-	    if (image_covers (src, extents, dest_x - src_x, dest_y - src_y)   &&
-		(!mask || image_covers (mask, extents, dest_x - mask_x, dest_y - mask_y)))
+	    if ((image_covers (src, extents, dest_x - src_x, dest_y - src_y)   &&
+		 (!mask || image_covers (mask, extents, dest_x - mask_x, dest_y - mask_y))) ||
+		source_image_needs_out_of_bounds_workaround (src))
 	    {
 		walk_region_internal (imp, op,
 				      src, mask, dest,
