@@ -242,7 +242,7 @@ vmx_combine_over_u_no_mask (uint32_t *dest, const uint32_t *src, int width)
     for (i = width%4; --i >=0;) {
         uint32_t s = src[i];
         uint32_t d = dest[i];
-        uint32_t ia = Alpha (~s);
+        uint32_t ia = ALPHA_8 (~s);
 
         UN8x4_MUL_UN8_ADD_UN8x4 (d, ia, s);
         dest[i] = d;
@@ -277,14 +277,14 @@ vmx_combine_over_u_mask (uint32_t *dest,
     }
 
     for (i = width%4; --i >=0;) {
-        uint32_t m = Alpha (mask[i]);
+        uint32_t m = ALPHA_8 (mask[i]);
         uint32_t s = src[i];
         uint32_t d = dest[i];
         uint32_t ia;
 
         UN8x4_MUL_UN8 (s, m);
 
-        ia = Alpha (~s);
+        ia = ALPHA_8 (~s);
 
         UN8x4_MUL_UN8_ADD_UN8x4 (d, ia, s);
         dest[i] = d;
@@ -328,7 +328,7 @@ vmx_combine_over_reverse_u_no_mask (uint32_t *dest, const uint32_t *src, int wid
     for (i = width%4; --i >=0;) {
         uint32_t s = src[i];
         uint32_t d = dest[i];
-        uint32_t ia = Alpha (~dest[i]);
+        uint32_t ia = ALPHA_8 (~dest[i]);
 
         UN8x4_MUL_UN8_ADD_UN8x4 (s, ia, d);
         dest[i] = s;
@@ -363,10 +363,10 @@ vmx_combine_over_reverse_u_mask (uint32_t *dest,
     }
 
     for (i = width%4; --i >=0;) {
-        uint32_t m = Alpha (mask[i]);
+        uint32_t m = ALPHA_8 (mask[i]);
         uint32_t s = src[i];
         uint32_t d = dest[i];
-        uint32_t ia = Alpha (~dest[i]);
+        uint32_t ia = ALPHA_8 (~dest[i]);
 
         UN8x4_MUL_UN8 (s, m);
 
@@ -412,7 +412,7 @@ vmx_combine_in_u_no_mask (uint32_t *dest, const uint32_t *src, int width)
     for (i = width%4; --i >=0;) {
 
         uint32_t s = src[i];
-        uint32_t a = Alpha (dest[i]);
+        uint32_t a = ALPHA_8 (dest[i]);
         UN8x4_MUL_UN8 (s, a);
         dest[i] = s;
     }
@@ -446,9 +446,9 @@ vmx_combine_in_u_mask (uint32_t *dest,
     }
 
     for (i = width%4; --i >=0;) {
-        uint32_t m = Alpha (mask[i]);
+        uint32_t m = ALPHA_8 (mask[i]);
         uint32_t s = src[i];
-        uint32_t a = Alpha (dest[i]);
+        uint32_t a = ALPHA_8 (dest[i]);
 
         UN8x4_MUL_UN8 (s, m);
 
@@ -493,7 +493,7 @@ vmx_combine_in_reverse_u_no_mask (uint32_t *dest, const uint32_t *src, int width
 
     for (i = width%4; --i >=0;) {
         uint32_t d = dest[i];
-        uint32_t a = Alpha (src[i]);
+        uint32_t a = ALPHA_8 (src[i]);
         UN8x4_MUL_UN8 (d, a);
         dest[i] = d;
     }
@@ -527,13 +527,13 @@ vmx_combine_in_reverse_u_mask (uint32_t *dest,
     }
 
     for (i = width%4; --i >=0;) {
-        uint32_t m = Alpha (mask[i]);
+        uint32_t m = ALPHA_8 (mask[i]);
         uint32_t d = dest[i];
         uint32_t a = src[i];
 
         UN8x4_MUL_UN8 (a, m);
 
-        a = Alpha (a);
+        a = ALPHA_8 (a);
         UN8x4_MUL_UN8 (d, a);
         dest[i] = d;
     }
@@ -575,7 +575,7 @@ vmx_combine_out_u_no_mask (uint32_t *dest, const uint32_t *src, int width)
 
     for (i = width%4; --i >=0;) {
         uint32_t s = src[i];
-        uint32_t a = Alpha (~dest[i]);
+        uint32_t a = ALPHA_8 (~dest[i]);
         UN8x4_MUL_UN8 (s, a);
         dest[i] = s;
     }
@@ -609,9 +609,9 @@ vmx_combine_out_u_mask (uint32_t *dest,
     }
 
     for (i = width%4; --i >=0;) {
-        uint32_t m = Alpha (mask[i]);
+        uint32_t m = ALPHA_8 (mask[i]);
         uint32_t s = src[i];
-        uint32_t a = Alpha (~dest[i]);
+        uint32_t a = ALPHA_8 (~dest[i]);
 
         UN8x4_MUL_UN8 (s, m);
 
@@ -656,7 +656,7 @@ vmx_combine_out_reverse_u_no_mask (uint32_t *dest, const uint32_t *src, int widt
 
     for (i = width%4; --i >=0;) {
         uint32_t d = dest[i];
-        uint32_t a = Alpha (~src[i]);
+        uint32_t a = ALPHA_8 (~src[i]);
         UN8x4_MUL_UN8 (d, a);
         dest[i] = d;
     }
@@ -690,13 +690,13 @@ vmx_combine_out_reverse_u_mask (uint32_t *dest,
     }
 
     for (i = width%4; --i >=0;) {
-        uint32_t m = Alpha (mask[i]);
+        uint32_t m = ALPHA_8 (mask[i]);
         uint32_t d = dest[i];
         uint32_t a = src[i];
 
         UN8x4_MUL_UN8 (a, m);
 
-        a = Alpha (~a);
+        a = ALPHA_8 (~a);
         UN8x4_MUL_UN8 (d, a);
         dest[i] = d;
     }
@@ -742,8 +742,8 @@ vmx_combine_atop_u_no_mask (uint32_t *dest, const uint32_t *src, int width)
     for (i = width%4; --i >=0;) {
         uint32_t s = src[i];
         uint32_t d = dest[i];
-        uint32_t dest_a = Alpha (d);
-        uint32_t src_ia = Alpha (~s);
+        uint32_t dest_a = ALPHA_8 (d);
+        uint32_t src_ia = ALPHA_8 (~s);
 
         UN8x4_MUL_UN8_ADD_UN8x4_MUL_UN8 (s, dest_a, d, src_ia);
         dest[i] = s;
@@ -779,15 +779,15 @@ vmx_combine_atop_u_mask (uint32_t *dest,
     }
 
     for (i = width%4; --i >=0;) {
-        uint32_t m = Alpha (mask[i]);
+        uint32_t m = ALPHA_8 (mask[i]);
         uint32_t s = src[i];
         uint32_t d = dest[i];
-        uint32_t dest_a = Alpha (d);
+        uint32_t dest_a = ALPHA_8 (d);
         uint32_t src_ia;
 
         UN8x4_MUL_UN8 (s, m);
 
-        src_ia = Alpha (~s);
+        src_ia = ALPHA_8 (~s);
 
         UN8x4_MUL_UN8_ADD_UN8x4_MUL_UN8 (s, dest_a, d, src_ia);
         dest[i] = s;
@@ -834,8 +834,8 @@ vmx_combine_atop_reverse_u_no_mask (uint32_t *dest, const uint32_t *src, int wid
     for (i = width%4; --i >=0;) {
         uint32_t s = src[i];
         uint32_t d = dest[i];
-        uint32_t src_a = Alpha (s);
-        uint32_t dest_ia = Alpha (~d);
+        uint32_t src_a = ALPHA_8 (s);
+        uint32_t dest_ia = ALPHA_8 (~d);
 
         UN8x4_MUL_UN8_ADD_UN8x4_MUL_UN8 (s, dest_ia, d, src_a);
         dest[i] = s;
@@ -871,15 +871,15 @@ vmx_combine_atop_reverse_u_mask (uint32_t *dest,
     }
 
     for (i = width%4; --i >=0;) {
-        uint32_t m = Alpha (mask[i]);
+        uint32_t m = ALPHA_8 (mask[i]);
         uint32_t s = src[i];
         uint32_t d = dest[i];
         uint32_t src_a;
-        uint32_t dest_ia = Alpha (~d);
+        uint32_t dest_ia = ALPHA_8 (~d);
 
         UN8x4_MUL_UN8 (s, m);
 
-        src_a = Alpha (s);
+        src_a = ALPHA_8 (s);
 
         UN8x4_MUL_UN8_ADD_UN8x4_MUL_UN8 (s, dest_ia, d, src_a);
         dest[i] = s;
@@ -926,8 +926,8 @@ vmx_combine_xor_u_no_mask (uint32_t *dest, const uint32_t *src, int width)
     for (i = width%4; --i >=0;) {
         uint32_t s = src[i];
         uint32_t d = dest[i];
-        uint32_t src_ia = Alpha (~s);
-        uint32_t dest_ia = Alpha (~d);
+        uint32_t src_ia = ALPHA_8 (~s);
+        uint32_t dest_ia = ALPHA_8 (~d);
 
         UN8x4_MUL_UN8_ADD_UN8x4_MUL_UN8 (s, dest_ia, d, src_ia);
         dest[i] = s;
@@ -963,15 +963,15 @@ vmx_combine_xor_u_mask (uint32_t *dest,
     }
 
     for (i = width%4; --i >=0;) {
-        uint32_t m = Alpha (mask[i]);
+        uint32_t m = ALPHA_8 (mask[i]);
         uint32_t s = src[i];
         uint32_t d = dest[i];
         uint32_t src_ia;
-        uint32_t dest_ia = Alpha (~d);
+        uint32_t dest_ia = ALPHA_8 (~d);
 
         UN8x4_MUL_UN8 (s, m);
 
-        src_ia = Alpha (~s);
+        src_ia = ALPHA_8 (~s);
 
         UN8x4_MUL_UN8_ADD_UN8x4_MUL_UN8 (s, dest_ia, d, src_ia);
         dest[i] = s;
@@ -1049,7 +1049,7 @@ vmx_combine_add_u_mask (uint32_t *dest,
     }
 
     for (i = width%4; --i >=0;) {
-        uint32_t m = Alpha (mask[i]);
+        uint32_t m = ALPHA_8 (mask[i]);
         uint32_t s = src[i];
         uint32_t d = dest[i];
 
@@ -1167,7 +1167,7 @@ vmx_combine_over_reverse_ca (pixman_implementation_t *imp, pixman_op_t op,
         uint32_t a = mask[i];
         uint32_t s = src[i];
         uint32_t d = dest[i];
-        uint32_t da = Alpha (d);
+        uint32_t da = ALPHA_8 (d);
         UN8x4_MUL_UN8x4 (s, a);
         UN8x4_MUL_UN8x4_ADD_UN8x4 (s, ~da, d);
         dest[i] = s;
@@ -1202,7 +1202,7 @@ vmx_combine_in_ca (pixman_implementation_t *imp, pixman_op_t op,
     for (i = width%4; --i >=0;) {
         uint32_t a = mask[i];
         uint32_t s = src[i];
-        uint32_t da = Alpha (dest[i]);
+        uint32_t da = ALPHA_8 (dest[i]);
         UN8x4_MUL_UN8 (s, a);
         UN8x4_MUL_UN8 (s, da);
         dest[i] = s;
@@ -1237,7 +1237,7 @@ vmx_combine_in_reverse_ca (pixman_implementation_t *imp, pixman_op_t op,
     for (i = width%4; --i >=0;) {
         uint32_t a = mask[i];
         uint32_t d = dest[i];
-        uint32_t sa = Alpha (src[i]);
+        uint32_t sa = ALPHA_8 (src[i]);
         UN8x4_MUL_UN8 (a, sa);
         UN8x4_MUL_UN8x4 (d, a);
         dest[i] = d;
@@ -1273,7 +1273,7 @@ vmx_combine_out_ca (pixman_implementation_t *imp, pixman_op_t op,
         uint32_t a = mask[i];
         uint32_t s = src[i];
         uint32_t d = dest[i];
-        uint32_t da = Alpha (~d);
+        uint32_t da = ALPHA_8 (~d);
         UN8x4_MUL_UN8x4 (s, a);
         UN8x4_MUL_UN8x4 (s, da);
         dest[i] = s;
@@ -1310,7 +1310,7 @@ vmx_combine_out_reverse_ca (pixman_implementation_t *imp, pixman_op_t op,
         uint32_t a = mask[i];
         uint32_t s = src[i];
         uint32_t d = dest[i];
-        uint32_t sa = Alpha (s);
+        uint32_t sa = ALPHA_8 (s);
         UN8x4_MUL_UN8x4 (a, sa);
         UN8x4_MUL_UN8x4 (d, ~a);
         dest[i] = d;
@@ -1349,8 +1349,8 @@ vmx_combine_atop_ca (pixman_implementation_t *imp, pixman_op_t op,
         uint32_t a = mask[i];
         uint32_t s = src[i];
         uint32_t d = dest[i];
-        uint32_t sa = Alpha (s);
-        uint32_t da = Alpha (d);
+        uint32_t sa = ALPHA_8 (s);
+        uint32_t da = ALPHA_8 (d);
 
         UN8x4_MUL_UN8x4 (s, a);
         UN8x4_MUL_UN8 (a, sa);
@@ -1391,8 +1391,8 @@ vmx_combine_atop_reverse_ca (pixman_implementation_t *imp, pixman_op_t op,
         uint32_t a = mask[i];
         uint32_t s = src[i];
         uint32_t d = dest[i];
-        uint32_t sa = Alpha (s);
-        uint32_t da = Alpha (d);
+        uint32_t sa = ALPHA_8 (s);
+        uint32_t da = ALPHA_8 (d);
 
         UN8x4_MUL_UN8x4 (s, a);
         UN8x4_MUL_UN8 (a, sa);
@@ -1433,8 +1433,8 @@ vmx_combine_xor_ca (pixman_implementation_t *imp, pixman_op_t op,
         uint32_t a = mask[i];
         uint32_t s = src[i];
         uint32_t d = dest[i];
-        uint32_t sa = Alpha (s);
-        uint32_t da = Alpha (d);
+        uint32_t sa = ALPHA_8 (s);
+        uint32_t da = ALPHA_8 (d);
 
         UN8x4_MUL_UN8x4 (s, a);
         UN8x4_MUL_UN8 (a, sa);
