@@ -138,6 +138,57 @@ static uint32_t Crc32_ComputeBuf( uint32_t inCrc32, const void *buf,
     return( crc32 ^ 0xFFFFFFFF );
 }
 
+/* perform endian conversion of pixel data */
+static void image_endian_swap(pixman_image_t *img, int bpp)
+{
+    int stride = pixman_image_get_stride(img);
+    uint32_t *data = pixman_image_get_data(img);
+    int height = pixman_image_get_height(img);;
+    int i, j;
+
+    /* swap bytes only on big endian systems */
+    volatile uint16_t endian_check_var = 0x1234;
+    if (*(volatile uint8_t *)&endian_check_var != 0x12) return;
+
+    for(i = 0; i < height; i++) {
+        char *line_data = (char *)data + stride * i;
+        /* swap bytes only for 16, 24 and 32 bpp for now */
+        switch (bpp) {
+        case 16:
+            for (j = 0; j + 2 <= stride; j += 2) {
+                char t1 = line_data[j + 0];
+                char t2 = line_data[j + 1];
+                line_data[j + 1] = t1;
+                line_data[j + 0] = t2;
+            }
+            break;
+        case 24:
+            for (j = 0; j + 3 <= stride; j += 3) {
+                char t1 = line_data[j + 0];
+                char t2 = line_data[j + 1];
+                char t3 = line_data[j + 2];
+                line_data[j + 2] = t1;
+                line_data[j + 1] = t2;
+                line_data[j + 0] = t3;
+            }
+            break;
+        case 32:
+            for (j = 0; j + 4 <= stride; j += 4) {
+                char t1 = line_data[j + 0];
+                char t2 = line_data[j + 1];
+                char t3 = line_data[j + 2];
+                char t4 = line_data[j + 3];
+                line_data[j + 3] = t1;
+                line_data[j + 2] = t2;
+                line_data[j + 1] = t3;
+                line_data[j + 0] = t4;
+            }
+            break;
+        default:
+            break;
+        }
+    }
+}
 
 #define MAX_SRC_WIDTH  10
 #define MAX_SRC_HEIGHT 10
@@ -211,6 +262,9 @@ uint32_t test_composite(uint32_t initcrc, int testnum, int verbose)
 
     dst_img = pixman_image_create_bits(
         dst_fmt, dst_width, dst_height, dstbuf, dst_stride);
+
+    image_endian_swap(src_img, src_bpp * 8);
+    image_endian_swap(dst_img, dst_bpp * 8);
 
     if (lcg_rand_n(8) > 0) {
         scale_x = 32768 + lcg_rand_n(65536);
@@ -286,6 +340,8 @@ uint32_t test_composite(uint32_t initcrc, int testnum, int verbose)
             dstbuf[i] &= 0xFFFFFF;
     }
 
+    image_endian_swap(dst_img, dst_bpp * 8);
+
     if (verbose) {
         int j;
         for (i = 0; i < dst_height; i++) {
@@ -327,7 +383,7 @@ int main(int argc, char *argv[])
             crc = test_composite(crc, i, 0);
         }
         printf("crc32=%08X\n", crc);
-#ifdef LITTLE_ENDIAN
+
         if (n == 3000000) {
             /* predefined value for running with all the fastpath functions disabled  */
             /* it needs to be updated every time changes are introduced to this program! */
@@ -338,7 +394,6 @@ int main(int argc, char *argv[])
                 printf("scaling test failed!\n");
             }
         }
-#endif
     }
     return 0;
 }
