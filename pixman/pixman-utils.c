@@ -613,6 +613,9 @@ image_covers (pixman_image_t *image, pixman_box32_t *extents, int x, int y)
 static pixman_bool_t
 source_image_needs_out_of_bounds_workaround (pixman_image_t *image)
 {
+    if (!out_of_bounds_workaround)
+	return FALSE;
+    
     if (image->common.clip_sources		&&
 	!image->common.client_clip		&&
 	image->common.have_clip_region)
