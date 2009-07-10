@@ -392,6 +392,7 @@ int main(int argc, char *argv[])
                 printf("scaling test passed\n");
             } else {
                 printf("scaling test failed!\n");
+                return 1;
             }
         }
     }
