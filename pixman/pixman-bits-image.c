@@ -727,6 +727,61 @@ bits_image_fetch_untransformed_64 (pixman_image_t * image, int x, int y,
     }
 }
 
+static pixman_bool_t out_of_bounds_workaround = TRUE;
+
+/* Old X servers rely on out-of-bounds accesses when they are asked
+ * to composite with a window as the source. They create a pixman image
+ * pointing to some bogus position in memory, but then they set a clip
+ * region to the position where the actual bits are.
+ *
+ * Due to a bug in old versions of pixman, where it would not clip
+ * against the image bounds when a clip region was set, this would
+ * actually work. So by default we allow certain out-of-bound access
+ * to happen unless explicitly disabled.
+ *
+ * Fixed X servers should call this function to disable the workaround.
+ */
+PIXMAN_EXPORT void
+pixman_disable_out_of_bounds_workaround (void)
+{
+    out_of_bounds_workaround = FALSE;
+}
+
+static pixman_bool_t
+source_image_needs_out_of_bounds_workaround (bits_image_t *image)
+{
+    if (image->common.clip_sources			&&
+	image->common.repeat == PIXMAN_REPEAT_NONE	&&
+	out_of_bounds_workaround)
+    {
+	const pixman_box32_t *boxes;
+	int n;
+
+	if (!image->common.client_clip)
+	{
+	    /* There is no client clip, so the drawable in question
+	     * is a window if the clip region is different from the
+	     * full drawable
+	     */
+	    boxes = pixman_region32_rectangles (&image->common.clip_region, &n);
+	    if (n == 1)
+	    {
+		if (boxes[0].x1 == 0 && boxes[0].y1 == 0 &&
+		    boxes[0].x2 == image->width &&
+		    boxes[0].y2 == image->height)
+		{
+		    /* pixmap */
+		    return FALSE;
+		}
+	    }
+	}
+
+	return TRUE;
+    }
+	
+    return FALSE;
+}
+
 static void
 bits_image_property_changed (pixman_image_t *image)
 {
@@ -766,6 +821,9 @@ bits_image_property_changed (pixman_image_t *image)
 
     bits->store_scanline_64 = bits_image_store_scanline_64;
     bits->store_scanline_32 = bits_image_store_scanline_32;
+
+    bits->common.need_workaround =
+	source_image_needs_out_of_bounds_workaround (bits);
 }
 
 static uint32_t *

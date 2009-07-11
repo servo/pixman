@@ -71,6 +71,7 @@ struct image_common
     pixman_bool_t		clip_sources;	    /* Whether the clip applies when
 						     * the image is used as a source
 						     */
+    pixman_bool_t		need_workaround;
     pixman_transform_t	       *transform;
     pixman_repeat_t		repeat;
     pixman_filter_t		filter;

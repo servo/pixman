@@ -115,6 +115,7 @@ _pixman_image_allocate (void)
 	common->client_clip = FALSE;
 	common->destroy_func = NULL;
 	common->destroy_data = NULL;
+	common->need_workaround = FALSE;
     }
 
     return image;
@@ -381,6 +382,8 @@ pixman_image_set_source_clipping (pixman_image_t  *image,
 				  pixman_bool_t    clip_sources)
 {
     image->common.clip_sources = clip_sources;
+
+    image_property_changed (image);
 }
 
 /* Unlike all the other property setters, this function does not
