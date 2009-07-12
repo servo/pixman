@@ -498,9 +498,9 @@ _pixman_walk_composite_region (pixman_implementation_t *imp,
 			      width, height, FALSE, FALSE,
 			      &region,
 			      composite_rect);
-    }
 
-    pixman_region32_fini (&region);
+	pixman_region32_fini (&region);
+    }
 }
 
     
@@ -686,7 +686,8 @@ _pixman_run_fast_path (const pixman_fast_path_t *paths,
 	pixman_region32_init (&region);
 
 	if (pixman_compute_composite_region32 (
-		&region, src, mask, dest, src_x, src_y, mask_x, mask_y, dest_x, dest_y, width, height))
+		&region, src, mask, dest,
+		src_x, src_y, mask_x, mask_y, dest_x, dest_y, width, height))
 	{
 	    pixman_box32_t *extents = pixman_region32_extents (&region);
 
@@ -705,9 +706,9 @@ _pixman_run_fast_path (const pixman_fast_path_t *paths,
 	    
 		result = TRUE;
 	    }
-	}
 	    
-	pixman_region32_fini (&region);
+	    pixman_region32_fini (&region);
+	}
     }
     
     return result;
