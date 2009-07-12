@@ -33,9 +33,9 @@
 #include "pixman-combine32.h"
 
 pixman_bool_t
-_pixman_init_gradient (gradient_t     *gradient,
-		       const pixman_gradient_stop_t *stops,
-		       int	       n_stops)
+_pixman_init_gradient (gradient_t *                  gradient,
+                       const pixman_gradient_stop_t *stops,
+                       int                           n_stops)
 {
     return_val_if_fail (n_stops > 0, FALSE);
 
@@ -62,27 +62,33 @@ _pixman_init_gradient (gradient_t     *gradient,
  * depth, but that's a project for the future.
  */
 void
-_pixman_image_get_scanline_generic_64 (pixman_image_t * pict, int x, int y,
-				       int width, uint32_t *buffer,
-				       const uint32_t *mask, uint32_t mask_bits)
+_pixman_image_get_scanline_generic_64 (pixman_image_t * pict,
+                                       int              x,
+                                       int              y,
+                                       int              width,
+                                       uint32_t *       buffer,
+                                       const uint32_t * mask,
+                                       uint32_t         mask_bits)
 {
     uint32_t *mask8 = NULL;
 
-    // Contract the mask image, if one exists, so that the 32-bit fetch
-    // function can use it.
-    if (mask) {
-        mask8 = pixman_malloc_ab(width, sizeof(uint32_t));
+    /* Contract the mask image, if one exists, so that the 32-bit fetch
+     * function can use it.
+     */
+    if (mask)
+    {
+	mask8 = pixman_malloc_ab (width, sizeof(uint32_t));
 	if (!mask8)
 	    return;
-	
-        pixman_contract (mask8, (uint64_t *)mask, width);
+
+	pixman_contract (mask8, (uint64_t *)mask, width);
     }
 
-    // Fetch the source image into the first half of buffer.
+    /* Fetch the source image into the first half of buffer. */
     _pixman_image_get_scanline_32 (pict, x, y, width, (uint32_t*)buffer, mask8,
-				   mask_bits);
+                                   mask_bits);
 
-    // Expand from 32bpp to 64bpp in place.
+    /* Expand from 32bpp to 64bpp in place. */
     pixman_expand ((uint64_t *)buffer, buffer, PIXMAN_a8r8g8b8, width);
 
     free (mask8);
@@ -123,10 +129,10 @@ _pixman_image_allocate (void)
 
 source_pict_class_t
 _pixman_image_classify (pixman_image_t *image,
-			int             x,
-			int             y,
-			int             width,
-			int             height)
+                        int             x,
+                        int             y,
+                        int             width,
+                        int             height)
 {
     if (image->common.classify)
 	return image->common.classify (image, x, y, width, height);
@@ -135,8 +141,13 @@ _pixman_image_classify (pixman_image_t *image,
 }
 
 void
-_pixman_image_get_scanline_32 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
-			       const uint32_t *mask, uint32_t mask_bits)
+_pixman_image_get_scanline_32 (pixman_image_t *image,
+                               int             x,
+                               int             y,
+                               int             width,
+                               uint32_t *      buffer,
+                               const uint32_t *mask,
+                               uint32_t        mask_bits)
 {
     image->common.get_scanline_32 (image, x, y, width, buffer, mask, mask_bits);
 }
@@ -145,8 +156,13 @@ _pixman_image_get_scanline_32 (pixman_image_t *image, int x, int y, int width, u
  * a uint64_t *buffer.
  */
 void
-_pixman_image_get_scanline_64 (pixman_image_t *image, int x, int y, int width, uint32_t *buffer,
-			       const uint32_t *unused, uint32_t unused2)
+_pixman_image_get_scanline_64 (pixman_image_t *image,
+                               int             x,
+                               int             y,
+                               int             width,
+                               uint32_t *      buffer,
+                               const uint32_t *unused,
+                               uint32_t        unused2)
 {
     image->common.get_scanline_64 (image, x, y, width, buffer, unused, unused2);
 }
@@ -178,7 +194,7 @@ pixman_image_unref (pixman_image_t *image)
     {
 	if (image->common.destroy_func)
 	    image->common.destroy_func (image, image->common.destroy_data);
-	
+
 	pixman_region32_fini (&common->clip_region);
 
 	if (common->transform)
@@ -190,20 +206,13 @@ pixman_image_unref (pixman_image_t *image)
 	if (common->alpha_map)
 	    pixman_image_unref ((pixman_image_t *)common->alpha_map);
 
-#if 0
-	if (image->type == BITS && image->bits.indexed)
-	    free (image->bits.indexed);
-#endif
-
-#if 0
-	memset (image, 0xaa, sizeof (pixman_image_t));
-#endif
-	if (image->type == LINEAR || image->type == RADIAL || image->type == CONICAL)
+	if (image->type == LINEAR ||
+	    image->type == RADIAL ||
+	    image->type == CONICAL)
 	{
 	    if (image->gradient.stops)
 		free (image->gradient.stops);
 	}
-
 
 	if (image->type == BITS && image->bits.free_me)
 	    free (image->bits.free_me);
@@ -217,16 +226,13 @@ pixman_image_unref (pixman_image_t *image)
 }
 
 PIXMAN_EXPORT void
-pixman_image_set_destroy_function (pixman_image_t *image,
-				   pixman_image_destroy_func_t func,
-				   void *data)
+pixman_image_set_destroy_function (pixman_image_t *            image,
+                                   pixman_image_destroy_func_t func,
+                                   void *                      data)
 {
     image->common.destroy_func = func;
     image->common.destroy_data = data;
 }
-			       
-
-/* Constructors */
 
 void
 _pixman_image_reset_clip_region (pixman_image_t *image)
@@ -235,8 +241,8 @@ _pixman_image_reset_clip_region (pixman_image_t *image)
 }
 
 PIXMAN_EXPORT pixman_bool_t
-pixman_image_set_clip_region32 (pixman_image_t *image,
-				pixman_region32_t *region)
+pixman_image_set_clip_region32 (pixman_image_t *   image,
+                                pixman_region32_t *region)
 {
     image_common_t *common = (image_common_t *)image;
     pixman_bool_t result;
@@ -258,10 +264,9 @@ pixman_image_set_clip_region32 (pixman_image_t *image,
     return result;
 }
 
-
 PIXMAN_EXPORT pixman_bool_t
-pixman_image_set_clip_region (pixman_image_t    *image,
-			      pixman_region16_t *region)
+pixman_image_set_clip_region (pixman_image_t *   image,
+                              pixman_region16_t *region)
 {
     image_common_t *common = (image_common_t *)image;
     pixman_bool_t result;
@@ -285,21 +290,20 @@ pixman_image_set_clip_region (pixman_image_t    *image,
 
 PIXMAN_EXPORT void
 pixman_image_set_has_client_clip (pixman_image_t *image,
-				  pixman_bool_t	  client_clip)
+                                  pixman_bool_t   client_clip)
 {
     image->common.client_clip = client_clip;
 }
 
 PIXMAN_EXPORT pixman_bool_t
-pixman_image_set_transform (pixman_image_t           *image,
-			    const pixman_transform_t *transform)
+pixman_image_set_transform (pixman_image_t *          image,
+                            const pixman_transform_t *transform)
 {
     static const pixman_transform_t id =
     {
 	{ { pixman_fixed_1, 0, 0 },
 	  { 0, pixman_fixed_1, 0 },
-	  { 0, 0, pixman_fixed_1 }
-	}
+	  { 0, 0, pixman_fixed_1 }}
     };
 
     image_common_t *common = (image_common_t *)image;
@@ -310,9 +314,10 @@ pixman_image_set_transform (pixman_image_t           *image,
 
     if (memcmp (&id, transform, sizeof (pixman_transform_t)) == 0)
     {
-	free(common->transform);
+	free (common->transform);
 	common->transform = NULL;
 	result = TRUE;
+
 	goto out;
     }
 
@@ -322,20 +327,21 @@ pixman_image_set_transform (pixman_image_t           *image,
     if (common->transform == NULL)
     {
 	result = FALSE;
+
 	goto out;
     }
 
-    memcpy(common->transform, transform, sizeof(pixman_transform_t));
+    memcpy (common->transform, transform, sizeof(pixman_transform_t));
 
 out:
     image_property_changed (image);
-    
+
     return TRUE;
 }
 
 PIXMAN_EXPORT void
-pixman_image_set_repeat (pixman_image_t  *image,
-			 pixman_repeat_t  repeat)
+pixman_image_set_repeat (pixman_image_t *image,
+                         pixman_repeat_t repeat)
 {
     image->common.repeat = repeat;
 
@@ -343,10 +349,10 @@ pixman_image_set_repeat (pixman_image_t  *image,
 }
 
 PIXMAN_EXPORT pixman_bool_t
-pixman_image_set_filter (pixman_image_t       *image,
-			 pixman_filter_t       filter,
-			 const pixman_fixed_t *params,
-			 int		       n_params)
+pixman_image_set_filter (pixman_image_t *      image,
+                         pixman_filter_t       filter,
+                         const pixman_fixed_t *params,
+                         int                   n_params)
 {
     image_common_t *common = (image_common_t *)image;
     pixman_fixed_t *new_params;
@@ -362,7 +368,7 @@ pixman_image_set_filter (pixman_image_t       *image,
 	    return FALSE;
 
 	memcpy (new_params,
-		params, n_params * sizeof (pixman_fixed_t));
+	        params, n_params * sizeof (pixman_fixed_t));
     }
 
     common->filter = filter;
@@ -378,8 +384,8 @@ pixman_image_set_filter (pixman_image_t       *image,
 }
 
 PIXMAN_EXPORT void
-pixman_image_set_source_clipping (pixman_image_t  *image,
-				  pixman_bool_t    clip_sources)
+pixman_image_set_source_clipping (pixman_image_t *image,
+                                  pixman_bool_t   clip_sources)
 {
     image->common.clip_sources = clip_sources;
 
@@ -391,8 +397,8 @@ pixman_image_set_source_clipping (pixman_image_t  *image,
  * way, way too expensive.
  */
 PIXMAN_EXPORT void
-pixman_image_set_indexed (pixman_image_t	 *image,
-			  const pixman_indexed_t *indexed)
+pixman_image_set_indexed (pixman_image_t *        image,
+                          const pixman_indexed_t *indexed)
 {
     bits_image_t *bits = (bits_image_t *)image;
 
@@ -403,9 +409,9 @@ pixman_image_set_indexed (pixman_image_t	 *image,
 
 PIXMAN_EXPORT void
 pixman_image_set_alpha_map (pixman_image_t *image,
-			    pixman_image_t *alpha_map,
-			    int16_t         x,
-			    int16_t         y)
+                            pixman_image_t *alpha_map,
+                            int16_t         x,
+                            int16_t         y)
 {
     image_common_t *common = (image_common_t *)image;
 
@@ -429,19 +435,18 @@ pixman_image_set_alpha_map (pixman_image_t *image,
 }
 
 PIXMAN_EXPORT void
-pixman_image_set_component_alpha   (pixman_image_t       *image,
-				    pixman_bool_t         component_alpha)
+pixman_image_set_component_alpha   (pixman_image_t *image,
+                                    pixman_bool_t   component_alpha)
 {
     image->common.component_alpha = component_alpha;
 
     image_property_changed (image);
 }
 
-
 PIXMAN_EXPORT void
-pixman_image_set_accessors (pixman_image_t             *image,
-			    pixman_read_memory_func_t	read_func,
-			    pixman_write_memory_func_t	write_func)
+pixman_image_set_accessors (pixman_image_t *           image,
+                            pixman_read_memory_func_t  read_func,
+                            pixman_write_memory_func_t write_func)
 {
     return_if_fail (image != NULL);
 
@@ -502,9 +507,9 @@ _pixman_image_is_solid (pixman_image_t *image)
     if (image->type == SOLID)
 	return TRUE;
 
-    if (image->type != BITS	||
-	image->bits.width != 1	||
-	image->bits.height != 1)
+    if (image->type != BITS     ||
+        image->bits.width != 1  ||
+        image->bits.height != 1)
     {
 	return FALSE;
     }
@@ -516,22 +521,23 @@ _pixman_image_is_solid (pixman_image_t *image)
 }
 
 uint32_t
-_pixman_image_get_solid (pixman_image_t *image, pixman_format_code_t format)
+_pixman_image_get_solid (pixman_image_t *     image,
+                         pixman_format_code_t format)
 {
     uint32_t result;
-    
+
     _pixman_image_get_scanline_32 (image, 0, 0, 1, &result, NULL, 0);
-    
+
     /* If necessary, convert RGB <--> BGR. */
     if (PIXMAN_FORMAT_TYPE (format) != PIXMAN_TYPE_ARGB)
     {
 	result = (((result & 0xff000000) >>  0) |
-		  ((result & 0x00ff0000) >> 16) |
-		  ((result & 0x0000ff00) >>  0) |
-		  ((result & 0x000000ff) << 16));
-    }									
-    
-    return result;							
+	          ((result & 0x00ff0000) >> 16) |
+	          ((result & 0x0000ff00) >>  0) |
+	          ((result & 0x000000ff) << 16));
+    }
+
+    return result;
 }
 
 pixman_bool_t
@@ -540,46 +546,47 @@ _pixman_image_is_opaque (pixman_image_t *image)
     int i;
 
     if (image->common.alpha_map)
-        return FALSE;
+	return FALSE;
 
     switch (image->type)
     {
     case BITS:
 	if (image->common.repeat == PIXMAN_REPEAT_NONE)
 	    return FALSE;
-	
-        if (PIXMAN_FORMAT_A (image->bits.format))
-            return FALSE;
-        break;
+
+	if (PIXMAN_FORMAT_A (image->bits.format))
+	    return FALSE;
+	break;
 
     case LINEAR:
     case RADIAL:
 	if (image->common.repeat == PIXMAN_REPEAT_NONE)
 	    return FALSE;
-	
+
 	for (i = 0; i < image->gradient.n_stops; ++i)
 	{
-            if (image->gradient.stops[i].color.alpha != 0xffff)
-                return FALSE;
-        }
-        break;
+	    if (image->gradient.stops[i].color.alpha != 0xffff)
+		return FALSE;
+	}
+	break;
 
     case CONICAL:
 	/* Conical gradients always have a transparent border */
 	return FALSE;
 	break;
-	
+
     case SOLID:
 	if (ALPHA_8 (image->solid.color) != 0xff)
-            return FALSE;
-        break;
+	    return FALSE;
+	break;
     }
 
     /* Convolution filters can introduce translucency if the sum of the
      * weights is lower than 1.
      */
     if (image->common.filter == PIXMAN_FILTER_CONVOLUTION)
-         return FALSE;
+	return FALSE;
 
-     return TRUE;
+    return TRUE;
 }
+
