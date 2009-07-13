@@ -629,7 +629,7 @@ bits_image_fetch_untransformed_repeat_none (bits_image_t *image, pixman_bool_t w
 
     if (y < 0 || y >= image->height)
     {
-	memset (buffer, 0, width * sizeof (uint32_t));
+	memset (buffer, 0, width * (wide? 8 : 4));
 	return;
     }
 
@@ -640,7 +640,7 @@ bits_image_fetch_untransformed_repeat_none (bits_image_t *image, pixman_bool_t w
 	memset (buffer, 0, w * (wide? 8 : 4));
 	
 	width -= w;
-	buffer += w;
+	buffer += w * (wide? 2 : 1);
 	x += w;
     }
     
@@ -654,7 +654,7 @@ bits_image_fetch_untransformed_repeat_none (bits_image_t *image, pixman_bool_t w
 	    image->fetch_scanline_raw_32 ((pixman_image_t *)image, x, y, w, buffer, NULL, 0);
 	
 	width -= w;
-	buffer += w;
+	buffer += w * (wide? 2 : 1);
 	x += w;
     }
 
@@ -687,7 +687,7 @@ bits_image_fetch_untransformed_repeat_normal (bits_image_t *image, pixman_bool_t
 	else
 	    image->fetch_scanline_raw_32 ((pixman_image_t *)image, x, y, w, buffer, NULL, 0);
 	
-	buffer += w;
+	buffer += w * (wide? 2 : 1);
 	x += w;
 	width -= w;
     }
