@@ -44,8 +44,8 @@ typedef struct {
 
 #include "pixman-region.c"
 
-/* This function exists only to make it possible to preserve the X ABI - it should
- * go away at first opportunity.
+/* This function exists only to make it possible to preserve the X ABI -
+ * it should go away at first opportunity.
  *
  * The problem is that the X ABI exports the three structs and has used
  * them through macros. So the X server calls this function with
