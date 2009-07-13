@@ -123,7 +123,7 @@ pixman_image_composite (pixman_op_t      op,
      * The output operator should be mathematically equivalent to the source.
      */
     op = pixman_optimize_operator(op, src, mask, dest);
-    if(op == PIXMAN_OP_DST)
+    if(op == PIXMAN_OP_DST || op == PIXMAN_OP_CONJOINT_DST || op == PIXMAN_OP_DISJOINT_DST)
         return;
 
     if (!imp)
