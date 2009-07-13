@@ -54,18 +54,18 @@
 #   define inline __inline__
 #   define force_inline __inline__ __attribute__ ((__always_inline__))
 #else
-# ifndef force_inline
-#  define force_inline inline
-# endif
+#   ifndef force_inline
+#      define force_inline inline
+#   endif
 #endif
 
 /* GCC visibility */
 #if defined(__GNUC__) && __GNUC__ >= 4
-#define PIXMAN_EXPORT __attribute__ ((visibility("default")))
+#   define PIXMAN_EXPORT __attribute__ ((visibility("default")))
 /* Sun Studio 8 visibility */
 #elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
-#define PIXMAN_EXPORT __global
+#   define PIXMAN_EXPORT __global
 #else
-#define PIXMAN_EXPORT
+#   define PIXMAN_EXPORT
 #endif
 
