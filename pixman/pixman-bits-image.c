@@ -611,7 +611,7 @@ bits_image_fetch_solid_64 (pixman_image_t * image, int x, int y,
     uint64_t *end;
     
     coords[0] = 0;
-    coords[1] = 1;
+    coords[1] = 0;
     
     image->bits.fetch_pixels_raw_64 (&image->bits, color, 1);
     
