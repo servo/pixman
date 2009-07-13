@@ -605,19 +605,19 @@ bits_image_fetch_solid_64 (pixman_image_t * image, int x, int y,
 			   int width, uint32_t *b,
 			   const uint32_t *unused, uint32_t unused2)
 {
-    uint32_t color[2];
-    uint32_t *coords = (uint32_t *)color;
+    uint64_t color;
+    uint32_t *coords = (uint32_t *)&color;
     uint64_t *buffer = (uint64_t *)b;
     uint64_t *end;
     
     coords[0] = 0;
     coords[1] = 0;
     
-    image->bits.fetch_pixels_raw_64 (&image->bits, color, 1);
+    image->bits.fetch_pixels_raw_64 (&image->bits, (uint32_t *)&color, 1);
     
     end = buffer + width;
     while (buffer < end)
-	*(buffer++) = color[0];
+	*(buffer++) = color;
 }
 
 static void
