@@ -39,10 +39,10 @@ dump_timers (void)
     for (timer = timers; timer != NULL; timer = timer->next)
     {
 	printf ("%s:   total: %llu     n: %llu      avg: %f\n",
-		timer->name,
-		timer->total,
-		timer->n_times,
-		timer->total / (double)timer->n_times);
+	        timer->name,
+	        timer->total,
+	        timer->n_times,
+	        timer->total / (double)timer->n_times);
     }
 }
 
@@ -51,14 +51,14 @@ pixman_timer_register (pixman_timer_t *timer)
 {
     static int initialized;
 
-    int atexit(void (*function)(void));
+    int atexit (void (*function)(void));
 
     if (!initialized)
     {
 	atexit (dump_timers);
 	initialized = 1;
     }
-    
+
     timer->next = timers;
     timers = timer;
 }
