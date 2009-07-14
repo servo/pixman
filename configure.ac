@@ -101,10 +101,18 @@ AC_SUBST(LT_VERSION_INFO)
 
 changequote(,)dnl
 if test "x$GCC" = "xyes"; then
+
   case " $CFLAGS " in
   *[\ \	]-Wall[\ \	]*) ;;
   *) CFLAGS="$CFLAGS -Wall" ;;
-  esac fi changequote([,])dnl
+  esac 
+
+  case " $CFLAGS " in
+  *[\ \	]-fno-strict-aliasing[\ \	]*) ;;
+  *) CFLAGS="$CFLAGS -fno-strict-aliasing" ;;
+  esac
+
+fi changequote([,])dnl
 
 AC_PATH_PROG(PERL, perl, no)
 if test "x$PERL" = xno; then
