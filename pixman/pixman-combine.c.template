@@ -1587,7 +1587,7 @@ combine_src_ca (pixman_implementation_t *imp,
 
 	combine_mask_value_ca (&s, &m);
 
-	*(dest) = s;
+	*(dest + i) = s;
     }
 }
 
