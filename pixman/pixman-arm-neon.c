@@ -2614,10 +2614,12 @@ static const pixman_fast_path_t arm_neon_fast_path_array[] =
 #ifdef USE_GCC_INLINE_ASM
     { PIXMAN_OP_SRC,  PIXMAN_r5g6b5,   PIXMAN_null,     PIXMAN_r5g6b5,   neon_composite_src_16_16,        0 },
     { PIXMAN_OP_SRC,  PIXMAN_b5g6r5,   PIXMAN_null,     PIXMAN_b5g6r5,   neon_composite_src_16_16,        0 },
+#if 0 /* this code has some bugs */
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_null,     PIXMAN_r5g6b5,   neon_composite_over_n_0565,      0 },
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_null,     PIXMAN_b5g6r5,   neon_composite_over_n_0565,      0 },
     { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,     PIXMAN_r5g6b5,   neon_composite_over_8888_0565,   0 },
     { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,     PIXMAN_b5g6r5,   neon_composite_over_8888_0565,   0 },
+#endif
 #endif
     { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,     PIXMAN_a8r8g8b8, neon_composite_over_8888_8888,   0 },
     { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,     PIXMAN_x8r8g8b8, neon_composite_over_8888_8888,   0 },
@@ -2765,7 +2767,9 @@ _pixman_implementation_create_arm_neon (void)
     pixman_implementation_t *imp = _pixman_implementation_create (simd);
 
     imp->composite = arm_neon_composite;
+#if 0 /* this code has some bugs */
     imp->blt = arm_neon_blt;
+#endif
     imp->fill = arm_neon_fill;
 
     return imp;
