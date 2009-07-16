@@ -648,6 +648,339 @@ neon_composite_over_8888_n_8888 (pixman_implementation_t * impl,
 }
 
 static void
+neon_composite_over_n_8_0565 (pixman_implementation_t * impl,
+			      pixman_op_t               op,
+			      pixman_image_t *          src_image,
+			      pixman_image_t *          mask_image,
+			      pixman_image_t *          dst_image,
+			      int32_t                   src_x,
+			      int32_t                   src_y,
+			      int32_t                   mask_x,
+			      int32_t                   mask_y,
+			      int32_t                   dest_x,
+			      int32_t                   dest_y,
+			      int32_t                   width,
+			      int32_t                   height)
+{
+    uint32_t     src, srca;
+    uint16_t    *dst_line, *dst;
+    uint8_t     *mask_line, *mask;
+    int          dst_stride, mask_stride;
+    uint32_t     w;
+    uint8x8_t    sval2;
+    uint8x8x4_t  sval8;
+
+    src = _pixman_image_get_solid (src_image, dst_image->bits.format);
+
+    srca = src >> 24;
+    if (src == 0)
+	return;
+
+    sval2=vreinterpret_u8_u32 (vdup_n_u32 (src));
+    sval8.val[0]=vdup_lane_u8 (sval2,0);
+    sval8.val[1]=vdup_lane_u8 (sval2,1);
+    sval8.val[2]=vdup_lane_u8 (sval2,2);
+    sval8.val[3]=vdup_lane_u8 (sval2,3);
+
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint16_t, dst_stride, dst_line, 1);
+    PIXMAN_IMAGE_GET_LINE (mask_image, mask_x, mask_y, uint8_t, mask_stride, mask_line, 1);
+
+    if (width>=8)
+    {
+	/* Use overlapping 8-pixel method, modified to avoid rewritten dest being reused */
+	while (height--)
+	{
+	    uint16_t *keep_dst=0;
+
+	    dst = dst_line;
+	    dst_line += dst_stride;
+	    mask = mask_line;
+	    mask_line += mask_stride;
+	    w = width;
+
+#ifndef USE_GCC_INLINE_ASM
+	    uint8x8_t alpha;
+	    uint16x8_t dval, temp;
+	    uint8x8x4_t sval8temp;
+
+	    alpha = vld1_u8 ((void*)mask);
+	    dval = vld1q_u16 ((void*)dst);
+	    keep_dst = dst;
+
+	    sval8temp = neon8mul (sval8,alpha);
+	    temp = pack0565 (neon8qadd (sval8temp,neon8mul (unpack0565 (dval),vmvn_u8 (sval8temp.val[3]))));
+
+	    mask += (w & 7);
+	    dst += (w & 7);
+	    w -= (w & 7);
+
+	    while (w)
+	    {
+		dval = vld1q_u16 ((void*)dst);
+		alpha = vld1_u8 ((void*)mask);
+
+		vst1q_u16 ((void*)keep_dst,temp);
+		keep_dst = dst;
+
+		sval8temp = neon8mul (sval8,alpha);
+		temp = pack0565 (neon8qadd (sval8temp,neon8mul (unpack0565 (dval),vmvn_u8 (sval8temp.val[3]))));
+
+		mask+=8;
+		dst+=8;
+		w-=8;
+	    }
+	    vst1q_u16 ((void*)keep_dst,temp);
+#else
+	    asm volatile (
+		"vdup.32      d0, %[src]\n\t"
+		"vdup.8       d1, d0[1]\n\t"
+		"vdup.8       d2, d0[2]\n\t"
+		"vdup.8       d3, d0[3]\n\t"
+		"vdup.8       d0, d0[0]\n\t"
+
+		"vld1.8       {q12}, [%[dst]]\n\t"
+		"vld1.8       {d31}, [%[mask]]\n\t"
+		"mov  %[keep_dst], %[dst]\n\t"
+
+		"and  ip, %[w], #7\n\t"
+		"add  %[mask], %[mask], ip\n\t"
+		"add  %[dst], %[dst], ip, LSL#1\n\t"
+		"subs  %[w], %[w], ip\n\t"
+		"b  9f\n\t"
+/* LOOP */
+		"2:\n\t"
+
+		"vld1.16      {q12}, [%[dst]]!\n\t"
+		"vld1.8       {d31}, [%[mask]]!\n\t"
+		"vst1.16      {q10}, [%[keep_dst]]\n\t"
+		"sub  %[keep_dst], %[dst], #8*2\n\t"
+		"subs  %[w], %[w], #8\n\t"
+		"9:\n\t"
+/* expand 0565 q12 to 8888 {d4-d7} */
+		"vmovn.u16    d4, q12\t\n"
+		"vshr.u16     q11, q12, #5\t\n"
+		"vshr.u16     q10, q12, #6+5\t\n"
+		"vmovn.u16    d5, q11\t\n"
+		"vmovn.u16    d6, q10\t\n"
+		"vshl.u8      d4, d4, #3\t\n"
+		"vshl.u8      d5, d5, #2\t\n"
+		"vshl.u8      d6, d6, #3\t\n"
+		"vsri.u8      d4, d4, #5\t\n"
+		"vsri.u8      d5, d5, #6\t\n"
+		"vsri.u8      d6, d6, #5\t\n"
+
+		"vmull.u8     q10, d31, d0\n\t"
+		"vmull.u8     q11, d31, d1\n\t"
+		"vmull.u8     q12, d31, d2\n\t"
+		"vmull.u8     q13, d31, d3\n\t"
+		"vrshr.u16    q8, q10, #8\n\t"
+		"vrshr.u16    q9, q11, #8\n\t"
+		"vraddhn.u16  d20, q10, q8\n\t"
+		"vraddhn.u16  d21, q11, q9\n\t"
+		"vrshr.u16    q9, q13, #8\n\t"
+		"vrshr.u16    q8, q12, #8\n\t"
+		"vraddhn.u16  d23, q13, q9\n\t"
+		"vraddhn.u16  d22, q12, q8\n\t"
+
+/* duplicate in 4/2/1 & 8pix vsns */
+		"vmvn.8       d30, d23\n\t"
+		"vmull.u8     q14, d30, d6\n\t"
+		"vmull.u8     q13, d30, d5\n\t"
+		"vmull.u8     q12, d30, d4\n\t"
+		"vrshr.u16    q8, q14, #8\n\t"
+		"vrshr.u16    q9, q13, #8\n\t"
+		"vraddhn.u16  d6, q14, q8\n\t"
+		"vrshr.u16    q8, q12, #8\n\t"
+		"vraddhn.u16  d5, q13, q9\n\t"
+		"vqadd.u8     d6, d6, d22\n\t"  /* moved up */
+		"vraddhn.u16  d4, q12, q8\n\t"
+/* intentionally don't calculate alpha */
+/* result in d4-d6 */
+
+/*              "vqadd.u8     d6, d6, d22\n\t"  ** moved up */
+		"vqadd.u8     d5, d5, d21\n\t"
+		"vqadd.u8     d4, d4, d20\n\t"
+
+/* pack 8888 {d20-d23} to 0565 q10 */
+		"vshll.u8     q10, d6, #8\n\t"
+		"vshll.u8     q3, d5, #8\n\t"
+		"vshll.u8     q2, d4, #8\n\t"
+		"vsri.u16     q10, q3, #5\t\n"
+		"vsri.u16     q10, q2, #11\t\n"
+
+		"bne 2b\n\t"
+
+		"1:\n\t"
+		"vst1.16      {q10}, [%[keep_dst]]\n\t"
+
+		: [w] "+r" (w), [dst] "+r" (dst), [mask] "+r" (mask), [keep_dst] "=r" (keep_dst)
+		: [src] "r" (src)
+		: "ip", "cc", "memory", "d0","d1","d2","d3","d4","d5","d6","d7",
+		  "d16","d17","d18","d19","d20","d21","d22","d23","d24","d25","d26","d27","d28","d29",
+		  "d30","d31"
+		);
+#endif
+	}
+    }
+    else
+    {
+	while (height--)
+	{
+	    void *dst4=0, *dst2=0;
+
+	    dst = dst_line;
+	    dst_line += dst_stride;
+	    mask = mask_line;
+	    mask_line += mask_stride;
+	    w = width;
+
+
+#ifndef USE_GCC_INLINE_ASM
+	    uint8x8_t alpha;
+	    uint16x8_t dval, temp;
+	    uint8x8x4_t sval8temp;
+
+	    if (w&4)
+	    {
+		alpha = vreinterpret_u8_u32 (vld1_lane_u32 ((void*)mask,vreinterpret_u32_u8 (alpha),1));
+		dval = vreinterpretq_u16_u64 (vld1q_lane_u64 ((void*)dst,vreinterpretq_u64_u16 (dval),1));
+		dst4=dst;
+		mask+=4;
+		dst+=4;
+	    }
+	    if (w&2)
+	    {
+		alpha = vreinterpret_u8_u16 (vld1_lane_u16 ((void*)mask,vreinterpret_u16_u8 (alpha),1));
+		dval = vreinterpretq_u16_u32 (vld1q_lane_u32 ((void*)dst,vreinterpretq_u32_u16 (dval),1));
+		dst2=dst;
+		mask+=2;
+		dst+=2;
+	    }
+	    if (w&1)
+	    {
+		alpha = vld1_lane_u8 ((void*)mask,alpha,1);
+		dval = vld1q_lane_u16 ((void*)dst,dval,1);
+	    }
+
+	    sval8temp = neon8mul (sval8,alpha);
+	    temp = pack0565 (neon8qadd (sval8temp,neon8mul (unpack0565 (dval),vmvn_u8 (sval8temp.val[3]))));
+
+	    if (w&1)
+		vst1q_lane_u16 ((void*)dst,temp,1);
+	    if (w&2)
+		vst1q_lane_u32 ((void*)dst2,vreinterpretq_u32_u16 (temp),1);
+	    if (w&4)
+		vst1q_lane_u64 ((void*)dst4,vreinterpretq_u64_u16 (temp),1);
+#else
+	    asm volatile (
+		"vdup.32      d0, %[src]\n\t"
+		"vdup.8       d1, d0[1]\n\t"
+		"vdup.8       d2, d0[2]\n\t"
+		"vdup.8       d3, d0[3]\n\t"
+		"vdup.8       d0, d0[0]\n\t"
+
+		"tst  %[w], #4\t\n"
+		"beq  skip_load4\t\n"
+
+		"vld1.64      {d25}, [%[dst]]\n\t"
+		"vld1.32      {d31[1]}, [%[mask]]\n\t"
+		"mov  %[dst4], %[dst]\t\n"
+		"add  %[mask], %[mask], #4\t\n"
+		"add  %[dst], %[dst], #4*2\t\n"
+
+		"skip_load4:\t\n"
+		"tst  %[w], #2\t\n"
+		"beq  skip_load2\t\n"
+		"vld1.32      {d24[1]}, [%[dst]]\n\t"
+		"vld1.16      {d31[1]}, [%[mask]]\n\t"
+		"mov  %[dst2], %[dst]\t\n"
+		"add  %[mask], %[mask], #2\t\n"
+		"add  %[dst], %[dst], #2*2\t\n"
+
+		"skip_load2:\t\n"
+		"tst  %[w], #1\t\n"
+		"beq  skip_load1\t\n"
+		"vld1.16      {d24[1]}, [%[dst]]\n\t"
+		"vld1.8       {d31[1]}, [%[mask]]\n\t"
+
+		"skip_load1:\t\n"
+/* expand 0565 q12 to 8888 {d4-d7} */
+		"vmovn.u16    d4, q12\t\n"
+		"vshr.u16     q11, q12, #5\t\n"
+		"vshr.u16     q10, q12, #6+5\t\n"
+		"vmovn.u16    d5, q11\t\n"
+		"vmovn.u16    d6, q10\t\n"
+		"vshl.u8      d4, d4, #3\t\n"
+		"vshl.u8      d5, d5, #2\t\n"
+		"vshl.u8      d6, d6, #3\t\n"
+		"vsri.u8      d4, d4, #5\t\n"
+		"vsri.u8      d5, d5, #6\t\n"
+		"vsri.u8      d6, d6, #5\t\n"
+
+		"vmull.u8     q10, d31, d0\n\t"
+		"vmull.u8     q11, d31, d1\n\t"
+		"vmull.u8     q12, d31, d2\n\t"
+		"vmull.u8     q13, d31, d3\n\t"
+		"vrshr.u16    q8, q10, #8\n\t"
+		"vrshr.u16    q9, q11, #8\n\t"
+		"vraddhn.u16  d20, q10, q8\n\t"
+		"vraddhn.u16  d21, q11, q9\n\t"
+		"vrshr.u16    q9, q13, #8\n\t"
+		"vrshr.u16    q8, q12, #8\n\t"
+		"vraddhn.u16  d23, q13, q9\n\t"
+		"vraddhn.u16  d22, q12, q8\n\t"
+
+/* duplicate in 4/2/1 & 8pix vsns */
+		"vmvn.8       d30, d23\n\t"
+		"vmull.u8     q14, d30, d6\n\t"
+		"vmull.u8     q13, d30, d5\n\t"
+		"vmull.u8     q12, d30, d4\n\t"
+		"vrshr.u16    q8, q14, #8\n\t"
+		"vrshr.u16    q9, q13, #8\n\t"
+		"vraddhn.u16  d6, q14, q8\n\t"
+		"vrshr.u16    q8, q12, #8\n\t"
+		"vraddhn.u16  d5, q13, q9\n\t"
+		"vqadd.u8     d6, d6, d22\n\t"  /* moved up */
+		"vraddhn.u16  d4, q12, q8\n\t"
+/* intentionally don't calculate alpha */
+/* result in d4-d6 */
+
+/*              "vqadd.u8     d6, d6, d22\n\t"  ** moved up */
+		"vqadd.u8     d5, d5, d21\n\t"
+		"vqadd.u8     d4, d4, d20\n\t"
+
+/* pack 8888 {d20-d23} to 0565 q10 */
+		"vshll.u8     q10, d6, #8\n\t"
+		"vshll.u8     q3, d5, #8\n\t"
+		"vshll.u8     q2, d4, #8\n\t"
+		"vsri.u16     q10, q3, #5\t\n"
+		"vsri.u16     q10, q2, #11\t\n"
+
+		"tst  %[w], #1\n\t"
+		"beq skip_store1\t\n"
+		"vst1.16      {d20[1]}, [%[dst]]\t\n"
+		"skip_store1:\t\n"
+		"tst  %[w], #2\n\t"
+		"beq  skip_store2\t\n"
+		"vst1.32      {d20[1]}, [%[dst2]]\t\n"
+		"skip_store2:\t\n"
+		"tst  %[w], #4\n\t"
+		"beq skip_store4\t\n"
+		"vst1.16      {d21}, [%[dst4]]\t\n"
+		"skip_store4:\t\n"
+
+		: [w] "+r" (w), [dst] "+r" (dst), [mask] "+r" (mask), [dst4] "+r" (dst4), [dst2] "+r" (dst2)
+		: [src] "r" (src)
+		: "ip", "cc", "memory", "d0","d1","d2","d3","d4","d5","d6","d7",
+		  "d16","d17","d18","d19","d20","d21","d22","d23","d24","d25","d26","d27","d28","d29",
+		  "d30","d31"
+		);
+#endif
+	}
+    }
+}
+
+static void
 neon_composite_over_n_8_8888 (pixman_implementation_t * impl,
                               pixman_op_t               op,
                               pixman_image_t *          src_image,
@@ -1790,6 +2123,7 @@ solid_over_565_8_pix_neon (uint32_t  glyph_colour,
 #endif
 }
 
+#if 0 /* this is broken currently */
 static void
 neon_composite_over_n_8_0565 (pixman_implementation_t * impl,
                               pixman_op_t               op,
@@ -1916,6 +2250,7 @@ neon_composite_over_n_8_0565 (pixman_implementation_t * impl,
 	}
     }
 }
+#endif
 
 #ifdef USE_GCC_INLINE_ASM
 
