@@ -646,8 +646,10 @@ PDF_SEPARABLE_BLEND_MODE (color_dodge)
 /*
  * Color burn
  * B(Dca, Da, Sca, Sa) =
- *   if Sca. == 0
- *     (Da == Dca).Sa.Da
+ *   if Dca == Da
+ *     Sa.Da
+ *   if Sca == 0
+ *     0
  *   otherwise
  *     Sa.Da.(1 - min (1, (1 - Dca/Da).Sa / Sca))
  */
@@ -660,9 +662,8 @@ blend_color_burn (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
     }
     else
     {
-	comp4_t sada = sa * da;
-	comp4_t rca = (da - dca) * sa * sa / sca;
-	return DIV_ONE_UNc (rca > sada ? 0 : sada - rca);
+	comp4_t rca = (da - dca) * sa / sca;
+	return DIV_ONE_UNc (sa * (MAX (rca, da) - rca));
     }
 }
 
