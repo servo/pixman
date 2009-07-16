@@ -284,6 +284,7 @@ pixman_add_traps (pixman_image_t * image,
     }
 }
 
+#if 0
 static void
 dump_image (pixman_image_t *image,
             const char *    title)
@@ -309,6 +310,7 @@ dump_image (pixman_image_t *image,
 	printf ("\n");
     }
 }
+#endif
 
 PIXMAN_EXPORT void
 pixman_add_trapezoids (pixman_image_t *          image,

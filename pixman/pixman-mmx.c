@@ -3206,7 +3206,9 @@ mmx_composite_over_x888_8_8888 (pixman_implementation_t *imp,
 		__m64 s = load8888 (*src | 0xff000000);
 
 		if (m == 0xff)
+		{
 		    *dst = store8888 (s);
+		}
 		else
 		{
 		    __m64 sa = expand_alpha (s);
