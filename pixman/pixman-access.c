@@ -45,11 +45,11 @@
      (((s) >> 6) & 0x03e0) |                                            \
      (((s) >> 9) & 0x7c00))
 
-#define RGB16_TO_ENTRY(mif,rgb15)					\
+#define RGB15_TO_ENTRY(mif,rgb15)					\
     ((mif)->ent[rgb15])
 
 #define RGB24_TO_ENTRY(mif,rgb24)					\
-    RGB16_TO_ENTRY (mif,CONVERT_RGB24_TO_RGB15 (rgb24))
+    RGB15_TO_ENTRY (mif,CONVERT_RGB24_TO_RGB15 (rgb24))
 
 #define RGB24_TO_ENTRY_Y(mif,rgb24)					\
     ((mif)->ent[CONVERT_RGB24_TO_Y15 (rgb24)])
@@ -86,7 +86,7 @@
     ((uint8_t *) ((bits) + offset0 +                                    \
                   ((stride) >> 1) * ((line) >> 1)))
 
-/*********************************** Fetch ************************************/
+/********************************** Fetch ************************************/
 
 static void
 fetch_scanline_a8r8g8b8 (pixman_image_t *image,
@@ -161,9 +161,9 @@ fetch_scanline_x8b8g8r8 (pixman_image_t *image,
     {
 	uint32_t p = READ (image, pixel++);
 	
-	*buffer++ = 0xff000000 |
-	    (p & 0x0000ff00) |
-	    ((p >> 16) & 0xff) |
+	*buffer++ = 0xff000000		|
+	    (p & 0x0000ff00)		|
+	    ((p >> 16) & 0xff)		|
 	    ((p & 0xff) << 16);
     }
 }
