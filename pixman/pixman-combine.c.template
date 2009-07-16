@@ -565,7 +565,7 @@ PDF_SEPARABLE_BLEND_MODE (screen)
 
 /*
  * Overlay
- * B(Dca, ab, Sca, as) =
+ * B(Dca, Da, Sca, Sa) =
  *   if 2.Dca < Da
  *     2.Sca.Dca
  *   otherwise
@@ -587,7 +587,7 @@ PDF_SEPARABLE_BLEND_MODE (overlay)
 
 /*
  * Darken
- * B(Dca, ab, Sca, as) = min (Sca.Da, Dca.Sa)
+ * B(Dca, Da, Sca, Sa) = min (Sca.Da, Dca.Sa)
  */
 static inline comp4_t
 blend_darken (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
@@ -603,7 +603,7 @@ PDF_SEPARABLE_BLEND_MODE (darken)
 
 /*
  * Lighten
- * B(Dca, ab, Sca, as) = max (Sca.Da, Dca.Sa)
+ * B(Dca, Da, Sca, Sa) = max (Sca.Da, Dca.Sa)
  */
 static inline comp4_t
 blend_lighten (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
@@ -619,7 +619,7 @@ PDF_SEPARABLE_BLEND_MODE (lighten)
 
 /*
  * Color dodge
- * B(Dca, ab, Sca, as) =
+ * B(Dca, Da, Sca, Sa) =
  *   if Sca == Sa
  *     (Dca != 0).Sa.Da
  *   otherwise
@@ -643,7 +643,7 @@ PDF_SEPARABLE_BLEND_MODE (color_dodge)
 
 /*
  * Color burn
- * B(Dca, ab, Sca, as) =
+ * B(Dca, Da, Sca, Sa) =
  *   if Sca. == 0
  *     (Da == Dca).Sa.Da
  *   otherwise
@@ -668,7 +668,7 @@ PDF_SEPARABLE_BLEND_MODE (color_burn)
 
 /*
  * Hard light
- * B(Dca, ab, Sca, as) =
+ * B(Dca, Da, Sca, Sa) =
  *   if 2.Sca < Sa
  *     2.Sca.Dca
  *   otherwise
@@ -687,7 +687,7 @@ PDF_SEPARABLE_BLEND_MODE (hard_light)
 
 /*
  * Soft light
- * B(Dca, ab, Sca, as) =
+ * B(Dca, Da, Sca, Sa) =
  *   if (2.Sca <= Sa)
  *     Dca.(Sa - (1 - Dca/Da).(2.Sca - Sa))
  *   otherwise if Dca.4 <= Da
@@ -734,7 +734,7 @@ PDF_SEPARABLE_BLEND_MODE (soft_light)
 
 /*
  * Difference
- * B(Dca, ab, Sca, as) = abs (Dca.Sa - Sca.Da)
+ * B(Dca, Da, Sca, Sa) = abs (Dca.Sa - Sca.Da)
  */
 static inline comp4_t
 blend_difference (comp4_t dca, comp4_t da, comp4_t sca, comp4_t sa)
@@ -752,7 +752,7 @@ PDF_SEPARABLE_BLEND_MODE (difference)
 
 /*
  * Exclusion
- * B(Dca, ab, Sca, as) = (Sca.Da + Dca.Sa - 2.Sca.Dca)
+ * B(Dca, Da, Sca, Sa) = (Sca.Da + Dca.Sa - 2.Sca.Dca)
  */
 
 /* This can be made faster by writing it directly and not using
