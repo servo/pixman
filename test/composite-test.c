@@ -10,39 +10,39 @@
 typedef struct {
     const char *name;
     pixman_op_t op;
-} Operator;
+} operator_t;
 
-static const Operator operators[] = {
-    { "CLEAR", PIXMAN_OP_CLEAR },
-    { "SRC", PIXMAN_OP_SRC },
-    { "DST", PIXMAN_OP_DST },
-    { "OVER", PIXMAN_OP_OVER },
-    { "OVER_REVERSE", PIXMAN_OP_OVER_REVERSE },
-    { "IN", PIXMAN_OP_IN },
-    { "IN_REVERSE", PIXMAN_OP_IN_REVERSE },
-    { "OUT", PIXMAN_OP_OUT },
-    { "OUT_REVERSE", PIXMAN_OP_OUT_REVERSE },
-    { "ATOP", PIXMAN_OP_ATOP },
-    { "ATOP_REVERSE", PIXMAN_OP_ATOP_REVERSE },
-    { "XOR", PIXMAN_OP_XOR },
-    { "ADD", PIXMAN_OP_ADD },
-    { "SATURATE", PIXMAN_OP_SATURATE },
+static const operator_t operators[] = {
+    { "CLEAR",		PIXMAN_OP_CLEAR },
+    { "SRC",		PIXMAN_OP_SRC },
+    { "DST",		PIXMAN_OP_DST },
+    { "OVER",		PIXMAN_OP_OVER },
+    { "OVER_REVERSE",	PIXMAN_OP_OVER_REVERSE },
+    { "IN",		PIXMAN_OP_IN },
+    { "IN_REVERSE",	PIXMAN_OP_IN_REVERSE },
+    { "OUT",		PIXMAN_OP_OUT },
+    { "OUT_REVERSE",	PIXMAN_OP_OUT_REVERSE },
+    { "ATOP",		PIXMAN_OP_ATOP },
+    { "ATOP_REVERSE",	PIXMAN_OP_ATOP_REVERSE },
+    { "XOR",		PIXMAN_OP_XOR },
+    { "ADD",		PIXMAN_OP_ADD },
+    { "SATURATE",	PIXMAN_OP_SATURATE },
 
-    { "MULTIPLY", PIXMAN_OP_MULTIPLY },
-    { "SCREEN", PIXMAN_OP_SCREEN },
-    { "OVERLAY", PIXMAN_OP_OVERLAY },
-    { "DARKEN", PIXMAN_OP_DARKEN },
-    { "LIGHTEN", PIXMAN_OP_LIGHTEN },
-    { "COLOR_DODGE", PIXMAN_OP_COLOR_DODGE },
-    { "COLOR_BURN", PIXMAN_OP_COLOR_BURN },
-    { "HARD_LIGHT", PIXMAN_OP_HARD_LIGHT },
-    { "SOFT_LIGHT", PIXMAN_OP_SOFT_LIGHT },
-    { "DIFFERENCE", PIXMAN_OP_DIFFERENCE },
-    { "EXCLUSION", PIXMAN_OP_EXCLUSION },
-    { "HSL_HUE", PIXMAN_OP_HSL_HUE },
-    { "HSL_SATURATION", PIXMAN_OP_HSL_SATURATION },
-    { "HSL_COLOR", PIXMAN_OP_HSL_COLOR },
-    { "HSL_LUMINOSITY", PIXMAN_OP_HSL_LUMINOSITY },
+    { "MULTIPLY",	PIXMAN_OP_MULTIPLY },
+    { "SCREEN",		PIXMAN_OP_SCREEN },
+    { "OVERLAY",	PIXMAN_OP_OVERLAY },
+    { "DARKEN",		PIXMAN_OP_DARKEN },
+    { "LIGHTEN",	PIXMAN_OP_LIGHTEN },
+    { "COLOR_DODGE",	PIXMAN_OP_COLOR_DODGE },
+    { "COLOR_BURN",	PIXMAN_OP_COLOR_BURN },
+    { "HARD_LIGHT",	PIXMAN_OP_HARD_LIGHT },
+    { "SOFT_LIGHT",	PIXMAN_OP_SOFT_LIGHT },
+    { "DIFFERENCE",	PIXMAN_OP_DIFFERENCE },
+    { "EXCLUSION",	PIXMAN_OP_EXCLUSION },
+    { "HSL_HUE",	PIXMAN_OP_HSL_HUE },
+    { "HSL_SATURATION",	PIXMAN_OP_HSL_SATURATION },
+    { "HSL_COLOR",	PIXMAN_OP_HSL_COLOR },
+    { "HSL_LUMINOSITY",	PIXMAN_OP_HSL_LUMINOSITY },
 };
 
 static uint32_t
@@ -83,12 +83,30 @@ writer (void *src, uint32_t value, int size)
 int
 main (int argc, char **argv)
 {
+#define d2f pixman_double_to_fixed
+    
     GtkWidget *window, *swindow;
     GtkWidget *table;
     uint32_t *dest = malloc (WIDTH * HEIGHT * 4);
     uint32_t *src = malloc (WIDTH * HEIGHT * 4);
     pixman_image_t *src_img;
     pixman_image_t *dest_img;
+    pixman_point_fixed_t p1 = { -10 << 0, 0 };
+    pixman_point_fixed_t p2 = { WIDTH << 16, (HEIGHT - 10) << 16 };
+    uint16_t full = 0xcfff;
+    uint16_t low  = 0x5000;
+    uint16_t alpha = 0xffff;
+    pixman_gradient_stop_t stops[6] =
+    {
+	{ d2f (0.0), { full, low, low, alpha } },
+	{ d2f (0.25), { full, full, low, alpha } },
+	{ d2f (0.4), { low, full, low, alpha } },
+	{ d2f (0.5), { low, full, full, alpha } },
+	{ d2f (0.8), { low, low, full, alpha } },
+	{ d2f (1.0), { full, low, full, alpha } },
+    };
+	
+	    
     int i;
 
     gtk_init (&argc, &argv);
@@ -102,27 +120,24 @@ main (int argc, char **argv)
 		      NULL);
     table = gtk_table_new (G_N_ELEMENTS (operators) / 6, 6, TRUE);
 
-    for (i = 0; i < WIDTH * HEIGHT; ++i)
-        src[i] = 0x7f7f0000; /* red */
+    src_img = pixman_image_create_linear_gradient (&p1, &p2, stops,
+						   sizeof (stops) / sizeof (stops[0]));
 
-    src_img = pixman_image_create_bits (PIXMAN_a8r8g8b8,
-					WIDTH, HEIGHT,
-					src,
-					WIDTH * 4);
-    pixman_image_set_accessors (src_img, reader, writer);
-
+    pixman_image_set_repeat (src_img, PIXMAN_REPEAT_PAD);
+    
     dest_img = pixman_image_create_bits (PIXMAN_a8r8g8b8,
 					 WIDTH, HEIGHT,
 					 dest,
 					 WIDTH * 4);
     pixman_image_set_accessors (dest_img, reader, writer);
 
-    for (i = 0; i < G_N_ELEMENTS (operators); ++i) {
-        int j;
+    for (i = 0; i < G_N_ELEMENTS (operators); ++i)
+    {
 	GtkWidget *image;
 	GdkPixbuf *pixbuf;
 	GtkWidget *vbox;
 	GtkWidget *label;
+	int j, k;
 
 	vbox = gtk_vbox_new (FALSE, 0);
 
@@ -130,9 +145,11 @@ main (int argc, char **argv)
 	gtk_box_pack_start (GTK_BOX (vbox), label, FALSE, FALSE, 6);
 	gtk_widget_show (label);
 
-	for (j = 0; j < WIDTH * HEIGHT; ++j)
-	    dest[j] = 0x7f00007f; /* blue */
-
+	for (j = 0; j < HEIGHT; ++j)
+	{
+	    for (k = 0; k < WIDTH; ++k)
+		dest[j * WIDTH + k] = 0x7f6f6f00;
+	}
 	pixman_image_composite (operators[i].op, src_img, NULL, dest_img,
 				0, 0, 0, 0, 0, 0, WIDTH, HEIGHT);
 	pixbuf = pixbuf_from_argb32 (pixman_image_get_data (dest_img), TRUE,
@@ -155,7 +172,9 @@ main (int argc, char **argv)
 
     swindow = gtk_scrolled_window_new (NULL, NULL);
     gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (swindow),
-				    GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+				    GTK_POLICY_AUTOMATIC,
+				    GTK_POLICY_AUTOMATIC);
+    
     gtk_scrolled_window_add_with_viewport (GTK_SCROLLED_WINDOW (swindow), table);
     gtk_widget_show (table);
 
