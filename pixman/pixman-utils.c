@@ -746,7 +746,8 @@ _pixman_run_fast_path (const pixman_fast_path_t *paths,
 
 	    if (sources_cover (
 		    src, mask, extents,
-		    src_x, src_y, mask_x, mask_y, dest_x, dest_y))
+		    src_x, src_y, mask_x, mask_y, dest_x, dest_y) ||
+		src->common.need_workaround)
 	    {
 		walk_region_internal (imp, op,
 		                      src, mask, dest,
