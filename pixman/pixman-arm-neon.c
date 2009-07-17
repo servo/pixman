@@ -1437,11 +1437,8 @@ neon_composite_src_16_16 (pixman_implementation_t * impl,
 	    : [src_stride] "r" (src_stride)
 
 	      /* Clobbered vector registers */
-	      
-	      /* NB: these are the quad aliases of the double
-	       * registers used in the asm
-	       */
-	    : "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15", "cc", "memory"
+	    : "d16", "d17", "d18", "d19", "d20", "d21", "d22", "d23",
+	      "d24", "d25", "d26", "d27", "d28", "d29", "d30", "d31", "cc", "memory"
 	    );
 
 	src_line += src_stride;
@@ -1576,7 +1573,8 @@ neon_composite_src_24_16 (pixman_implementation_t * impl,
 	      /* NB: these are the quad aliases of the
 	       * double registers used in the asm
 	       */
-	    : "q0", "q1", "q2", "q3", "q8", "q9", "q10", "q11", "cc", "memory"
+	    : "d0", "d1", "d2", "d3", "d4", "d5", "d6", "d7", "d16", "d17",
+	      "d18", "d19", "d20", "d21", "d22", "d23", "cc", "memory"
 	    );
 #else
 	/* A copy of the above code, in intrinsics-form. */
@@ -1958,10 +1956,8 @@ neon_quadword_copy (void*    dst,
 	:
 
         /* Clobbered vector registers */
-        /* NB: these are the quad aliases of the double
-	 * registers used in the asm
-	 */
-	: "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15", "cc", "memory");
+	: "d16", "d17", "d18", "d19", "d20", "d21", "d22", "d23", "d24", "d25",
+	  "d26", "d27", "d28", "d29", "d30", "d31", "cc", "memory");
 
 #else
 
@@ -2087,7 +2083,8 @@ solid_over_565_8_pix_neon (uint32_t  glyph_colour,
 	: [dest_stride] "r" (dest_stride), [mask_stride] "r" (mask_stride), [glyph_colour] "r" (&glyph_colour)
 
 	  /* Clobbers, including the inputs we modify, and potentially lots of memory */
-	: "q0", "q1", "q2", "q3", "d17", "q9", "q10", "q11", "q12", "cc", "memory"
+	: "d0", "d1", "d2", "d3", "d4", "d5", "d6", "d7", "d17", "d18", "d19",
+	  "d20", "d21", "d22", "d23", "d24", "d25", "cc", "memory"
         );
 
 #else
@@ -2299,8 +2296,8 @@ plain_over_565_8_pix_neon (uint32_t  colour,
 	  /* Clobbers, including the inputs we modify, and
 	   * potentially lots of memory
 	   */
-	: "q0", "q1", "q2", "q3", "q9",
-	  "q10", "q11", "q12", "q13", "q14",
+	: "d0", "d1", "d2", "d3", "d4", "d5", "d6", "d7", "d18", "d19",
+	  "d20", "d21", "d22", "d23", "d24", "d25", "d26", "d27", "d28", "d29",
 	  "cc", "memory"
         );
 }
@@ -2458,7 +2455,8 @@ ARGB8_over_565_8_pix_neon (uint32_t *src,
 	: [src_stride] "r" (src_stride)
 
 	  /* Clobbers, including the inputs we modify, and potentially lots of memory */
-	: "q0", "q1", "q2", "q3", "d17", "d18", "q10", "q11", "cc", "memory"
+	: "d0", "d1", "d2", "d3", "d4", "d5", "d6", "d7", "d17", "d18", "d20",
+	  "d21", "d22", "d23", "cc", "memory"
         );
 }
 
