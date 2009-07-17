@@ -1799,11 +1799,10 @@ pixman_fill_neon (uint32_t *bits,
 	    "bne		6b\n"
 
 	    "3:\n"
-	    
-	    : /* No output members */
-	    : [color] "r" (color), [height] "r" (height), [width] "r" (width),
-	    [dst] "r" (dst), [byte_stride] "r" (byte_stride)
-	    : "memory", "cc", "d0", "r4", "r5");
+	    : [height] "+r" (height), [dst] "+r" (dst)
+	    : [color] "r" (color), [width] "r" (width),
+	      [byte_stride] "r" (byte_stride)
+	    : "memory", "cc", "d0", "r4");
     }
     else
     {
@@ -1880,10 +1879,10 @@ pixman_fill_neon (uint32_t *bits,
 	    "add		%[dst], %[dst], %[byte_stride]\n"
 	    "bne		1b\n"
 	    "5:\n"
-	    : /* No output members */
-	    : [color] "r" (color), [height] "r" (height), [width] "r" (width),
-	    [dst] "r" (dst), [byte_stride] "r" (byte_stride)
-	    : "memory", "cc", "q0", "d0", "d1", "r4", "r5", "r6");
+	    : [height] "+r" (height), [dst] "+r" (dst)
+	    : [color] "r" (color), [width] "r" (width),
+	      [byte_stride] "r" (byte_stride)
+	    : "memory", "cc", "d0", "d1", "r4", "r5", "r6");
     }
     return TRUE;
 
