@@ -339,6 +339,12 @@ PREFIX (_init_rect) (region_type_t *	region,
 		     unsigned int	width,
 		     unsigned int	height)
 {
+    if (x + (int) width < x || y + (int) height < y)
+    {
+        PREFIX (_init) (region);
+        return;
+    }
+
     region->extents.x1 = x;
     region->extents.y1 = y;
     region->extents.x2 = x + width;
