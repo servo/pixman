@@ -629,8 +629,7 @@ core_combine_over_u_sse2 (uint32_t*       pd,
     cache_prefetch ((__m128i*)pm);
 
     /* Align dst on a 16-byte boundary */
-    while (w &&
-           ((unsigned long)pd & 15))
+    while (w && ((unsigned long)pd & 15))
     {
 	d = *pd;
 	s = combine1 (ps, pm);
@@ -5625,6 +5624,9 @@ sse2_fill (pixman_implementation_t *imp,
     return TRUE;
 }
 
+#if defined(__GNUC__) && !defined(__x86_64__) && !defined(__amd64__)
+__attribute__((__force_align_arg_pointer__))
+#endif
 pixman_implementation_t *
 _pixman_implementation_create_sse2 (void)
 {
