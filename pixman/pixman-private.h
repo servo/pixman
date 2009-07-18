@@ -88,8 +88,6 @@ struct image_common
     int                         alpha_origin_x;
     int                         alpha_origin_y;
     pixman_bool_t               component_alpha;
-    pixman_read_memory_func_t   read_func;
-    pixman_write_memory_func_t  write_func;
     classify_func_t             classify;
     property_changed_func_t     property_changed;
     fetch_scanline_t            get_scanline_32;

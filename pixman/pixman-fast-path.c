@@ -1217,8 +1217,8 @@ fast_path_composite (pixman_implementation_t *imp,
         && (src->common.filter == PIXMAN_FILTER_NEAREST)
         && PIXMAN_FORMAT_BPP (dest->bits.format) == 32
         && src->bits.format == dest->bits.format
-        && !src->common.read_func && !src->common.write_func
-        && !dest->common.read_func && !dest->common.write_func)
+        && !src->bits.read_func && !src->bits.write_func
+        && !dest->bits.read_func && !dest->bits.write_func)
     {
 	/* ensure that the transform matrix only has a scale */
 	if (src->common.transform->matrix[0][1] == 0 &&

@@ -3,9 +3,9 @@
 #define ACCESS(sym) sym##_accessors
 
 #define READ(img, ptr)							\
-    ((img)->common.read_func ((ptr), sizeof(*(ptr))))
+    (((bits_image_t *)(img))->read_func ((ptr), sizeof(*(ptr))))
 #define WRITE(img, ptr,val)						\
-    ((img)->common.write_func ((ptr), (val), sizeof (*(ptr))))
+    (((bits_image_t *)(img))->write_func ((ptr), (val), sizeof (*(ptr))))
 
 #define MEMCPY_WRAPPED(img, dst, src, size)				\
     do {								\

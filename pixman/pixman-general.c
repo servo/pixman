@@ -134,7 +134,7 @@ general_composite_rect  (pixman_implementation_t *imp,
      */
     if (!wide &&
         !dest->common.alpha_map &&
-        !dest->common.write_func &&
+        !dest->bits.write_func &&
         (op == PIXMAN_OP_ADD || op == PIXMAN_OP_OVER) &&
         (dest->bits.format == PIXMAN_a8r8g8b8 ||
          dest->bits.format == PIXMAN_x8r8g8b8))

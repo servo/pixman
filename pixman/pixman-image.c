@@ -115,8 +115,6 @@ _pixman_image_allocate (void)
 	common->alpha_map = NULL;
 	common->component_alpha = FALSE;
 	common->ref_count = 1;
-	common->read_func = NULL;
-	common->write_func = NULL;
 	common->classify = NULL;
 	common->client_clip = FALSE;
 	common->destroy_func = NULL;
@@ -450,10 +448,13 @@ pixman_image_set_accessors (pixman_image_t *           image,
 {
     return_if_fail (image != NULL);
 
-    image->common.read_func = read_func;
-    image->common.write_func = write_func;
+    if (image->type == BITS)
+    {
+	image->bits.read_func = read_func;
+	image->bits.write_func = write_func;
 
-    image_property_changed (image);
+	image_property_changed (image);
+    }
 }
 
 PIXMAN_EXPORT uint32_t *

@@ -3444,7 +3444,7 @@ _pixman_bits_image_setup_raw_accessors_accessors (bits_image_t *image);
 void
 _pixman_bits_image_setup_raw_accessors (bits_image_t *image)
 {
-    if (image->common.read_func || image->common.write_func)
+    if (image->read_func || image->write_func)
 	_pixman_bits_image_setup_raw_accessors_accessors (image);
     else
 	setup_accessors (image);

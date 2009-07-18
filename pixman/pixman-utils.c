@@ -678,11 +678,11 @@ _pixman_run_fast_path (const pixman_fast_path_t *paths,
         && (!mask || (mask->common.filter != PIXMAN_FILTER_CONVOLUTION &&
                       mask->common.repeat != PIXMAN_REPEAT_PAD &&
                       mask->common.repeat != PIXMAN_REPEAT_REFLECT))
-        && !src->common.read_func && !src->common.write_func
-        && !(mask && mask->common.read_func)
-        && !(mask && mask->common.write_func)
-        && !dest->common.read_func
-        && !dest->common.write_func)
+        && !src->bits.read_func && !src->bits.write_func
+        && !(mask && mask->bits.read_func)
+        && !(mask && mask->bits.write_func)
+        && !dest->bits.read_func
+        && !dest->bits.write_func)
     {
 	const pixman_fast_path_t *info;
 	pixman_bool_t pixbuf;

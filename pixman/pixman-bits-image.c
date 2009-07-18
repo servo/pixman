@@ -954,6 +954,8 @@ pixman_image_create_bits (pixman_format_code_t format,
     image->bits.height = height;
     image->bits.bits = bits;
     image->bits.free_me = free_me;
+    image->bits.read_func = NULL;
+    image->bits.write_func = NULL;
 
     /* The rowstride is stored in number of uint32_t */
     image->bits.rowstride = rowstride_bytes / (int) sizeof (uint32_t);
