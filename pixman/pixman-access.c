@@ -2425,10 +2425,10 @@ store_scanline_a2r10g10b10 (bits_image_t *  image,
     for (i = 0; i < width; ++i)
     {
 	WRITE (image, pixel++,
-	       ((values[i] >> 32) & 0xc0000000) | // A
-	       ((values[i] >> 18) & 0x3ff00000) | // R
-	       ((values[i] >> 12) & 0xffc00) | // G
-	       ((values[i] >> 6) & 0x3ff));    // B
+	       ((values[i] >> 32) & 0xc0000000) |
+	       ((values[i] >> 18) & 0x3ff00000) |
+	       ((values[i] >> 12) & 0xffc00) | 
+	       ((values[i] >> 6) & 0x3ff));    
     }
 }
 
@@ -2447,9 +2447,9 @@ store_scanline_x2r10g10b10 (bits_image_t *  image,
     for (i = 0; i < width; ++i)
     {
 	WRITE (image, pixel++,
-	       ((values[i] >> 18) & 0x3ff00000) | // R
-	       ((values[i] >> 12) & 0xffc00) | // G
-	       ((values[i] >> 6) & 0x3ff));    // B
+	       ((values[i] >> 18) & 0x3ff00000) | 
+	       ((values[i] >> 12) & 0xffc00) |
+	       ((values[i] >> 6) & 0x3ff));
     }
 }
 
@@ -2468,10 +2468,10 @@ store_scanline_a2b10g10r10 (bits_image_t *  image,
     for (i = 0; i < width; ++i)
     {
 	WRITE (image, pixel++,
-	       ((values[i] >> 32) & 0xc0000000) | // A
-	       ((values[i] >> 38) & 0x3ff) |   // R
-	       ((values[i] >> 12) & 0xffc00) | // G
-	       ((values[i] << 14) & 0x3ff00000)); // B
+	       ((values[i] >> 32) & 0xc0000000) |
+	       ((values[i] >> 38) & 0x3ff) |
+	       ((values[i] >> 12) & 0xffc00) |
+	       ((values[i] << 14) & 0x3ff00000));
     }
 }
 
@@ -2490,9 +2490,9 @@ store_scanline_x2b10g10r10 (bits_image_t *  image,
     for (i = 0; i < width; ++i)
     {
 	WRITE (image, pixel++,
-	       ((values[i] >> 38) & 0x3ff) |   // R
-	       ((values[i] >> 12) & 0xffc00) | // G
-	       ((values[i] << 14) & 0x3ff00000)); // B
+	       ((values[i] >> 38) & 0x3ff) |
+	       ((values[i] >> 12) & 0xffc00) |
+	       ((values[i] << 14) & 0x3ff00000));
     }
 }
 

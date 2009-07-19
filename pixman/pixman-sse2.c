@@ -361,7 +361,7 @@ cache_prefetch (__m128i* addr)
 static force_inline void
 cache_prefetch_next (__m128i* addr)
 {
-    _mm_prefetch (addr + 4, _MM_HINT_T0); // 64 bytes ahead
+    _mm_prefetch (addr + 4, _MM_HINT_T0); /* 64 bytes ahead */
 }
 
 /* load 4 pixels from a 16-byte boundary aligned address */

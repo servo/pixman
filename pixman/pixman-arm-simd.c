@@ -135,7 +135,7 @@ arm_composite_over_8888_8888 (pixman_implementation_t * impl,
 	src_line += src_stride;
 	w = width;
 
-//#define inner_branch
+/* #define inner_branch */
 	asm volatile (
 	    "cmp %[w], #0\n\t"
 	    "beq 2f\n\t"
