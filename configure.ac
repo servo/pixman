@@ -267,9 +267,19 @@ case $host_os in
    solaris*)
       # When building 32-bit binaries, apply a mapfile to ensure that the
       # binaries aren't flagged as only able to run on MMX+SSE capable CPUs
-      # since they check at runtime before using those instructions
+      # since they check at runtime before using those instructions.
+      # Not all linkers grok the mapfile format so we check for that first.
       if test "$AMD64_ABI" = "no" ; then
-         HWCAP_LDFLAGS='-Wl,-M,$(srcdir)/solaris-hwcap.mapfile'
+	 use_hwcap_mapfile=no
+	 AC_MSG_CHECKING(whether to use a hardware capability map file)
+	 hwcap_save_LDFLAGS="$LDFLAGS"
+	 HWCAP_LDFLAGS='-Wl,-M,$(srcdir)/solaris-hwcap.mapfile'
+	 LDFLAGS="$LDFLAGS -Wl,-M,pixman/solaris-hwcap.mapfile"
+	 AC_LINK_IFELSE([int main() { return 0; }],
+			use_hwcap_mapfile=yes,
+			HWCAP_LDFLAGS="")
+	 LDFLAGS="$hwcap_save_LDFLAGS"
+	 AC_MSG_RESULT($use_hwcap_mapfile)
       fi
       if test "x$MMX_LDFLAGS" = "x" ; then
          MMX_LDFLAGS="$HWCAP_LDFLAGS"
