@@ -646,23 +646,40 @@ _pixman_run_fast_path (const pixman_fast_path_t *paths,
     pixman_bool_t mask_repeat =
 	mask && mask->common.repeat == PIXMAN_REPEAT_NORMAL;
     pixman_bool_t result;
+    pixman_bool_t has_fast_path;
 
-    if ((src->type == BITS || _pixman_image_is_solid (src)) &&
-        (!mask || mask->type == BITS)
-        && !src->common.transform && !(mask && mask->common.transform)
-	&& !src->common.alpha_map && !dest->common.alpha_map
-        && !(mask && mask->common.alpha_map)
-        && (src->common.filter != PIXMAN_FILTER_CONVOLUTION)
-        && (src->common.repeat != PIXMAN_REPEAT_PAD)
-        && (src->common.repeat != PIXMAN_REPEAT_REFLECT)
-        && (!mask || (mask->common.filter != PIXMAN_FILTER_CONVOLUTION &&
-                      mask->common.repeat != PIXMAN_REPEAT_PAD &&
-                      mask->common.repeat != PIXMAN_REPEAT_REFLECT))
-        && !src->bits.read_func && !src->bits.write_func
-        && !(mask && mask->bits.read_func)
-        && !(mask && mask->bits.write_func)
-        && !dest->bits.read_func
-        && !dest->bits.write_func)
+    has_fast_path = !dest->common.alpha_map &&
+		    !dest->bits.read_func &&
+		    !dest->bits.write_func;
+
+    if (has_fast_path)
+    {
+	has_fast_path = (src->type == BITS || _pixman_image_is_solid (src)) &&
+	                !src->common.transform &&
+	                !src->common.alpha_map &&
+			src->common.filter != PIXMAN_FILTER_CONVOLUTION &&
+			src->common.repeat != PIXMAN_REPEAT_PAD &&
+			src->common.repeat != PIXMAN_REPEAT_REFLECT;
+	if (has_fast_path && src->type == BITS)
+	{
+	    has_fast_path = !src->bits.read_func &&
+	                    !src->bits.write_func;
+	}
+    }
+
+    if (mask && has_fast_path)
+    {
+	has_fast_path = mask->type == BITS &&
+	                !mask->common.transform &&
+	                !mask->common.alpha_map &&
+	                !mask->bits.read_func &&
+	                !mask->bits.write_func &&
+			mask->common.filter != PIXMAN_FILTER_CONVOLUTION &&
+			mask->common.repeat != PIXMAN_REPEAT_PAD &&
+			mask->common.repeat != PIXMAN_REPEAT_REFLECT;
+    }
+
+    if (has_fast_path)
     {
 	const pixman_fast_path_t *info;
 	pixman_bool_t pixbuf;
