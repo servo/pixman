@@ -356,6 +356,11 @@ PREFIX (_init_rect) (region_type_t *	region,
 PIXMAN_EXPORT void
 PREFIX (_init_with_extents) (region_type_t *region, box_type_t *extents)
 {
+    if (extents->x1 >= extents->x2 || extents->y1 > extents->y2)
+    {
+        PREFIX (_init) (region);
+        return;
+    }
     region->extents = *extents;
 
     region->data = NULL;
