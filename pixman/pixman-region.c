@@ -63,6 +63,7 @@
 #define PIXREGION_TOP(reg) PIXREGION_BOX (reg, (reg)->data->numRects)
 #define PIXREGION_END(reg) PIXREGION_BOX (reg, (reg)->data->numRects - 1)
 
+#define GOOD_RECT(rect) ((rect)->x1 < (rect)->x2 && (rect)->y1 < (rect)->y2)
 #define GOOD(reg) assert (PREFIX (_selfcheck) (reg))
 
 static const box_type_t PREFIX (_empty_box_) = { 0, 0, 0, 0 };
@@ -339,16 +340,16 @@ PREFIX (_init_rect) (region_type_t *	region,
 		     unsigned int	width,
 		     unsigned int	height)
 {
-    if (x + (int) width < x || y + (int) height < y)
-    {
-        PREFIX (_init) (region);
-        return;
-    }
-
     region->extents.x1 = x;
     region->extents.y1 = y;
     region->extents.x2 = x + width;
     region->extents.y2 = y + height;
+
+    if (!GOOD_RECT (&region->extents))
+    {
+        PREFIX (_init) (region);
+        return;
+    }
 
     region->data = NULL;
 }
@@ -356,7 +357,7 @@ PREFIX (_init_rect) (region_type_t *	region,
 PIXMAN_EXPORT void
 PREFIX (_init_with_extents) (region_type_t *region, box_type_t *extents)
 {
-    if (extents->x1 >= extents->x2 || extents->y1 > extents->y2)
+    if (!GOOD_RECT (extents))
     {
         PREFIX (_init) (region);
         return;
@@ -1303,14 +1304,14 @@ PREFIX (_union_rect) (region_type_t *dest,
 {
     region_type_t region;
 
-    if (!width || !height)
-	return PREFIX (_copy) (dest, source);
-    
     region.extents.x1 = x;
     region.extents.y1 = y;
     region.extents.x2 = x + width;
     region.extents.y2 = y + height;
 
+    if (!GOOD_RECT (&region.extents))
+	return PREFIX (_copy) (dest, source);
+    
     region.data = NULL;
 
     return PREFIX (_union) (dest, source, &region);
@@ -2240,6 +2241,8 @@ PREFIX (_translate) (region_type_t *region, int x, int y)
 	    }
 	}
     }
+
+    GOOD (region);
 }
 
 PIXMAN_EXPORT void
@@ -2247,14 +2250,13 @@ PREFIX (_reset) (region_type_t *region, box_type_t *box)
 {
     GOOD (region);
 
-    assert (box->x1 <= box->x2);
-    assert (box->y1 <= box->y2);
+    assert (GOOD_RECT (box));
 
     region->extents = *box;
 
     FREE_DATA (region);
 
-    region->data = (region_data_type_t *)NULL;
+    region->data = NULL;
 }
 
 /* box is "return" value */
