@@ -74,7 +74,7 @@
 #elif defined PIXMAN_REGION_LOG_FAILURES
 
 static void
-log_region_error (void)
+log_region_error (const char *function, const char *message)
 {
     static int n_messages = 0;
 
@@ -82,8 +82,9 @@ log_region_error (void)
     {
 	fprintf (stderr,
 		 "*** BUG ***\n"
-		 "Malformed region detected\n"
-		 "Set a breakpoint on 'log_region_error' to debug\n\n");
+		 "%s: %s\n"
+		 "Set a breakpoint on 'log_region_error' to debug\n\n",
+                 function, message);
 
 	n_messages++;
     }
@@ -93,7 +94,7 @@ log_region_error (void)
     do									\
     {									\
 	if (!PREFIX (_selfcheck (reg)))					\
-	    log_region_error ();					\
+	    log_region_error (FUNC, "Malformed region " # reg);         \
     } while (0)
 
 #else
