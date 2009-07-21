@@ -36,6 +36,15 @@
 #include "pixman-private.h"
 #include "pixman-combine32.h"
 
+#if defined(_MSC_VER) && defined(_M_AMD64)
+/* Windows 64 doesn't allow MMX to be used, so
+ * the pixman-x64-mmx-emulation.h file contains
+ * implementations of those MMX intrinsics that
+ * are used in the SSE2 implementation.
+ */
+#   include "pixman-x64-mmx-emulation.h"
+#endif
+
 #ifdef USE_SSE2
 
 /* --------------------------------------------------------------------
