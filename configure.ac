@@ -384,7 +384,7 @@ AM_CONDITIONAL(USE_ARM_SIMD, test $have_arm_simd = yes)
 
 dnl ==========================================================================
 dnl Check for ARM NEON instructions
-ARM_NEON_CFLAGS="-mfpu=neon"
+ARM_NEON_CFLAGS="-mfpu=neon -mcpu=cortex-a8"
 
 have_arm_neon=no
 AC_MSG_CHECKING(whether to use ARM NEON)
