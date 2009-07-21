@@ -4353,7 +4353,7 @@ sse2_composite_over_pixbuf_0565 (pixman_implementation_t *imp,
 		invert_colors_2x128 (xmm_src_lo, xmm_src_hi,
 				     &xmm_dst2, &xmm_dst3);
 	    }
-	    else if (zero)
+	    else if (!zero)
 	    {
 		over_rev_non_pre_2x128 (xmm_src_lo, xmm_src_hi,
 					&xmm_dst2, &xmm_dst3);
