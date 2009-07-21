@@ -1898,8 +1898,8 @@ pixman_fill_neon (uint32_t *bits,
 #define NEON_SCANLINE_BUFFER_PIXELS (1024)
 
 static inline void
-neon_quadword_copy ((void *)    dst,
-		    (void *)    src,
+neon_quadword_copy (void *   dst,
+		    void *   src,
 		    uint32_t count,         /* of quadwords */
 		    uint32_t trailer_count  /* of bytes */)
 {
