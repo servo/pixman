@@ -73,16 +73,22 @@ make_image (int width, int height, pixman_bool_t src, int *rx, int *ry)
     dx = get_rand (500);
     dy = get_rand (500);
 
-    /* Now simulate the bogus X server translations */
-    bits -= (dy * stride + dx) * bpp;
+    if (!src)
+    {
+	/* Now simulate the bogus X server translations */
+	bits -= (dy * stride + dx) * bpp;
+    }
 
     image = pixman_image_create_bits (
 	format, width, height, (uint32_t *)bits, stride * bpp);
 
-    /* And add the bogus clip region */
-    pixman_region32_init_rect (&region, dx, dy, dx + width, dy + height);
+    if (!src)
+    {
+	/* And add the bogus clip region */
+	pixman_region32_init_rect (&region, dx, dy, dx + width, dy + height);
 
-    pixman_image_set_clip_region32 (image, &region);
+	pixman_image_set_clip_region32 (image, &region);
+    }
 
     pixman_image_set_source_clipping (image, TRUE);
 
@@ -112,8 +118,15 @@ make_image (int width, int height, pixman_bool_t src, int *rx, int *ry)
 	pixman_image_set_repeat (image, PIXMAN_REPEAT_PAD);
     }
 
-    *rx = dx;
-    *ry = dy;
+    if (!src)
+    {
+	*rx = dx;
+	*ry = dy;
+    }
+    else
+    {
+	*rx = *ry = 0;
+    }
 
     return image;
 }
@@ -148,7 +161,11 @@ main ()
 	    uint8_t *pixel =
 		bits + (i + dest_y) * stride + (j + dest_x) * bpp;
 
-	    assert (*(uint16_t *)pixel == 0x788f);
+	    if (*(uint16_t *)pixel != 0x788f)
+	    {
+		printf ("bad pixel %x\n", *(uint16_t *)pixel);
+		assert (*(uint16_t *)pixel == 0x788f);
+	    }
 	}
     }
 

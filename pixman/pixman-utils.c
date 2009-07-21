@@ -84,20 +84,13 @@ clip_source_image (pixman_region32_t * region,
                    int                 dx,
                    int                 dy)
 {
-    /* The workaround lets certain fast paths run even when they
-     * would normally be rejected because of out-of-bounds access.
-     * We need to clip against the source geometry in that case
+    /* Source clips are ignored, unless they are explicitly turned on
+     * and the clip in question was set by an X client. (Because if
+     * the clip was not set by a client, then it is a hierarchy
+     * clip and those should always be ignored for sources).
      */
-    if (!picture->common.need_workaround)
-    {
-	/* Source clips are ignored, unless they are explicitly turned on
-	 * and the clip in question was set by an X client. (Because if
-	 * the clip was not set by a client, then it is a hierarchy
-	 * clip and those should always be ignored for sources).
-	 */
-	if (!picture->common.clip_sources || !picture->common.client_clip)
-	    return TRUE;
-    }
+    if (!picture->common.clip_sources || !picture->common.client_clip)
+	return TRUE;
 
     return clip_general_image (region,
                                &picture->common.clip_region,
@@ -133,21 +126,8 @@ pixman_compute_composite_region32 (pixman_region32_t * region,
 
     region->extents.x1 = MAX (region->extents.x1, 0);
     region->extents.y1 = MAX (region->extents.y1, 0);
-
-    /* Some X servers rely on an old bug, where pixman would just believe the
-     * set clip_region and not clip against the destination geometry. So,
-     * since only X servers set "source clip", we don't clip against
-     * destination geometry when that is set and when the workaround has
-     * not been explicitly disabled by
-     *
-     *      pixman_disable_out_of_bounds_workaround();
-     *
-     */
-    if (!(dst_image->common.need_workaround))
-    {
-	region->extents.x2 = MIN (region->extents.x2, dst_image->bits.width);
-	region->extents.y2 = MIN (region->extents.y2, dst_image->bits.height);
-    }
+    region->extents.x2 = MIN (region->extents.x2, dst_image->bits.width);
+    region->extents.y2 = MIN (region->extents.y2, dst_image->bits.height);
 
     region->data = 0;
 
@@ -746,8 +726,7 @@ _pixman_run_fast_path (const pixman_fast_path_t *paths,
 
 	    if (sources_cover (
 		    src, mask, extents,
-		    src_x, src_y, mask_x, mask_y, dest_x, dest_y) ||
-		src->common.need_workaround)
+		    src_x, src_y, mask_x, mask_y, dest_x, dest_y))
 	    {
 		walk_region_internal (imp, op,
 		                      src, mask, dest,

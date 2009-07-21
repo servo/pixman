@@ -806,6 +806,7 @@ source_image_needs_out_of_bounds_workaround (bits_image_t *image)
 {
     if (image->common.clip_sources                      &&
         image->common.repeat == PIXMAN_REPEAT_NONE      &&
+	image->common.have_clip_region			&&
         out_of_bounds_workaround)
     {
 	const pixman_box32_t *boxes;

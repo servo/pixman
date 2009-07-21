@@ -55,6 +55,8 @@ static const optimized_operator_info_t optimized_operators[] =
     { PIXMAN_OP_NONE }
 };
 
+static pixman_implementation_t *imp;
+
 /*
  * Check if the current operator could be optimized
  */
@@ -105,7 +107,50 @@ pixman_optimize_operator (pixman_op_t     op,
 
 }
 
-static pixman_implementation_t *imp;
+static void
+apply_workaround (pixman_image_t *image,
+		  int16_t *       x,
+		  int16_t *       y,
+		  uint32_t **     save_bits,
+		  int *           save_dx,
+		  int *           save_dy)
+{
+    /* Some X servers generate images that point to the
+     * wrong place in memory, but then set the clip region
+     * to point to the right place. Because of an old bug
+     * in pixman, this would actually work.
+     *
+     * Here we try and undo the damage
+     */
+    int bpp = PIXMAN_FORMAT_BPP (image->bits.format) / 8;
+    pixman_box32_t *extents;
+    uint8_t *t;
+    int dx, dy;
+
+    extents = pixman_region32_extents (&(image->common.clip_region));
+    dx = extents->x1;
+    dy = extents->y1;
+
+    *save_bits = image->bits.bits;
+
+    *x -= dx;
+    *y -= dy;
+    pixman_region32_translate (&(image->common.clip_region), -dx, -dy);
+
+    t = (uint8_t *)image->bits.bits;
+    t += dy * image->bits.rowstride * 4 + dx * bpp;
+    image->bits.bits = (uint32_t *)t;
+
+    *save_dx = dx;
+    *save_dy = dy;
+}
+
+static void
+unapply_workaround (pixman_image_t *image, uint32_t *bits, int dx, int dy)
+{
+    image->bits.bits = bits;
+    pixman_region32_translate (&image->common.clip_region, dx, dy);
+}
 
 PIXMAN_EXPORT void
 pixman_image_composite (pixman_op_t      op,
@@ -121,6 +166,13 @@ pixman_image_composite (pixman_op_t      op,
                         uint16_t         width,
                         uint16_t         height)
 {
+    uint32_t *src_bits;
+    int src_dx, src_dy;
+    uint32_t *mask_bits;
+    int mask_dx, mask_dy;
+    uint32_t *dest_bits;
+    int dest_dx, dest_dy;
+
     /*
      * Check if we can replace our operator by a simpler one
      * if the src or dest are opaque. The output operator should be
@@ -137,12 +189,26 @@ pixman_image_composite (pixman_op_t      op,
     if (!imp)
 	imp = _pixman_choose_implementation ();
 
+    if (src->common.need_workaround)
+	apply_workaround (src, &src_x, &src_y, &src_bits, &src_dx, &src_dy);
+    if (mask && mask->common.need_workaround)
+	apply_workaround (mask, &mask_x, &mask_y, &mask_bits, &mask_dx, &mask_dy);
+    if (dest->common.need_workaround)
+	apply_workaround (dest, &dest_x, &dest_y, &dest_bits, &dest_dx, &dest_dy);
+
     _pixman_implementation_composite (imp, op,
                                       src, mask, dest,
                                       src_x, src_y,
                                       mask_x, mask_y,
                                       dest_x, dest_y,
                                       width, height);
+
+    if (src->common.need_workaround)
+	unapply_workaround (src, src_bits, src_dx, src_dy);
+    if (mask && mask->common.need_workaround)
+	unapply_workaround (mask, mask_bits, mask_dx, mask_dy);
+    if (dest->common.need_workaround)
+	unapply_workaround (dest, dest_bits, dest_dx, dest_dy);
 }
 
 PIXMAN_EXPORT pixman_bool_t
