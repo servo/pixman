@@ -67,11 +67,7 @@
 
 #define PIXMAN_REGION_LOG_FAILURES
 
-#if defined PIXMAN_REGION_DEBUG
-
-#    define GOOD(reg) assert (PREFIX (_selfcheck) (reg))
-
-#elif defined PIXMAN_REGION_LOG_FAILURES
+#if defined PIXMAN_REGION_LOG_FAILURES || defined PIXMAN_REGION_DEBUG
 
 static void
 log_region_error (const char *function, const char *message)
@@ -86,6 +82,10 @@ log_region_error (const char *function, const char *message)
 		 "Set a breakpoint on 'log_region_error' to debug\n\n",
                  function, message);
 
+#if defined PIXMAN_REGION_DEBUG
+        abort ();
+#endif
+
 	n_messages++;
     }
 }
@@ -99,6 +99,7 @@ log_region_error (const char *function, const char *message)
 
 #else
 
+#define log_region_error(function, name)
 #define GOOD(reg)
 
 #endif
