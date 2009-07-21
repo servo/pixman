@@ -809,25 +809,18 @@ source_image_needs_out_of_bounds_workaround (bits_image_t *image)
 	image->common.have_clip_region			&&
         out_of_bounds_workaround)
     {
-	const pixman_box32_t *boxes;
-	int n;
-
 	if (!image->common.client_clip)
 	{
 	    /* There is no client clip, so the drawable in question
-	     * is a window if the clip region is different from the
-	     * full drawable
+	     * is a window if the clip region extends beyond the
+	     * drawable geometry.
 	     */
-	    boxes = pixman_region32_rectangles (&image->common.clip_region, &n);
-	    if (n == 1)
+	    const pixman_box32_t *extents = pixman_region32_extents (&image->common.clip_region);
+
+	    if (extents->x1 >= 0 && extents->x2 < image->width &&
+		extents->y1 >= 0 && extents->y2 < image->height)
 	    {
-		if (boxes[0].x1 == 0 && boxes[0].y1 == 0 &&
-		    boxes[0].x2 == image->width &&
-		    boxes[0].y2 == image->height)
-		{
-		    /* pixmap */
-		    return FALSE;
-		}
+		return FALSE;
 	    }
 	}
 
