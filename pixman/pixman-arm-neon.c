@@ -169,8 +169,8 @@ neon_composite_add_8000_8000 (pixman_implementation_t * impl,
 	    w = width;
 
 #ifndef USE_GCC_INLINE_ASM
-	    sval = vld1_u8 (((void *))src);
-	    dval = vld1_u8 (((void *))dst);
+	    sval = vld1_u8 ((void *)src);
+	    dval = vld1_u8 ((void *)dst);
 	    keep_dst = dst;
 
 	    temp = vqadd_u8 (dval, sval);
@@ -181,10 +181,10 @@ neon_composite_add_8000_8000 (pixman_implementation_t * impl,
 
 	    while (w)
 	    {
-		sval = vld1_u8 (((void *))src);
-		dval = vld1_u8 (((void *))dst);
+		sval = vld1_u8 ((void *)src);
+		dval = vld1_u8 ((void *)dst);
 
-		vst1_u8 (((void *))keep_dst, temp);
+		vst1_u8 ((void *)keep_dst, temp);
 		keep_dst = dst;
 
 		temp = vqadd_u8 (dval, sval);
@@ -194,7 +194,7 @@ neon_composite_add_8000_8000 (pixman_implementation_t * impl,
 		w -= 8;
 	    }
 
-	    vst1_u8 (((void *))keep_dst, temp);
+	    vst1_u8 ((void *)keep_dst, temp);
 #else
 	    asm volatile (
 /* avoid using d8-d15 (q4-q7) aapcs callee-save registers */
@@ -249,9 +249,9 @@ neon_composite_add_8000_8000 (pixman_implementation_t * impl,
 	    if (w & 4)
 	    {
 		sval = vreinterpret_u8_u32 (
-		    vld1_lane_u32 (((void *))src, vreinterpret_u32_u8 (sval), 1));
+		    vld1_lane_u32 ((void *)src, vreinterpret_u32_u8 (sval), 1));
 		dval = vreinterpret_u8_u32 (
-		    vld1_lane_u32 (((void *))dst, vreinterpret_u32_u8 (dval), 1));
+		    vld1_lane_u32 ((void *)dst, vreinterpret_u32_u8 (dval), 1));
 
 		dst4 = dst;
 		src += 4;
@@ -261,9 +261,9 @@ neon_composite_add_8000_8000 (pixman_implementation_t * impl,
 	    if (w & 2)
 	    {
 		sval = vreinterpret_u8_u16 (
-		    vld1_lane_u16 (((void *))src, vreinterpret_u16_u8 (sval), 1));
+		    vld1_lane_u16 ((void *)src, vreinterpret_u16_u8 (sval), 1));
 		dval = vreinterpret_u8_u16 (
-		    vld1_lane_u16 (((void *))dst, vreinterpret_u16_u8 (dval), 1));
+		    vld1_lane_u16 ((void *)dst, vreinterpret_u16_u8 (dval), 1));
 
 		dst2 = dst;
 		src += 2;
@@ -282,10 +282,10 @@ neon_composite_add_8000_8000 (pixman_implementation_t * impl,
 		vst1_lane_u8 (dst, dval, 1);
 
 	    if (w & 2)
-		vst1_lane_u16 (((void *))dst2, vreinterpret_u16_u8 (dval), 1);
+		vst1_lane_u16 ((void *)dst2, vreinterpret_u16_u8 (dval), 1);
 
 	    if (w & 4)
-		vst1_lane_u32 (((void *))dst4, vreinterpret_u32_u8 (dval), 1);
+		vst1_lane_u32 ((void *)dst4, vreinterpret_u32_u8 (dval), 1);
 	}
     }
 }
@@ -328,8 +328,8 @@ neon_composite_over_8888_8888 (pixman_implementation_t * impl,
 	    w = width;
 
 #ifndef USE_GCC_INLINE_ASM
-	    sval = vld4_u8 (((void *))src);
-	    dval = vld4_u8 (((void *))dst);
+	    sval = vld4_u8 ((void *)src);
+	    dval = vld4_u8 ((void *)dst);
 	    keep_dst = dst;
 
 	    temp = neon8mul (dval, vmvn_u8 (sval.val[3]));
@@ -341,10 +341,10 @@ neon_composite_over_8888_8888 (pixman_implementation_t * impl,
 
 	    while (w)
 	    {
-		sval = vld4_u8 (((void *))src);
-		dval = vld4_u8 (((void *))dst);
+		sval = vld4_u8 ((void *)src);
+		dval = vld4_u8 ((void *)dst);
 
-		vst4_u8 (((void *))keep_dst, temp);
+		vst4_u8 ((void *)keep_dst, temp);
 		keep_dst = dst;
 
 		temp = neon8mul (dval, vmvn_u8 (sval.val[3]));
@@ -355,7 +355,7 @@ neon_composite_over_8888_8888 (pixman_implementation_t * impl,
 		w -= 8;
 	    }
 
-	    vst4_u8 (((void *))keep_dst, temp);
+	    vst4_u8 ((void *)keep_dst, temp);
 #else
 	    asm volatile (
 /* avoid using d8-d15 (q4-q7) aapcs callee-save registers */
@@ -427,10 +427,10 @@ neon_composite_over_8888_8888 (pixman_implementation_t * impl,
 		uint8x8_t sval, dval;
 
 		/* two 32-bit pixels packed into D-reg; ad-hoc vectorization */
-		sval = vreinterpret_u8_u32 (vld1_u32 (((void *))src));
-		dval = vreinterpret_u8_u32 (vld1_u32 (((void *))dst));
+		sval = vreinterpret_u8_u32 (vld1_u32 ((void *)src));
+		dval = vreinterpret_u8_u32 (vld1_u32 ((void *)dst));
 		dval = neon2mul (dval, vtbl1_u8 (vmvn_u8 (sval), alpha_selector));
-		vst1_u8 (((void *))dst, vqadd_u8 (sval, dval));
+		vst1_u8 ((void *)dst, vqadd_u8 (sval, dval));
 
 		src += 2;
 		dst += 2;
@@ -442,10 +442,10 @@ neon_composite_over_8888_8888 (pixman_implementation_t * impl,
 		uint8x8_t sval, dval;
 
 		/* single 32-bit pixel in lane 0 */
-		sval = vreinterpret_u8_u32 (vld1_dup_u32 (((void *))src));  /* only interested in lane 0 */
-		dval = vreinterpret_u8_u32 (vld1_dup_u32 (((void *))dst));  /* only interested in lane 0 */
+		sval = vreinterpret_u8_u32 (vld1_dup_u32 ((void *)src));  /* only interested in lane 0 */
+		dval = vreinterpret_u8_u32 (vld1_dup_u32 ((void *)dst));  /* only interested in lane 0 */
 		dval = neon2mul (dval, vtbl1_u8 (vmvn_u8 (sval), alpha_selector));
-		vst1_lane_u32 (((void *))dst, vreinterpret_u32_u8 (vqadd_u8 (sval, dval)), 0);
+		vst1_lane_u32 ((void *)dst, vreinterpret_u32_u8 (vqadd_u8 (sval, dval)), 0);
 	    }
 	}
     }
@@ -495,8 +495,8 @@ neon_composite_over_8888_n_8888 (pixman_implementation_t * impl,
 #ifndef USE_GCC_INLINE_ASM
 	    uint8x8x4_t sval, dval, temp;
 
-	    sval = vld4_u8 (((void *))src);
-	    dval = vld4_u8 (((void *))dst);
+	    sval = vld4_u8 ((void *)src);
+	    dval = vld4_u8 ((void *)dst);
 	    keep_dst = dst;
 
 	    sval = neon8mul (sval, mask_alpha);
@@ -509,10 +509,10 @@ neon_composite_over_8888_n_8888 (pixman_implementation_t * impl,
 
 	    while (w)
 	    {
-		sval = vld4_u8 (((void *))src);
-		dval = vld4_u8 (((void *))dst);
+		sval = vld4_u8 ((void *)src);
+		dval = vld4_u8 ((void *)dst);
 
-		vst4_u8 (((void *))keep_dst, temp);
+		vst4_u8 ((void *)keep_dst, temp);
 		keep_dst = dst;
 
 		sval = neon8mul (sval, mask_alpha);
@@ -523,7 +523,7 @@ neon_composite_over_8888_n_8888 (pixman_implementation_t * impl,
 		dst += 8;
 		w -= 8;
 	    }
-	    vst4_u8 (((void *))keep_dst, temp);
+	    vst4_u8 ((void *)keep_dst, temp);
 #else
 	    asm volatile (
 /* avoid using d8-d15 (q4-q7) aapcs callee-save registers */
@@ -612,8 +612,8 @@ neon_composite_over_8888_n_8888 (pixman_implementation_t * impl,
 	    {
 		uint8x8_t sval, dval;
 
-		sval = vreinterpret_u8_u32 (vld1_u32 (((void *))src));
-		dval = vreinterpret_u8_u32 (vld1_u32 (((void *))dst));
+		sval = vreinterpret_u8_u32 (vld1_u32 ((void *)src));
+		dval = vreinterpret_u8_u32 (vld1_u32 ((void *)dst));
 
 		/* sval * const alpha_mul */
 		sval = neon2mul (sval, mask_alpha);
@@ -621,7 +621,7 @@ neon_composite_over_8888_n_8888 (pixman_implementation_t * impl,
 		/* dval * 255-(src alpha) */
 		dval = neon2mul (dval, vtbl1_u8 (vmvn_u8 (sval), alpha_selector));
 
-		vst1_u8 (((void *))dst, vqadd_u8 (sval, dval));
+		vst1_u8 ((void *)dst, vqadd_u8 (sval, dval));
 
 		src += 2;
 		dst += 2;
@@ -632,8 +632,8 @@ neon_composite_over_8888_n_8888 (pixman_implementation_t * impl,
 	    {
 		uint8x8_t sval, dval;
 
-		sval = vreinterpret_u8_u32 (vld1_dup_u32 (((void *))src));
-		dval = vreinterpret_u8_u32 (vld1_dup_u32 (((void *))dst));
+		sval = vreinterpret_u8_u32 (vld1_dup_u32 ((void *)src));
+		dval = vreinterpret_u8_u32 (vld1_dup_u32 ((void *)dst));
 
 		/* sval * const alpha_mul */
 		sval = neon2mul (sval, mask_alpha);
@@ -641,7 +641,7 @@ neon_composite_over_8888_n_8888 (pixman_implementation_t * impl,
 		/* dval * 255-(src alpha) */
 		dval = neon2mul (dval, vtbl1_u8 (vmvn_u8 (sval), alpha_selector));
 
-		vst1_lane_u32 (((void *))dst, vreinterpret_u32_u8 (vqadd_u8 (sval, dval)), 0);
+		vst1_lane_u32 ((void *)dst, vreinterpret_u32_u8 (vqadd_u8 (sval, dval)), 0);
 	    }
 	}
     }
@@ -703,8 +703,8 @@ neon_composite_over_n_8_0565 (pixman_implementation_t * impl,
 	    uint16x8_t dval, temp;
 	    uint8x8x4_t sval8temp;
 
-	    alpha = vld1_u8 (((void *))mask);
-	    dval = vld1q_u16 (((void *))dst);
+	    alpha = vld1_u8 ((void *)mask);
+	    dval = vld1q_u16 ((void *)dst);
 	    keep_dst = dst;
 
 	    sval8temp = neon8mul (sval8, alpha);
@@ -716,10 +716,10 @@ neon_composite_over_n_8_0565 (pixman_implementation_t * impl,
 
 	    while (w)
 	    {
-		dval = vld1q_u16 (((void *))dst);
-		alpha = vld1_u8 (((void *))mask);
+		dval = vld1q_u16 ((void *)dst);
+		alpha = vld1_u8 ((void *)mask);
 
-		vst1q_u16 (((void *))keep_dst, temp);
+		vst1q_u16 ((void *)keep_dst, temp);
 		keep_dst = dst;
 
 		sval8temp = neon8mul (sval8, alpha);
@@ -729,7 +729,7 @@ neon_composite_over_n_8_0565 (pixman_implementation_t * impl,
 		dst+=8;
 		w-=8;
 	    }
-	    vst1q_u16 (((void *))keep_dst, temp);
+	    vst1q_u16 ((void *)keep_dst, temp);
 #else
 	    asm volatile (
 		"vdup.32      d0, %[src]\n\t"
@@ -842,35 +842,35 @@ neon_composite_over_n_8_0565 (pixman_implementation_t * impl,
 
 	    if (w&4)
 	    {
-		alpha = vreinterpret_u8_u32 (vld1_lane_u32 (((void *))mask, vreinterpret_u32_u8 (alpha),1));
-		dval = vreinterpretq_u16_u64 (vld1q_lane_u64 (((void *))dst, vreinterpretq_u64_u16 (dval),1));
+		alpha = vreinterpret_u8_u32 (vld1_lane_u32 ((void *)mask, vreinterpret_u32_u8 (alpha),1));
+		dval = vreinterpretq_u16_u64 (vld1q_lane_u64 ((void *)dst, vreinterpretq_u64_u16 (dval),1));
 		dst4=dst;
 		mask+=4;
 		dst+=4;
 	    }
 	    if (w&2)
 	    {
-		alpha = vreinterpret_u8_u16 (vld1_lane_u16 (((void *))mask, vreinterpret_u16_u8 (alpha),1));
-		dval = vreinterpretq_u16_u32 (vld1q_lane_u32 (((void *))dst, vreinterpretq_u32_u16 (dval),1));
+		alpha = vreinterpret_u8_u16 (vld1_lane_u16 ((void *)mask, vreinterpret_u16_u8 (alpha),1));
+		dval = vreinterpretq_u16_u32 (vld1q_lane_u32 ((void *)dst, vreinterpretq_u32_u16 (dval),1));
 		dst2=dst;
 		mask+=2;
 		dst+=2;
 	    }
 	    if (w&1)
 	    {
-		alpha = vld1_lane_u8 (((void *))mask, alpha,1);
-		dval = vld1q_lane_u16 (((void *))dst, dval,1);
+		alpha = vld1_lane_u8 ((void *)mask, alpha,1);
+		dval = vld1q_lane_u16 ((void *)dst, dval,1);
 	    }
 
 	    sval8temp = neon8mul (sval8, alpha);
 	    temp = pack0565 (neon8qadd (sval8temp, neon8mul (unpack0565 (dval), vmvn_u8 (sval8temp.val[3]))));
 
 	    if (w&1)
-		vst1q_lane_u16 (((void *))dst, temp,1);
+		vst1q_lane_u16 ((void *)dst, temp,1);
 	    if (w&2)
-		vst1q_lane_u32 (((void *))dst2, vreinterpretq_u32_u16 (temp),1);
+		vst1q_lane_u32 ((void *)dst2, vreinterpretq_u32_u16 (temp),1);
 	    if (w&4)
-		vst1q_lane_u64 (((void *))dst4, vreinterpretq_u64_u16 (temp),1);
+		vst1q_lane_u64 ((void *)dst4, vreinterpretq_u64_u16 (temp),1);
 #else
 	    asm volatile (
 		"vdup.32      d0, %[src]\n\t"
@@ -1040,8 +1040,8 @@ neon_composite_over_n_8_8888 (pixman_implementation_t * impl,
 	    uint8x8_t alpha;
 	    uint8x8x4_t dval, temp;
 
-	    alpha = vld1_u8 (((void *))mask);
-	    dval = vld4_u8 (((void *))dst);
+	    alpha = vld1_u8 ((void *)mask);
+	    dval = vld4_u8 ((void *)dst);
 	    keep_dst = dst;
 
 	    temp = neon8mul (sval8, alpha);
@@ -1054,10 +1054,10 @@ neon_composite_over_n_8_8888 (pixman_implementation_t * impl,
 
 	    while (w)
 	    {
-		alpha = vld1_u8 (((void *))mask);
-		dval = vld4_u8 (((void *))dst);
+		alpha = vld1_u8 ((void *)mask);
+		dval = vld4_u8 ((void *)dst);
 
-		vst4_u8 (((void *))keep_dst, temp);
+		vst4_u8 ((void *)keep_dst, temp);
 		keep_dst = dst;
 
 		temp = neon8mul (sval8, alpha);
@@ -1068,7 +1068,7 @@ neon_composite_over_n_8_8888 (pixman_implementation_t * impl,
 		dst += 8;
 		w -= 8;
 	    }
-	    vst4_u8 (((void *))keep_dst, temp);
+	    vst4_u8 ((void *)keep_dst, temp);
 #else
 	    asm volatile (
 	        "vdup.32      d0, %[src]\n\t"
@@ -1160,14 +1160,14 @@ neon_composite_over_n_8_8888 (pixman_implementation_t * impl,
 		uint8x8_t dval, temp, res;
 
 		alpha = vtbl1_u8 (
-		    vreinterpret_u8_u16 (vld1_dup_u16 (((void *))mask)), mask_selector);
-		dval = vld1_u8 (((void *))dst);
+		    vreinterpret_u8_u16 (vld1_dup_u16 ((void *)mask)), mask_selector);
+		dval = vld1_u8 ((void *)dst);
 
 		temp = neon2mul (sval2, alpha);
 		res = vqadd_u8 (
 		    temp, neon2mul (dval, vtbl1_u8 (vmvn_u8 (temp), alpha_selector)));
 
-		vst1_u8 (((void *))dst, res);
+		vst1_u8 ((void *)dst, res);
 
 		mask += 2;
 		dst += 2;
@@ -1178,14 +1178,14 @@ neon_composite_over_n_8_8888 (pixman_implementation_t * impl,
 	    {
 		uint8x8_t dval, temp, res;
 
-		alpha = vtbl1_u8 (vld1_dup_u8 (((void *))mask), mask_selector);
-		dval = vreinterpret_u8_u32 (vld1_dup_u32 (((void *))dst));
+		alpha = vtbl1_u8 (vld1_dup_u8 ((void *)mask), mask_selector);
+		dval = vreinterpret_u8_u32 (vld1_dup_u32 ((void *)dst));
 
 		temp = neon2mul (sval2, alpha);
 		res = vqadd_u8 (
 		    temp, neon2mul (dval, vtbl1_u8 (vmvn_u8 (temp), alpha_selector)));
 
-		vst1_lane_u32 (((void *))dst, vreinterpret_u32_u8 (res), 0);
+		vst1_lane_u32 ((void *)dst, vreinterpret_u32_u8 (res), 0);
 	    }
 	}
     }
