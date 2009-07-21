@@ -385,6 +385,7 @@ PREFIX (_init_rect) (region_type_t *	region,
 
     if (!GOOD_RECT (&region->extents))
     {
+        log_region_error (FUNC, "Invalid rectangle passed");
         PREFIX (_init) (region);
         return;
     }
@@ -397,6 +398,7 @@ PREFIX (_init_with_extents) (region_type_t *region, box_type_t *extents)
 {
     if (!GOOD_RECT (extents))
     {
+        log_region_error (FUNC, "Invalid rectangle passed");
         PREFIX (_init) (region);
         return;
     }
@@ -1348,7 +1350,10 @@ PREFIX (_union_rect) (region_type_t *dest,
     region.extents.y2 = y + height;
 
     if (!GOOD_RECT (&region.extents))
+    {
+        log_region_error (FUNC, "Invalid rectangle passed");
 	return PREFIX (_copy) (dest, source);
+    }
     
     region.data = NULL;
 
