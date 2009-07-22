@@ -30,7 +30,7 @@
 #include <stdlib.h>
 #include "pixman-private.h"
 
-static source_pict_class_t
+static source_image_class_t
 linear_gradient_classify (pixman_image_t *image,
                           int             x,
                           int             y,

@@ -58,9 +58,9 @@ typedef enum
     SOURCE_IMAGE_CLASS_UNKNOWN,
     SOURCE_IMAGE_CLASS_HORIZONTAL,
     SOURCE_IMAGE_CLASS_VERTICAL,
-} source_pict_class_t;
+} source_image_class_t;
 
-typedef source_pict_class_t (*classify_func_t) (pixman_image_t *image,
+typedef source_image_class_t (*classify_func_t) (pixman_image_t *image,
 						int             x,
 						int             y,
 						int             width,
@@ -100,7 +100,7 @@ struct image_common
 struct source_image
 {
     image_common_t common;
-    source_pict_class_t class;
+    source_image_class_t class;
 };
 
 struct solid_fill
@@ -210,7 +210,7 @@ _pixman_image_get_scanline_generic_64  (pixman_image_t *image,
                                         const uint32_t *mask,
                                         uint32_t        mask_bits);
 
-source_pict_class_t
+source_image_class_t
 _pixman_image_classify (pixman_image_t *image,
                         int             x,
                         int             y,

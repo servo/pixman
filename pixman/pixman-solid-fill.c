@@ -44,7 +44,7 @@ solid_fill_get_scanline_32 (pixman_image_t *image,
     return;
 }
 
-static source_pict_class_t
+static source_image_class_t
 solid_fill_classify (pixman_image_t *image,
                      int             x,
                      int             y,

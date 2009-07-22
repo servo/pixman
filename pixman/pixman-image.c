@@ -125,7 +125,7 @@ _pixman_image_allocate (void)
     return image;
 }
 
-source_pict_class_t
+source_image_class_t
 _pixman_image_classify (pixman_image_t *image,
                         int             x,
                         int             y,
