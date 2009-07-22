@@ -527,13 +527,8 @@ bits_image_fetch_transformed (pixman_image_t * image,
     uint32_t tmp_buffer[2 * N_TMP_PIXELS];
     pixman_vector_t unit;
     pixman_vector_t v;
-    uint32_t *bits;
-    int32_t stride;
     int32_t *coords;
     int i;
-
-    bits = image->bits.bits;
-    stride = image->bits.rowstride;
 
     /* reference point is the center of the pixel */
     v.vector[0] = pixman_int_to_fixed (x) + pixman_fixed_1 / 2;
