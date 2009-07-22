@@ -80,7 +80,7 @@ clip_general_image (pixman_region32_t * region,
 
 static inline pixman_bool_t
 clip_source_image (pixman_region32_t * region,
-                   pixman_image_t *    picture,
+                   pixman_image_t *    image,
                    int                 dx,
                    int                 dy)
 {
@@ -89,11 +89,11 @@ clip_source_image (pixman_region32_t * region,
      * the clip was not set by a client, then it is a hierarchy
      * clip and those should always be ignored for sources).
      */
-    if (!picture->common.clip_sources || !picture->common.client_clip)
+    if (!image->common.clip_sources || !image->common.client_clip)
 	return TRUE;
 
     return clip_general_image (region,
-                               &picture->common.clip_region,
+                               &image->common.clip_region,
                                dx, dy);
 }
 

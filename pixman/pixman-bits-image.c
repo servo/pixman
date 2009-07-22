@@ -491,31 +491,31 @@ bits_image_fetch_convolution_pixels (bits_image_t *image,
 }
 
 static void
-bits_image_fetch_filtered (bits_image_t *pict,
+bits_image_fetch_filtered (bits_image_t *image,
                            uint32_t *    buffer,
                            int           n_pixels)
 {
-    switch (pict->common.filter)
+    switch (image->common.filter)
     {
     case PIXMAN_FILTER_NEAREST:
     case PIXMAN_FILTER_FAST:
-	bits_image_fetch_nearest_pixels (pict, buffer, n_pixels);
+	bits_image_fetch_nearest_pixels (image, buffer, n_pixels);
 	break;
 
     case PIXMAN_FILTER_BILINEAR:
     case PIXMAN_FILTER_GOOD:
     case PIXMAN_FILTER_BEST:
-	bits_image_fetch_bilinear_pixels (pict, buffer, n_pixels);
+	bits_image_fetch_bilinear_pixels (image, buffer, n_pixels);
 	break;
 
     case PIXMAN_FILTER_CONVOLUTION:
-	bits_image_fetch_convolution_pixels (pict, buffer, n_pixels);
+	bits_image_fetch_convolution_pixels (image, buffer, n_pixels);
 	break;
     }
 }
 
 static void
-bits_image_fetch_transformed (pixman_image_t * pict,
+bits_image_fetch_transformed (pixman_image_t * image,
                               int              x,
                               int              y,
                               int              width,
@@ -532,8 +532,8 @@ bits_image_fetch_transformed (pixman_image_t * pict,
     int32_t *coords;
     int i;
 
-    bits = pict->bits.bits;
-    stride = pict->bits.rowstride;
+    bits = image->bits.bits;
+    stride = image->bits.rowstride;
 
     /* reference point is the center of the pixel */
     v.vector[0] = pixman_int_to_fixed (x) + pixman_fixed_1 / 2;
@@ -542,14 +542,14 @@ bits_image_fetch_transformed (pixman_image_t * pict,
 
     /* when using convolution filters or PIXMAN_REPEAT_PAD one
      * might get here without a transform */
-    if (pict->common.transform)
+    if (image->common.transform)
     {
-	if (!pixman_transform_point_3d (pict->common.transform, &v))
+	if (!pixman_transform_point_3d (image->common.transform, &v))
 	    return;
 
-	unit.vector[0] = pict->common.transform->matrix[0][0];
-	unit.vector[1] = pict->common.transform->matrix[1][0];
-	unit.vector[2] = pict->common.transform->matrix[2][0];
+	unit.vector[0] = image->common.transform->matrix[0][0];
+	unit.vector[1] = image->common.transform->matrix[1][0];
+	unit.vector[2] = image->common.transform->matrix[2][0];
 
 	affine = (v.vector[2] == pixman_fixed_1 && unit.vector[2] == 0);
     }
@@ -606,7 +606,7 @@ bits_image_fetch_transformed (pixman_image_t * pict,
 	    v.vector[1] += unit.vector[1];
 	}
 
-	bits_image_fetch_filtered (&pict->bits, tmp_buffer, n_pixels);
+	bits_image_fetch_filtered (&image->bits, tmp_buffer, n_pixels);
 
 	for (j = 0; j < n_pixels; ++j)
 	    buffer[i++] = tmp_buffer[j];

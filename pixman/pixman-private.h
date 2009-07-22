@@ -26,7 +26,7 @@ typedef struct radial_gradient radial_gradient_t;
 typedef struct bits_image bits_image_t;
 typedef struct circle circle_t;
 
-typedef void (*fetch_scanline_t) (pixman_image_t *pict,
+typedef void (*fetch_scanline_t) (pixman_image_t *image,
 				  int             x,
 				  int             y,
 				  int             width,
@@ -202,7 +202,7 @@ void
 _pixman_bits_image_setup_raw_accessors (bits_image_t *image);
 
 void
-_pixman_image_get_scanline_generic_64  (pixman_image_t *pict,
+_pixman_image_get_scanline_generic_64  (pixman_image_t *image,
                                         int             x,
                                         int             y,
                                         int             width,
@@ -279,14 +279,14 @@ uint32_t
 _pixman_image_get_solid (pixman_image_t *     image,
                          pixman_format_code_t format);
 
-#define PIXMAN_IMAGE_GET_LINE(pict, x, y, type, out_stride, line, mul)	\
+#define PIXMAN_IMAGE_GET_LINE(image, x, y, type, out_stride, line, mul)	\
     do									\
     {									\
 	uint32_t *__bits__;						\
 	int       __stride__;						\
         								\
-	__bits__ = pict->bits.bits;                                     \
-	__stride__ = pict->bits.rowstride;                              \
+	__bits__ = image->bits.bits;					\
+	__stride__ = image->bits.rowstride;				\
 	(out_stride) =							\
 	    __stride__ * (int) sizeof (uint32_t) / (int) sizeof (type);	\
 	(line) =							\
