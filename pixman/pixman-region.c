@@ -64,6 +64,7 @@
 #define PIXREGION_END(reg) PIXREGION_BOX (reg, (reg)->data->numRects - 1)
 
 #define GOOD_RECT(rect) ((rect)->x1 < (rect)->x2 && (rect)->y1 < (rect)->y2)
+#define BAD_RECT(rect) ((rect)->x1 > (rect)->x2 || (rect)->y1 > (rect)->y2)
 
 #define PIXMAN_REGION_LOG_FAILURES
 
@@ -385,7 +386,8 @@ PREFIX (_init_rect) (region_type_t *	region,
 
     if (!GOOD_RECT (&region->extents))
     {
-        log_region_error (FUNC, "Invalid rectangle passed");
+        if (BAD_RECT (&region->extents))
+            log_region_error (FUNC, "Invalid rectangle passed");
         PREFIX (_init) (region);
         return;
     }
@@ -398,7 +400,8 @@ PREFIX (_init_with_extents) (region_type_t *region, box_type_t *extents)
 {
     if (!GOOD_RECT (extents))
     {
-        log_region_error (FUNC, "Invalid rectangle passed");
+        if (BAD_RECT (extents))
+            log_region_error (FUNC, "Invalid rectangle passed");
         PREFIX (_init) (region);
         return;
     }
@@ -1351,7 +1354,8 @@ PREFIX (_union_rect) (region_type_t *dest,
 
     if (!GOOD_RECT (&region.extents))
     {
-        log_region_error (FUNC, "Invalid rectangle passed");
+        if (BAD_RECT (&region.extents))
+            log_region_error (FUNC, "Invalid rectangle passed");
 	return PREFIX (_copy) (dest, source);
     }
     
