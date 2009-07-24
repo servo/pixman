@@ -155,9 +155,6 @@ radial_gradient_get_scanline_32 (pixman_image_t *image,
      * for t:
      *
      * t = (-2·B ± ⎷(B² - 4·A·C)) / 2·A
-     *
-     * When computing t over a scanline, we notice that some expressions are
-     * constant so we can compute them just once.
      */
 
     gradient_t *gradient = (gradient_t *)image;
@@ -201,6 +198,33 @@ radial_gradient_get_scanline_32 (pixman_image_t *image,
 
     if (affine)
     {
+	/* When computing t over a scanline, we notice that some expressions
+	 * are constant so we can compute them just once. Given:
+	 *
+	 * t = (-2·B ± ⎷(B² - 4·A·C)) / 2·A
+	 *
+	 * where
+	 *
+	 * A = cdx² + cdy² - dr² [precomputed as radial->A]
+	 * B = -2·(pdx·cdx + pdy·cdy + r₁·dr)
+	 * C = pdx² + pdy² - r₁²
+	 *
+	 * Since we have an affine transformation, we know that (pdx, pdy)
+	 * increase linearly with each pixel,
+	 *
+	 * pdx = pdx₀ + n·cx,
+	 * pdy = pdy₀ + n·cy,
+	 *
+	 * we can then express B in terms of an linear increment along
+	 * the scanline:
+	 *
+	 * B = B₀ + n·cB, with
+	 * B₀ = -2·(pdx₀·cdx + pdy₀·cdy + r₁·dr) and
+	 * cB = -2·(cx·cdx + cy·cdy)
+	 *
+	 * Thus we can replace the full evaluation of B per-pixel (4 multiplies,
+	 * 2 additions) with a single addition.
+	 */
 	double r1   = radial->c1.radius / 65536.;
 	double r1sq = r1 * r1;
 	double pdx  = rx - radial->c1.x / 65536.;
