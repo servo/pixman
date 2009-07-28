@@ -108,73 +108,48 @@ bits_image_fetch_raw_pixels (bits_image_t *image,
     image->fetch_pixels_raw_32 (image, buffer, n_pixels);
 }
 
-static void
-bits_image_fetch_alpha_pixels (bits_image_t *image,
-                               uint32_t *    buffer,
-                               int           n_pixels)
+static uint32_t
+fetch_raw (bits_image_t *image, int x, int y)
 {
-#define N_ALPHA_PIXELS 256
+    uint32_t pixel[2];
 
-    uint32_t alpha_pixels[N_ALPHA_PIXELS * 2];
-    int i;
+    pixel[0] = x;
+    pixel[1] = y;
 
-    if (!image->common.alpha_map)
+    bits_image_fetch_raw_pixels (image, pixel, 1);
+
+    return pixel[0];
+}
+
+static uint32_t
+bits_image_fetch_alpha_pixel (bits_image_t *image, int x, int y)
+{
+    uint32_t pixel;
+    
+    pixel = fetch_raw (image, x, y);
+    
+    if (image->common.alpha_map)
     {
-	bits_image_fetch_raw_pixels (image, buffer, n_pixels);
-	return;
-    }
+	uint32_t pixel_a;
+	
+	x -= image->common.alpha_origin_x;
+	y -= image->common.alpha_origin_y;
 
-    /* Alpha map */
-    i = 0;
-    while (i < n_pixels)
-    {
-	int tmp_n_pixels = MIN (N_ALPHA_PIXELS, n_pixels - i);
-	int j;
-	int32_t *coords;
-
-	memcpy (alpha_pixels, buffer + 2 * i, tmp_n_pixels * 2 * sizeof (int32_t));
-	coords = (int32_t *)alpha_pixels;
-	for (j = 0; j < tmp_n_pixels; ++j)
+	if (x < 0 || x >= image->common.alpha_map->width ||
+	    y < 0 || y >= image->common.alpha_map->height)
 	{
-	    int32_t x = coords[0];
-	    int32_t y = coords[1];
-
-	    if (x != 0xffffffff)
-	    {
-		x -= image->common.alpha_origin_x;
-
-		if (x < 0 || x >= image->common.alpha_map->width)
-		    x = 0xffffffff;
-	    }
-
-	    if (y != 0xffffffff)
-	    {
-		y -= image->common.alpha_origin_y;
-
-		if (y < 0 || y >= image->common.alpha_map->height)
-		    y = 0xffffffff;
-	    }
-
-	    coords[0] = x;
-	    coords[1] = y;
-
-	    coords += 2;
+	    pixel_a = 0;
+	}
+	else
+	{
+	    pixel_a = fetch_raw (image->common.alpha_map, x, y);
+	    pixel_a = ALPHA_8 (pixel_a);
 	}
 
-	bits_image_fetch_raw_pixels (image->common.alpha_map, alpha_pixels,
-	                             tmp_n_pixels);
-	bits_image_fetch_raw_pixels (image, buffer + 2 * i, tmp_n_pixels);
-
-	for (j = 0; j < tmp_n_pixels; ++j)
-	{
-	    int a = alpha_pixels[j] >> 24;
-	    uint32_t p = buffer[2 * i - j] | 0xff000000;
-
-	    UN8x4_MUL_UN8 (p, a);
-
-	    buffer[i++] = p;
-	}
+	UN8x4_MUL_UN8 (pixel, pixel_a);
     }
+
+    return pixel;
 }
 
 static force_inline pixman_bool_t
@@ -209,19 +184,6 @@ repeat (pixman_repeat_t repeat, int size, int *coord)
     return TRUE;
 }
 
-static uint32_t
-fetch_one (bits_image_t *image, int x, int y)
-{
-    uint32_t pixel[2];
-
-    pixel[0] = x;
-    pixel[1] = y;
-
-    bits_image_fetch_alpha_pixels (image, pixel, 1);
-
-    return pixel[0];
-}
-
 /* Buffer contains list of fixed-point coordinates on input,
  * a list of pixels on output
  */
@@ -236,7 +198,7 @@ bits_image_fetch_nearest_pixels (bits_image_t *image,
     if (repeat (image->common.repeat, image->width, &x0) &&
 	repeat (image->common.repeat, image->height, &y0))
     {
-	return fetch_one (image, x0, y0);
+	return bits_image_fetch_alpha_pixel (image, x0, y0);
     }
     else
     {
@@ -282,16 +244,16 @@ bits_image_fetch_bilinear_pixels (bits_image_t   *image,
     tl = tr = bl = br = 0;
 
     if (x1r && y1r)
-	tl = fetch_one (image, x1, y1);
+	tl = bits_image_fetch_alpha_pixel (image, x1, y1);
 
     if (x1r && y2r)
-	bl = fetch_one (image, x1, y2);
+	bl = bits_image_fetch_alpha_pixel (image, x1, y2);
 
     if (x2r && y1r)
-	tr = fetch_one (image, x2, y1);
+	tr = bits_image_fetch_alpha_pixel (image, x2, y1);
 
     if (x2r && y2r)
-	br = fetch_one (image, x2, y2);
+	br = bits_image_fetch_alpha_pixel (image, x2, y2);
     
     idistx = 256 - distx;
     idisty = 256 - disty;
@@ -355,7 +317,7 @@ bits_image_fetch_convolution_pixels (bits_image_t   *image,
 
 		if (f)
 		{
-		    uint32_t pixel = fetch_one (image, rx, ry);
+		    uint32_t pixel = bits_image_fetch_alpha_pixel (image, rx, ry);
 		    
 		    srtot += RED_8 (pixel) * f;
 		    sgtot += GREEN_8 (pixel) * f;
