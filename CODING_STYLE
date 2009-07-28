@@ -1,8 +1,8 @@
 Pixman coding style.
+====================
 
-The pixman coding style is close to cairo's. There is one exception
-though: braces go on their own line, rather than on the line of the
-if/while/for:
+The pixman coding style is close to cairo's with one exception: braces
+go on their own line, rather than on the line of the if/while/for:
 
 	if (condition)
 	{
@@ -17,7 +17,10 @@ not
 	    do_something_else();
         }
 
+
+
 Specific guidelines:
+
 
 Indentation
 ===========
@@ -32,6 +35,7 @@ tab characters and space characters. Tab characters are interpreted as
 
 	Advance to the next column which is a multiple of 8.
 
+
 Names
 =====
 
@@ -44,6 +48,7 @@ Type names are in lower case and end with "_t". For example
 pixman_image_t.
 
 Labels, functions and variables have lower case names.
+
 
 Braces
 ======
@@ -73,75 +78,133 @@ Rules for braces and substatements of if/while/for/do:
 
 * Otherwise, don't add braces.
 
+
+Comments
+========
+
+For comments either like this:
+
+        /* One line comment */
+
+or like this:
+
+	/* This is a multi-line comment
+	 *
+         * It extends over multiple lines
+	 */
+
+Generally comments should say things that is clear from the code
+itself. If too many comments say obvious things, then people will just
+stop reading all comments, including the good ones.
+
+
 Whitespace
 ==========
 
-Separate logically distinct chunks with a single newline. This
-obviously applies between functions, but also applies within a
-function or block or structure definition.
+* Put a single space after commas
 
-Use a newline after a block of variable declarations.
+* Put spaces around arithmetic operators such a +, -, *, /:
 
-Use a single space before a left parenthesis, except where the
-standard will not allow it, (eg. when defining a parameterized macro).
+        y * stride + x
 
-Don't eliminate newlines just because things would still fit on one
-line. This breaks the expected visual structure of the code making it
-much harder to read and understand:
+        x / unit_x
+
+* Do not put spaces after the address-of operator, the * when used as
+  a pointer derefernce or the ! and ~ operators:
+
+     &foo;
+
+     ~0x00000000
+
+     !condition
+
+     *result = 100
+
+* Break up long lines (> ~80 characters) and use whitespace to align
+  things nicely. This is one way:
+
+  	 some_very_long_function name (
+	 	implementation, op, src, mask, dest, 
+		src_x, src_y, mask_x, mask_y, dest_x, dest_y,
+		width, height);
+
+  This is another:
+
+        some_very_long_function_name (implementation, op,
+                                      src, mask, dest,
+				      src_x, src_y,
+				      mask_x, mask_y,
+				      dest_x, dest_y,
+				      width, height);
+
+* Separate logically distinct chunks with a single newline. This
+  obviously applies between functions, but also applies within a
+  function or block or structure definition.
+
+* Use a newline after a block of variable declarations.
+
+* Use a single space before a left parenthesis, except where the
+  standard will not allow it, (eg. when defining a parameterized macro).
+
+* Don't eliminate newlines just because things would still fit on one
+  line. This breaks the expected visual structure of the code making
+  it much harder to read and understand:
 
 	if (condition) foo (); else bar ();	/* Yuck! */
 
-Do eliminate trailing whitespace (space or tab characters) on any
-line. Also, avoid putting initial or final blank lines into any file,
-and never use multiple blank lines instead of a single blank line.
+* Do eliminate trailing whitespace (space or tab characters) on any
+  line. Also, avoid putting initial or final blank lines into any
+  file, and never use multiple blank lines instead of a single blank
+  line.
 
-Do enable the default git pre-commit hook that detect trailing
-whitespace for you and help you to avoid corrupting cairo's tree with
-it. Do that as follows:
+* Do enable the default git pre-commit hook that detect trailing
+  whitespace for you and help you to avoid corrupting cairo's tree
+  with it. Do that as follows:
 
 	chmod a+x .git/hooks/pre-commit
 
-You might also find the git-stripspace utility helpful which acts as a
-filter to remove trailing whitespace as well as initial, final, and
-duplicate blank lines.
-
-Break up long lines (> ~80 characters) and use whitespace to align
-things nicely. For example the arguments in a long list to a function
-call should all be aligned with each other:
-
-	align_function_arguments (argument_the_first,
-				  argument_the_second,
-				  argument_the_third);
-
-Function prototypes and definitions can be formatted in two ways. If
-all parameters fit naturally on one line, then format them on one
-line:
+* You might also find the git-stripspace utility helpful which acts as
+  a filter to remove trailing whitespace as well as initial, final,
+  and duplicate blank lines.
 
 
-	int
-	some_function (int x, int y, int z)
-	{
-	}
+Function Definitions
+====================
 
-If the parameters do not fit on one line, then whitespace should be
-inserted between the parameter types and names so that the names are
-aligned:
+Function definitions should take the following form:
 
 	void
-	align_parameter_names_in_prototypes (const char *char_star_arg,
-					     int	 int_arg,
-					     double	*double_star_arg,
-					     double	 double_arg);
+	my_function (argument)
+	{
+	    do_my_things ();
+	}
 
-The return type and associated specifiers and qualifiers should always
-be on a line above the function, so that the function name is flush
-left.
+If all the parameters to a function fit naturally on one line, format
+them that way. Otherwise, put one argument on each line, adding
+whitespace so that the parameter names are aligned with each other.
+
+I.e., do either this:
+
+        void
+        short_arguments (const char *str, int x, int y, int z)
+        {
+        }
+
+or this:
+
+	void
+	long_arguments (const char *char_star_arg,
+			int	    int_arg,
+			double	   *double_star_arg,
+			double	    double_arg)
+	{
+	}
 
 
 Mode lines
 ==========
 
-So given the rules above, what is the best way to simplify one's life as
+Given the rules above, what is the best way to simplify one's life as
 a code monkey? Get your editor to do most of the tedious work of
 beautifying your code!
 
