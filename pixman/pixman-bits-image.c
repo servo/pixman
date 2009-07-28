@@ -93,40 +93,25 @@ _pixman_image_store_scanline_64 (bits_image_t *  image,
 
 /* Fetch functions */
 
-/* On entry, @buffer should contain @n_pixels (x, y) coordinate pairs, where
- * x and y are both uint32_ts. On exit, buffer will contain the corresponding
- * pixels.
- *
- * The coordinates must be within the sample grid. If either x or y is 0xffffffff,
- * the pixel returned will be 0.
- */
-static void
-bits_image_fetch_raw_pixels (bits_image_t *image,
-                             uint32_t *    buffer,
-                             int           n_pixels)
-{
-    image->fetch_pixels_raw_32 (image, buffer, n_pixels);
-}
-
-static uint32_t
-fetch_raw (bits_image_t *image, int x, int y)
+static force_inline uint32_t
+bits_image_fetch_pixel_raw (bits_image_t *image, int x, int y)
 {
     uint32_t pixel[2];
 
     pixel[0] = x;
     pixel[1] = y;
 
-    bits_image_fetch_raw_pixels (image, pixel, 1);
+    image->fetch_pixels_raw_32 (image, pixel, 1);
 
     return pixel[0];
 }
 
 static uint32_t
-bits_image_fetch_alpha_pixel (bits_image_t *image, int x, int y)
+bits_image_fetch_pixel_alpha (bits_image_t *image, int x, int y)
 {
     uint32_t pixel;
     
-    pixel = fetch_raw (image, x, y);
+    pixel = bits_image_fetch_pixel_raw (image, x, y);
     
     if (image->common.alpha_map)
     {
@@ -142,7 +127,8 @@ bits_image_fetch_alpha_pixel (bits_image_t *image, int x, int y)
 	}
 	else
 	{
-	    pixel_a = fetch_raw (image->common.alpha_map, x, y);
+	    pixel_a = bits_image_fetch_pixel_raw (
+		image->common.alpha_map, x, y);
 	    pixel_a = ALPHA_8 (pixel_a);
 	}
 
@@ -184,13 +170,10 @@ repeat (pixman_repeat_t repeat, int size, int *coord)
     return TRUE;
 }
 
-/* Buffer contains list of fixed-point coordinates on input,
- * a list of pixels on output
- */
-static uint32_t
-bits_image_fetch_nearest_pixels (bits_image_t *image,
-				 pixman_fixed_t x,
-				 pixman_fixed_t y)
+static force_inline uint32_t
+bits_image_fetch_pixel_nearest (bits_image_t   *image,
+				pixman_fixed_t  x,
+				pixman_fixed_t  y)
 {
     int x0 = pixman_fixed_to_int (x - pixman_fixed_e);
     int y0 = pixman_fixed_to_int (y - pixman_fixed_e);
@@ -198,7 +181,7 @@ bits_image_fetch_nearest_pixels (bits_image_t *image,
     if (repeat (image->common.repeat, image->width, &x0) &&
 	repeat (image->common.repeat, image->height, &y0))
     {
-	return bits_image_fetch_alpha_pixel (image, x0, y0);
+	return bits_image_fetch_pixel_alpha (image, x0, y0);
     }
     else
     {
@@ -206,15 +189,10 @@ bits_image_fetch_nearest_pixels (bits_image_t *image,
     }
 }
 
-#define N_TMP_PIXELS    (256)
-
-/* Buffer contains list of fixed-point coordinates on input,
- * a list of pixels on output
- */
-static uint32_t
-bits_image_fetch_bilinear_pixels (bits_image_t   *image,
-				  pixman_fixed_t x,
-				  pixman_fixed_t y)
+static force_inline uint32_t
+bits_image_fetch_pixel_bilinear (bits_image_t   *image,
+				 pixman_fixed_t  x,
+				 pixman_fixed_t  y)
 {
     pixman_repeat_t repeat_mode = image->common.repeat;
     int width = image->width;
@@ -244,16 +222,16 @@ bits_image_fetch_bilinear_pixels (bits_image_t   *image,
     tl = tr = bl = br = 0;
 
     if (x1r && y1r)
-	tl = bits_image_fetch_alpha_pixel (image, x1, y1);
+	tl = bits_image_fetch_pixel_alpha (image, x1, y1);
 
     if (x1r && y2r)
-	bl = bits_image_fetch_alpha_pixel (image, x1, y2);
+	bl = bits_image_fetch_pixel_alpha (image, x1, y2);
 
     if (x2r && y1r)
-	tr = bits_image_fetch_alpha_pixel (image, x2, y1);
+	tr = bits_image_fetch_pixel_alpha (image, x2, y1);
 
     if (x2r && y2r)
-	br = bits_image_fetch_alpha_pixel (image, x2, y2);
+	br = bits_image_fetch_pixel_alpha (image, x2, y2);
     
     idistx = 256 - distx;
     idisty = 256 - disty;
@@ -275,13 +253,10 @@ bits_image_fetch_bilinear_pixels (bits_image_t   *image,
     return r;
 }
 
-/* Buffer contains list of fixed-point coordinates on input,
- * a list of pixels on output
- */
-static uint32_t
-bits_image_fetch_convolution_pixels (bits_image_t   *image,
-				     pixman_fixed_t  x,
-				     pixman_fixed_t  y)
+static force_inline uint32_t
+bits_image_fetch_pixel_convolution (bits_image_t   *image,
+				    pixman_fixed_t  x,
+				    pixman_fixed_t  y)
 {
     pixman_fixed_t *params = image->common.filter_params;
     int x_off = (params[0] - pixman_fixed_1) >> 1;
@@ -317,7 +292,8 @@ bits_image_fetch_convolution_pixels (bits_image_t   *image,
 
 		if (f)
 		{
-		    uint32_t pixel = bits_image_fetch_alpha_pixel (image, rx, ry);
+		    uint32_t pixel =
+			bits_image_fetch_pixel_alpha (image, rx, ry);
 		    
 		    srtot += RED_8 (pixel) * f;
 		    sgtot += GREEN_8 (pixel) * f;
@@ -340,41 +316,33 @@ bits_image_fetch_convolution_pixels (bits_image_t   *image,
     sgtot = CLIP (sgtot, 0, 0xff);
     sbtot = CLIP (sbtot, 0, 0xff);
 
-    return ((satot << 24) |
-	    (srtot << 16) |
-	    (sgtot <<  8) |
-	    (sbtot       ));
+    return ((satot << 24) | (srtot << 16) | (sgtot <<  8) | (sbtot));
 }
 
-static inline uint32_t
-bits_image_fetch_filtered (bits_image_t *image,
-			   pixman_fixed_t x,
-			   pixman_fixed_t y)
+static force_inline uint32_t
+bits_image_fetch_pixel_filtered (bits_image_t *image,
+				 pixman_fixed_t x,
+				 pixman_fixed_t y)
 {
-    uint32_t pixel[2];
-
-    pixel[0] = x;
-    pixel[1] = y;
-    
     switch (image->common.filter)
     {
     case PIXMAN_FILTER_NEAREST:
     case PIXMAN_FILTER_FAST:
-	return bits_image_fetch_nearest_pixels (image, x, y);
+	return bits_image_fetch_pixel_nearest (image, x, y);
 	break;
 
     case PIXMAN_FILTER_BILINEAR:
     case PIXMAN_FILTER_GOOD:
     case PIXMAN_FILTER_BEST:
-	return bits_image_fetch_bilinear_pixels (image, x, y);
+	return bits_image_fetch_pixel_bilinear (image, x, y);
 	break;
 
     case PIXMAN_FILTER_CONVOLUTION:
-	return bits_image_fetch_convolution_pixels (image, x, y);
+	return bits_image_fetch_pixel_convolution (image, x, y);
 	break;
     }
 
-    return pixel[0];
+    return 0;
 }
 
 static void
@@ -423,7 +391,10 @@ bits_image_fetch_transformed (pixman_image_t * image,
 	for (i = 0; i < width; ++i)
 	{
 	    if (!mask || (mask[i] & mask_bits))
-		buffer[i] = bits_image_fetch_filtered (&image->bits, x, y);
+	    {
+		buffer[i] =
+		    bits_image_fetch_pixel_filtered (&image->bits, x, y);
+	    }
 
 	    x += ux;
 	    y += uy;
@@ -440,7 +411,8 @@ bits_image_fetch_transformed (pixman_image_t * image,
 		x0 = ((pixman_fixed_48_16_t)x << 16) / w;
 		y0 = ((pixman_fixed_48_16_t)y << 16) / w;
 		
-		buffer[i] = bits_image_fetch_filtered (&image->bits, x0, y0);
+		buffer[i] =
+		    bits_image_fetch_pixel_filtered (&image->bits, x0, y0);
 	    }
 	    
 	    x += ux;
