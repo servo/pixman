@@ -490,49 +490,54 @@ bits_image_fetch_convolution_pixels (bits_image_t *image,
 	free (tmp_pixels);
 }
 
-static void
+static inline uint32_t
 bits_image_fetch_filtered (bits_image_t *image,
-                           uint32_t *    buffer,
-                           int           n_pixels)
+			   pixman_fixed_t x,
+			   pixman_fixed_t y)
 {
+    uint32_t pixel[2];
+
+    pixel[0] = x;
+    pixel[1] = y;
+    
     switch (image->common.filter)
     {
     case PIXMAN_FILTER_NEAREST:
     case PIXMAN_FILTER_FAST:
-	bits_image_fetch_nearest_pixels (image, buffer, n_pixels);
+	bits_image_fetch_nearest_pixels (image, pixel, 1);
 	break;
 
     case PIXMAN_FILTER_BILINEAR:
     case PIXMAN_FILTER_GOOD:
     case PIXMAN_FILTER_BEST:
-	bits_image_fetch_bilinear_pixels (image, buffer, n_pixels);
+	bits_image_fetch_bilinear_pixels (image, pixel, 1);
 	break;
 
     case PIXMAN_FILTER_CONVOLUTION:
-	bits_image_fetch_convolution_pixels (image, buffer, n_pixels);
+	bits_image_fetch_convolution_pixels (image, pixel, 1);
 	break;
     }
+
+    return pixel[0];
 }
 
 static void
 bits_image_fetch_transformed (pixman_image_t * image,
-                              int              x,
-                              int              y,
+                              int              offset,
+                              int              line,
                               int              width,
                               uint32_t *       buffer,
                               const uint32_t * mask,
                               uint32_t         mask_bits)
 {
-    pixman_bool_t affine = TRUE;
-    uint32_t tmp_buffer[2 * N_TMP_PIXELS];
-    pixman_vector_t unit;
+    pixman_fixed_t x, y, w;
+    pixman_fixed_t ux, uy, uw;
     pixman_vector_t v;
-    int32_t *coords;
     int i;
 
     /* reference point is the center of the pixel */
-    v.vector[0] = pixman_int_to_fixed (x) + pixman_fixed_1 / 2;
-    v.vector[1] = pixman_int_to_fixed (y) + pixman_fixed_1 / 2;
+    v.vector[0] = pixman_int_to_fixed (offset) + pixman_fixed_1 / 2;
+    v.vector[1] = pixman_int_to_fixed (line) + pixman_fixed_1 / 2;
     v.vector[2] = pixman_fixed_1;
 
     /* when using convolution filters or PIXMAN_REPEAT_PAD one
@@ -542,69 +547,50 @@ bits_image_fetch_transformed (pixman_image_t * image,
 	if (!pixman_transform_point_3d (image->common.transform, &v))
 	    return;
 
-	unit.vector[0] = image->common.transform->matrix[0][0];
-	unit.vector[1] = image->common.transform->matrix[1][0];
-	unit.vector[2] = image->common.transform->matrix[2][0];
-
-	affine = (v.vector[2] == pixman_fixed_1 && unit.vector[2] == 0);
+	ux = image->common.transform->matrix[0][0];
+	uy = image->common.transform->matrix[1][0];
+	uw = image->common.transform->matrix[2][0];
     }
     else
     {
-	unit.vector[0] = pixman_fixed_1;
-	unit.vector[1] = 0;
-	unit.vector[2] = 0;
+	ux = pixman_fixed_1;
+	uy = 0;
+	uw = 0;
     }
 
-    i = 0;
-    while (i < width)
+    x = v.vector[0];
+    y = v.vector[1];
+    w = v.vector[2];
+
+    if (w == pixman_fixed_1 && uw == 0)
     {
-	int n_pixels = MIN (N_TMP_PIXELS, width - i);
-	int j;
-
-	coords = (int32_t *)tmp_buffer;
-
-	for (j = 0; j < n_pixels; ++j)
+	for (i = 0; i < width; ++i)
 	{
-	    if (affine)
-	    {
-		coords[0] = v.vector[0];
-		coords[1] = v.vector[1];
-	    }
-	    else
-	    {
-		pixman_fixed_48_16_t div;
+	    if (!mask || (mask[i] & mask_bits))
+		buffer[i] = bits_image_fetch_filtered (&image->bits, x, y);
 
-		div = ((pixman_fixed_48_16_t)v.vector[0] << 16) / v.vector[2];
-
-		if ((div >> 16) > 0x7fff)
-		    coords[0] = 0x7fffffff;
-		else if ((div >> 16) < 0x8000)
-		    coords[0] = 0x80000000;
-		else
-		    coords[0] = div;
-
-		div = ((pixman_fixed_48_16_t)v.vector[1] << 16) / v.vector[2];
-
-		if ((div >> 16) > 0x7fff)
-		    coords[1] = 0x7fffffff;
-		else if ((div >> 16) < 0x8000)
-		    coords[1] = 0x8000000;
-		else
-		    coords[1] = div;
-
-		v.vector[2] += unit.vector[2];
-	    }
-
-	    coords += 2;
-
-	    v.vector[0] += unit.vector[0];
-	    v.vector[1] += unit.vector[1];
+	    x += ux;
+	    y += uy;
 	}
-
-	bits_image_fetch_filtered (&image->bits, tmp_buffer, n_pixels);
-
-	for (j = 0; j < n_pixels; ++j)
-	    buffer[i++] = tmp_buffer[j];
+    }
+    else
+    {
+	for (i = 0; i < width; ++i)
+	{
+	    pixman_fixed_t x0, y0;
+	
+	    if (!mask || (mask[i] & mask_bits))
+	    {
+		x0 = ((pixman_fixed_48_16_t)x << 16) / w;
+		y0 = ((pixman_fixed_48_16_t)y << 16) / w;
+		
+		buffer[i] = bits_image_fetch_filtered (&image->bits, x0, y0);
+	    }
+	    
+	    x += ux;
+	    y += uy;
+	    w += uw;
+	}
     }
 }
 
