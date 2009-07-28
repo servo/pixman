@@ -38,6 +38,10 @@ typedef void (*fetch_pixels_t)   (bits_image_t *  image,
 				  uint32_t *      buffer,
 				  int             n_pixels);
 
+typedef uint32_t (*fetch_pixel_32_t) (bits_image_t *image,
+				      int           x,
+				      int           y);
+
 typedef void (*store_scanline_t) (bits_image_t *  image,
 				  int             x,
 				  int             y,
@@ -166,6 +170,12 @@ struct bits_image
     /* Fetch raw pixels, with no regard for transformations, alpha map etc. */
     fetch_pixels_t             fetch_pixels_raw_32;
     fetch_pixels_t             fetch_pixels_raw_64;
+
+    /* Fetch a pixel, disregarding alpha maps, transformations etc. */
+    fetch_pixel_32_t	       fetch_pixel_raw_32;
+
+    /* Fetch a pixel, taking alpha maps into account */
+    fetch_pixel_32_t	       fetch_pixel_32;
 
     /* Fetch raw scanlines, with no regard for transformations, alpha maps etc. */
     fetch_scanline_t           fetch_scanline_raw_32;

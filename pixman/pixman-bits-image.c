@@ -93,7 +93,7 @@ _pixman_image_store_scanline_64 (bits_image_t *  image,
 
 /* Fetch functions */
 
-static force_inline uint32_t
+static uint32_t
 bits_image_fetch_pixel_raw (bits_image_t *image, int x, int y)
 {
     uint32_t pixel[2];
@@ -136,6 +136,12 @@ bits_image_fetch_pixel_alpha (bits_image_t *image, int x, int y)
     }
 
     return pixel;
+}
+
+static force_inline uint32_t
+get_pixel (bits_image_t *image, int x, int y)
+{
+    return image->fetch_pixel_32 (image, x, y);
 }
 
 static force_inline pixman_bool_t
@@ -181,7 +187,7 @@ bits_image_fetch_pixel_nearest (bits_image_t   *image,
     if (repeat (image->common.repeat, image->width, &x0) &&
 	repeat (image->common.repeat, image->height, &y0))
     {
-	return bits_image_fetch_pixel_alpha (image, x0, y0);
+	return get_pixel (image, x0, y0);
     }
     else
     {
@@ -222,16 +228,16 @@ bits_image_fetch_pixel_bilinear (bits_image_t   *image,
     tl = tr = bl = br = 0;
 
     if (x1r && y1r)
-	tl = bits_image_fetch_pixel_alpha (image, x1, y1);
+	tl = get_pixel (image, x1, y1);
 
     if (x1r && y2r)
-	bl = bits_image_fetch_pixel_alpha (image, x1, y2);
+	bl = get_pixel (image, x1, y2);
 
     if (x2r && y1r)
-	tr = bits_image_fetch_pixel_alpha (image, x2, y1);
+	tr = get_pixel (image, x2, y1);
 
     if (x2r && y2r)
-	br = bits_image_fetch_pixel_alpha (image, x2, y2);
+	br = get_pixel (image, x2, y2);
     
     idistx = 256 - distx;
     idisty = 256 - disty;
@@ -293,7 +299,7 @@ bits_image_fetch_pixel_convolution (bits_image_t   *image,
 		if (f)
 		{
 		    uint32_t pixel =
-			bits_image_fetch_pixel_alpha (image, rx, ry);
+			get_pixel (image, rx, ry);
 		    
 		    srtot += RED_8 (pixel) * f;
 		    sgtot += GREEN_8 (pixel) * f;
@@ -646,12 +652,17 @@ bits_image_property_changed (pixman_image_t *image)
 
     _pixman_bits_image_setup_raw_accessors (bits);
 
+    image->bits.fetch_pixel_raw_32 = bits_image_fetch_pixel_raw;
+    image->bits.fetch_pixel_32 = bits_image_fetch_pixel_raw;
+
     if (bits->common.alpha_map)
     {
 	image->common.get_scanline_64 =
 	    _pixman_image_get_scanline_generic_64;
 	image->common.get_scanline_32 =
 	    bits_image_fetch_transformed;
+
+	image->bits.fetch_pixel_32 = bits_image_fetch_pixel_alpha;
     }
     else if ((bits->common.repeat != PIXMAN_REPEAT_NONE) &&
              bits->width == 1 &&
