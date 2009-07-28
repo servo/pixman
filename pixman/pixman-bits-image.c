@@ -185,7 +185,7 @@ bits_image_fetch_pixels_src_clip (bits_image_t *image,
     bits_image_fetch_alpha_pixels (image, buffer, n_pixels);
 }
 
-static force_inline void
+static force_inline pixman_bool_t
 repeat (pixman_repeat_t repeat,
         int             width,
         int             height,
@@ -217,43 +217,57 @@ repeat (pixman_repeat_t repeat,
 
     case PIXMAN_REPEAT_NONE:
 	if (*x < 0 || *x >= width)
+	{
 	    *x = 0xffffffff;
+	    return FALSE;
+	}
 
 	if (*y < 0 || *y >= height)
+	{
 	    *y = 0xffffffff;
+	    return FALSE;
+	}
 	break;
     }
+
+    return TRUE;
+}
+
+static uint32_t
+fetch_one (bits_image_t *image, int x, int y)
+{
+    uint32_t pixel[2];
+
+    pixel[0] = x;
+    pixel[1] = y;
+
+    bits_image_fetch_alpha_pixels (image, pixel, 1);
+
+    return pixel[0];
 }
 
 /* Buffer contains list of fixed-point coordinates on input,
  * a list of pixels on output
  */
-static void
+static uint32_t
 bits_image_fetch_nearest_pixels (bits_image_t *image,
-                                 uint32_t *    buffer,
-                                 int           n_pixels)
+				 pixman_fixed_t x,
+				 pixman_fixed_t y)
 {
-    pixman_repeat_t repeat_mode = image->common.repeat;
-    int width = image->width;
-    int height = image->height;
-    int i;
+    int x0 = pixman_fixed_to_int (x - pixman_fixed_e);
+    int y0 = pixman_fixed_to_int (y - pixman_fixed_e);
 
-    for (i = 0; i < 2 * n_pixels; i += 2)
+    if (repeat (image->common.repeat,
+		image->width,
+		image->height,
+		&x0, &y0))
     {
-	int32_t *coords = (int32_t *)buffer;
-	int32_t x, y;
-
-	/* Subtract pixman_fixed_e to ensure that 0.5 rounds to 0, not 1 */
-	x = pixman_fixed_to_int (coords[i] - pixman_fixed_e);
-	y = pixman_fixed_to_int (coords[i + 1] - pixman_fixed_e);
-
-	repeat (repeat_mode, width, height, &x, &y);
-
-	coords[i] = x;
-	coords[i + 1] = y;
+	return fetch_one (image, x0, y0);
     }
-
-    bits_image_fetch_pixels_src_clip (image, buffer, n_pixels);
+    else
+    {
+	return 0;
+    }
 }
 
 #define N_TMP_PIXELS    (256)
@@ -504,7 +518,7 @@ bits_image_fetch_filtered (bits_image_t *image,
     {
     case PIXMAN_FILTER_NEAREST:
     case PIXMAN_FILTER_FAST:
-	bits_image_fetch_nearest_pixels (image, pixel, 1);
+	return bits_image_fetch_nearest_pixels (image, x, y);
 	break;
 
     case PIXMAN_FILTER_BILINEAR:
