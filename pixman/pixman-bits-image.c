@@ -186,45 +186,29 @@ bits_image_fetch_pixels_src_clip (bits_image_t *image,
 }
 
 static force_inline pixman_bool_t
-repeat (pixman_repeat_t repeat,
-        int             width,
-        int             height,
-        int *           x,
-        int *           y)
+repeat (pixman_repeat_t repeat, int size, int *coord)
 {
     switch (repeat)
     {
     case PIXMAN_REPEAT_NORMAL:
-	*x = MOD (*x, width);
-	*y = MOD (*y, height);
+	*coord = MOD (*coord, size);
 	break;
 
     case PIXMAN_REPEAT_PAD:
-	*x = CLIP (*x, 0, width - 1);
-	*y = CLIP (*y, 0, height - 1);
+	*coord = CLIP (*coord, 0, size - 1);
 	break;
 
     case PIXMAN_REPEAT_REFLECT:
-	*x = MOD (*x, width * 2);
-	*y = MOD (*y, height * 2);
+	*coord = MOD (*coord, size * 2);
 
-	if (*x >= width)
-	    *x = width * 2 - *x - 1;
-
-	if (*y >= height)
-	    *y = height * 2 - *y - 1;
+	if (*coord >= size)
+	    *coord = size * 2 - *coord - 1;
 	break;
 
     case PIXMAN_REPEAT_NONE:
-	if (*x < 0 || *x >= width)
+	if (*coord < 0 || *coord >= size)
 	{
-	    *x = 0xffffffff;
-	    return FALSE;
-	}
-
-	if (*y < 0 || *y >= height)
-	{
-	    *y = 0xffffffff;
+	    *coord = 0xffffffff;
 	    return FALSE;
 	}
 	break;
@@ -257,10 +241,8 @@ bits_image_fetch_nearest_pixels (bits_image_t *image,
     int x0 = pixman_fixed_to_int (x - pixman_fixed_e);
     int y0 = pixman_fixed_to_int (y - pixman_fixed_e);
 
-    if (repeat (image->common.repeat,
-		image->width,
-		image->height,
-		&x0, &y0))
+    if (repeat (image->common.repeat, image->width, &x0) &&
+	repeat (image->common.repeat, image->height, &y0))
     {
 	return fetch_one (image, x0, y0);
     }
@@ -319,8 +301,10 @@ bits_image_fetch_bilinear_pixels (bits_image_t *image,
 	    x2 = x1 + 1;
 	    y2 = y1 + 1;
 
-	    repeat (repeat_mode, width, height, &x1, &y1);
-	    repeat (repeat_mode, width, height, &x2, &y2);
+	    repeat (repeat_mode, width, &x1);
+	    repeat (repeat_mode, height, &y1);
+	    repeat (repeat_mode, width, &x2);
+	    repeat (repeat_mode, height, &y2);
 
 	    *t++ = x1;
 	    *t++ = y1;
@@ -448,7 +432,8 @@ bits_image_fetch_convolution_pixels (bits_image_t *image,
 		    int rx = x;
 		    int ry = y;
 
-		    repeat (repeat_mode, width, height, &rx, &ry);
+		    repeat (repeat_mode, width, &rx);
+		    repeat (repeat_mode, height, &ry);
 
 		    *t++ = rx;
 		    *t++ = ry;
