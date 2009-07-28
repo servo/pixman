@@ -257,109 +257,68 @@ bits_image_fetch_nearest_pixels (bits_image_t *image,
 /* Buffer contains list of fixed-point coordinates on input,
  * a list of pixels on output
  */
-static void
-bits_image_fetch_bilinear_pixels (bits_image_t *image,
-                                  uint32_t *    buffer,
-                                  int           n_pixels)
+static uint32_t
+bits_image_fetch_bilinear_pixels (bits_image_t   *image,
+				  pixman_fixed_t x,
+				  pixman_fixed_t y)
 {
-/* (Four pixels * two coordinates) per pixel */
-#define N_TEMPS         (N_TMP_PIXELS * 8)
-#define N_DISTS         (N_TMP_PIXELS * 2)
-
-    uint32_t temps[N_TEMPS];
-    int32_t dists[N_DISTS];
     pixman_repeat_t repeat_mode = image->common.repeat;
     int width = image->width;
     int height = image->height;
-    int32_t *coords;
-    int i;
+    pixman_bool_t x1r, y1r, x2r, y2r;
+    int x1, y1, x2, y2;
+    uint32_t tl, tr, bl, br, r;
+    int32_t distx, disty, idistx, idisty;
+    uint32_t ft, fb;
 
-    i = 0;
-    coords = (int32_t *)buffer;
-    while (i < n_pixels)
-    {
-	int tmp_n_pixels = MIN (N_TMP_PIXELS, n_pixels - i);
-	int32_t distx, disty;
-	uint32_t *u;
-	int32_t *t, *d;
-	int j;
+    x1 = x - pixman_fixed_1 / 2;
+    y1 = y - pixman_fixed_1 / 2;
 
-	t = (int32_t *)temps;
-	d = dists;
-	for (j = 0; j < tmp_n_pixels; ++j)
-	{
-	    int32_t x1, y1, x2, y2;
+    distx = (x1 >> 8) & 0xff;
+    disty = (y1 >> 8) & 0xff;
 
-	    x1 = coords[0] - pixman_fixed_1 / 2;
-	    y1 = coords[1] - pixman_fixed_1 / 2;
+    x1 = pixman_fixed_to_int (x1);
+    y1 = pixman_fixed_to_int (y1);
+    x2 = x1 + 1;
+    y2 = y1 + 1;
 
-	    distx = (x1 >> 8) & 0xff;
-	    disty = (y1 >> 8) & 0xff;
+    x1r = repeat (repeat_mode, width, &x1);
+    y1r = repeat (repeat_mode, height, &y1);
+    x2r = repeat (repeat_mode, width, &x2);
+    y2r = repeat (repeat_mode, height, &y2);
 
-	    x1 >>= 16;
-	    y1 >>= 16;
-	    x2 = x1 + 1;
-	    y2 = y1 + 1;
+    tl = tr = bl = br = 0;
 
-	    repeat (repeat_mode, width, &x1);
-	    repeat (repeat_mode, height, &y1);
-	    repeat (repeat_mode, width, &x2);
-	    repeat (repeat_mode, height, &y2);
+    if (x1r && y1r)
+	tl = fetch_one (image, x1, y1);
 
-	    *t++ = x1;
-	    *t++ = y1;
-	    *t++ = x2;
-	    *t++ = y1;
-	    *t++ = x1;
-	    *t++ = y2;
-	    *t++ = x2;
-	    *t++ = y2;
+    if (x1r && y2r)
+	bl = fetch_one (image, x1, y2);
 
-	    *d++ = distx;
-	    *d++ = disty;
+    if (x2r && y1r)
+	tr = fetch_one (image, x2, y1);
 
-	    coords += 2;
-	}
-
-	bits_image_fetch_pixels_src_clip (image, temps, tmp_n_pixels * 4);
-
-	u = (uint32_t *)temps;
-	d = dists;
-	for (j = 0; j < tmp_n_pixels; ++j)
-	{
-	    uint32_t tl, tr, bl, br, r;
-	    int32_t idistx, idisty;
-	    uint32_t ft, fb;
-
-	    tl = *u++;
-	    tr = *u++;
-	    bl = *u++;
-	    br = *u++;
-
-	    distx = *d++;
-	    disty = *d++;
-
-	    idistx = 256 - distx;
-	    idisty = 256 - disty;
+    if (x2r && y2r)
+	br = fetch_one (image, x2, y2);
+    
+    idistx = 256 - distx;
+    idisty = 256 - disty;
 
 #define GET8(v, i)   ((uint16_t) (uint8_t) ((v) >> i))
-
-	    ft = GET8 (tl, 0) * idistx + GET8 (tr, 0) * distx;
-	    fb = GET8 (bl, 0) * idistx + GET8 (br, 0) * distx;
-	    r = (((ft * idisty + fb * disty) >> 16) & 0xff);
-	    ft = GET8 (tl, 8) * idistx + GET8 (tr, 8) * distx;
-	    fb = GET8 (bl, 8) * idistx + GET8 (br, 8) * distx;
-	    r |= (((ft * idisty + fb * disty) >> 8) & 0xff00);
-	    ft = GET8 (tl, 16) * idistx + GET8 (tr, 16) * distx;
-	    fb = GET8 (bl, 16) * idistx + GET8 (br, 16) * distx;
-	    r |= (((ft * idisty + fb * disty)) & 0xff0000);
-	    ft = GET8 (tl, 24) * idistx + GET8 (tr, 24) * distx;
-	    fb = GET8 (bl, 24) * idistx + GET8 (br, 24) * distx;
-	    r |= (((ft * idisty + fb * disty) << 8) & 0xff000000);
-
-	    buffer[i++] = r;
-	}
-    }
+    ft = GET8 (tl, 0) * idistx + GET8 (tr, 0) * distx;
+    fb = GET8 (bl, 0) * idistx + GET8 (br, 0) * distx;
+    r = (((ft * idisty + fb * disty) >> 16) & 0xff);
+    ft = GET8 (tl, 8) * idistx + GET8 (tr, 8) * distx;
+    fb = GET8 (bl, 8) * idistx + GET8 (br, 8) * distx;
+    r |= (((ft * idisty + fb * disty) >> 8) & 0xff00);
+    ft = GET8 (tl, 16) * idistx + GET8 (tr, 16) * distx;
+    fb = GET8 (bl, 16) * idistx + GET8 (br, 16) * distx;
+    r |= (((ft * idisty + fb * disty)) & 0xff0000);
+    ft = GET8 (tl, 24) * idistx + GET8 (tr, 24) * distx;
+    fb = GET8 (bl, 24) * idistx + GET8 (br, 24) * distx;
+    r |= (((ft * idisty + fb * disty) << 8) & 0xff000000);
+    
+    return r;
 }
 
 /* Buffer contains list of fixed-point coordinates on input,
@@ -509,7 +468,7 @@ bits_image_fetch_filtered (bits_image_t *image,
     case PIXMAN_FILTER_BILINEAR:
     case PIXMAN_FILTER_GOOD:
     case PIXMAN_FILTER_BEST:
-	bits_image_fetch_bilinear_pixels (image, pixel, 1);
+	return bits_image_fetch_bilinear_pixels (image, x, y);
 	break;
 
     case PIXMAN_FILTER_CONVOLUTION:
