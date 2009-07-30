@@ -124,12 +124,6 @@ bits_image_fetch_pixel_alpha (bits_image_t *image, int x, int y)
 }
 
 static force_inline uint32_t
-bits_image_fetch_pixel (bits_image_t *image, int x, int y)
-{
-    return image->fetch_pixel_32 (image, x, y);
-}
-
-static force_inline uint32_t
 get_pixel (bits_image_t *image, int x, int y)
 {
     return image->fetch_pixel_32 (image, x, y);
