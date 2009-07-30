@@ -98,14 +98,14 @@ bits_image_fetch_pixel_alpha (bits_image_t *image, int x, int y)
 {
     uint32_t pixel;
     uint32_t pixel_a;
-    
+
     pixel = image->fetch_pixel_raw_32 (image, x, y);
-    
+
     assert (image->common.alpha_map);
-	
+
     x -= image->common.alpha_origin_x;
     y -= image->common.alpha_origin_y;
-    
+
     if (x < 0 || x >= image->common.alpha_map->width ||
 	y < 0 || y >= image->common.alpha_map->height)
     {
@@ -117,7 +117,7 @@ bits_image_fetch_pixel_alpha (bits_image_t *image, int x, int y)
 	    image->common.alpha_map, x, y);
 	pixel_a = ALPHA_8 (pixel_a);
     }
-    
+
     UN8x4_MUL_UN8 (pixel, pixel_a);
 
     return pixel;
@@ -229,7 +229,7 @@ bits_image_fetch_pixel_bilinear (bits_image_t   *image,
 
     if (x2r && y2r)
 	br = get_pixel (image, x2, y2);
-    
+
     idistx = 256 - distx;
     idisty = 256 - disty;
 
@@ -246,7 +246,7 @@ bits_image_fetch_pixel_bilinear (bits_image_t   *image,
     ft = GET8 (tl, 24) * idistx + GET8 (tr, 24) * distx;
     fb = GET8 (bl, 24) * idistx + GET8 (br, 24) * distx;
     r |= (((ft * idisty + fb * disty) << 8) & 0xff000000);
-    
+
     return r;
 }
 
@@ -274,14 +274,14 @@ bits_image_fetch_pixel_convolution (bits_image_t   *image,
     y2 = y1 + cheight;
 
     srtot = sgtot = sbtot = satot = 0;
-    
+
     for (i = y1; i < y2; ++i)
     {
 	for (j = x1; j < x2; ++j)
 	{
 	    int rx = i;
 	    int ry = j;
-	    
+
 	    if (repeat (repeat_mode, width, &rx)	&&
 		repeat (repeat_mode, height, &ry))
 	    {
@@ -291,7 +291,7 @@ bits_image_fetch_pixel_convolution (bits_image_t   *image,
 		{
 		    uint32_t pixel =
 			get_pixel (image, rx, ry);
-		    
+
 		    srtot += RED_8 (pixel) * f;
 		    sgtot += GREEN_8 (pixel) * f;
 		    sbtot += BLUE_8 (pixel) * f;
@@ -307,7 +307,7 @@ bits_image_fetch_pixel_convolution (bits_image_t   *image,
     srtot >>= 16;
     sgtot >>= 16;
     sbtot >>= 16;
-    
+
     satot = CLIP (satot, 0, 0xff);
     srtot = CLIP (srtot, 0, 0xff);
     sgtot = CLIP (sgtot, 0, 0xff);
@@ -383,7 +383,7 @@ bits_image_fetch_transformed (pixman_image_t * image,
     y = v.vector[1];
     w = v.vector[2];
 
-    if (w == pixman_fixed_1 && uw == 0)
+    if (w == pixman_fixed_1 && uw == 0) /* Affine */
     {
 	for (i = 0; i < width; ++i)
 	{
@@ -402,16 +402,16 @@ bits_image_fetch_transformed (pixman_image_t * image,
 	for (i = 0; i < width; ++i)
 	{
 	    pixman_fixed_t x0, y0;
-	
+
 	    if (!mask || (mask[i] & mask_bits))
 	    {
 		x0 = ((pixman_fixed_48_16_t)x << 16) / w;
 		y0 = ((pixman_fixed_48_16_t)y << 16) / w;
-		
+
 		buffer[i] =
 		    bits_image_fetch_pixel_filtered (&image->bits, x0, y0);
 	    }
-	    
+
 	    x += ux;
 	    y += uy;
 	    w += uw;
@@ -452,7 +452,7 @@ bits_image_fetch_solid_64 (pixman_image_t * image,
     uint64_t *end;
 
     color = image->bits.fetch_pixel_raw_64 (&image->bits, 0, 0);
-    
+
     end = buffer + width;
     while (buffer < end)
 	*(buffer++) = color;
@@ -531,7 +531,7 @@ bits_image_fetch_untransformed_repeat_normal (bits_image_t *image,
 	    image->fetch_scanline_raw_64 ((pixman_image_t *)image, x, y, w, buffer, NULL, 0);
 	else
 	    image->fetch_scanline_raw_32 ((pixman_image_t *)image, x, y, w, buffer, NULL, 0);
-	
+
 	buffer += w * (wide? 2 : 1);
 	x += w;
 	width -= w;
