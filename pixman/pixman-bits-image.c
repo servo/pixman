@@ -94,48 +94,39 @@ _pixman_image_store_scanline_64 (bits_image_t *  image,
 /* Fetch functions */
 
 static uint32_t
-bits_image_fetch_pixel_raw (bits_image_t *image, int x, int y)
-{
-    uint32_t pixel[2];
-
-    pixel[0] = x;
-    pixel[1] = y;
-
-    image->fetch_pixels_raw_32 (image, pixel, 1);
-
-    return pixel[0];
-}
-
-static uint32_t
 bits_image_fetch_pixel_alpha (bits_image_t *image, int x, int y)
 {
     uint32_t pixel;
+    uint32_t pixel_a;
     
-    pixel = bits_image_fetch_pixel_raw (image, x, y);
+    pixel = image->fetch_pixel_raw_32 (image, x, y);
     
-    if (image->common.alpha_map)
-    {
-	uint32_t pixel_a;
+    assert (image->common.alpha_map);
 	
-	x -= image->common.alpha_origin_x;
-	y -= image->common.alpha_origin_y;
-
-	if (x < 0 || x >= image->common.alpha_map->width ||
-	    y < 0 || y >= image->common.alpha_map->height)
-	{
-	    pixel_a = 0;
-	}
-	else
-	{
-	    pixel_a = bits_image_fetch_pixel_raw (
-		image->common.alpha_map, x, y);
-	    pixel_a = ALPHA_8 (pixel_a);
-	}
-
-	UN8x4_MUL_UN8 (pixel, pixel_a);
+    x -= image->common.alpha_origin_x;
+    y -= image->common.alpha_origin_y;
+    
+    if (x < 0 || x >= image->common.alpha_map->width ||
+	y < 0 || y >= image->common.alpha_map->height)
+    {
+	pixel_a = 0;
     }
+    else
+    {
+	pixel_a = image->fetch_pixel_raw_32 (
+	    image->common.alpha_map, x, y);
+	pixel_a = ALPHA_8 (pixel_a);
+    }
+    
+    UN8x4_MUL_UN8 (pixel, pixel_a);
 
     return pixel;
+}
+
+static force_inline uint32_t
+bits_image_fetch_pixel (bits_image_t *image, int x, int y)
+{
+    return image->fetch_pixel_32 (image, x, y);
 }
 
 static force_inline uint32_t
@@ -437,17 +428,14 @@ bits_image_fetch_solid_32 (pixman_image_t * image,
                            const uint32_t * mask,
                            uint32_t         mask_bits)
 {
-    uint32_t color[2];
+    uint32_t color;
     uint32_t *end;
 
-    color[0] = 0;
-    color[1] = 0;
-
-    image->bits.fetch_pixels_raw_32 (&image->bits, color, 1);
+    color = image->bits.fetch_pixel_raw_32 (&image->bits, 0, 0);
 
     end = buffer + width;
     while (buffer < end)
-	*(buffer++) = color[0];
+	*(buffer++) = color;
 }
 
 static void
@@ -460,14 +448,10 @@ bits_image_fetch_solid_64 (pixman_image_t * image,
                            uint32_t         unused2)
 {
     uint64_t color;
-    uint32_t *coords = (uint32_t *)&color;
     uint64_t *buffer = (uint64_t *)b;
     uint64_t *end;
 
-    coords[0] = 0;
-    coords[1] = 0;
-    
-    image->bits.fetch_pixels_raw_64 (&image->bits, (uint32_t *)&color, 1);
+    color = image->bits.fetch_pixel_raw_64 (&image->bits, 0, 0);
     
     end = buffer + width;
     while (buffer < end)
@@ -652,8 +636,7 @@ bits_image_property_changed (pixman_image_t *image)
 
     _pixman_bits_image_setup_raw_accessors (bits);
 
-    image->bits.fetch_pixel_raw_32 = bits_image_fetch_pixel_raw;
-    image->bits.fetch_pixel_32 = bits_image_fetch_pixel_raw;
+    image->bits.fetch_pixel_32 = image->bits.fetch_pixel_raw_32;
 
     if (bits->common.alpha_map)
     {

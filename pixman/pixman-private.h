@@ -34,11 +34,11 @@ typedef void (*fetch_scanline_t) (pixman_image_t *image,
 				  const uint32_t *mask,
 				  uint32_t        mask_bits);
 
-typedef void (*fetch_pixels_t)   (bits_image_t *  image,
-				  uint32_t *      buffer,
-				  int             n_pixels);
-
 typedef uint32_t (*fetch_pixel_32_t) (bits_image_t *image,
+				      int           x,
+				      int           y);
+
+typedef uint64_t (*fetch_pixel_64_t) (bits_image_t *image,
 				      int           x,
 				      int           y);
 
@@ -167,15 +167,13 @@ struct bits_image
     uint32_t *                 free_me;
     int                        rowstride;  /* in number of uint32_t's */
 
-    /* Fetch raw pixels, with no regard for transformations, alpha map etc. */
-    fetch_pixels_t             fetch_pixels_raw_32;
-    fetch_pixels_t             fetch_pixels_raw_64;
-
     /* Fetch a pixel, disregarding alpha maps, transformations etc. */
     fetch_pixel_32_t	       fetch_pixel_raw_32;
+    fetch_pixel_64_t	       fetch_pixel_raw_64;
 
     /* Fetch a pixel, taking alpha maps into account */
     fetch_pixel_32_t	       fetch_pixel_32;
+    fetch_pixel_64_t	       fetch_pixel_64;
 
     /* Fetch raw scanlines, with no regard for transformations, alpha maps etc. */
     fetch_scanline_t           fetch_scanline_raw_32;
