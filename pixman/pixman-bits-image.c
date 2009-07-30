@@ -151,10 +151,7 @@ repeat (pixman_repeat_t repeat, int size, int *coord)
 
     case PIXMAN_REPEAT_NONE:
 	if (*coord < 0 || *coord >= size)
-	{
-	    *coord = 0xffffffff;
 	    return FALSE;
-	}
 	break;
     }
 
