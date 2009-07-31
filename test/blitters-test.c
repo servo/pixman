@@ -310,6 +310,10 @@ free_random_image (
 }
 
 static pixman_op_t op_list[] = {
+    PIXMAN_OP_SRC,
+    PIXMAN_OP_OVER,
+    PIXMAN_OP_ADD,
+#if 0
     PIXMAN_OP_CLEAR,
     PIXMAN_OP_SRC,
     PIXMAN_OP_DST,
@@ -369,10 +373,15 @@ static pixman_op_t op_list[] = {
     PIXMAN_OP_HSL_COLOR,
     PIXMAN_OP_HSL_LUMINOSITY,
 #endif
+#endif
 };
 static pixman_format_code_t img_fmt_list[] = {
     PIXMAN_a8r8g8b8,
     PIXMAN_x8r8g8b8,
+    PIXMAN_r5g6b5,
+    PIXMAN_r3g3b2,
+    PIXMAN_a8,
+#if 0
     PIXMAN_a8b8g8r8,
     PIXMAN_x8b8g8r8,
     PIXMAN_b8g8r8a8,
@@ -416,6 +425,7 @@ static pixman_format_code_t img_fmt_list[] = {
     PIXMAN_a1r1g1b1,
     PIXMAN_a1b1g1r1,
     PIXMAN_a1,
+#endif
     -1
 };
 static pixman_format_code_t mask_fmt_list[] = {
@@ -449,7 +459,7 @@ test_composite (uint32_t initcrc, int testnum, int verbose)
     uint32_t crc32;
     int max_width, max_height, max_extra_stride;
 
-    max_width = max_height = 12 + testnum / 100000;
+    max_width = max_height = 24 + testnum / 100000;
     max_extra_stride = 4 + testnum / 1000000;
     if (max_width > 64) max_width = 64;
     if (max_height > 16) max_height = 16;
@@ -478,6 +488,7 @@ test_composite (uint32_t initcrc, int testnum, int verbose)
 
     mask_img = NULL;
     mask_fmt = -1;
+#if 0
     if (lcg_rand_n (2))
     {
 	if (lcg_rand_n (2))
@@ -497,6 +508,7 @@ test_composite (uint32_t initcrc, int testnum, int verbose)
 	    pixman_image_set_component_alpha (mask_img, 1);
 #endif
     }
+#endif
 
     src_width = pixman_image_get_width (src_img);
     src_height = pixman_image_get_height (src_img);
@@ -570,7 +582,7 @@ main (int argc, char *argv[])
     else
     {
 	n1 = 1;
-	n2 = 3000000;
+	n2 = 2000000;
     }
 
     if (n2 < 0)
@@ -586,12 +598,12 @@ main (int argc, char *argv[])
 	}
 	printf ("crc32=%08X\n", crc);
 
-	if (n2 == 3000000)
+	if (n2 == 2000000)
 	{
 	    /* Predefined value for running with all the fastpath functions
 	       disabled. It needs to be updated every time when changes are
 	       introduced to this program or behavior of pixman changes! */
-	    if (crc == 0x1A025829)
+	    if (crc == 0x4895C7B0)
 	    {
 		printf ("blitters test passed\n");
 	    }
