@@ -66,7 +66,7 @@
 #define GOOD_RECT(rect) ((rect)->x1 < (rect)->x2 && (rect)->y1 < (rect)->y2)
 #define BAD_RECT(rect) ((rect)->x1 > (rect)->x2 || (rect)->y1 > (rect)->y2)
 
-#define PIXMAN_REGION_LOG_FAILURES
+#define noPIXMAN_REGION_LOG_FAILURES
 
 #if defined PIXMAN_REGION_LOG_FAILURES || defined PIXMAN_REGION_DEBUG
 

@@ -289,8 +289,6 @@ pixman_image_create_linear_gradient (pixman_point_fixed_t *        p1,
     image->common.classify = linear_gradient_classify;
     image->common.property_changed = linear_gradient_property_changed;
 
-    linear_gradient_property_changed (image);
-
     return image;
 }
 

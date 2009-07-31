@@ -363,8 +363,6 @@ pixman_image_create_radial_gradient (pixman_point_fixed_t *        inner,
 
     image->common.property_changed = radial_gradient_property_changed;
 
-    radial_gradient_property_changed (image);
-
     return image;
 }
 

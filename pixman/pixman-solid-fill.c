@@ -86,8 +86,6 @@ pixman_image_create_solid_fill (pixman_color_t *color)
     img->common.classify = solid_fill_classify;
     img->common.property_changed = solid_fill_property_changed;
 
-    solid_fill_property_changed (img);
-
     return img;
 }
 

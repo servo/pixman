@@ -82,6 +82,7 @@ struct image_common
     pixman_bool_t               clip_sources;       /* Whether the clip applies when
 						     * the image is used as a source
 						     */
+    pixman_bool_t		dirty;
     pixman_bool_t               need_workaround;
     pixman_transform_t *        transform;
     pixman_repeat_t             repeat;
@@ -276,6 +277,9 @@ _pixman_init_gradient (gradient_t *                  gradient,
                        int                           n_stops);
 void
 _pixman_image_reset_clip_region (pixman_image_t *image);
+
+void
+_pixman_image_validate (pixman_image_t *image);
 
 pixman_bool_t
 _pixman_image_is_opaque (pixman_image_t *image);

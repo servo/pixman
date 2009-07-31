@@ -765,8 +765,6 @@ pixman_image_create_bits (pixman_format_code_t format,
 
     image->common.property_changed = bits_image_property_changed;
 
-    bits_image_property_changed (image);
-
     _pixman_image_reset_clip_region (image);
 
     return image;

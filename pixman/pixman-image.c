@@ -120,6 +120,7 @@ _pixman_image_allocate (void)
 	common->destroy_func = NULL;
 	common->destroy_data = NULL;
 	common->need_workaround = FALSE;
+	common->dirty = TRUE;
     }
 
     return image;
@@ -168,7 +169,7 @@ _pixman_image_get_scanline_64 (pixman_image_t *image,
 static void
 image_property_changed (pixman_image_t *image)
 {
-    image->common.property_changed (image);
+    image->common.dirty = TRUE;
 }
 
 /* Ref Counting */
@@ -236,6 +237,16 @@ void
 _pixman_image_reset_clip_region (pixman_image_t *image)
 {
     image->common.have_clip_region = FALSE;
+}
+
+void
+_pixman_image_validate (pixman_image_t *image)
+{
+    if (image->common.dirty)
+    {
+	image->common.property_changed (image);
+	image->common.dirty = FALSE;
+    }
 }
 
 PIXMAN_EXPORT pixman_bool_t
