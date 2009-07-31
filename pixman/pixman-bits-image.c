@@ -124,12 +124,18 @@ bits_image_fetch_pixel_alpha (bits_image_t *image, int x, int y)
 }
 
 static force_inline uint32_t
-get_pixel (bits_image_t *image, int x, int y)
+get_pixel (bits_image_t *image, int x, int y, pixman_bool_t check_bounds)
 {
+    if (check_bounds &&
+	(x < 0 || x >= image->width || y < 0 || y >= image->height))
+    {
+	return 0;
+    }
+	
     return image->fetch_pixel_32 (image, x, y);
 }
 
-static force_inline pixman_bool_t
+static force_inline void
 repeat (pixman_repeat_t repeat, int size, int *coord)
 {
     switch (repeat)
@@ -150,12 +156,8 @@ repeat (pixman_repeat_t repeat, int size, int *coord)
 	break;
 
     case PIXMAN_REPEAT_NONE:
-	if (*coord < 0 || *coord >= size)
-	    return FALSE;
 	break;
     }
-
-    return TRUE;
 }
 
 static force_inline uint32_t
@@ -166,14 +168,16 @@ bits_image_fetch_pixel_nearest (bits_image_t   *image,
     int x0 = pixman_fixed_to_int (x - pixman_fixed_e);
     int y0 = pixman_fixed_to_int (y - pixman_fixed_e);
 
-    if (repeat (image->common.repeat, image->width, &x0) &&
-	repeat (image->common.repeat, image->height, &y0))
+    if (image->common.repeat != PIXMAN_REPEAT_NONE)
     {
-	return get_pixel (image, x0, y0);
+	repeat (image->common.repeat, image->width, &x0);
+	repeat (image->common.repeat, image->height, &y0);
+
+	return get_pixel (image, x0, y0, FALSE);
     }
     else
     {
-	return 0;
+	return get_pixel (image, x0, y0, TRUE);
     }
 }
 
@@ -185,7 +189,6 @@ bits_image_fetch_pixel_bilinear (bits_image_t   *image,
     pixman_repeat_t repeat_mode = image->common.repeat;
     int width = image->width;
     int height = image->height;
-    pixman_bool_t x1r, y1r, x2r, y2r;
     int x1, y1, x2, y2;
     uint32_t tl, tr, bl, br, r;
     int32_t distx, disty, idistx, idisty;
@@ -202,24 +205,25 @@ bits_image_fetch_pixel_bilinear (bits_image_t   *image,
     x2 = x1 + 1;
     y2 = y1 + 1;
 
-    x1r = repeat (repeat_mode, width, &x1);
-    y1r = repeat (repeat_mode, height, &y1);
-    x2r = repeat (repeat_mode, width, &x2);
-    y2r = repeat (repeat_mode, height, &y2);
-
-    tl = tr = bl = br = 0;
-
-    if (x1r && y1r)
-	tl = get_pixel (image, x1, y1);
-
-    if (x1r && y2r)
-	bl = get_pixel (image, x1, y2);
-
-    if (x2r && y1r)
-	tr = get_pixel (image, x2, y1);
-
-    if (x2r && y2r)
-	br = get_pixel (image, x2, y2);
+    if (repeat_mode != PIXMAN_REPEAT_NONE)
+    {
+	repeat (repeat_mode, width, &x1);
+	repeat (repeat_mode, height, &y1);
+	repeat (repeat_mode, width, &x2);
+	repeat (repeat_mode, height, &y2);
+	
+	tl = get_pixel (image, x1, y1, FALSE);
+	bl = get_pixel (image, x1, y2, FALSE);
+	tr = get_pixel (image, x2, y1, FALSE);
+	br = get_pixel (image, x2, y2, FALSE);
+    }
+    else
+    {
+	tl = get_pixel (image, x1, y1, TRUE);
+	tr = get_pixel (image, x2, y1, TRUE);
+	bl = get_pixel (image, x1, y2, TRUE);
+	br = get_pixel (image, x2, y2, TRUE);
+    }
 
     idistx = 256 - distx;
     idisty = 256 - disty;
@@ -273,21 +277,28 @@ bits_image_fetch_pixel_convolution (bits_image_t   *image,
 	    int rx = i;
 	    int ry = j;
 
-	    if (repeat (repeat_mode, width, &rx)	&&
-		repeat (repeat_mode, height, &ry))
+	    pixman_fixed_t f = *params;
+	    
+	    if (f)
 	    {
-		pixman_fixed_t f = *params;
-
-		if (f)
+		uint32_t pixel;
+		
+		if (repeat_mode != PIXMAN_REPEAT_NONE)
 		{
-		    uint32_t pixel =
-			get_pixel (image, rx, ry);
-
-		    srtot += RED_8 (pixel) * f;
-		    sgtot += GREEN_8 (pixel) * f;
-		    sbtot += BLUE_8 (pixel) * f;
-		    satot += ALPHA_8 (pixel) * f;
+		    repeat (repeat_mode, width, &rx);
+		    repeat (repeat_mode, height, &ry);
+		    
+		    pixel = get_pixel (image, rx, ry, FALSE);
 		}
+		else
+		{
+		    pixel = get_pixel (image, rx, ry, TRUE);
+		}
+
+		srtot += RED_8 (pixel) * f;
+		sgtot += GREEN_8 (pixel) * f;
+		sbtot += BLUE_8 (pixel) * f;
+		satot += ALPHA_8 (pixel) * f;
 	    }
 
 	    params++;
