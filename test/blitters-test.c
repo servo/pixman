@@ -24,6 +24,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <malloc.h>
 #include "pixman.h"
 
 /* A primitive pseudorandom number generator, taken from POSIX.1-2001 example */
@@ -252,7 +253,7 @@ create_random_image (
     stride = (stride + 3) & ~3;
 
     /* do the allocation */
-    buf = (uint32_t *)malloc (stride * height);
+    buf = (uint32_t *)memalign (64, stride * height);
 
     /* initialize image with random data */
     for (i = 0; i < stride * height; i++)
@@ -431,8 +432,10 @@ static pixman_format_code_t img_fmt_list[] = {
 static pixman_format_code_t mask_fmt_list[] = {
     PIXMAN_a8r8g8b8,
     PIXMAN_a8,
+#if 0
     PIXMAN_a4,
     PIXMAN_a1,
+#endif
     -1
 };
 
@@ -459,9 +462,9 @@ test_composite (uint32_t initcrc, int testnum, int verbose)
     uint32_t crc32;
     int max_width, max_height, max_extra_stride;
 
-    max_width = max_height = 24 + testnum / 100000;
+    max_width = max_height = 24 + testnum / 10000;
     max_extra_stride = 4 + testnum / 1000000;
-    if (max_width > 64) max_width = 64;
+    if (max_width > 256) max_width = 256;
     if (max_height > 16) max_height = 16;
     if (max_extra_stride > 8) max_extra_stride = 8;
 
@@ -488,7 +491,6 @@ test_composite (uint32_t initcrc, int testnum, int verbose)
 
     mask_img = NULL;
     mask_fmt = -1;
-#if 0
     if (lcg_rand_n (2))
     {
 	if (lcg_rand_n (2))
@@ -508,7 +510,6 @@ test_composite (uint32_t initcrc, int testnum, int verbose)
 	    pixman_image_set_component_alpha (mask_img, 1);
 #endif
     }
-#endif
 
     src_width = pixman_image_get_width (src_img);
     src_height = pixman_image_get_height (src_img);
