@@ -556,6 +556,7 @@ main (int argc, char *argv[])
 {
     int i, n1 = 1, n2 = 0;
     uint32_t crc = 0;
+    int verbose = getenv ("VERBOSE") != NULL;
 
     if (argc >= 3)
     {
@@ -582,6 +583,9 @@ main (int argc, char *argv[])
 	for (i = n1; i <= n2; i++)
 	{
 	    crc = test_composite (crc, i, 0);
+
+	    if (verbose)
+		printf ("%d: %08X\n", i, crc);
 	}
 	printf ("crc32=%08X\n", crc);
 
