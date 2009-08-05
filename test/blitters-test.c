@@ -314,7 +314,6 @@ static pixman_op_t op_list[] = {
     PIXMAN_OP_SRC,
     PIXMAN_OP_OVER,
     PIXMAN_OP_ADD,
-#if 0
     PIXMAN_OP_CLEAR,
     PIXMAN_OP_SRC,
     PIXMAN_OP_DST,
@@ -331,9 +330,7 @@ static pixman_op_t op_list[] = {
     PIXMAN_OP_SATURATE,
     PIXMAN_OP_DISJOINT_CLEAR,
     PIXMAN_OP_DISJOINT_SRC,
-#if 0 /* using this crashes the test */
     PIXMAN_OP_DISJOINT_DST,
-#endif
     PIXMAN_OP_DISJOINT_OVER,
     PIXMAN_OP_DISJOINT_OVER_REVERSE,
     PIXMAN_OP_DISJOINT_IN,
@@ -345,9 +342,7 @@ static pixman_op_t op_list[] = {
     PIXMAN_OP_DISJOINT_XOR,
     PIXMAN_OP_CONJOINT_CLEAR,
     PIXMAN_OP_CONJOINT_SRC,
-#if 0 /* using this crashes the test */
     PIXMAN_OP_CONJOINT_DST,
-#endif
     PIXMAN_OP_CONJOINT_OVER,
     PIXMAN_OP_CONJOINT_OVER_REVERSE,
     PIXMAN_OP_CONJOINT_IN,
@@ -374,7 +369,6 @@ static pixman_op_t op_list[] = {
     PIXMAN_OP_HSL_COLOR,
     PIXMAN_OP_HSL_LUMINOSITY,
 #endif
-#endif
 };
 static pixman_format_code_t img_fmt_list[] = {
     PIXMAN_a8r8g8b8,
@@ -382,7 +376,6 @@ static pixman_format_code_t img_fmt_list[] = {
     PIXMAN_r5g6b5,
     PIXMAN_r3g3b2,
     PIXMAN_a8,
-#if 0
     PIXMAN_a8b8g8r8,
     PIXMAN_x8b8g8r8,
     PIXMAN_b8g8r8a8,
@@ -391,12 +384,10 @@ static pixman_format_code_t img_fmt_list[] = {
     PIXMAN_b8g8r8,
     PIXMAN_r5g6b5,
     PIXMAN_b5g6r5,
-#if 0 /* using these makes valgrind complain */
     PIXMAN_x2r10g10b10,
     PIXMAN_a2r10g10b10,
     PIXMAN_x2b10g10r10,
     PIXMAN_a2b10g10r10,
-#endif
     PIXMAN_a1r5g5b5,
     PIXMAN_x1r5g5b5,
     PIXMAN_a1b5g5r5,
@@ -426,16 +417,13 @@ static pixman_format_code_t img_fmt_list[] = {
     PIXMAN_a1r1g1b1,
     PIXMAN_a1b1g1r1,
     PIXMAN_a1,
-#endif
     -1
 };
 static pixman_format_code_t mask_fmt_list[] = {
     PIXMAN_a8r8g8b8,
     PIXMAN_a8,
-#if 0
     PIXMAN_a4,
     PIXMAN_a1,
-#endif
     -1
 };
 
@@ -505,10 +493,8 @@ test_composite (uint32_t initcrc, int testnum, int verbose)
 					   max_extra_stride, &mask_fmt);
 	    pixman_image_set_repeat (mask_img, PIXMAN_REPEAT_NORMAL);
 	}
-#if 0 /* using this crashes the test */
 	if (lcg_rand_n (2))
 	    pixman_image_set_component_alpha (mask_img, 1);
-#endif
     }
 
     src_width = pixman_image_get_width (src_img);
