@@ -78,7 +78,6 @@ combine_mask_alpha_ca (const comp4_t *src, comp4_t *mask)
 
     if (a == ~0)
     {
-	x = x >> A_SHIFT;
 	x |= x << G_SHIFT;
 	x |= x << R_SHIFT;
 	*(mask) = x;
