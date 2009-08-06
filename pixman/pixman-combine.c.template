@@ -1610,17 +1610,14 @@ combine_over_ca (pixman_implementation_t *imp,
 	combine_mask_ca (&s, &m);
 
 	a = ~m;
-	if (a != ~0)
+	if (a)
 	{
-	    if (a)
-	    {
-		comp4_t d = *(dest + i);
-		UNcx4_MUL_UNcx4_ADD_UNcx4 (d, a, s);
-		s = d;
-	    }
-
-	    *(dest + i) = s;
+	    comp4_t d = *(dest + i);
+	    UNcx4_MUL_UNcx4_ADD_UNcx4 (d, a, s);
+	    s = d;
 	}
+
+	*(dest + i) = s;
     }
 }
 
