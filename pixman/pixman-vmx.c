@@ -95,56 +95,12 @@ pix_add_mul (vector unsigned int x,
              vector unsigned int y,
              vector unsigned int b)
 {
-    vector unsigned short hi, lo, mod, hiy, loy, mody;
-    
-    hi = (vector unsigned short)
-	vec_mergeh ((vector unsigned char)AVV (0),
-		    (vector unsigned char)x);
-    mod = (vector unsigned short)
-	vec_mergeh ((vector unsigned char)AVV (0),
-		    (vector unsigned char)a);
-    hiy = (vector unsigned short)
-	vec_mergeh ((vector unsigned char)AVV (0),
-		    (vector unsigned char)y);
-    mody = (vector unsigned short)
-	vec_mergeh ((vector unsigned char)AVV (0),
-		    (vector unsigned char)b);
-    
-    hi = vec_mladd (hi, mod, (vector unsigned short)
-                    AVV (0x0080, 0x0080, 0x0080, 0x0080,
-                         0x0080, 0x0080, 0x0080, 0x0080));
-    
-    hi = vec_mladd (hiy, mody, hi);
-    
-    hi = vec_adds (hi, vec_sr (hi, vec_splat_u16 (8)));
-    
-    hi = vec_sr (hi, vec_splat_u16 (8));
-    
-    lo = (vector unsigned short)
-	vec_mergel ((vector unsigned char)AVV (0),
-		    (vector unsigned char)x);
-    mod = (vector unsigned short)
-	vec_mergel ((vector unsigned char)AVV (0),
-		    (vector unsigned char)a);
-    
-    loy = (vector unsigned short)
-	vec_mergel ((vector unsigned char)AVV (0),
-		    (vector unsigned char)y);
-    mody = (vector unsigned short)
-	vec_mergel ((vector unsigned char)AVV (0),
-		    (vector unsigned char)b);
-    
-    lo = vec_mladd (lo, mod, (vector unsigned short)
-                    AVV (0x0080, 0x0080, 0x0080, 0x0080,
-                         0x0080, 0x0080, 0x0080, 0x0080));
-    
-    lo = vec_mladd (loy, mody, lo);
-    
-    lo = vec_adds (lo, vec_sr (lo, vec_splat_u16 (8)));
-    
-    lo = vec_sr (lo, vec_splat_u16 (8));
-    
-    return (vector unsigned int)vec_packsu (hi, lo);
+    vector unsigned int t1, t2;
+
+    t1 = pix_multiply (x, a);
+    t2 = pix_multiply (y, b);
+
+    return pix_add (t1, t2);
 }
 
 static force_inline vector unsigned int
@@ -161,7 +117,7 @@ over (vector unsigned int src,
 {
     vector unsigned char tmp = (vector unsigned char)
 	pix_multiply (dest, negate (srca));
-    
+
     tmp = vec_adds ((vector unsigned char)src, tmp);
     return (vector unsigned int)tmp;
 }
