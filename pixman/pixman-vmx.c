@@ -1221,26 +1221,25 @@ vmx_combine_over_reverse_ca (pixman_implementation_t *imp,
     /* printf("%s\n",__PRETTY_FUNCTION__); */
     for (i = width / 4; i > 0; i--)
     {
-	
 	LOAD_VECTORSC (dest, src, mask);
-	
+
 	vdest = over (vdest, splat_alpha (vdest), pix_multiply (vsrc, vmask));
-	
+
 	STORE_VECTOR (dest);
-	
+
 	mask += 4;
 	src += 4;
 	dest += 4;
     }
-    
+
     for (i = width % 4; --i >= 0;)
     {
 	uint32_t a = mask[i];
 	uint32_t s = src[i];
 	uint32_t d = dest[i];
-	uint32_t da = ALPHA_8 (d);
+	uint32_t ida = ALPHA_8 (~d);
 	UN8x4_MUL_UN8x4 (s, a);
-	UN8x4_MUL_UN8x4_ADD_UN8x4 (s, ~da, d);
+	UN8x4_MUL_UN8x4_ADD_UN8x4 (s, ida, d);
 	dest[i] = s;
     }
 }
