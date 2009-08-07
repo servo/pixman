@@ -1110,7 +1110,7 @@ mmx_composite_over_n_8888 (pixman_implementation_t *imp,
 
     src = _pixman_image_get_solid (src_image, dst_image->bits.format);
 
-    if (src >> 24 == 0)
+    if (src == 0)
 	return;
 
     PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint32_t, dst_stride, dst_line, 1);
@@ -1189,7 +1189,7 @@ mmx_composite_over_n_0565 (pixman_implementation_t *imp,
 
     src = _pixman_image_get_solid (src_image, dst_image->bits.format);
 
-    if (src >> 24 == 0)
+    if (src == 0)
 	return;
 
     PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint16_t, dst_stride, dst_line, 1);
