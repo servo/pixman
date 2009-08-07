@@ -1342,7 +1342,8 @@ vmx_combine_out_ca (pixman_implementation_t *imp,
     {
 	LOAD_VECTORSC (dest, src, mask);
 
-	vdest = pix_multiply (pix_multiply (vsrc, vmask), splat_alpha (vdest));
+	vdest = pix_multiply (
+	    pix_multiply (vsrc, vmask), splat_alpha (negate (vdest)));
 
 	STORE_VECTOR (dest);
 
