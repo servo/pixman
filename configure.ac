@@ -462,7 +462,9 @@ AC_ARG_ENABLE(timers,
 		   [enable TIMER_BEGIN and TIMER_END macros [default=no]])],
    [enable_timers=$enableval], [enable_timers=no])
 
-AC_DEFINE(PIXMAN_TIMERS, 1, [enable TIMER_BEGIN/TIMER_END macros])
+if test $enable_timers = yes ; then 
+   AC_DEFINE(PIXMAN_TIMERS, 1, [enable TIMER_BEGIN/TIMER_END macros])
+fi
 AC_SUBST(PIXMAN_TIMERS)
 
 dnl ===================================
