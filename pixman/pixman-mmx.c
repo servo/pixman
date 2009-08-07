@@ -1285,7 +1285,7 @@ mmx_composite_over_n_8888_8888_ca (pixman_implementation_t *imp,
     src = _pixman_image_get_solid (src_image, dst_image->bits.format);
 
     srca = src >> 24;
-    if (srca == 0)
+    if (src == 0)
 	return;
 
     PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint32_t, dst_stride, dst_line, 1);
@@ -1772,7 +1772,7 @@ mmx_composite_over_n_8_8888 (pixman_implementation_t *imp,
     src = _pixman_image_get_solid (src_image, dst_image->bits.format);
 
     srca = src >> 24;
-    if (srca == 0)
+    if (src == 0)
 	return;
 
     srcsrc = (uint64_t)src << 32 | src;
@@ -2054,7 +2054,7 @@ mmx_composite_src_n_8_8888 (pixman_implementation_t *imp,
     src = _pixman_image_get_solid (src_image, dst_image->bits.format);
 
     srca = src >> 24;
-    if (srca == 0)
+    if (src == 0)
     {
 	pixman_fill_mmx (dst_image->bits.bits, dst_image->bits.rowstride,
 			 PIXMAN_FORMAT_BPP (dst_image->bits.format),
@@ -2189,7 +2189,7 @@ mmx_composite_over_n_8_0565 (pixman_implementation_t *imp,
     src = _pixman_image_get_solid (src_image, dst_image->bits.format);
 
     srca = src >> 24;
-    if (srca == 0)
+    if (src == 0)
 	return;
 
     PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint16_t, dst_stride, dst_line, 1);
@@ -2548,7 +2548,7 @@ mmx_composite_over_n_8888_0565_ca (pixman_implementation_t *imp,
     src = _pixman_image_get_solid (src_image, dst_image->bits.format);
 
     srca = src >> 24;
-    if (srca == 0)
+    if (src == 0)
 	return;
 
     PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint16_t, dst_stride, dst_line, 1);
