@@ -264,19 +264,14 @@ pix_add_multiply_2x128 (__m128i* src_lo,
                         __m128i* ret_lo,
                         __m128i* ret_hi)
 {
-    __m128i lo, hi;
-    __m128i mul_lo, mul_hi;
+    __m128i t1_lo, t1_hi;
+    __m128i t2_lo, t2_hi;
 
-    lo = _mm_mullo_epi16 (*src_lo, *alpha_dst_lo);
-    hi = _mm_mullo_epi16 (*src_hi, *alpha_dst_hi);
-    mul_lo = _mm_mullo_epi16 (*dst_lo, *alpha_src_lo);
-    mul_hi = _mm_mullo_epi16 (*dst_hi, *alpha_src_hi);
-    lo = _mm_adds_epu16 (lo, mask_0080);
-    hi = _mm_adds_epu16 (hi, mask_0080);
-    lo = _mm_adds_epu16 (lo, mul_lo);
-    hi = _mm_adds_epu16 (hi, mul_hi);
-    *ret_lo = _mm_mulhi_epu16 (lo, mask_0101);
-    *ret_hi = _mm_mulhi_epu16 (hi, mask_0101);
+    pix_multiply_2x128 (src_lo, src_hi, alpha_dst_lo, alpha_dst_hi, &t1_lo, &t1_hi);
+    pix_multiply_2x128 (dst_lo, dst_hi, alpha_src_lo, alpha_src_hi, &t2_lo, &t2_hi);
+
+    *ret_lo = _mm_adds_epu8 (t1_lo, t2_lo);
+    *ret_hi = _mm_adds_epu8 (t1_hi, t2_hi);
 }
 
 static force_inline void
@@ -457,11 +452,10 @@ pix_add_multiply_1x64 (__m64* src,
                        __m64* dst,
                        __m64* alpha_src)
 {
-    return _mm_mulhi_pu16 (
-	_mm_adds_pu16 (_mm_adds_pu16 (_mm_mullo_pi16 (*src, *alpha_dst),
-				      mask_x0080),
-		       _mm_mullo_pi16 (*dst, *alpha_src)),
-	mask_x0101);
+    __m64 t1 = pix_multiply_1x64 (*src, *alpha_dst);
+    __m64 t2 = pix_multiply_1x64 (*dst, *alpha_src);
+
+    return _mm_adds_pu8 (t1, t2);
 }
 
 static force_inline __m64
