@@ -91,8 +91,8 @@ lcg_rand_n (int max)
 
 static uint32_t
 compute_crc32 (uint32_t    in_crc32,
-		  const void *buf,
-		  size_t      buf_len)
+	       const void *buf,
+	       size_t      buf_len)
 {
     static const uint32_t crc_table[256] = {
 	0x00000000, 0x77073096, 0xEE0E612C, 0x990951BA, 0x076DC419, 0x706AF48F,
@@ -144,7 +144,7 @@ compute_crc32 (uint32_t    in_crc32,
     unsigned char *       byte_buf;
     size_t                i;
 
-    /** accumulate crc32 for buffer **/
+    /* accumulate crc32 for buffer */
     crc32 = in_crc32 ^ 0xFFFFFFFF;
     byte_buf = (unsigned char*) buf;
 
@@ -165,7 +165,8 @@ image_endian_swap (pixman_image_t *img, int bpp)
 
     /* swap bytes only on big endian systems */
     volatile uint16_t endian_check_var = 0x1234;
-    if (*(volatile uint8_t *)&endian_check_var != 0x12) return;
+    if (*(volatile uint8_t *)&endian_check_var != 0x12)
+	return;
 
     for (i = 0; i < height; i++)
     {
@@ -198,6 +199,7 @@ image_endian_swap (pixman_image_t *img, int bpp)
 	    {
 		char t1 = line_data[j + 0];
 		char t2 = line_data[j + 1];
+
 		line_data[j + 1] = t1;
 		line_data[j + 0] = t2;
 	    }
@@ -208,6 +210,7 @@ image_endian_swap (pixman_image_t *img, int bpp)
 		char t1 = line_data[j + 0];
 		char t2 = line_data[j + 1];
 		char t3 = line_data[j + 2];
+
 		line_data[j + 2] = t1;
 		line_data[j + 1] = t2;
 		line_data[j + 0] = t3;
@@ -220,6 +223,7 @@ image_endian_swap (pixman_image_t *img, int bpp)
 		char t2 = line_data[j + 1];
 		char t3 = line_data[j + 2];
 		char t4 = line_data[j + 3];
+
 		line_data[j + 3] = t1;
 		line_data[j + 2] = t2;
 		line_data[j + 1] = t3;
@@ -234,22 +238,24 @@ image_endian_swap (pixman_image_t *img, int bpp)
 
 /* Create random image for testing purposes */
 static pixman_image_t *
-create_random_image (
-	pixman_format_code_t *allowed_formats,
-	int max_width,
-	int max_height,
-	int max_extra_stride,
-	pixman_format_code_t *used_fmt)
+create_random_image (pixman_format_code_t *allowed_formats,
+		     int                   max_width,
+		     int                   max_height,
+		     int                   max_extra_stride,
+		     pixman_format_code_t *used_fmt)
 {
     int n = 0, i, width, height, stride;
     pixman_format_code_t fmt;
     uint32_t *buf;
     pixman_image_t *img;
-    while (allowed_formats[n] != -1) n++;
+
+    while (allowed_formats[n] != -1)
+	n++;
     fmt = allowed_formats[lcg_rand_n (n)];
     width = lcg_rand_n (max_width) + 1;
     height = lcg_rand_n (max_height) + 1;
-    stride = (width * PIXMAN_FORMAT_BPP (fmt) + 7) / 8 + lcg_rand_n (max_extra_stride + 1);
+    stride = (width * PIXMAN_FORMAT_BPP (fmt) + 7) / 8 +
+	lcg_rand_n (max_extra_stride + 1);
     stride = (stride + 3) & ~3;
 
     /* do the allocation */
@@ -259,13 +265,13 @@ create_random_image (
     for (i = 0; i < stride * height; i++)
     {
 	/* generation is biased to having more 0 or 255 bytes as
-	   they are more likely to be special-cased in code */
+	 * they are more likely to be special-cased in code
+	 */
 	*((uint8_t *)buf + i) = lcg_rand_n (4) ? lcg_rand_n (256) :
 	    (lcg_rand_n (2) ? 0 : 255);
     }
 
-    img = pixman_image_create_bits (
-	fmt, width, height, buf, stride);
+    img = pixman_image_create_bits (fmt, width, height, buf, stride);
 
     image_endian_swap (img, PIXMAN_FORMAT_BPP (fmt));
 
@@ -275,10 +281,9 @@ create_random_image (
 
 /* Free random image, and optionally update crc32 based on its data */
 static uint32_t
-free_random_image (
-    uint32_t initcrc,
-    pixman_image_t *img,
-    pixman_format_code_t fmt)
+free_random_image (uint32_t initcrc,
+		   pixman_image_t *img,
+		   pixman_format_code_t fmt)
 {
     uint32_t crc32 = 0;
     int stride = pixman_image_get_stride (img);
@@ -294,19 +299,24 @@ free_random_image (
 	    int i;
 	    uint32_t *data = pixman_image_get_data (img);
 	    uint32_t mask = (1 << PIXMAN_FORMAT_DEPTH (fmt)) - 1;
+
 	    for (i = 0; i < 32; i++)
 		mask |= mask << (i * PIXMAN_FORMAT_BPP (fmt));
 
 	    for (i = 0; i < stride * height / 4; i++)
 		data[i] &= mask;
 	}
+
 	/* swap endiannes in order to provide identical results on both big
-	   and litte endian systems */
+	 * and litte endian systems
+	 */
 	image_endian_swap (img, PIXMAN_FORMAT_BPP (fmt));
 	crc32 = compute_crc32 (initcrc, data, stride * height);
     }
+
     pixman_image_unref (img);
     free (data);
+
     return crc32;
 }
 
@@ -370,6 +380,7 @@ static pixman_op_t op_list[] = {
     PIXMAN_OP_HSL_LUMINOSITY,
 #endif
 };
+
 static pixman_format_code_t img_fmt_list[] = {
     PIXMAN_a8r8g8b8,
     PIXMAN_x8r8g8b8,
@@ -419,6 +430,7 @@ static pixman_format_code_t img_fmt_list[] = {
     PIXMAN_a1,
     -1
 };
+
 static pixman_format_code_t mask_fmt_list[] = {
     PIXMAN_a8r8g8b8,
     PIXMAN_a8,
@@ -452,9 +464,15 @@ test_composite (uint32_t initcrc, int testnum, int verbose)
 
     max_width = max_height = 24 + testnum / 10000;
     max_extra_stride = 4 + testnum / 1000000;
-    if (max_width > 256) max_width = 256;
-    if (max_height > 16) max_height = 16;
-    if (max_extra_stride > 8) max_extra_stride = 8;
+
+    if (max_width > 256)
+	max_width = 256;
+
+    if (max_height > 16)
+	max_height = 16;
+
+    if (max_extra_stride > 8)
+	max_extra_stride = 8;
 
     lcg_srand (testnum);
 
@@ -464,21 +482,23 @@ test_composite (uint32_t initcrc, int testnum, int verbose)
     {
 	/* normal image */
 	src_img = create_random_image (img_fmt_list, max_width, max_height,
-				      max_extra_stride, &src_fmt);
+				       max_extra_stride, &src_fmt);
     }
     else
     {
 	/* solid case */
 	src_img = create_random_image (img_fmt_list, 1, 1,
-				      max_extra_stride, &src_fmt);
+				       max_extra_stride, &src_fmt);
+
 	pixman_image_set_repeat (src_img, PIXMAN_REPEAT_NORMAL);
     }
 
     dst_img = create_random_image (img_fmt_list, max_width, max_height,
-				  max_extra_stride, &dst_fmt);
+				   max_extra_stride, &dst_fmt);
 
     mask_img = NULL;
     mask_fmt = -1;
+
     if (lcg_rand_n (2))
     {
 	if (lcg_rand_n (2))
@@ -493,6 +513,7 @@ test_composite (uint32_t initcrc, int testnum, int verbose)
 					   max_extra_stride, &mask_fmt);
 	    pixman_image_set_repeat (mask_img, PIXMAN_REPEAT_NORMAL);
 	}
+
 	if (lcg_rand_n (2))
 	    pixman_image_set_component_alpha (mask_img, 1);
     }
@@ -500,15 +521,18 @@ test_composite (uint32_t initcrc, int testnum, int verbose)
     src_width = pixman_image_get_width (src_img);
     src_height = pixman_image_get_height (src_img);
     src_stride = pixman_image_get_stride (src_img);
+
     dst_width = pixman_image_get_width (dst_img);
     dst_height = pixman_image_get_height (dst_img);
     dst_stride = pixman_image_get_stride (dst_img);
+
     dstbuf = pixman_image_get_data (dst_img);
 
     src_x = lcg_rand_n (src_width);
     src_y = lcg_rand_n (src_height);
     dst_x = lcg_rand_n (dst_width);
     dst_y = lcg_rand_n (dst_height);
+
     w = lcg_rand_n (dst_width - dst_x + 1);
     h = lcg_rand_n (dst_height - dst_y + 1);
 
@@ -531,6 +555,7 @@ test_composite (uint32_t initcrc, int testnum, int verbose)
     if (verbose)
     {
 	int j;
+
 	printf ("---\n");
 	for (i = 0; i < dst_height; i++)
 	{
@@ -538,6 +563,7 @@ test_composite (uint32_t initcrc, int testnum, int verbose)
 	    {
 		if (j == (dst_width * PIXMAN_FORMAT_BPP (dst_fmt) + 7) / 8)
 		    printf ("| ");
+
 		printf ("%02X ", *((uint8_t *)dstbuf + i * dst_stride + j));
 	    }
 	    printf ("\n");
@@ -547,7 +573,10 @@ test_composite (uint32_t initcrc, int testnum, int verbose)
 
     free_random_image (initcrc, src_img, -1);
     crc32 = free_random_image (initcrc, dst_img, dst_fmt);
-    if (mask_img) free_random_image (initcrc, mask_img, -1);
+
+    if (mask_img)
+	free_random_image (initcrc, mask_img, -1);
+
     return crc32;
 }
 
