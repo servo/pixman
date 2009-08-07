@@ -4857,8 +4857,6 @@ sse2_composite_in_n_8_8 (pixman_implementation_t *imp,
     src = _pixman_image_get_solid (src_image, dst_image->bits.format);
 
     sa = src >> 24;
-    if (sa == 0)
-	return;
 
     xmm_alpha = expand_alpha_1x128 (expand_pixel_32_1x128 (src));
 
@@ -5073,8 +5071,6 @@ sse2_composite_add_8888_8_8 (pixman_implementation_t *imp,
     src = _pixman_image_get_solid (src_image, dst_image->bits.format);
 
     sa = src >> 24;
-    if (sa == 0)
-	return;
 
     xmm_alpha = expand_alpha_1x128 (expand_pixel_32_1x128 (src));
 
