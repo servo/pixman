@@ -1542,11 +1542,11 @@ vmx_combine_xor_ca (pixman_implementation_t *imp,
 	uint32_t s = src[i];
 	uint32_t d = dest[i];
 	uint32_t sa = ALPHA_8 (s);
-	uint32_t da = ALPHA_8 (d);
+	uint32_t da = ALPHA_8 (~d);
 	
 	UN8x4_MUL_UN8x4 (s, a);
 	UN8x4_MUL_UN8 (a, sa);
-	UN8x4_MUL_UN8x4_ADD_UN8x4_MUL_UN8 (d, ~a, s, ~da);
+	UN8x4_MUL_UN8x4_ADD_UN8x4_MUL_UN8 (d, ~a, s, da);
 	dest[i] = d;
     }
 }
