@@ -400,25 +400,18 @@ pack_565 (__m64 pixel, __m64 target, int pos)
 static force_inline __m64
 pix_add_mul (__m64 x, __m64 a, __m64 y, __m64 b)
 {
-    x = _mm_mullo_pi16 (x, a);
-    y = _mm_mullo_pi16 (y, b);
-    x = _mm_adds_pu16 (x, MC (4x0080));
-    x = _mm_adds_pu16 (x, y);
-    x = _mm_adds_pu16 (x, _mm_srli_pi16 (x, 8));
-    x = _mm_srli_pi16 (x, 8);
+    x = pix_multiply (x, a);
+    y = pix_multiply (y, b);
 
-    return x;
+    return pix_add (x, y);
 }
 
 #else
 
 #define pix_add_mul(x, a, y, b)	 \
-    ( x = _mm_mullo_pi16 (x, a), \
-      y = _mm_mullo_pi16 (y, b), \
-      x = _mm_adds_pu16 (x, MC (4x0080)), \
-      x = _mm_adds_pu16 (x, y), \
-      x = _mm_adds_pu16 (x, _mm_srli_pi16 (x, 8)), \
-      _mm_srli_pi16 (x, 8) )
+    ( x = pix_multiply (x, a),	 \
+      y = pix_multiply (y, a),	 \
+      pix_add (x, y) )
 
 #endif
 
