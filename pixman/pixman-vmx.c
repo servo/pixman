@@ -1238,8 +1238,10 @@ vmx_combine_over_reverse_ca (pixman_implementation_t *imp,
 	uint32_t s = src[i];
 	uint32_t d = dest[i];
 	uint32_t ida = ALPHA_8 (~d);
+
 	UN8x4_MUL_UN8x4 (s, a);
-	UN8x4_MUL_UN8x4_ADD_UN8x4 (s, ida, d);
+	UN8x4_MUL_UN8_ADD_UN8x4 (s, ida, d);
+
 	dest[i] = s;
     }
 }
@@ -1458,6 +1460,7 @@ vmx_combine_atop_ca (pixman_implementation_t *imp,
 	UN8x4_MUL_UN8x4 (s, a);
 	UN8x4_MUL_UN8 (a, sa);
 	UN8x4_MUL_UN8x4_ADD_UN8x4_MUL_UN8 (d, ~a, s, da);
+
 	dest[i] = d;
     }
 }
