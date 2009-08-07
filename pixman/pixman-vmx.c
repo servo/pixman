@@ -1437,7 +1437,7 @@ vmx_combine_atop_ca (pixman_implementation_t *imp,
 	vsrc = pix_multiply (vsrc, vmask);
 	vmask = pix_multiply (vmask, vsrca);
 
-	vdest = pix_add_mul (vsrc, splat_alpha (negate (vdest)),
+	vdest = pix_add_mul (vsrc, splat_alpha (vdest),
 			     negate (vmask), vdest);
 
 	STORE_VECTOR (dest);
