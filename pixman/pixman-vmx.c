@@ -1380,33 +1380,34 @@ vmx_combine_out_reverse_ca (pixman_implementation_t *imp,
     vector unsigned int vdest, vsrc, vmask;
     vector unsigned char tmp1, tmp2, tmp3, tmp4, edges,
 	dest_mask, mask_mask, src_mask, store_mask;
-    
+
     COMPUTE_SHIFT_MASKC (dest, src, mask);
-    
+
     /* printf ("%s\n",__PRETTY_FUNCTION__); */
     for (i = width / 4; i > 0; i--)
     {
-	
 	LOAD_VECTORSC (dest, src, mask);
-	
+
 	vdest = pix_multiply (
 	    vdest, negate (pix_multiply (vmask, splat_alpha (vsrc))));
-	
+
 	STORE_VECTOR (dest);
-	
+
 	src += 4;
 	dest += 4;
 	mask += 4;
     }
-    
+
     for (i = width % 4; --i >= 0;)
     {
 	uint32_t a = mask[i];
 	uint32_t s = src[i];
 	uint32_t d = dest[i];
 	uint32_t sa = ALPHA_8 (s);
-	UN8x4_MUL_UN8x4 (a, sa);
+
+	UN8x4_MUL_UN8 (a, sa);
 	UN8x4_MUL_UN8x4 (d, ~a);
+
 	dest[i] = d;
     }
 }
