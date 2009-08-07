@@ -1170,30 +1170,35 @@ vmx_combine_over_ca (pixman_implementation_t *imp,
     vector unsigned int vdest, vsrc, vmask;
     vector unsigned char tmp1, tmp2, tmp3, tmp4, edges,
 	dest_mask, mask_mask, src_mask, store_mask;
-    
+
     COMPUTE_SHIFT_MASKC (dest, src, mask);
+
     /* printf ("%s\n",__PRETTY_FUNCTION__); */
     for (i = width / 4; i > 0; i--)
     {
-	
+
 	LOAD_VECTORSC (dest, src, mask);
-	
+
 	vdest = in_over (vsrc, splat_alpha (vsrc), vmask, vdest);
-	
+
 	STORE_VECTOR (dest);
-	
+
 	mask += 4;
 	src += 4;
 	dest += 4;
     }
-    
+
     for (i = width % 4; --i >= 0;)
     {
 	uint32_t a = mask[i];
 	uint32_t s = src[i];
 	uint32_t d = dest[i];
+	uint32_t sa = ALPHA_8 (s);
+
 	UN8x4_MUL_UN8x4 (s, a);
+	UN8x4_MUL_UN8 (a, sa);
 	UN8x4_MUL_UN8x4_ADD_UN8x4 (d, ~a, s);
+
 	dest[i] = d;
     }
 }
