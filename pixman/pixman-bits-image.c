@@ -131,7 +131,7 @@ get_pixel (bits_image_t *image, int x, int y, pixman_bool_t check_bounds)
     {
 	return 0;
     }
-	
+
     return image->fetch_pixel_32 (image, x, y);
 }
 
@@ -274,20 +274,20 @@ bits_image_fetch_pixel_convolution (bits_image_t   *image,
     {
 	for (j = x1; j < x2; ++j)
 	{
-	    int rx = i;
-	    int ry = j;
+	    int rx = j;
+	    int ry = i;
 
 	    pixman_fixed_t f = *params;
-	    
+
 	    if (f)
 	    {
 		uint32_t pixel;
-		
+
 		if (repeat_mode != PIXMAN_REPEAT_NONE)
 		{
 		    repeat (repeat_mode, width, &rx);
 		    repeat (repeat_mode, height, &ry);
-		    
+
 		    pixel = get_pixel (image, rx, ry, FALSE);
 		}
 		else
@@ -746,6 +746,7 @@ pixman_image_create_bits (pixman_format_code_t format,
     {
 	if (free_me)
 	    free (free_me);
+
 	return NULL;
     }
 
