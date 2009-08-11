@@ -423,7 +423,7 @@ fast_composite_over_n_8888_8888_ca (pixman_implementation_t *imp,
                                     int32_t                  width,
                                     int32_t                  height)
 {
-    uint32_t src, srca;
+    uint32_t src, srca, s;
     uint32_t    *dst_line, *dst, d;
     uint32_t    *mask_line, *mask, ma;
     int dst_stride, mask_stride;
@@ -459,11 +459,12 @@ fast_composite_over_n_8888_8888_ca (pixman_implementation_t *imp,
 	    else if (ma)
 	    {
 		d = *dst;
+		s = src;
 
-		UN8x4_MUL_UN8x4 (src, ma);
+		UN8x4_MUL_UN8x4 (s, ma);
 		UN8x4_MUL_UN8 (ma, srca);
 		ma = ~ma;
-		UN8x4_MUL_UN8x4_ADD_UN8x4 (d, ma, src);
+		UN8x4_MUL_UN8x4_ADD_UN8x4 (d, ma, s);
 
 		*dst = d;
 	    }
@@ -619,11 +620,11 @@ fast_composite_over_n_8888_0565_ca (pixman_implementation_t *imp,
                                     int32_t                  width,
                                     int32_t                  height)
 {
-    uint32_t src, srca;
-    uint16_t src16;
-    uint16_t    *dst_line, *dst;
-    uint32_t d;
-    uint32_t    *mask_line, *mask, ma;
+    uint32_t  src, srca, s;
+    uint16_t  src16;
+    uint16_t *dst_line, *dst;
+    uint32_t  d;
+    uint32_t *mask_line, *mask, ma;
     int dst_stride, mask_stride;
     uint16_t w;
 
@@ -667,10 +668,12 @@ fast_composite_over_n_8888_0565_ca (pixman_implementation_t *imp,
 		d = *dst;
 		d = CONVERT_0565_TO_0888 (d);
 
-		UN8x4_MUL_UN8x4 (src, ma);
+		s = src;
+
+		UN8x4_MUL_UN8x4 (s, ma);
 		UN8x4_MUL_UN8 (ma, srca);
 		ma = ~ma;
-		UN8x4_MUL_UN8x4_ADD_UN8x4 (d, ma, src);
+		UN8x4_MUL_UN8x4_ADD_UN8x4 (d, ma, s);
 
 		*dst = CONVERT_8888_TO_0565 (d);
 	    }
