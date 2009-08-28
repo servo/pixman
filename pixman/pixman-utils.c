@@ -670,15 +670,16 @@ _pixman_run_fast_path (const pixman_fast_path_t *paths,
 
     if (mask && has_fast_path)
     {
-	has_fast_path = mask->type == BITS &&
-	                !mask->common.transform &&
-	                !mask->common.alpha_map &&
-	                !mask->bits.read_func &&
-	                !mask->bits.write_func &&
-			 mask->common.filter != PIXMAN_FILTER_CONVOLUTION &&
-			 mask->common.repeat != PIXMAN_REPEAT_PAD &&
-			 mask->common.repeat != PIXMAN_REPEAT_REFLECT;
-	                !PIXMAN_FORMAT_IS_WIDE (src->bits.format);
+	has_fast_path =
+	    mask->type == BITS &&
+	    !mask->common.transform &&
+	    !mask->common.alpha_map &&
+	    !mask->bits.read_func &&
+	    !mask->bits.write_func &&
+	    mask->common.filter != PIXMAN_FILTER_CONVOLUTION &&
+	    mask->common.repeat != PIXMAN_REPEAT_PAD &&
+	    mask->common.repeat != PIXMAN_REPEAT_REFLECT &&
+	    !PIXMAN_FORMAT_IS_WIDE (mask->bits.format);
     }
 
     if (has_fast_path)
