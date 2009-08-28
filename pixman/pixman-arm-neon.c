@@ -64,6 +64,12 @@ unpack0565 (uint16x8_t rgb)
     return res;
 }
 
+#ifdef USE_GCC_INLINE_ASM
+/* Some versions of gcc have problems with vshll_n_u8 intrinsic (Bug 23576) */
+#define vshll_n_u8(a, n) ({ uint16x8_t r; \
+    asm ("vshll.u8 %q0, %P1, %2\n" : "=w" (r) : "w" (a), "i" (n)); r; })
+#endif
+
 static force_inline uint16x8_t
 pack0565 (uint8x8x4_t s)
 {
