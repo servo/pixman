@@ -2628,12 +2628,18 @@ create_mask_2x32_64 (uint32_t mask0,
     return _mm_set_pi32 (mask0, mask1);
 }
 
+/* Work around a code generation bug in Sun Studio 12. */
+#if defined(__SUNPRO_C) && (__SUNPRO_C >= 0x590)
+# define create_mask_2x32_128(mask0, mask1) \
+	(_mm_set_epi32 ((mask0), (mask1), (mask0), (mask1)))
+#else
 static force_inline __m128i
 create_mask_2x32_128 (uint32_t mask0,
                       uint32_t mask1)
 {
     return _mm_set_epi32 (mask0, mask1, mask0, mask1);
 }
+#endif
 
 /* SSE2 code patch for fbcompose.c */
 
