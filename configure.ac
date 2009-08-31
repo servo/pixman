@@ -65,6 +65,8 @@ AM_CONFIG_HEADER(config.h)
 
 AC_CANONICAL_HOST
 
+test_CFLAGS=${CFLAGS+set} # We may override autoconf default CFLAGS.
+
 AC_PROG_CC
 AC_PROG_LIBTOOL
 AC_CHECK_FUNCS([getisax])
@@ -74,6 +76,16 @@ AC_C_INLINE
 # Checks for Sun Studio compilers
 AC_CHECK_DECL([__SUNPRO_C], [SUNCC="yes"], [SUNCC="no"])
 AC_CHECK_DECL([__amd64], [AMD64_ABI="yes"], [AMD64_ABI="no"])
+
+# Default CFLAGS to -O -g rather than just the -g from AC_PROG_CC
+# if we're using Sun Studio and neither the user nor a config.site
+# has set CFLAGS.
+if test $SUNCC = yes &&			\
+   test "$test_CFLAGS" == "" &&		\
+   test "$CFLAGS" = "-g"
+then
+  CFLAGS="-O -g"
+fi
 
 # 
 # We ignore pixman_major in the version here because the major version should
