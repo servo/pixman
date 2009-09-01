@@ -1193,19 +1193,19 @@ neon_composite_over_n_8_8888 (pixman_implementation_t * impl,
 }
 
 static void
-neon_composite_add_8888_8_8 (pixman_implementation_t * impl,
-                             pixman_op_t               op,
-                             pixman_image_t *          src_image,
-                             pixman_image_t *          mask_image,
-                             pixman_image_t *          dst_image,
-                             int32_t                   src_x,
-                             int32_t                   src_y,
-                             int32_t                   mask_x,
-                             int32_t                   mask_y,
-                             int32_t                   dest_x,
-                             int32_t                   dest_y,
-                             int32_t                   width,
-                             int32_t                   height)
+neon_composite_add_n_8_8 (pixman_implementation_t * impl,
+			  pixman_op_t               op,
+			  pixman_image_t *          src_image,
+			  pixman_image_t *          mask_image,
+			  pixman_image_t *          dst_image,
+			  int32_t                   src_x,
+			  int32_t                   src_y,
+			  int32_t                   mask_x,
+			  int32_t                   mask_y,
+			  int32_t                   dest_x,
+			  int32_t                   dest_y,
+			  int32_t                   width,
+			  int32_t                   height)
 {
     uint8_t     *dst_line, *dst;
     uint8_t     *mask_line, *mask;
@@ -2601,7 +2601,7 @@ neon_composite_over_8888_0565 (pixman_implementation_t * impl,
 
 static const pixman_fast_path_t arm_neon_fast_path_array[] =
 {
-    { PIXMAN_OP_ADD,  PIXMAN_solid,    PIXMAN_a8,       PIXMAN_a8,       neon_composite_add_8888_8_8,     0 },
+    { PIXMAN_OP_ADD,  PIXMAN_solid,    PIXMAN_a8,       PIXMAN_a8,       neon_composite_add_n_8_8,        0 },
     { PIXMAN_OP_ADD,  PIXMAN_a8,       PIXMAN_null,     PIXMAN_a8,       neon_composite_add_8000_8000,    0 },
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_r5g6b5,   neon_composite_over_n_8_0565,    0 },
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_b5g6r5,   neon_composite_over_n_8_0565,    0 },

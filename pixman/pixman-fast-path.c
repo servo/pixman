@@ -975,19 +975,19 @@ fast_composite_add_8888_8888 (pixman_implementation_t *imp,
 }
 
 static void
-fast_composite_add_8888_8_8 (pixman_implementation_t *imp,
-                             pixman_op_t              op,
-                             pixman_image_t *         src_image,
-                             pixman_image_t *         mask_image,
-                             pixman_image_t *         dst_image,
-                             int32_t                  src_x,
-                             int32_t                  src_y,
-                             int32_t                  mask_x,
-                             int32_t                  mask_y,
-                             int32_t                  dest_x,
-                             int32_t                  dest_y,
-                             int32_t                  width,
-                             int32_t                  height)
+fast_composite_add_n_8_8 (pixman_implementation_t *imp,
+			  pixman_op_t              op,
+			  pixman_image_t *         src_image,
+			  pixman_image_t *         mask_image,
+			  pixman_image_t *         dst_image,
+			  int32_t                  src_x,
+			  int32_t                  src_y,
+			  int32_t                  mask_x,
+			  int32_t                  mask_y,
+			  int32_t                  dest_x,
+			  int32_t                  dest_y,
+			  int32_t                  width,
+			  int32_t                  height)
 {
     uint8_t     *dst_line, *dst;
     uint8_t     *mask_line, *mask;
@@ -1129,7 +1129,7 @@ static const pixman_fast_path_t c_fast_paths[] =
     { PIXMAN_OP_ADD, PIXMAN_a8b8g8r8,  PIXMAN_null,     PIXMAN_a8b8g8r8, fast_composite_add_8888_8888,   0 },
     { PIXMAN_OP_ADD, PIXMAN_a8,        PIXMAN_null,     PIXMAN_a8,       fast_composite_add_8000_8000,   0 },
     { PIXMAN_OP_ADD, PIXMAN_solid,     PIXMAN_a8r8g8b8, PIXMAN_a8r8g8b8, fast_composite_add_n_8888_8888_ca, NEED_COMPONENT_ALPHA },
-    { PIXMAN_OP_ADD, PIXMAN_solid,     PIXMAN_a8,       PIXMAN_a8,       fast_composite_add_8888_8_8,    0 },
+    { PIXMAN_OP_ADD, PIXMAN_solid,     PIXMAN_a8,       PIXMAN_a8,       fast_composite_add_n_8_8,    0 },
     { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_null,     PIXMAN_a8r8g8b8, fast_composite_solid_fill, 0 },
     { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_null,     PIXMAN_x8r8g8b8, fast_composite_solid_fill, 0 },
     { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_null,     PIXMAN_a8b8g8r8, fast_composite_solid_fill, 0 },
