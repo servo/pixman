@@ -2767,8 +2767,8 @@ arm_neon_fill (pixman_implementation_t *imp,
 pixman_implementation_t *
 _pixman_implementation_create_arm_neon (void)
 {
-    pixman_implementation_t *simd = _pixman_implementation_create_arm_simd ();
-    pixman_implementation_t *imp = _pixman_implementation_create (simd);
+    pixman_implementation_t *general = _pixman_implementation_create_fast_path ();
+    pixman_implementation_t *imp = _pixman_implementation_create (general);
 
     imp->composite = arm_neon_composite;
 #if 0 /* this code has some bugs */
