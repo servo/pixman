@@ -318,7 +318,7 @@ fi
 have_vmx_intrinsics=no
 AC_MSG_CHECKING(whether to use VMX/Altivec intrinsics)
 xserver_save_CFLAGS=$CFLAGS
-CFLAGS="$CFLAGS $VMX_CFLAGS"
+CFLAGS="$VMX_CFLAGS $CFLAGS"
 AC_COMPILE_IFELSE([
 #if defined(__GNUC__) && (__GNUC__ < 3 || (__GNUC__ == 3 && __GNUC_MINOR__ < 4))
 error "Need GCC >= 3.4 for sane altivec support"
@@ -362,7 +362,7 @@ ARM_SIMD_CFLAGS="-mcpu=arm1136j-s"
 have_arm_simd=no
 AC_MSG_CHECKING(whether to use ARM SIMD assembler)
 xserver_save_CFLAGS=$CFLAGS
-CFLAGS="$CFLAGS $ARM_SIMD_CFLAGS"
+CFLAGS="$ARM_SIMD_CFLAGS $CFLAGS"
 AC_COMPILE_IFELSE([
 int main () {
     asm("uqadd8 r1, r1, r2");
@@ -401,7 +401,7 @@ ARM_NEON_CFLAGS="-mfpu=neon -mcpu=cortex-a8"
 have_arm_neon=no
 AC_MSG_CHECKING(whether to use ARM NEON)
 xserver_save_CFLAGS=$CFLAGS
-CFLAGS="$CFLAGS $ARM_NEON_CFLAGS"
+CFLAGS="$ARM_NEON_CFLAGS $CFLAGS"
 AC_COMPILE_IFELSE([
 #include <arm_neon.h>
 int main () {
