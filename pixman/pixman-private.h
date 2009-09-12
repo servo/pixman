@@ -557,15 +557,15 @@ _pixman_choose_implementation (void);
  * Utilities
  */
 
-/* These "formats" both have depth 0, so they
+/* These "formats" all have depth 0, so they
  * will never clash with any real ones
  */
 #define PIXMAN_null             PIXMAN_FORMAT (0, 0, 0, 0, 0, 0)
 #define PIXMAN_solid            PIXMAN_FORMAT (0, 1, 0, 0, 0, 0)
 #define PIXMAN_a8r8g8b8_ca	PIXMAN_FORMAT (0, 2, 0, 0, 0, 0)
 #define PIXMAN_a8b8g8r8_ca	PIXMAN_FORMAT (0, 3, 0, 0, 0, 0)
-
-#define NEED_PIXBUF                     (1 << 1)
+#define PIXMAN_pixbuf		PIXMAN_FORMAT (0, 4, 0, 0, 0, 0)
+#define PIXMAN_rpixbuf		PIXMAN_FORMAT (0, 5, 0, 0, 0, 0)
 
 typedef struct
 {
