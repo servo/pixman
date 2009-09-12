@@ -3434,7 +3434,7 @@ sse2_composite_over_8888_n_8888 (pixman_implementation_t *imp,
     PIXMAN_IMAGE_GET_LINE (
 	src_image, src_x, src_y, uint32_t, src_stride, src_line, 1);
 
-    mask = _pixman_image_get_solid (mask_image, dst_image->bits.format);
+    mask = _pixman_image_get_solid (mask_image, PIXMAN_a8r8g8b8);
 
     xmm_mask = create_mask_16_128 (mask >> 24);
 
@@ -3550,7 +3550,7 @@ sse2_composite_over_x888_n_8888 (pixman_implementation_t *imp,
     PIXMAN_IMAGE_GET_LINE (
 	src_image, src_x, src_y, uint32_t, src_stride, src_line, 1);
 
-    mask = _pixman_image_get_solid (mask_image, dst_image->bits.format);
+    mask = _pixman_image_get_solid (mask_image, PIXMAN_a8r8g8b8);
 
     xmm_mask = create_mask_16_128 (mask >> 24);
     xmm_alpha = mask_00ff;
@@ -5790,15 +5790,15 @@ static const pixman_fast_path_t sse2_fast_paths[] =
     { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8,       PIXMAN_x8r8g8b8, sse2_composite_over_x888_8_8888,    0 },
     { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8,       PIXMAN_a8r8g8b8, sse2_composite_over_x888_8_8888,    0 },
     { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8,       PIXMAN_x8b8g8r8, sse2_composite_over_x888_8_8888,    0 },
-    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8,       PIXMAN_a8b8g8r8, sse2_composite_over_x888_8_8888,    0 },
-    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8,       PIXMAN_a8r8g8b8, sse2_composite_over_x888_n_8888,    NEED_SOLID_MASK },
-    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8,       PIXMAN_x8r8g8b8, sse2_composite_over_x888_n_8888,    NEED_SOLID_MASK },
-    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8,       PIXMAN_a8b8g8r8, sse2_composite_over_x888_n_8888,    NEED_SOLID_MASK },
-    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8,       PIXMAN_x8b8g8r8, sse2_composite_over_x888_n_8888,    NEED_SOLID_MASK },
-    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8,       PIXMAN_a8r8g8b8, sse2_composite_over_8888_n_8888,    NEED_SOLID_MASK },
-    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8,       PIXMAN_x8r8g8b8, sse2_composite_over_8888_n_8888,    NEED_SOLID_MASK },
-    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_a8,       PIXMAN_a8b8g8r8, sse2_composite_over_8888_n_8888,    NEED_SOLID_MASK },
-    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_a8,       PIXMAN_x8b8g8r8, sse2_composite_over_8888_n_8888,    NEED_SOLID_MASK },
+    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8,       PIXMAN_a8r8g8b8, sse2_composite_over_x888_8_8888,    0 },
+    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_solid,    PIXMAN_a8r8g8b8, sse2_composite_over_x888_n_8888,    0 },
+    { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_solid,    PIXMAN_x8r8g8b8, sse2_composite_over_x888_n_8888,    0 },
+    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_solid,    PIXMAN_a8b8g8r8, sse2_composite_over_x888_n_8888,    0 },
+    { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_solid,    PIXMAN_x8b8g8r8, sse2_composite_over_x888_n_8888,    0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_solid,    PIXMAN_a8r8g8b8, sse2_composite_over_8888_n_8888,    0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_solid,    PIXMAN_x8r8g8b8, sse2_composite_over_8888_n_8888,    0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_solid,    PIXMAN_a8b8g8r8, sse2_composite_over_8888_n_8888,    0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_solid,    PIXMAN_x8b8g8r8, sse2_composite_over_8888_n_8888,    0 },
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8r8g8b8, PIXMAN_a8r8g8b8, sse2_composite_over_n_8888_8888_ca, NEED_COMPONENT_ALPHA },
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8r8g8b8, PIXMAN_x8r8g8b8, sse2_composite_over_n_8888_8888_ca, NEED_COMPONENT_ALPHA },
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8b8g8r8, PIXMAN_a8b8g8r8, sse2_composite_over_n_8888_8888_ca, NEED_COMPONENT_ALPHA },

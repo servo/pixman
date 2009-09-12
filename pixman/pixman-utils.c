@@ -498,23 +498,6 @@ _pixman_walk_composite_region (pixman_implementation_t *imp,
     }
 }
 
-static pixman_bool_t
-mask_is_solid (pixman_image_t *mask)
-{
-    if (mask->type == SOLID)
-	return TRUE;
-
-    if (mask->type == BITS &&
-        mask->common.repeat == PIXMAN_REPEAT_NORMAL &&
-        mask->bits.width == 1 &&
-        mask->bits.height == 1)
-    {
-	return TRUE;
-    }
-
-    return FALSE;
-}
-
 static const pixman_fast_path_t *
 get_fast_path (const pixman_fast_path_t *fast_paths,
                pixman_op_t               op,
@@ -544,22 +527,18 @@ get_fast_path (const pixman_fast_path_t *fast_paths,
 	if (!valid_src)
 	    continue;
 
-	if ((info->mask_format == PIXMAN_null && !mask_image) ||
+	if ((info->mask_format == PIXMAN_null && !mask_image)	||
 	    (mask_image && mask_image->type == BITS &&
-	     info->mask_format == mask_image->bits.format))
+	     info->mask_format == mask_image->bits.format)	||
+	    (info->mask_format == PIXMAN_solid && mask_image &&
+	     _pixman_image_is_solid (mask_image)))
 	{
 	    valid_mask = TRUE;
 
-	    if (info->flags & NEED_SOLID_MASK)
+	    if ((info->flags & NEED_COMPONENT_ALPHA) !=
+		(mask_image && mask_image->common.component_alpha))
 	    {
-		if (!mask_image || !mask_is_solid (mask_image))
-		    valid_mask = FALSE;
-	    }
-
-	    if (info->flags & NEED_COMPONENT_ALPHA)
-	    {
-		if (!mask_image || !mask_image->common.component_alpha)
-		    valid_mask = FALSE;
+		valid_mask = FALSE;
 	    }
 	}
 
@@ -702,8 +681,7 @@ _pixman_run_fast_path (const pixman_fast_path_t *paths,
 	    if (info->src_format == PIXMAN_solid)
 		src_repeat = FALSE;
 
-	    if (info->mask_format == PIXMAN_solid ||
-		info->flags & NEED_SOLID_MASK)
+	    if (info->mask_format == PIXMAN_solid)
 	    {
 		mask_repeat = FALSE;
 	    }

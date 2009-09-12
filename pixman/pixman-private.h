@@ -565,7 +565,6 @@ _pixman_choose_implementation (void);
 
 #define NEED_COMPONENT_ALPHA            (1 << 0)
 #define NEED_PIXBUF                     (1 << 1)
-#define NEED_SOLID_MASK                 (1 << 2)
 
 typedef struct
 {
