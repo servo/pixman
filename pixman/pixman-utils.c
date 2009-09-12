@@ -498,6 +498,29 @@ _pixman_walk_composite_region (pixman_implementation_t *imp,
     }
 }
 
+static pixman_bool_t
+source_is_fastpathable (pixman_image_t *image)
+{
+    if (image->common.transform					||
+	image->common.alpha_map					||
+	image->common.filter == PIXMAN_FILTER_CONVOLUTION	||
+	image->common.repeat == PIXMAN_REPEAT_PAD		||
+	image->common.repeat == PIXMAN_REPEAT_REFLECT)
+    {
+	return FALSE;
+    }
+
+    if (image->type == BITS	&&
+	(image->bits.read_func					||
+	 image->bits.write_func					||
+	 PIXMAN_FORMAT_IS_WIDE (image->bits.format)))
+    {
+	return FALSE;
+    }
+
+    return TRUE;
+}
+
 static const pixman_fast_path_t *
 get_fast_path (const pixman_fast_path_t *fast_paths,
                pixman_op_t               op,
@@ -513,45 +536,11 @@ get_fast_path (const pixman_fast_path_t *fast_paths,
     const pixman_fast_path_t *info;
 
     /* Source */
-    
-    if (src->common.transform				||
-	src->common.alpha_map				||
-	src->common.filter == PIXMAN_FILTER_CONVOLUTION	||
-	src->common.repeat == PIXMAN_REPEAT_PAD		||
-	src->common.repeat == PIXMAN_REPEAT_REFLECT)
-    {
+    if (!source_is_fastpathable (src))
 	return NULL;
-    }
 
-    if (src->type == BITS		&&
-	(src->bits.read_func				||
-	 src->bits.write_func				||
-	 PIXMAN_FORMAT_IS_WIDE (src->bits.format)))
-    {
+    if (mask && !source_is_fastpathable (mask))
 	return NULL;
-    }
-
-    /* Mask */
-    
-    if (mask)
-    {
-	if (mask->common.transform				||
-	    mask->common.alpha_map				||
-	    mask->common.filter == PIXMAN_FILTER_CONVOLUTION	||
-	    mask->common.repeat == PIXMAN_REPEAT_PAD		||
-	    mask->common.repeat == PIXMAN_REPEAT_REFLECT)
-	{
-	    return NULL;
-	}
-
-	if (mask->type == BITS		&&
-	    (mask->bits.read_func				||
-	     mask->bits.write_func				||
-	     PIXMAN_FORMAT_IS_WIDE (src->bits.format)))
-	{
-	    return NULL;
-	}
-    }
 
     /* Destination */
 
