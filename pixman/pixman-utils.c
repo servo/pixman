@@ -527,40 +527,48 @@ get_source_format_code (pixman_image_t *image, pixman_format_code_t *code)
     if (!image)
     {
 	*code = PIXMAN_null;
+	
+	return TRUE;
     }
-    else if (image->common.component_alpha)
+    else
     {
-	if (image->type == BITS)
+	if (!source_is_fastpathable (image))
+	    return FALSE;
+	
+	if (image->common.component_alpha)
 	{
-	    /* These are the *only* component_alpha formats
-	     * we support for fast paths
-	     */
-	    if (image->bits.format == PIXMAN_a8r8g8b8)
-		*code = PIXMAN_a8r8g8b8_ca;
-	    else if (image->bits.format == PIXMAN_a8b8g8r8)
-		*code = PIXMAN_a8b8g8r8_ca;
+	    if (image->type == BITS)
+	    {
+		/* These are the *only* component_alpha formats
+		 * we support for fast paths
+		 */
+		if (image->bits.format == PIXMAN_a8r8g8b8)
+		    *code = PIXMAN_a8r8g8b8_ca;
+		else if (image->bits.format == PIXMAN_a8b8g8r8)
+		    *code = PIXMAN_a8b8g8r8_ca;
+		else
+		    return FALSE;
+	    }
 	    else
+	    {
 		return FALSE;
+	    }
+	}
+	else if (_pixman_image_is_solid (image))
+	{
+	    *code = PIXMAN_solid;
+	}
+	else if (image->common.type == BITS)
+	{
+	    *code = image->bits.format;
 	}
 	else
 	{
 	    return FALSE;
 	}
+	
+	return TRUE;
     }
-    else if (_pixman_image_is_solid (image))
-    {
-	*code = PIXMAN_solid;
-    }
-    else if (image->common.type == BITS)
-    {
-	*code = image->bits.format;
-    }
-    else
-    {
-	return FALSE;
-    }
-
-    return TRUE;
 }
 
 static force_inline pixman_bool_t
@@ -622,21 +630,14 @@ _pixman_run_fast_path (const pixman_fast_path_t *paths,
                        int32_t                   width,
                        int32_t                   height)
 {
-    pixman_composite_func_t func = NULL;
     pixman_bool_t src_repeat = src->common.repeat == PIXMAN_REPEAT_NORMAL;
     pixman_bool_t mask_repeat = mask && mask->common.repeat == PIXMAN_REPEAT_NORMAL;
-    pixman_bool_t result;
     pixman_format_code_t src_format, mask_format, dest_format;
+    pixman_composite_func_t func = NULL;
     const pixman_fast_path_t *info;
-
-    /* Source */
-    if (!source_is_fastpathable (src))
-	return FALSE;
+    pixman_bool_t result;
 
     if (!get_source_format_code (src, &src_format))
-	return FALSE;
-
-    if (mask && !source_is_fastpathable (mask))
 	return FALSE;
 
     if (!get_source_format_code (mask, &mask_format))
