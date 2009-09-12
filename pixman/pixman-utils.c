@@ -562,77 +562,74 @@ get_fast_path (const pixman_fast_path_t *fast_paths,
 	return NULL;
     }
 
+    /* Source */
+    
+    if (_pixman_image_is_solid (src))
+    {
+	src_format = PIXMAN_solid;
+    }
+    else if (src->type == BITS)
+    {
+	src_format = src->bits.format;
+    }
+    else
+    {
+	return NULL;
+    }
+    
+    /* Mask */
+    if (!mask)
+    {
+	mask_format = PIXMAN_null;
+    }
+    else if (mask->common.component_alpha)
+    {
+	if (mask->type == BITS)
+	{
+	    /* These are the *only* component_alpha formats
+	     * we support for fast paths
+	     */
+	    if (mask->bits.format == PIXMAN_a8r8g8b8)
+		mask_format = PIXMAN_a8r8g8b8_ca;
+	    else if (mask->bits.format == PIXMAN_a8b8g8r8)
+		mask_format = PIXMAN_a8b8g8r8_ca;
+	    else
+		return NULL;
+	}
+	else
+	{
+	    return NULL;
+	}
+    }
+    else if (_pixman_image_is_solid (mask))
+    {
+	mask_format = PIXMAN_solid;
+    }
+    else if (mask->common.type == BITS)
+    {
+	mask_format = mask->bits.format;
+    }
+    else
+    {
+	return NULL;
+    }
+
+    dest_format = dest->bits.format;
+
     /* Check for pixbufs */
-    if (mask_image && mask_image->type == BITS								&&
-	(mask_image->bits.format == PIXMAN_a8r8g8b8 || mask_image->bits.format == PIXMAN_a8b8g8r8)	&&
-	(src_image->type == BITS && src_image->bits.bits == mask_image->bits.bits)			&&
-	(src_image->common.repeat == mask_image->common.repeat)						&&
+    if ((mask_format == PIXMAN_a8r8g8b8 || mask_format == PIXMAN_a8b8g8r8) &&
+	(src->type == BITS && src->bits.bits == mask->bits.bits)	   &&
+	(src->common.repeat == mask->common.repeat)			   &&
 	(src_x == mask_x && src_y == mask_y))
     {
-	if (src_image->bits.format == PIXMAN_x8b8g8r8)
+	if (src_format == PIXMAN_x8b8g8r8)
 	    src_format = mask_format = PIXMAN_pixbuf;
-	else if (src_image->bits.format == PIXMAN_x8r8g8b8)
+	else if (src_format == PIXMAN_x8r8g8b8)
 	    src_format = mask_format = PIXMAN_rpixbuf;
 	else
 	    return NULL;
     }
-    else
-    {
-	/* Source */
-	
-	if (_pixman_image_is_solid (src))
-	{
-	    src_format = PIXMAN_solid;
-	}
-	else if (src->type == BITS)
-	{
-	    src_format = src->bits.format;
-	}
-	else
-	{
-	    return NULL;
-	}
 
-	/* Mask */
-	if (!mask)
-	{
-	    mask_format = PIXMAN_null;
-	}
-	else if (mask->common.component_alpha)
-	{
-	    if (mask->type == BITS)
-	    {
-		/* These are the *only* component_alpha formats
-		 * we support for fast paths
-		 */
-		if (mask->bits.format == PIXMAN_a8r8g8b8)
-		    mask_format = PIXMAN_a8r8g8b8_ca;
-		else if (mask->bits.format == PIXMAN_a8b8g8r8)
-		    mask_format = PIXMAN_a8b8g8r8_ca;
-		else
-		    return NULL;
-	    }
-	    else
-	    {
-		return NULL;
-	    }
-	}
-	else if (_pixman_image_is_solid (mask))
-	{
-	    mask_format = PIXMAN_solid;
-	}
-	else if (mask->common.type == BITS)
-	{
-	    mask_format = mask->bits.format;
-	}
-	else
-	{
-	    return NULL;
-	}
-    }
-
-    dest_format = dest->bits.format;
-    
     for (info = fast_paths; info->op != PIXMAN_OP_NONE; ++info)
     {
 	if (info->op == op			&&
