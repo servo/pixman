@@ -574,7 +574,6 @@ typedef struct
     pixman_format_code_t    mask_format;
     pixman_format_code_t    dest_format;
     pixman_composite_func_t func;
-    uint32_t                flags;
 } pixman_fast_path_t;
 
 /* Memory allocation helpers */
