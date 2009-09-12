@@ -562,8 +562,9 @@ _pixman_choose_implementation (void);
  */
 #define PIXMAN_null             PIXMAN_FORMAT (0, 0, 0, 0, 0, 0)
 #define PIXMAN_solid            PIXMAN_FORMAT (0, 1, 0, 0, 0, 0)
+#define PIXMAN_a8r8g8b8_ca	PIXMAN_FORMAT (0, 2, 0, 0, 0, 0)
+#define PIXMAN_a8b8g8r8_ca	PIXMAN_FORMAT (0, 3, 0, 0, 0, 0)
 
-#define NEED_COMPONENT_ALPHA            (1 << 0)
 #define NEED_PIXBUF                     (1 << 1)
 
 typedef struct

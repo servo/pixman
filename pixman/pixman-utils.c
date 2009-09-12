@@ -508,10 +508,47 @@ get_fast_path (const pixman_fast_path_t *fast_paths,
 {
     const pixman_fast_path_t *info;
 
+    pixman_format_code_t mask_format;
+
+    if (!mask_image)
+    {
+	mask_format = PIXMAN_null;
+    }
+    else if (mask_image->common.component_alpha)
+    {
+	if (mask_image->type == BITS)
+	{
+	    /* These are the *only* component_alpha formats
+	     * we support for fast paths
+	     */
+	    if (mask_image->bits.format == PIXMAN_a8r8g8b8)
+		mask_format = PIXMAN_a8r8g8b8_ca;
+	    else if (mask_image->bits.format == PIXMAN_a8b8g8r8)
+		mask_format = PIXMAN_a8b8g8r8_ca;
+	    else
+		return NULL;
+	}
+	else
+	{
+	    return NULL;
+	}
+    }
+    else if (_pixman_image_is_solid (mask_image))
+    {
+	mask_format = PIXMAN_solid;
+    }
+    else if (mask_image->common.type == BITS)
+    {
+	mask_format = mask_image->bits.format;
+    }
+    else
+    {
+	return NULL;
+    }
+    
     for (info = fast_paths; info->op != PIXMAN_OP_NONE; info++)
     {
 	pixman_bool_t valid_src = FALSE;
-	pixman_bool_t valid_mask = FALSE;
 
 	if (info->op != op)
 	    continue;
@@ -527,22 +564,7 @@ get_fast_path (const pixman_fast_path_t *fast_paths,
 	if (!valid_src)
 	    continue;
 
-	if ((info->mask_format == PIXMAN_null && !mask_image)	||
-	    (mask_image && mask_image->type == BITS &&
-	     info->mask_format == mask_image->bits.format)	||
-	    (info->mask_format == PIXMAN_solid && mask_image &&
-	     _pixman_image_is_solid (mask_image)))
-	{
-	    valid_mask = TRUE;
-
-	    if ((info->flags & NEED_COMPONENT_ALPHA) !=
-		(mask_image && mask_image->common.component_alpha))
-	    {
-		valid_mask = FALSE;
-	    }
-	}
-
-	if (!valid_mask)
+	if (info->mask_format != mask_format)
 	    continue;
 
 	if (info->dest_format != dst_image->bits.format)
