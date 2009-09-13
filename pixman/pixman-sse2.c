@@ -629,7 +629,8 @@ core_combine_over_u_sse2 (uint32_t*       pd,
     /* call prefetch hint to optimize cache load*/
     cache_prefetch ((__m128i*)ps);
     cache_prefetch ((__m128i*)pd);
-    cache_prefetch ((__m128i*)pm);
+    if (pm)
+	cache_prefetch ((__m128i*)pm);
 
     /* Align dst on a 16-byte boundary */
     while (w && ((unsigned long)pd & 15))
@@ -647,14 +648,16 @@ core_combine_over_u_sse2 (uint32_t*       pd,
     /* call prefetch hint to optimize cache load*/
     cache_prefetch ((__m128i*)ps);
     cache_prefetch ((__m128i*)pd);
-    cache_prefetch ((__m128i*)pm);
+    if (pm)
+	cache_prefetch ((__m128i*)pm);
 
     while (w >= 4)
     {
 	/* fill cache line with next memory */
 	cache_prefetch_next ((__m128i*)ps);
 	cache_prefetch_next ((__m128i*)pd);
-	cache_prefetch_next ((__m128i*)pm);
+	if (pm)
+	    cache_prefetch_next ((__m128i*)pm);
 
 	/* I'm loading unaligned because I'm not sure about
 	 * the address alignment.
