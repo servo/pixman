@@ -566,14 +566,33 @@ _pixman_choose_implementation (void);
 #define PIXMAN_pixbuf		PIXMAN_FORMAT (0, 4, 0, 0, 0, 0)
 #define PIXMAN_rpixbuf		PIXMAN_FORMAT (0, 5, 0, 0, 0, 0)
 
+#define FAST_PATH_STD_SRC_FLAGS		0
+#define FAST_PATH_STD_MASK_U_FLAGS	0
+#define FAST_PATH_STD_MASK_CA_FLAGS	0
+#define FAST_PATH_STD_DEST_FLAGS	0
+
 typedef struct
 {
     pixman_op_t             op;
     pixman_format_code_t    src_format;
+    uint32_t		    src_flags;
     pixman_format_code_t    mask_format;
+    uint32_t		    mask_flags;
     pixman_format_code_t    dest_format;
+    uint32_t		    dest_flags;
     pixman_composite_func_t func;
 } pixman_fast_path_t;
+
+#define PIXMAN_STD_FAST_PATH(op, src, mask, dest, func)			\
+    {	    PIXMAN_OP_ ## op,						\
+	    PIXMAN_ ## src, FAST_PATH_STD_SRC_FLAGS,			\
+	    PIXMAN_ ## mask,						\
+	    ((PIXMAN_ ## mask == PIXMAN_a8r8g8b8_ca ||			\
+	      PIXMAN_ ## mask == PIXMAN_a8b8g8r8_ca) ?			\
+	     FAST_PATH_STD_MASK_CA_FLAGS : FAST_PATH_STD_MASK_U_FLAGS),	\
+	    PIXMAN_ ## dest, FAST_PATH_STD_DEST_FLAGS,			\
+	    func							\
+    }
 
 /* Memory allocation helpers */
 void *
