@@ -132,6 +132,7 @@ struct image {
     const struct format *format;
     const struct color *color;
     int size;
+    pixman_repeat_t repeat;
 };
 
 static const struct operator {
@@ -568,9 +569,10 @@ static char *
 describe_image (struct image *info, char *buf, int buflen)
 {
     if (info->size) {
-	snprintf (buf, buflen, "%s %dx%d",
+	snprintf (buf, buflen, "%s %dx%d%s",
 		  info->format->name,
-		  info->size, info->size);
+		  info->size, info->size,
+		  info->repeat ? "R" :"");
     } else {
 	snprintf (buf, buflen, "solid");
     }
@@ -684,6 +686,9 @@ composite_test (struct image *dst,
     return success;
 }
 
+#define REPEAT 0x01000000
+#define FLAGS  0xff000000
+
 static void
 image_init (struct image *info,
 	    int color,
@@ -696,21 +701,28 @@ image_init (struct image *info,
     compute_pixman_color (info->color, &fill);
 
     info->format = &formats[format];
-    if (size) {
+    info->size = size & ~FLAGS;
+    info->repeat = PIXMAN_REPEAT_NONE;
+    if (info->size) {
 	pixman_rectangle16_t rect;
 
 	info->image = pixman_image_create_bits (info->format->format,
-						size, size, NULL, 0);
+						info->size, info->size,
+						NULL, 0);
 
 	rect.x = rect.y = 0;
-	rect.width = rect.height = size;
+	rect.width = rect.height = info->size;
 	pixman_image_fill_rectangles (PIXMAN_OP_SRC, info->image, &fill,
 				      1, &rect);
+
+	if (size & REPEAT) {
+	    pixman_image_set_repeat (info->image, PIXMAN_REPEAT_NORMAL);
+	    info->repeat = PIXMAN_REPEAT_NORMAL;
+	}
     } else {
 	info->image = pixman_image_create_solid_fill (&fill);
     }
 
-    info->size = size;
 }
 
 static void
@@ -725,7 +737,7 @@ main (void)
     pixman_bool_t ok, group_ok = TRUE, ca;
     int i, d, m, s;
     int tests_passed = 0, tests_total = 0;
-    int sizes[] = { 1, 10 };
+    int sizes[] = { 1, 1 | REPEAT, 10 };
     int num_tests;
 
     for (i = 0; i < ARRAY_LENGTH (colors); i++) {
