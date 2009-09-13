@@ -159,9 +159,9 @@ general_composite_rect  (pixman_implementation_t *imp,
         fetch_src                       &&
         fetch_mask                      &&
         mask                            &&
-        mask->common.type == BITS       &&
-        mask->common.component_alpha    &&
-        PIXMAN_FORMAT_RGB (mask->bits.format);
+        mask->common.component_alpha	&&
+        (mask->common.type == SOLID ||
+	 (mask->common.type == BITS && PIXMAN_FORMAT_RGB (mask->bits.format)));
 
     if (wide)
     {
