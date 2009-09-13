@@ -264,6 +264,17 @@ general_composite_rect  (pixman_implementation_t *imp,
 	free (scanline_buffer);
 }
 
+static const pixman_fast_path_t general_fast_path[] =
+{
+    {   PIXMAN_OP_any,
+	PIXMAN_any,		0,
+	PIXMAN_any,		0,
+	PIXMAN_any,		0,
+	general_composite_rect,
+    },
+    {	PIXMAN_OP_NONE	}
+};
+
 static void
 general_composite (pixman_implementation_t * imp,
                    pixman_op_t               op,
@@ -279,10 +290,16 @@ general_composite (pixman_implementation_t * imp,
                    int32_t                   width,
                    int32_t                   height)
 {
-    _pixman_walk_composite_region (imp, op, src, mask, dest, src_x, src_y,
-                                   mask_x, mask_y, dest_x, dest_y,
-				   width, height,
-                                   general_composite_rect);
+    pixman_bool_t result;
+
+    result = _pixman_run_fast_path (general_fast_path, imp,
+				    op, src, mask, dest,
+				    src_x, src_y,
+				    mask_x, mask_y,
+				    dest_x, dest_y,
+				    width, height);
+    
+    assert (result);
 }
 
 static pixman_bool_t

@@ -564,6 +564,9 @@ _pixman_choose_implementation (void);
 #define PIXMAN_pixbuf		PIXMAN_FORMAT (0, 2, 0, 0, 0, 0)
 #define PIXMAN_rpixbuf		PIXMAN_FORMAT (0, 3, 0, 0, 0, 0)
 #define PIXMAN_unknown		PIXMAN_FORMAT (0, 4, 0, 0, 0, 0)
+#define PIXMAN_any		PIXMAN_FORMAT (0, 5, 0, 0, 0, 0)	
+
+#define PIXMAN_OP_any		(PIXMAN_N_OPERATORS + 1)
 
 #define FAST_PATH_ID_TRANSFORM			(1 << 0)
 #define FAST_PATH_NO_ALPHA_MAP			(1 << 1)
@@ -572,7 +575,7 @@ _pixman_choose_implementation (void);
 #define FAST_PATH_NO_REFLECT_REPEAT		(1 << 4)
 #define FAST_PATH_NO_ACCESSORS			(1 << 5)
 #define FAST_PATH_NO_WIDE_FORMAT		(1 << 6)
-#define FAST_PATH_reserved			(1 << 7)
+#define FAST_PATH_COVERS_CLIP			(1 << 7)
 #define FAST_PATH_COMPONENT_ALPHA		(1 << 8)
 #define FAST_PATH_UNIFIED_ALPHA			(1 << 9)
 
@@ -583,7 +586,8 @@ _pixman_choose_implementation (void);
      FAST_PATH_NO_PAD_REPEAT		|				\
      FAST_PATH_NO_REFLECT_REPEAT	|				\
      FAST_PATH_NO_ACCESSORS		|				\
-     FAST_PATH_NO_WIDE_FORMAT)
+     FAST_PATH_NO_WIDE_FORMAT		|				\
+     FAST_PATH_COVERS_CLIP)
 
 #define FAST_PATH_STD_SRC_FLAGS						\
     _FAST_PATH_STANDARD_FLAGS
