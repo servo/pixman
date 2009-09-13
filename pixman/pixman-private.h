@@ -561,15 +561,41 @@ _pixman_choose_implementation (void);
  */
 #define PIXMAN_null             PIXMAN_FORMAT (0, 0, 0, 0, 0, 0)
 #define PIXMAN_solid            PIXMAN_FORMAT (0, 1, 0, 0, 0, 0)
-#define PIXMAN_a8r8g8b8_ca	PIXMAN_FORMAT (0, 2, 0, 0, 0, 0)
-#define PIXMAN_a8b8g8r8_ca	PIXMAN_FORMAT (0, 3, 0, 0, 0, 0)
-#define PIXMAN_pixbuf		PIXMAN_FORMAT (0, 4, 0, 0, 0, 0)
-#define PIXMAN_rpixbuf		PIXMAN_FORMAT (0, 5, 0, 0, 0, 0)
+#define PIXMAN_pixbuf		PIXMAN_FORMAT (0, 2, 0, 0, 0, 0)
+#define PIXMAN_rpixbuf		PIXMAN_FORMAT (0, 3, 0, 0, 0, 0)
+#define PIXMAN_unknown		PIXMAN_FORMAT (0, 4, 0, 0, 0, 0)
 
-#define FAST_PATH_STD_SRC_FLAGS		0
-#define FAST_PATH_STD_MASK_U_FLAGS	0
-#define FAST_PATH_STD_MASK_CA_FLAGS	0
-#define FAST_PATH_STD_DEST_FLAGS	0
+#define FAST_PATH_ID_TRANSFORM			(1 << 0)
+#define FAST_PATH_NO_ALPHA_MAP			(1 << 1)
+#define FAST_PATH_NO_CONVOLUTION_FILTER		(1 << 2)
+#define FAST_PATH_NO_PAD_REPEAT			(1 << 3)
+#define FAST_PATH_NO_REFLECT_REPEAT		(1 << 4)
+#define FAST_PATH_NO_ACCESSORS			(1 << 5)
+#define FAST_PATH_NO_WIDE_FORMAT		(1 << 6)
+#define FAST_PATH_reserved			(1 << 7)
+#define FAST_PATH_COMPONENT_ALPHA		(1 << 8)
+#define FAST_PATH_UNIFIED_ALPHA			(1 << 9)
+
+#define _FAST_PATH_STANDARD_FLAGS					\
+    (FAST_PATH_ID_TRANSFORM		|				\
+     FAST_PATH_NO_ALPHA_MAP		|				\
+     FAST_PATH_NO_CONVOLUTION_FILTER	|				\
+     FAST_PATH_NO_PAD_REPEAT		|				\
+     FAST_PATH_NO_REFLECT_REPEAT	|				\
+     FAST_PATH_NO_ACCESSORS		|				\
+     FAST_PATH_NO_WIDE_FORMAT)
+
+#define FAST_PATH_STD_SRC_FLAGS						\
+    _FAST_PATH_STANDARD_FLAGS
+#define FAST_PATH_STD_MASK_U_FLAGS					\
+    (_FAST_PATH_STANDARD_FLAGS		|				\
+     FAST_PATH_UNIFIED_ALPHA)
+#define FAST_PATH_STD_MASK_CA_FLAGS					\
+    (_FAST_PATH_STANDARD_FLAGS		|				\
+     FAST_PATH_COMPONENT_ALPHA)
+#define FAST_PATH_STD_DEST_FLAGS					\
+    (FAST_PATH_NO_ACCESSORS		|				\
+     FAST_PATH_NO_WIDE_FORMAT)
 
 typedef struct
 {
@@ -583,16 +609,31 @@ typedef struct
     pixman_composite_func_t func;
 } pixman_fast_path_t;
 
+#define FAST_PATH(op, src, src_flags, mask, mask_flags, dest, dest_flags, func) \
+    PIXMAN_OP_ ## op,							\
+    PIXMAN_ ## src,							\
+    src_flags,							        \
+    PIXMAN_ ## mask,						        \
+    mask_flags,							        \
+    PIXMAN_ ## dest,	                                                \
+    dest_flags,							        \
+    func
+
 #define PIXMAN_STD_FAST_PATH(op, src, mask, dest, func)			\
-    {	    PIXMAN_OP_ ## op,						\
-	    PIXMAN_ ## src, FAST_PATH_STD_SRC_FLAGS,			\
-	    PIXMAN_ ## mask,						\
-	    ((PIXMAN_ ## mask == PIXMAN_a8r8g8b8_ca ||			\
-	      PIXMAN_ ## mask == PIXMAN_a8b8g8r8_ca) ?			\
-	     FAST_PATH_STD_MASK_CA_FLAGS : FAST_PATH_STD_MASK_U_FLAGS),	\
-	    PIXMAN_ ## dest, FAST_PATH_STD_DEST_FLAGS,			\
-	    func							\
-    }
+    { FAST_PATH (							\
+	  op,								\
+	  src, FAST_PATH_STD_SRC_FLAGS,					\
+	  mask, (PIXMAN_ ## mask) ? FAST_PATH_STD_MASK_U_FLAGS : 0,	\
+	  dest, FAST_PATH_STD_DEST_FLAGS,				\
+	  func) }
+
+#define PIXMAN_STD_FAST_PATH_CA(op, src, mask, dest, func)		\
+    { FAST_PATH (							\
+	  op,								\
+	  src, FAST_PATH_STD_SRC_FLAGS,					\
+	  mask, FAST_PATH_STD_MASK_CA_FLAGS,				\
+	  dest, FAST_PATH_STD_DEST_FLAGS,				\
+	  func) }
 
 /* Memory allocation helpers */
 void *
