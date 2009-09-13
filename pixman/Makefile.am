@@ -108,4 +108,5 @@ libpixman_arm_neon_la_LIBADD = $(DEP_LIBS)
 libpixman_1_la_LIBADD += libpixman-arm-neon.la
 endif
 
-
+.c.s : $(libpixmaninclude_HEADERS)
+	$(CC) $(CFLAGS) -DHAVE_CONFIG_H -I$(srcdir) -I$(builddir) -I$(top_builddir) -S -o $@ $<
