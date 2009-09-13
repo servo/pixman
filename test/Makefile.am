@@ -5,6 +5,7 @@ TESTPROGRAMS =			\
 	region-test		\
 	scaling-test		\
 	blitters-test		\
+	composite		\
 	fetch-test		\
 	oob-test		\
 	window-test		\
@@ -14,6 +15,7 @@ fetch_test_LDADD = $(TEST_LDADD)
 region_test_LDADD = $(TEST_LDADD)
 scaling_test_LDADD = $(TEST_LDADD)
 blitters_test_LDADD = $(TEST_LDADD)
+composite_LDADD = $(TEST_LDADD)
 trap_crasher_LDADD = $(TEST_LDADD)
 oob_test_LDADD = $(TEST_LDADD)
 window_test_LDADD = $(TEST_LDADD)
