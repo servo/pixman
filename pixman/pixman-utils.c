@@ -609,17 +609,13 @@ _pixman_run_fast_path (const pixman_fast_path_t *paths,
                        int32_t                   width,
                        int32_t                   height)
 {
-    pixman_bool_t src_repeat
-	= src->common.repeat == PIXMAN_REPEAT_NORMAL;
-    pixman_bool_t mask_repeat
-	= mask && mask->common.repeat == PIXMAN_REPEAT_NORMAL;
     pixman_format_code_t src_format, mask_format, dest_format;
     uint32_t src_flags, mask_flags, dest_flags;
-    pixman_composite_func_t func = NULL;
+    pixman_composite_func_t func;
     const pixman_fast_path_t *info;
     pixman_bool_t result;
 
-    get_image_info (src, &src_format, &src_flags);
+    get_image_info (src,  &src_format,  &src_flags);
     get_image_info (mask, &mask_format, &mask_flags);
     get_image_info (dest, &dest_format, &dest_flags);
     
@@ -635,6 +631,7 @@ _pixman_run_fast_path (const pixman_fast_path_t *paths,
 	    src_format = mask_format = PIXMAN_rpixbuf;
     }
 
+    func = NULL;
     for (info = paths; info->op != PIXMAN_OP_NONE; ++info)
     {
 	if (info->op == op					&&
@@ -646,13 +643,6 @@ _pixman_run_fast_path (const pixman_fast_path_t *paths,
 	    (info->dest_flags & dest_flags) == info->dest_flags)
 	{
 	    func = info->func;
-	    
-	    if (info->src_format == PIXMAN_solid)
-		src_repeat = FALSE;
-	    
-	    if (info->mask_format == PIXMAN_solid)
-		mask_repeat = FALSE;
-
 	    break;
 	}
     }
@@ -674,6 +664,21 @@ _pixman_run_fast_path (const pixman_fast_path_t *paths,
 		    src, mask, extents,
 		    src_x, src_y, mask_x, mask_y, dest_x, dest_y))
 	    {
+		pixman_bool_t src_repeat, mask_repeat;
+
+		src_repeat =
+		    src->type == BITS					&&
+		    src_flags & FAST_PATH_ID_TRANSFORM			&&
+		    src->common.repeat == PIXMAN_REPEAT_NORMAL		&&
+		    src_format != PIXMAN_solid;
+		
+		mask_repeat =
+		    mask						&&
+		    mask->type == BITS					&&
+		    mask_flags & FAST_PATH_ID_TRANSFORM			&&
+		    mask->common.repeat == PIXMAN_REPEAT_NORMAL		&&
+		    mask_format != PIXMAN_solid;
+		
 		walk_region_internal (imp, op,
 		                      src, mask, dest,
 		                      src_x, src_y, mask_x, mask_y,
