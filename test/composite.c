@@ -33,16 +33,31 @@
 #define min(a,b) ((a) <= (b) ? (a) : (b))
 #define max(a,b) ((a) >= (b) ? (a) : (b))
 
-static struct color {
-    double r,g,b,a;
-} colors[] = {
+typedef struct color_t color_t;
+typedef struct format_t format_t;
+typedef struct image_t image_t;
+typedef struct operator_t operator_t;
+
+struct color_t
+{
+    double r, g, b, a;
+};
+
+struct format_t
+{
+    pixman_format_code_t format;
+    const char *name;
+};
+
+static color_t colors[] =
+{
     /* these are premultiplied in main() */
-    {1.0, 1.0, 1.0, 1.0},
-    {1.0, 0.0, 0.0, 1.0},
-    {0.0, 1.0, 0.0, 1.0},
-    {0.0, 0.0, 1.0, 1.0},
-    {0.0, 0.0, 0.0, 1.0},
-    {0.5, 0.0, 0.0, 0.5},
+    { 1.0, 1.0, 1.0, 1.0 },
+    { 1.0, 0.0, 0.0, 1.0 },
+    { 0.0, 1.0, 0.0, 1.0 },
+    { 0.0, 0.0, 1.0, 1.0 },
+    { 0.0, 0.0, 0.0, 1.0 },
+    { 0.5, 0.0, 0.0, 0.5 },
 };
 
 static uint16_t
@@ -57,7 +72,7 @@ _color_double_to_short (double d)
 }
 
 static void
-compute_pixman_color (const struct color *color,
+compute_pixman_color (const color_t *color,
 		      pixman_color_t *out)
 {
     out->red   = _color_double_to_short (color->r);
@@ -66,10 +81,8 @@ compute_pixman_color (const struct color *color,
     out->alpha = _color_double_to_short (color->a);
 }
 
-static const struct format {
-    pixman_format_code_t format;
-    const char *name;
-} formats[] = {
+static const format_t formats[] =
+{
 #define P(x) { PIXMAN_##x, #x }
     P(a8),
 
@@ -127,18 +140,23 @@ static const struct format {
 #undef P
 };
 
-struct image {
+struct image_t
+{
     pixman_image_t *image;
-    const struct format *format;
-    const struct color *color;
-    int size;
+    const format_t *format;
+    const color_t *color;
     pixman_repeat_t repeat;
+    int size;
 };
 
-static const struct operator {
+struct operator_t
+{
     pixman_op_t op;
     const char *name;
-} operators[] = {
+};
+
+static const operator_t operators[] =
+{
 #define P(x) { PIXMAN_OP_##x, #x }
     P(CLEAR),
     P(SRC),
@@ -190,7 +208,8 @@ calc_op (pixman_op_t op, double src, double dst, double srca, double dsta)
 
     double Fa, Fb;
 
-    switch (op) {
+    switch (op)
+    {
     case PIXMAN_OP_CLEAR:
     case PIXMAN_OP_DISJOINT_CLEAR:
     case PIXMAN_OP_CONJOINT_CLEAR:
@@ -395,22 +414,25 @@ calc_op (pixman_op_t op, double src, double dst, double srca, double dsta)
 
 static void
 do_composite (pixman_op_t op,
-	      const struct color *src,
-	      const struct color *mask,
-	      const struct color *dst,
-	      struct color *result,
-	      pixman_bool_t componentAlpha)
+	      const color_t *src,
+	      const color_t *mask,
+	      const color_t *dst,
+	      color_t *result,
+	      pixman_bool_t component_alpha)
 {
-    struct color srcval, srcalpha;
+    color_t srcval, srcalpha;
 
-    if (mask == NULL) {
+    if (mask == NULL)
+    {
 	srcval = *src;
 
 	srcalpha.r = src->a;
 	srcalpha.g = src->a;
 	srcalpha.b = src->a;
 	srcalpha.a = src->a;
-    } else if (componentAlpha) {
+    }
+    else if (component_alpha)
+    {
 	srcval.r = src->r * mask->r;
 	srcval.g = src->g * mask->g;
 	srcval.b = src->b * mask->b;
@@ -420,7 +442,9 @@ do_composite (pixman_op_t op,
 	srcalpha.g = src->a * mask->g;
 	srcalpha.b = src->a * mask->b;
 	srcalpha.a = src->a * mask->a;
-    } else {
+    }
+    else
+    {
 	srcval.r = src->r * mask->a;
 	srcval.g = src->g * mask->a;
 	srcval.b = src->b * mask->a;
@@ -440,16 +464,19 @@ do_composite (pixman_op_t op,
 
 static void
 color_correct (pixman_format_code_t format,
-	       struct color *color)
+	       color_t *color)
 {
 #define round_pix(pix, mask) \
     ((int)((pix) * (mask) + .5) / (double) (mask))
 
-    if (PIXMAN_FORMAT_R (format) == 0) {
+    if (PIXMAN_FORMAT_R (format) == 0)
+    {
 	color->r = 0.0;
 	color->g = 0.0;
 	color->b = 0.0;
-    } else {
+    }
+    else
+    {
 	color->r = round_pix (color->r, PIXMAN_FORMAT_R (format));
 	color->g = round_pix (color->g, PIXMAN_FORMAT_G (format));
 	color->b = round_pix (color->b, PIXMAN_FORMAT_B (format));
@@ -466,7 +493,7 @@ color_correct (pixman_format_code_t format,
 static void
 get_pixel (pixman_image_t *image,
 	   pixman_format_code_t format,
-	   struct color *color)
+	   color_t *color)
 {
 #define MASK(N) ((1UL << (N))-1)
 
@@ -482,7 +509,8 @@ get_pixel (pixman_image_t *image,
     g = PIXMAN_FORMAT_G (format);
     b = PIXMAN_FORMAT_B (format);
 
-    switch (PIXMAN_FORMAT_TYPE (format)) {
+    switch (PIXMAN_FORMAT_TYPE (format))
+    {
     case PIXMAN_TYPE_ARGB:
         bs = 0;
         gs = b + bs;
@@ -530,11 +558,14 @@ get_pixel (pixman_image_t *image,
     else
 	color->a = 1.0;
 
-    if (MASK (r) != 0) {
+    if (MASK (r) != 0)
+    {
 	color->r = ((val >> rs) & MASK (r)) / (double) MASK (r);
 	color->g = ((val >> gs) & MASK (g)) / (double) MASK (g);
 	color->b = ((val >> bs) & MASK (b)) / (double) MASK (b);
-    } else {
+    }
+    else
+    {
 	color->r = 0.0;
 	color->g = 0.0;
 	color->b = 0.0;
@@ -544,7 +575,7 @@ get_pixel (pixman_image_t *image,
 }
 
 static double
-eval_diff (struct color *expected, struct color *test)
+eval_diff (color_t *expected, color_t *test)
 {
     double rscale, gscale, bscale, ascale;
     double rdiff, gdiff, bdiff, adiff;
@@ -566,33 +597,37 @@ eval_diff (struct color *expected, struct color *test)
 }
 
 static char *
-describe_image (struct image *info, char *buf, int buflen)
+describe_image (image_t *info, char *buf, int buflen)
 {
-    if (info->size) {
+    if (info->size)
+    {
 	snprintf (buf, buflen, "%s %dx%d%s",
 		  info->format->name,
 		  info->size, info->size,
 		  info->repeat ? "R" :"");
-    } else {
+    }
+    else
+    {
 	snprintf (buf, buflen, "solid");
     }
 
     return buf;
 }
 
-/* Test a composite of a given operation, source, mask, and destination picture.
+/* Test a composite of a given operation, source, mask, and destination
+ * picture.
  * Fills the window, and samples from the 0,0 pixel corner.
  */
 static pixman_bool_t
-composite_test (struct image *dst,
-		const struct operator *op,
-		struct image *src,
-		struct image *mask,
-		pixman_bool_t componentAlpha)
+composite_test (image_t *dst,
+		const operator_t *op,
+		image_t *src,
+		image_t *mask,
+		pixman_bool_t component_alpha)
 {
     pixman_color_t fill;
     pixman_rectangle16_t rect;
-    struct color expected, result, tdst, tsrc, tmsk;
+    color_t expected, result, tdst, tsrc, tmsk;
     double diff;
     pixman_bool_t success = TRUE;
 
@@ -602,8 +637,9 @@ composite_test (struct image *dst,
     pixman_image_fill_rectangles (PIXMAN_OP_SRC, dst->image,
 				  &fill, 1, &rect);
 
-    if (mask != NULL) {
-	pixman_image_set_component_alpha (mask->image, componentAlpha);
+    if (mask != NULL)
+    {
+	pixman_image_set_component_alpha (mask->image, component_alpha);
 	pixman_image_composite (op->op, src->image, mask->image, dst->image,
 				0, 0,
 				0, 0,
@@ -611,16 +647,22 @@ composite_test (struct image *dst,
 				dst->size, dst->size);
 
 	tmsk = *mask->color;
-	if (mask->size) {
+	if (mask->size)
+	{
 	    color_correct (mask->format->format, &tmsk);
-	    if (componentAlpha &&
+
+	    if (component_alpha &&
 		PIXMAN_FORMAT_R (mask->format->format) == 0)
 	    {
-		/* Ax component-alpha masks expand alpha into all color channels. */
+		/* Ax component-alpha masks expand alpha into
+		 * all color channels.
+		 */
 		tmsk.r = tmsk.g = tmsk.b = tmsk.a;
 	    }
 	}
-    } else {
+    }
+    else
+    {
 	pixman_image_composite (op->op, src->image, NULL, dst->image,
 				0, 0,
 				0, 0,
@@ -635,47 +677,51 @@ composite_test (struct image *dst,
     if (src->size)
 	color_correct (src->format->format, &tsrc);
     do_composite (op->op, &tsrc, mask ? &tmsk : NULL, &tdst,
-		  &expected, componentAlpha);
+		  &expected, component_alpha);
     color_correct (dst->format->format, &expected);
 
     diff = eval_diff (&expected, &result);
-    if (diff > 3.0) {
+    if (diff > 3.0)
+    {
 	char buf[40];
 
 	snprintf (buf, sizeof (buf),
 		  "%s %scomposite",
 		  op->name,
-		  componentAlpha ? "CA " : "");
+		  component_alpha ? "CA " : "");
 
-	printf("%s test error of %.4f --\n"
-	       "           R    G    B    A\n"
-	       "got:       %.2f %.2f %.2f %.2f [%08lx]\n"
-	       "expected:  %.2f %.2f %.2f %.2f\n",
-	       buf, diff,
-	       result.r, result.g, result.b, result.a,
-	       *(unsigned long *) pixman_image_get_data (dst->image),
-	       expected.r, expected.g, expected.b, expected.a);
-
-	if (mask != NULL) {
-	    printf("src color: %.2f %.2f %.2f %.2f\n"
-		   "msk color: %.2f %.2f %.2f %.2f\n"
-		   "dst color: %.2f %.2f %.2f %.2f\n",
-		   src->color->r, src->color->g,
-		   src->color->b, src->color->a,
-		   mask->color->r, mask->color->g,
-		   mask->color->b, mask->color->a,
-		   dst->color->r, dst->color->g,
-		   dst->color->b, dst->color->a);
+	printf ("%s test error of %.4f --\n"
+		"           R    G    B    A\n"
+		"got:       %.2f %.2f %.2f %.2f [%08lx]\n"
+		"expected:  %.2f %.2f %.2f %.2f\n",
+		buf, diff,
+		result.r, result.g, result.b, result.a,
+		*(unsigned long *) pixman_image_get_data (dst->image),
+		expected.r, expected.g, expected.b, expected.a);
+	
+	if (mask != NULL)
+	{
+	    printf ("src color: %.2f %.2f %.2f %.2f\n"
+		    "msk color: %.2f %.2f %.2f %.2f\n"
+		    "dst color: %.2f %.2f %.2f %.2f\n",
+		    src->color->r, src->color->g,
+		    src->color->b, src->color->a,
+		    mask->color->r, mask->color->g,
+		    mask->color->b, mask->color->a,
+		    dst->color->r, dst->color->g,
+		    dst->color->b, dst->color->a);
 	    printf ("src: %s, ", describe_image (src, buf, sizeof (buf)));
 	    printf ("mask: %s, ", describe_image (mask, buf, sizeof (buf)));
 	    printf ("dst: %s\n\n", describe_image (dst, buf, sizeof (buf)));
-	} else {
-	    printf("src color: %.2f %.2f %.2f %.2f\n"
-		   "dst color: %.2f %.2f %.2f %.2f\n",
-		   src->color->r, src->color->g,
-		   src->color->b, src->color->a,
-		   dst->color->r, dst->color->g,
-		   dst->color->b, dst->color->a);
+	}
+	else
+	{
+	    printf ("src color: %.2f %.2f %.2f %.2f\n"
+		    "dst color: %.2f %.2f %.2f %.2f\n",
+		    src->color->r, src->color->g,
+		    src->color->b, src->color->a,
+		    dst->color->r, dst->color->g,
+		    dst->color->b, dst->color->a);
 	    printf ("src: %s, ", describe_image (src, buf, sizeof (buf)));
 	    printf ("dst: %s\n\n", describe_image (dst, buf, sizeof (buf)));
 	}
@@ -690,7 +736,7 @@ composite_test (struct image *dst,
 #define FLAGS  0xff000000
 
 static void
-image_init (struct image *info,
+image_init (image_t *info,
 	    int color,
 	    int format,
 	    int size)
@@ -703,7 +749,9 @@ image_init (struct image *info,
     info->format = &formats[format];
     info->size = size & ~FLAGS;
     info->repeat = PIXMAN_REPEAT_NONE;
-    if (info->size) {
+
+    if (info->size)
+    {
 	pixman_rectangle16_t rect;
 
 	info->image = pixman_image_create_bits (info->format->format,
@@ -715,18 +763,20 @@ image_init (struct image *info,
 	pixman_image_fill_rectangles (PIXMAN_OP_SRC, info->image, &fill,
 				      1, &rect);
 
-	if (size & REPEAT) {
+	if (size & REPEAT)
+	{
 	    pixman_image_set_repeat (info->image, PIXMAN_REPEAT_NORMAL);
 	    info->repeat = PIXMAN_REPEAT_NORMAL;
 	}
-    } else {
+    }
+    else
+    {
 	info->image = pixman_image_create_solid_fill (&fill);
     }
-
 }
 
 static void
-image_fini (struct image *info)
+image_fini (image_t *info)
 {
     pixman_image_unref (info->image);
 }
@@ -740,7 +790,8 @@ main (void)
     int sizes[] = { 1, 1 | REPEAT, 10 };
     int num_tests;
 
-    for (i = 0; i < ARRAY_LENGTH (colors); i++) {
+    for (i = 0; i < ARRAY_LENGTH (colors); i++)
+    {
 	colors[i].r *= colors[i].a;
 	colors[i].g *= colors[i].a;
 	colors[i].b *= colors[i].a;
@@ -748,44 +799,59 @@ main (void)
 
     num_tests = ARRAY_LENGTH (colors) * ARRAY_LENGTH (formats);
 
-    for (d = 0; d < num_tests; d++) {
-	struct image dst;
+    for (d = 0; d < num_tests; d++)
+    {
+	image_t dst;
 
-	image_init (&dst,
-		    d / ARRAY_LENGTH (formats),
-		    d % ARRAY_LENGTH (formats),
-		    1);
+	image_init (
+	    &dst, d / ARRAY_LENGTH (formats), d % ARRAY_LENGTH (formats), 1);
 
 
-	for (s = -ARRAY_LENGTH (colors); s < ARRAY_LENGTH (sizes) * num_tests; s++) {
-	    struct image src;
+	for (s = -ARRAY_LENGTH (colors);
+	     s < ARRAY_LENGTH (sizes) * num_tests;
+	     s++)
+	{
+	    image_t src;
 
-	    if (s < 0) {
+	    if (s < 0)
+	    {
 		image_init (&src, -s - 1, 0, 0);
-	    } else {
+	    }
+	    else
+	    {
 		image_init (&src,
 			    s / ARRAY_LENGTH (sizes) / ARRAY_LENGTH (formats),
 			    s / ARRAY_LENGTH (sizes) % ARRAY_LENGTH (formats),
 			    sizes[s % ARRAY_LENGTH (sizes)]);
 	    }
 
-	    for (m = -ARRAY_LENGTH (colors); m < ARRAY_LENGTH (sizes) * num_tests; m++) {
-		struct image mask;
+	    for (m = -ARRAY_LENGTH (colors);
+		 m < ARRAY_LENGTH (sizes) * num_tests;
+		 m++)
+	    {
+		image_t mask;
 
-		if (m < 0) {
+		if (m < 0)
+		{
 		    image_init (&mask, -m - 1, 0, 0);
-		} else {
-		    image_init (&mask,
-				m / ARRAY_LENGTH (sizes) / ARRAY_LENGTH (formats),
-				m / ARRAY_LENGTH (sizes) % ARRAY_LENGTH (formats),
-				sizes[m % ARRAY_LENGTH (sizes)]);
+		}
+		else
+		{
+		    image_init (
+			&mask,
+			m / ARRAY_LENGTH (sizes) / ARRAY_LENGTH (formats),
+			m / ARRAY_LENGTH (sizes) % ARRAY_LENGTH (formats),
+			sizes[m % ARRAY_LENGTH (sizes)]);
 		}
 
-		for (ca = -1; ca <= 1; ca++) {
-		    for (i = 0; i < ARRAY_LENGTH (operators); i++) {
-			const struct operator *op = &operators[i];
+		for (ca = -1; ca <= 1; ca++)
+		{
+		    for (i = 0; i < ARRAY_LENGTH (operators); i++)
+		    {
+			const operator_t *op = &operators[i];
 
-			switch (ca) {
+			switch (ca)
+			{
 			case -1:
 			    ok = composite_test (&dst, op, &src, NULL, ca);
 			    break;
