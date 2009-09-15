@@ -528,7 +528,9 @@ do_composite (pixman_implementation_t *imp,
 {
     pixman_format_code_t src_format, mask_format, dest_format;
     uint32_t src_flags, mask_flags, dest_flags;
+    pixman_bool_t src_repeat, mask_repeat;
     pixman_region32_t region;
+    pixman_box32_t *extents;
 
     get_image_info (src,  &src_format,  &src_flags);
     get_image_info (mask, &mask_format, &mask_flags);
@@ -546,6 +548,19 @@ do_composite (pixman_implementation_t *imp,
 	    src_format = mask_format = PIXMAN_rpixbuf;
     }
 	    
+    src_repeat =
+	src->type == BITS					&&
+	src_flags & FAST_PATH_ID_TRANSFORM			&&
+	src->common.repeat == PIXMAN_REPEAT_NORMAL		&&
+	src_format != PIXMAN_solid;
+    
+    mask_repeat =
+	mask							&&
+	mask->type == BITS					&&
+	mask_flags & FAST_PATH_ID_TRANSFORM			&&
+	mask->common.repeat == PIXMAN_REPEAT_NORMAL		&&
+	mask_format != PIXMAN_solid;
+    
     pixman_region32_init (&region);
     
     if (!pixman_compute_composite_region32 (
@@ -555,63 +570,34 @@ do_composite (pixman_implementation_t *imp,
 	return;
     }
     
+    extents = pixman_region32_extents (&region);
+    
+    if (image_covers (src, extents, dest_x - src_x, dest_y - src_y))
+	src_flags |= FAST_PATH_COVERS_CLIP;
+    
+    if (mask && image_covers (mask, extents, dest_x - mask_x, dest_y - mask_y))
+	mask_flags |= FAST_PATH_COVERS_CLIP;
+	    
     while (imp)
     {
+	const pixman_fast_path_t *info;
+	    
+	for (info = imp->fast_paths; info->op != PIXMAN_OP_NONE; ++info)
 	{
-	    pixman_composite_func_t func;
-	    const pixman_fast_path_t *info;
-	    pixman_bool_t result;
-	    pixman_box32_t *extents;
-	    
-	    result = FALSE;
-	    
-	    extents = pixman_region32_extents (&region);
-	    
-	    if (image_covers (src, extents, dest_x - src_x, dest_y - src_y))
-		src_flags |= FAST_PATH_COVERS_CLIP;
-	    
-	    if (mask && image_covers (mask, extents, dest_x - mask_x, dest_y - mask_y))
-		mask_flags |= FAST_PATH_COVERS_CLIP;
-	    
-	    func = NULL;
-	    for (info = imp->fast_paths; info->op != PIXMAN_OP_NONE; ++info)
+	    if ((info->op == op || info->op == PIXMAN_OP_any)		&&
+		/* src */
+		((info->src_format == src_format) ||
+		 (info->src_format == PIXMAN_any))			&&
+		(info->src_flags & src_flags) == info->src_flags	&&
+		/* mask */
+		((info->mask_format == mask_format) ||
+		 (info->mask_format == PIXMAN_any))			&&
+		(info->mask_flags & mask_flags) == info->mask_flags	&&
+		/* dest */
+		((info->dest_format == dest_format) ||
+		 (info->dest_format == PIXMAN_any))			&&
+		(info->dest_flags & dest_flags) == info->dest_flags)
 	    {
-		if ((info->op == op || info->op == PIXMAN_OP_any)	&&
-		    /* src */
-		    ((info->src_format == src_format) ||
-		     (info->src_format == PIXMAN_any))			&&
-		    (info->src_flags & src_flags) == info->src_flags	&&
-		    /* mask */
-		    ((info->mask_format == mask_format) ||
-		     (info->mask_format == PIXMAN_any))			&&
-		    (info->mask_flags & mask_flags) == info->mask_flags	&&
-		    /* dest */
-		    ((info->dest_format == dest_format) ||
-		     (info->dest_format == PIXMAN_any))			&&
-		    (info->dest_flags & dest_flags) == info->dest_flags)
-		{
-		    func = info->func;
-		    break;
-		}
-	    }
-	    
-	    if (func)
-	    {
-		pixman_bool_t src_repeat, mask_repeat;
-		
-		src_repeat =
-		    src->type == BITS					&&
-		    src_flags & FAST_PATH_ID_TRANSFORM			&&
-		    src->common.repeat == PIXMAN_REPEAT_NORMAL		&&
-		    src_format != PIXMAN_solid;
-		
-		mask_repeat =
-		    mask						&&
-		    mask->type == BITS					&&
-		    mask_flags & FAST_PATH_ID_TRANSFORM			&&
-		    mask->common.repeat == PIXMAN_REPEAT_NORMAL		&&
-		    mask_format != PIXMAN_solid;
-		
 		walk_region_internal (imp, op,
 				      src, mask, dest,
 				      src_x, src_y, mask_x, mask_y,
@@ -619,18 +605,16 @@ do_composite (pixman_implementation_t *imp,
 				      width, height,
 				      src_repeat, mask_repeat,
 				      &region,
-				      func);
+				      info->func);
 		
-		result = TRUE;
+		goto done;
 	    }
-	    
-	    if (result)
-		break;
 	}
 	
 	imp = imp->delegate;
     }
 
+done:
     pixman_region32_fini (&region);
 }
 
