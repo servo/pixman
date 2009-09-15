@@ -526,32 +526,33 @@ do_composite (pixman_implementation_t *imp,
 	      int		       width,
 	      int		       height)
 {
+    pixman_format_code_t src_format, mask_format, dest_format;
+    uint32_t src_flags, mask_flags, dest_flags;
+
+    get_image_info (src,  &src_format,  &src_flags);
+    get_image_info (mask, &mask_format, &mask_flags);
+    get_image_info (dest, &dest_format, &dest_flags);
+    
+    /* Check for pixbufs */
+    if ((mask_format == PIXMAN_a8r8g8b8 || mask_format == PIXMAN_a8b8g8r8) &&
+	(src->type == BITS && src->bits.bits == mask->bits.bits)	   &&
+	(src->common.repeat == mask->common.repeat)			   &&
+	(src_x == mask_x && src_y == mask_y))
+    {
+	if (src_format == PIXMAN_x8b8g8r8)
+	    src_format = mask_format = PIXMAN_pixbuf;
+	else if (src_format == PIXMAN_x8r8g8b8)
+	    src_format = mask_format = PIXMAN_rpixbuf;
+    }
+	    
     while (imp)
     {
 	{
-	    pixman_format_code_t src_format, mask_format, dest_format;
-	    uint32_t src_flags, mask_flags, dest_flags;
 	    pixman_composite_func_t func;
 	    const pixman_fast_path_t *info;
 	    pixman_bool_t result;
 	    pixman_region32_t region;
 	    pixman_box32_t *extents;
-	    
-	    get_image_info (src,  &src_format,  &src_flags);
-	    get_image_info (mask, &mask_format, &mask_flags);
-	    get_image_info (dest, &dest_format, &dest_flags);
-	    
-	    /* Check for pixbufs */
-	    if ((mask_format == PIXMAN_a8r8g8b8 || mask_format == PIXMAN_a8b8g8r8) &&
-		(src->type == BITS && src->bits.bits == mask->bits.bits)	   &&
-		(src->common.repeat == mask->common.repeat)			   &&
-		(src_x == mask_x && src_y == mask_y))
-	    {
-		if (src_format == PIXMAN_x8b8g8r8)
-		    src_format = mask_format = PIXMAN_pixbuf;
-		else if (src_format == PIXMAN_x8r8g8b8)
-		    src_format = mask_format = PIXMAN_rpixbuf;
-	    }
 	    
 	    pixman_region32_init (&region);
 	    
