@@ -1627,39 +1627,6 @@ static const pixman_fast_path_t c_fast_paths[] =
 };
 
 static void
-fast_path_composite (pixman_implementation_t *imp,
-                     pixman_op_t              op,
-                     pixman_image_t *         src,
-                     pixman_image_t *         mask,
-                     pixman_image_t *         dest,
-                     int32_t                  src_x,
-                     int32_t                  src_y,
-                     int32_t                  mask_x,
-                     int32_t                  mask_y,
-                     int32_t                  dest_x,
-                     int32_t                  dest_y,
-                     int32_t                  width,
-                     int32_t                  height)
-{
-    if (_pixman_run_fast_path (c_fast_paths, imp,
-			       op, src, mask, dest,
-			       src_x, src_y,
-			       mask_x, mask_y,
-			       dest_x, dest_y,
-			       width, height))
-    {
-	return;
-    }
-
-    _pixman_implementation_composite (imp->delegate, op,
-                                      src, mask, dest,
-                                      src_x, src_y,
-                                      mask_x, mask_y,
-                                      dest_x, dest_y,
-                                      width, height);
-}
-
-static void
 pixman_fill8 (uint32_t *bits,
               int       stride,
               int       x,
@@ -1772,7 +1739,6 @@ _pixman_implementation_create_fast_path (void)
     pixman_implementation_t *general = _pixman_implementation_create_general ();
     pixman_implementation_t *imp = _pixman_implementation_create (general, c_fast_paths);
 
-    imp->composite = fast_path_composite;
     imp->fill = fast_path_fill;
 
     return imp;

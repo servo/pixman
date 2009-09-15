@@ -270,33 +270,6 @@ static const pixman_fast_path_t general_fast_path[] =
     { PIXMAN_OP_NONE }
 };
 
-static void
-general_composite (pixman_implementation_t * imp,
-                   pixman_op_t               op,
-                   pixman_image_t *          src,
-                   pixman_image_t *          mask,
-                   pixman_image_t *          dest,
-                   int32_t                   src_x,
-                   int32_t                   src_y,
-                   int32_t                   mask_x,
-                   int32_t                   mask_y,
-                   int32_t                   dest_x,
-                   int32_t                   dest_y,
-                   int32_t                   width,
-                   int32_t                   height)
-{
-    pixman_bool_t result;
-
-    result = _pixman_run_fast_path (general_fast_path, imp,
-				    op, src, mask, dest,
-				    src_x, src_y,
-				    mask_x, mask_y,
-				    dest_x, dest_y,
-				    width, height);
-
-    assert (result);
-}
-
 static pixman_bool_t
 general_blt (pixman_implementation_t *imp,
              uint32_t *               src_bits,
@@ -339,7 +312,6 @@ _pixman_implementation_create_general (void)
     _pixman_setup_combiner_functions_32 (imp);
     _pixman_setup_combiner_functions_64 (imp);
 
-    imp->composite = general_composite;
     imp->blt = general_blt;
     imp->fill = general_fill;
 

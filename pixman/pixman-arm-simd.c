@@ -438,46 +438,11 @@ static const pixman_fast_path_t arm_simd_fast_paths[] =
     { PIXMAN_OP_NONE },
 };
 
-static void
-arm_simd_composite (pixman_implementation_t *imp,
-                    pixman_op_t              op,
-                    pixman_image_t *         src,
-                    pixman_image_t *         mask,
-                    pixman_image_t *         dest,
-                    int32_t                  src_x,
-                    int32_t                  src_y,
-                    int32_t                  mask_x,
-                    int32_t                  mask_y,
-                    int32_t                  dest_x,
-                    int32_t                  dest_y,
-                    int32_t                  width,
-                    int32_t                  height)
-{
-    if (_pixman_run_fast_path (arm_simd_fast_paths, imp,
-                               op, src, mask, dest,
-                               src_x, src_y,
-                               mask_x, mask_y,
-                               dest_x, dest_y,
-                               width, height))
-    {
-	return;
-    }
-
-    _pixman_implementation_composite (imp->delegate, op,
-                                      src, mask, dest,
-                                      src_x, src_y,
-                                      mask_x, mask_y,
-                                      dest_x, dest_y,
-                                      width, height);
-}
-
 pixman_implementation_t *
 _pixman_implementation_create_arm_simd (void)
 {
     pixman_implementation_t *general = _pixman_implementation_create_fast_path ();
     pixman_implementation_t *imp = _pixman_implementation_create (general, arm_simd_fast_paths);
-
-    imp->composite = arm_simd_composite;
 
     return imp;
 }

@@ -435,39 +435,6 @@ static const pixman_fast_path_t arm_neon_fast_paths[] =
     { PIXMAN_OP_NONE },
 };
 
-static void
-arm_neon_composite (pixman_implementation_t *imp,
-                    pixman_op_t              op,
-                    pixman_image_t *         src,
-                    pixman_image_t *         mask,
-                    pixman_image_t *         dest,
-                    int32_t                  src_x,
-                    int32_t                  src_y,
-                    int32_t                  mask_x,
-                    int32_t                  mask_y,
-                    int32_t                  dest_x,
-                    int32_t                  dest_y,
-                    int32_t                  width,
-                    int32_t                  height)
-{
-    if (_pixman_run_fast_path (arm_neon_fast_paths, imp,
-                               op, src, mask, dest,
-                               src_x, src_y,
-                               mask_x, mask_y,
-                               dest_x, dest_y,
-                               width, height))
-    {
-	return;
-    }
-
-    _pixman_implementation_composite (imp->delegate, op,
-                                      src, mask, dest,
-                                      src_x, src_y,
-                                      mask_x, mask_y,
-                                      dest_x, dest_y,
-                                      width, height);
-}
-
 static pixman_bool_t
 arm_neon_blt (pixman_implementation_t *imp,
               uint32_t *               src_bits,
@@ -555,7 +522,6 @@ _pixman_implementation_create_arm_neon (void)
     imp->combine_32[PIXMAN_OP_OVER] = neon_combine_over_u;
     imp->combine_32[PIXMAN_OP_ADD] = neon_combine_add_u;
 
-    imp->composite = arm_neon_composite;
     imp->blt = arm_neon_blt;
     imp->fill = arm_neon_fill;
 

@@ -444,8 +444,7 @@ struct pixman_implementation_t
     pixman_implementation_t *	toplevel;
     pixman_implementation_t *	delegate;
     const pixman_fast_path_t *	fast_paths;
-
-    pixman_composite_func_t	composite;
+    
     pixman_blt_func_t		blt;
     pixman_fill_func_t		fill;
 
@@ -487,21 +486,6 @@ _pixman_implementation_combine_64_ca (pixman_implementation_t *imp,
                                       const uint64_t *         src,
                                       const uint64_t *         mask,
                                       int                      width);
-void
-_pixman_implementation_composite (pixman_implementation_t *imp,
-                                  pixman_op_t              op,
-                                  pixman_image_t *         src,
-                                  pixman_image_t *         mask,
-                                  pixman_image_t *         dest,
-                                  int32_t                  src_x,
-                                  int32_t                  src_y,
-                                  int32_t                  mask_x,
-                                  int32_t                  mask_y,
-                                  int32_t                  dest_x,
-                                  int32_t                  dest_y,
-                                  int32_t                  width,
-                                  int32_t                  height);
-
 
 pixman_bool_t
 _pixman_implementation_blt (pixman_implementation_t *imp,

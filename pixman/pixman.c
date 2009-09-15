@@ -154,6 +154,25 @@ unapply_workaround (pixman_image_t *image, uint32_t *bits, int dx, int dy)
     pixman_region32_translate (&image->common.clip_region, dx, dy);
 }
 
+/*
+ * Work around GCC bug causing crashes in Mozilla with SSE2
+ *
+ * When using -msse, gcc generates movdqa instructions assuming that
+ * the stack is 16 byte aligned. Unfortunately some applications, such
+ * as Mozilla and Mono, end up aligning the stack to 4 bytes, which
+ * causes the movdqa instructions to fail.
+ *
+ * The __force_align_arg_pointer__ makes gcc generate a prologue that
+ * realigns the stack pointer to 16 bytes.
+ *
+ * On x86-64 this is not necessary because the standard ABI already
+ * calls for a 16 byte aligned stack.
+ *
+ * See https://bugs.freedesktop.org/show_bug.cgi?id=15693
+ */
+#if defined (USE_SSE2) && defined(__GNUC__) && !defined(__x86_64__) && !defined(__amd64__)
+__attribute__((__force_align_arg_pointer__))
+#endif
 PIXMAN_EXPORT void
 pixman_image_composite (pixman_op_t      op,
                         pixman_image_t * src,
