@@ -372,7 +372,6 @@ pixman_rasterize_edges_accessors (pixman_image_t *image,
 /*
  * Implementations
  */
-
 typedef struct pixman_implementation_t pixman_implementation_t;
 
 typedef void (*pixman_combine_32_func_t) (pixman_implementation_t *imp,
@@ -428,23 +427,37 @@ typedef pixman_bool_t (*pixman_fill_func_t) (pixman_implementation_t *imp,
 void _pixman_setup_combiner_functions_32 (pixman_implementation_t *imp);
 void _pixman_setup_combiner_functions_64 (pixman_implementation_t *imp);
 
+typedef struct
+{
+    pixman_op_t             op;
+    pixman_format_code_t    src_format;
+    uint32_t		    src_flags;
+    pixman_format_code_t    mask_format;
+    uint32_t		    mask_flags;
+    pixman_format_code_t    dest_format;
+    uint32_t		    dest_flags;
+    pixman_composite_func_t func;
+} pixman_fast_path_t;
+
 struct pixman_implementation_t
 {
-    pixman_implementation_t *toplevel;
-    pixman_implementation_t *delegate;
+    pixman_implementation_t *	toplevel;
+    pixman_implementation_t *	delegate;
+    const pixman_fast_path_t *	fast_paths;
 
-    pixman_composite_func_t  composite;
-    pixman_blt_func_t        blt;
-    pixman_fill_func_t       fill;
+    pixman_composite_func_t	composite;
+    pixman_blt_func_t		blt;
+    pixman_fill_func_t		fill;
 
-    pixman_combine_32_func_t combine_32[PIXMAN_N_OPERATORS];
-    pixman_combine_32_func_t combine_32_ca[PIXMAN_N_OPERATORS];
-    pixman_combine_64_func_t combine_64[PIXMAN_N_OPERATORS];
-    pixman_combine_64_func_t combine_64_ca[PIXMAN_N_OPERATORS];
+    pixman_combine_32_func_t	combine_32[PIXMAN_N_OPERATORS];
+    pixman_combine_32_func_t	combine_32_ca[PIXMAN_N_OPERATORS];
+    pixman_combine_64_func_t	combine_64[PIXMAN_N_OPERATORS];
+    pixman_combine_64_func_t	combine_64_ca[PIXMAN_N_OPERATORS];
 };
 
 pixman_implementation_t *
-_pixman_implementation_create (pixman_implementation_t *delegate);
+_pixman_implementation_create (pixman_implementation_t *delegate,
+			       const pixman_fast_path_t *fast_paths);
 
 void
 _pixman_implementation_combine_32 (pixman_implementation_t *imp,
@@ -488,6 +501,7 @@ _pixman_implementation_composite (pixman_implementation_t *imp,
                                   int32_t                  dest_y,
                                   int32_t                  width,
                                   int32_t                  height);
+
 
 pixman_bool_t
 _pixman_implementation_blt (pixman_implementation_t *imp,
@@ -602,18 +616,6 @@ _pixman_choose_implementation (void);
 #define FAST_PATH_STD_DEST_FLAGS					\
     (FAST_PATH_NO_ACCESSORS		|				\
      FAST_PATH_NO_WIDE_FORMAT)
-
-typedef struct
-{
-    pixman_op_t             op;
-    pixman_format_code_t    src_format;
-    uint32_t		    src_flags;
-    pixman_format_code_t    mask_format;
-    uint32_t		    mask_flags;
-    pixman_format_code_t    dest_format;
-    uint32_t		    dest_flags;
-    pixman_composite_func_t func;
-} pixman_fast_path_t;
 
 #define FAST_PATH(op, src, src_flags, mask, mask_flags, dest, dest_flags, func) \
     PIXMAN_OP_ ## op,							\

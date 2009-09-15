@@ -5956,7 +5956,7 @@ pixman_implementation_t *
 _pixman_implementation_create_sse2 (void)
 {
     pixman_implementation_t *mmx = _pixman_implementation_create_mmx ();
-    pixman_implementation_t *imp = _pixman_implementation_create (mmx);
+    pixman_implementation_t *imp = _pixman_implementation_create (mmx, sse2_fast_paths);
 
     /* SSE2 constants */
     mask_565_r  = create_mask_2x32_128 (0x00f80000, 0x00f80000);

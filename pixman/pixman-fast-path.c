@@ -1770,7 +1770,7 @@ pixman_implementation_t *
 _pixman_implementation_create_fast_path (void)
 {
     pixman_implementation_t *general = _pixman_implementation_create_general ();
-    pixman_implementation_t *imp = _pixman_implementation_create (general);
+    pixman_implementation_t *imp = _pixman_implementation_create (general, c_fast_paths);
 
     imp->composite = fast_path_composite;
     imp->fill = fast_path_fill;

@@ -419,7 +419,7 @@ arm_composite_over_n_8_8888 (pixman_implementation_t * impl,
     }
 }
 
-static const pixman_fast_path_t arm_simd_fast_path_array[] =
+static const pixman_fast_path_t arm_simd_fast_paths[] =
 {
     PIXMAN_STD_FAST_PATH (OVER, a8r8g8b8, null, a8r8g8b8, arm_composite_over_8888_8888),
     PIXMAN_STD_FAST_PATH (OVER, a8r8g8b8, null, x8r8g8b8, arm_composite_over_8888_8888),
@@ -437,8 +437,6 @@ static const pixman_fast_path_t arm_simd_fast_path_array[] =
 
     { PIXMAN_OP_NONE },
 };
-
-const pixman_fast_path_t *const arm_simd_fast_paths = arm_simd_fast_path_array;
 
 static void
 arm_simd_composite (pixman_implementation_t *imp,
@@ -477,7 +475,7 @@ pixman_implementation_t *
 _pixman_implementation_create_arm_simd (void)
 {
     pixman_implementation_t *general = _pixman_implementation_create_fast_path ();
-    pixman_implementation_t *imp = _pixman_implementation_create (general);
+    pixman_implementation_t *imp = _pixman_implementation_create (general, arm_simd_fast_paths);
 
     imp->composite = arm_simd_composite;
 

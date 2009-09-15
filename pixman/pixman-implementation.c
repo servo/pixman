@@ -136,7 +136,8 @@ delegate_fill (pixman_implementation_t *imp,
 }
 
 pixman_implementation_t *
-_pixman_implementation_create (pixman_implementation_t *delegate)
+_pixman_implementation_create (pixman_implementation_t *delegate,
+			       const pixman_fast_path_t *fast_paths)
 {
     pixman_implementation_t *imp = malloc (sizeof (pixman_implementation_t));
     pixman_implementation_t *d;
@@ -144,6 +145,8 @@ _pixman_implementation_create (pixman_implementation_t *delegate)
 
     if (!imp)
 	return NULL;
+
+    assert (fast_paths);
 
     /* Make sure the whole delegate chain has the right toplevel */
     imp->delegate = delegate;
@@ -164,6 +167,8 @@ _pixman_implementation_create (pixman_implementation_t *delegate)
 	imp->combine_64_ca[i] = delegate_combine_64_ca;
     }
 
+    imp->fast_paths = fast_paths;
+    
     return imp;
 }
 

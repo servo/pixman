@@ -266,13 +266,8 @@ general_composite_rect  (pixman_implementation_t *imp,
 
 static const pixman_fast_path_t general_fast_path[] =
 {
-    {   PIXMAN_OP_any,
-	PIXMAN_any,		0,
-	PIXMAN_any,		0,
-	PIXMAN_any,		0,
-	general_composite_rect,
-    },
-    {	PIXMAN_OP_NONE	}
+    { PIXMAN_OP_any, PIXMAN_any, 0, PIXMAN_any,	0, PIXMAN_any, 0, general_composite_rect },
+    { PIXMAN_OP_NONE }
 };
 
 static void
@@ -298,7 +293,7 @@ general_composite (pixman_implementation_t * imp,
 				    mask_x, mask_y,
 				    dest_x, dest_y,
 				    width, height);
-    
+
     assert (result);
 }
 
@@ -339,7 +334,7 @@ general_fill (pixman_implementation_t *imp,
 pixman_implementation_t *
 _pixman_implementation_create_general (void)
 {
-    pixman_implementation_t *imp = _pixman_implementation_create (NULL);
+    pixman_implementation_t *imp = _pixman_implementation_create (NULL, general_fast_path);
 
     _pixman_setup_combiner_functions_32 (imp);
     _pixman_setup_combiner_functions_64 (imp);
