@@ -528,6 +528,7 @@ do_composite (pixman_implementation_t *imp,
 {
     pixman_format_code_t src_format, mask_format, dest_format;
     uint32_t src_flags, mask_flags, dest_flags;
+    pixman_region32_t region;
 
     get_image_info (src,  &src_format,  &src_flags);
     get_image_info (mask, &mask_format, &mask_flags);
@@ -545,23 +546,22 @@ do_composite (pixman_implementation_t *imp,
 	    src_format = mask_format = PIXMAN_rpixbuf;
     }
 	    
+    pixman_region32_init (&region);
+    
+    if (!pixman_compute_composite_region32 (
+	    &region, src, mask, dest,
+	    src_x, src_y, mask_x, mask_y, dest_x, dest_y, width, height))
+    {
+	return;
+    }
+    
     while (imp)
     {
 	{
 	    pixman_composite_func_t func;
 	    const pixman_fast_path_t *info;
 	    pixman_bool_t result;
-	    pixman_region32_t region;
 	    pixman_box32_t *extents;
-	    
-	    pixman_region32_init (&region);
-	    
-	    if (!pixman_compute_composite_region32 (
-		    &region, src, mask, dest,
-		    src_x, src_y, mask_x, mask_y, dest_x, dest_y, width, height))
-	    {
-		return;
-	    }
 	    
 	    result = FALSE;
 	    
@@ -624,13 +624,14 @@ do_composite (pixman_implementation_t *imp,
 		result = TRUE;
 	    }
 	    
-	    pixman_region32_fini (&region);
 	    if (result)
-		return;
+		break;
 	}
 	
 	imp = imp->delegate;
     }
+
+    pixman_region32_fini (&region);
 }
 
 /*
