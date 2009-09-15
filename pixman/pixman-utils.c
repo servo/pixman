@@ -512,13 +512,31 @@ get_image_info (pixman_image_t       *image,
     else
     {
 	if (!image->common.transform)
+	{
 	    *flags |= FAST_PATH_ID_TRANSFORM;
-
+	}
+	else
+	{
+	    if (image->common.transform->matrix[0][1] == 0 &&
+		image->common.transform->matrix[1][0] == 0 &&
+		image->common.transform->matrix[2][0] == 0 &&
+		image->common.transform->matrix[2][1] == 0 &&
+		image->common.transform->matrix[2][2] == pixman_fixed_1)
+	    {
+		*flags |= FAST_PATH_SCALE_TRANSFORM;
+	    }
+	}
+	
 	if (!image->common.alpha_map)
 	    *flags |= FAST_PATH_NO_ALPHA_MAP;
 
 	if (image->common.filter != PIXMAN_FILTER_CONVOLUTION)
+	{
 	    *flags |= FAST_PATH_NO_CONVOLUTION_FILTER;
+
+	    if (image->common.filter == PIXMAN_FILTER_NEAREST)
+		*flags |= FAST_PATH_NEAREST_FILTER;
+	}
 
 	if (image->common.repeat != PIXMAN_REPEAT_PAD)
 	    *flags |= FAST_PATH_NO_PAD_REPEAT;

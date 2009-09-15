@@ -568,16 +568,18 @@ _pixman_choose_implementation (void);
 
 #define PIXMAN_OP_any		(PIXMAN_N_OPERATORS + 1)
 
-#define FAST_PATH_ID_TRANSFORM			(1 << 0)
-#define FAST_PATH_NO_ALPHA_MAP			(1 << 1)
-#define FAST_PATH_NO_CONVOLUTION_FILTER		(1 << 2)
-#define FAST_PATH_NO_PAD_REPEAT			(1 << 3)
-#define FAST_PATH_NO_REFLECT_REPEAT		(1 << 4)
-#define FAST_PATH_NO_ACCESSORS			(1 << 5)
-#define FAST_PATH_NO_WIDE_FORMAT		(1 << 6)
-#define FAST_PATH_COVERS_CLIP			(1 << 7)
-#define FAST_PATH_COMPONENT_ALPHA		(1 << 8)
-#define FAST_PATH_UNIFIED_ALPHA			(1 << 9)
+#define FAST_PATH_ID_TRANSFORM			(1 <<  0)
+#define FAST_PATH_NO_ALPHA_MAP			(1 <<  1)
+#define FAST_PATH_NO_CONVOLUTION_FILTER		(1 <<  2)
+#define FAST_PATH_NO_PAD_REPEAT			(1 <<  3)
+#define FAST_PATH_NO_REFLECT_REPEAT		(1 <<  4)
+#define FAST_PATH_NO_ACCESSORS			(1 <<  5)
+#define FAST_PATH_NO_WIDE_FORMAT		(1 <<  6)
+#define FAST_PATH_COVERS_CLIP			(1 <<  7)
+#define FAST_PATH_COMPONENT_ALPHA		(1 <<  8)
+#define FAST_PATH_UNIFIED_ALPHA			(1 <<  9)
+#define FAST_PATH_SCALE_TRANSFORM		(1 << 10)
+#define FAST_PATH_NEAREST_FILTER		(1 << 11)
 
 #define _FAST_PATH_STANDARD_FLAGS					\
     (FAST_PATH_ID_TRANSFORM		|				\
