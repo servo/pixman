@@ -588,29 +588,6 @@ image_covers (pixman_image_t *image,
     return TRUE;
 }
 
-static force_inline pixman_bool_t
-sources_cover (pixman_image_t *src,
-	       pixman_image_t *mask,
-	       pixman_box32_t *extents,
-	       int             src_x,
-	       int             src_y,
-	       int             mask_x,
-	       int             mask_y,
-	       int             dest_x,
-	       int             dest_y)
-{
-    if (!image_covers (src, extents, dest_x - src_x, dest_y - src_y))
-	return FALSE;
-
-    if (!mask)
-	return TRUE;
-
-    if (!image_covers (mask, extents, dest_x - mask_x, dest_y - mask_y))
-	return FALSE;
-
-    return TRUE;
-}
-
 pixman_bool_t
 _pixman_run_fast_path (const pixman_fast_path_t *paths,
                        pixman_implementation_t * imp,
