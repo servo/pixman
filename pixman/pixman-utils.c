@@ -462,42 +462,6 @@ walk_region_internal (pixman_implementation_t *imp,
     }
 }
 
-void
-_pixman_walk_composite_region (pixman_implementation_t *imp,
-                               pixman_op_t              op,
-                               pixman_image_t *         src_image,
-                               pixman_image_t *         mask_image,
-                               pixman_image_t *         dst_image,
-                               int32_t                  src_x,
-                               int32_t                  src_y,
-                               int32_t                  mask_x,
-                               int32_t                  mask_y,
-                               int32_t                  dest_x,
-                               int32_t                  dest_y,
-                               int32_t                  width,
-                               int32_t                  height,
-                               pixman_composite_func_t  composite_rect)
-{
-    pixman_region32_t region;
-
-    pixman_region32_init (&region);
-
-    if (pixman_compute_composite_region32 (
-            &region, src_image, mask_image, dst_image,
-            src_x, src_y, mask_x, mask_y, dest_x, dest_y,
-            width, height))
-    {
-	walk_region_internal (imp, op,
-	                      src_image, mask_image, dst_image,
-	                      src_x, src_y, mask_x, mask_y, dest_x, dest_y,
-	                      width, height, FALSE, FALSE,
-	                      &region,
-	                      composite_rect);
-
-	pixman_region32_fini (&region);
-    }
-}
-
 static void
 get_image_info (pixman_image_t       *image,
 		pixman_format_code_t *code,
