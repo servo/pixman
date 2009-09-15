@@ -511,120 +511,6 @@ image_covers (pixman_image_t *image,
     return TRUE;
 }
 
-static pixman_bool_t
-_pixman_run_fast_path (const pixman_fast_path_t *paths,
-                       pixman_implementation_t * imp,
-                       pixman_op_t               op,
-                       pixman_image_t *          src,
-                       pixman_image_t *          mask,
-                       pixman_image_t *          dest,
-                       int32_t                   src_x,
-                       int32_t                   src_y,
-                       int32_t                   mask_x,
-                       int32_t                   mask_y,
-                       int32_t                   dest_x,
-                       int32_t                   dest_y,
-                       int32_t                   width,
-                       int32_t                   height)
-{
-    pixman_format_code_t src_format, mask_format, dest_format;
-    uint32_t src_flags, mask_flags, dest_flags;
-    pixman_composite_func_t func;
-    const pixman_fast_path_t *info;
-    pixman_bool_t result;
-    pixman_region32_t region;
-    pixman_box32_t *extents;
-    
-    get_image_info (src,  &src_format,  &src_flags);
-    get_image_info (mask, &mask_format, &mask_flags);
-    get_image_info (dest, &dest_format, &dest_flags);
-    
-    /* Check for pixbufs */
-    if ((mask_format == PIXMAN_a8r8g8b8 || mask_format == PIXMAN_a8b8g8r8) &&
-	(src->type == BITS && src->bits.bits == mask->bits.bits)	   &&
-	(src->common.repeat == mask->common.repeat)			   &&
-	(src_x == mask_x && src_y == mask_y))
-    {
-	if (src_format == PIXMAN_x8b8g8r8)
-	    src_format = mask_format = PIXMAN_pixbuf;
-	else if (src_format == PIXMAN_x8r8g8b8)
-	    src_format = mask_format = PIXMAN_rpixbuf;
-    }
-
-    pixman_region32_init (&region);
-    
-    if (!pixman_compute_composite_region32 (
-	    &region, src, mask, dest,
-	    src_x, src_y, mask_x, mask_y, dest_x, dest_y, width, height))
-    {
-	return TRUE;
-    }
-
-    result = FALSE;
-    
-    extents = pixman_region32_extents (&region);
-
-    if (image_covers (src, extents, dest_x - src_x, dest_y - src_y))
-	src_flags |= FAST_PATH_COVERS_CLIP;
-
-    if (mask && image_covers (mask, extents, dest_x - mask_x, dest_y - mask_y))
-	mask_flags |= FAST_PATH_COVERS_CLIP;
-
-    func = NULL;
-    for (info = paths; info->op != PIXMAN_OP_NONE; ++info)
-    {
-	if ((info->op == op || info->op == PIXMAN_OP_any)	&&
-	    /* src */
-	    ((info->src_format == src_format) ||
-	     (info->src_format == PIXMAN_any))			&&
-	    (info->src_flags & src_flags) == info->src_flags	&&
-	    /* mask */
-	    ((info->mask_format == mask_format) ||
-	     (info->mask_format == PIXMAN_any))			&&
-	    (info->mask_flags & mask_flags) == info->mask_flags	&&
-	    /* dest */
-	    ((info->dest_format == dest_format) ||
-	     (info->dest_format == PIXMAN_any))			&&
-	    (info->dest_flags & dest_flags) == info->dest_flags)
-	{
-	    func = info->func;
-	    break;
-	}
-    }
-
-    if (func)
-    {
-	pixman_bool_t src_repeat, mask_repeat;
-	
-	src_repeat =
-	    src->type == BITS					&&
-	    src_flags & FAST_PATH_ID_TRANSFORM			&&
-	    src->common.repeat == PIXMAN_REPEAT_NORMAL		&&
-	    src_format != PIXMAN_solid;
-	
-	mask_repeat =
-	    mask						&&
-	    mask->type == BITS					&&
-	    mask_flags & FAST_PATH_ID_TRANSFORM			&&
-	    mask->common.repeat == PIXMAN_REPEAT_NORMAL		&&
-	    mask_format != PIXMAN_solid;
-	
-	walk_region_internal (imp, op,
-			      src, mask, dest,
-			      src_x, src_y, mask_x, mask_y,
-			      dest_x, dest_y,
-			      width, height,
-			      src_repeat, mask_repeat,
-			      &region,
-			      func);
-	
-	result = TRUE;
-    }
-
-    pixman_region32_fini (&region);
-    return result;
-}
-
 static void
 do_composite (pixman_implementation_t *imp,
 	      pixman_op_t	       op,
@@ -642,16 +528,106 @@ do_composite (pixman_implementation_t *imp,
 {
     while (imp)
     {
-	if (_pixman_run_fast_path (imp->fast_paths, imp,
-				   op, src, mask, dest,
-				   src_x, src_y,
-				   mask_x, mask_y,
-				   dest_x, dest_y,
-				   width, height))
 	{
-	    return;
+	    pixman_format_code_t src_format, mask_format, dest_format;
+	    uint32_t src_flags, mask_flags, dest_flags;
+	    pixman_composite_func_t func;
+	    const pixman_fast_path_t *info;
+	    pixman_bool_t result;
+	    pixman_region32_t region;
+	    pixman_box32_t *extents;
+	    
+	    get_image_info (src,  &src_format,  &src_flags);
+	    get_image_info (mask, &mask_format, &mask_flags);
+	    get_image_info (dest, &dest_format, &dest_flags);
+	    
+	    /* Check for pixbufs */
+	    if ((mask_format == PIXMAN_a8r8g8b8 || mask_format == PIXMAN_a8b8g8r8) &&
+		(src->type == BITS && src->bits.bits == mask->bits.bits)	   &&
+		(src->common.repeat == mask->common.repeat)			   &&
+		(src_x == mask_x && src_y == mask_y))
+	    {
+		if (src_format == PIXMAN_x8b8g8r8)
+		    src_format = mask_format = PIXMAN_pixbuf;
+		else if (src_format == PIXMAN_x8r8g8b8)
+		    src_format = mask_format = PIXMAN_rpixbuf;
+	    }
+	    
+	    pixman_region32_init (&region);
+	    
+	    if (!pixman_compute_composite_region32 (
+		    &region, src, mask, dest,
+		    src_x, src_y, mask_x, mask_y, dest_x, dest_y, width, height))
+	    {
+		return;
+	    }
+	    
+	    result = FALSE;
+	    
+	    extents = pixman_region32_extents (&region);
+	    
+	    if (image_covers (src, extents, dest_x - src_x, dest_y - src_y))
+		src_flags |= FAST_PATH_COVERS_CLIP;
+	    
+	    if (mask && image_covers (mask, extents, dest_x - mask_x, dest_y - mask_y))
+		mask_flags |= FAST_PATH_COVERS_CLIP;
+	    
+	    func = NULL;
+	    for (info = imp->fast_paths; info->op != PIXMAN_OP_NONE; ++info)
+	    {
+		if ((info->op == op || info->op == PIXMAN_OP_any)	&&
+		    /* src */
+		    ((info->src_format == src_format) ||
+		     (info->src_format == PIXMAN_any))			&&
+		    (info->src_flags & src_flags) == info->src_flags	&&
+		    /* mask */
+		    ((info->mask_format == mask_format) ||
+		     (info->mask_format == PIXMAN_any))			&&
+		    (info->mask_flags & mask_flags) == info->mask_flags	&&
+		    /* dest */
+		    ((info->dest_format == dest_format) ||
+		     (info->dest_format == PIXMAN_any))			&&
+		    (info->dest_flags & dest_flags) == info->dest_flags)
+		{
+		    func = info->func;
+		    break;
+		}
+	    }
+	    
+	    if (func)
+	    {
+		pixman_bool_t src_repeat, mask_repeat;
+		
+		src_repeat =
+		    src->type == BITS					&&
+		    src_flags & FAST_PATH_ID_TRANSFORM			&&
+		    src->common.repeat == PIXMAN_REPEAT_NORMAL		&&
+		    src_format != PIXMAN_solid;
+		
+		mask_repeat =
+		    mask						&&
+		    mask->type == BITS					&&
+		    mask_flags & FAST_PATH_ID_TRANSFORM			&&
+		    mask->common.repeat == PIXMAN_REPEAT_NORMAL		&&
+		    mask_format != PIXMAN_solid;
+		
+		walk_region_internal (imp, op,
+				      src, mask, dest,
+				      src_x, src_y, mask_x, mask_y,
+				      dest_x, dest_y,
+				      width, height,
+				      src_repeat, mask_repeat,
+				      &region,
+				      func);
+		
+		result = TRUE;
+	    }
+	    
+	    pixman_region32_fini (&region);
+	    if (result)
+		return;
 	}
-
+	
 	imp = imp->delegate;
     }
 }
