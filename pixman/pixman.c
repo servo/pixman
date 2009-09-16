@@ -351,21 +351,48 @@ walk_region_internal (pixman_implementation_t *imp,
     const pixman_box32_t *pbox;
     int w, h, w_this, h_this;
     int x_msk, y_msk, x_src, y_src, x_dst, y_dst;
+    int src_dy = src_y - dest_y;
+    int src_dx = src_x - dest_x;
+    int mask_dy = mask_y - dest_y;
+    int mask_dx = mask_x - dest_x;
 
     pbox = pixman_region32_rectangles (region, &n);
+
+    /* Fast path for non-repeating sources */
+    if (!src_repeat && !mask_repeat)
+    {
+       while (n--)
+       {
+           (*composite_rect) (imp, op,
+                              src_image, mask_image, dst_image,
+                              pbox->x1 + src_dx,
+                              pbox->y1 + src_dy,
+                              pbox->x1 + mask_dx,
+                              pbox->y1 + mask_dy,
+                              pbox->x1,
+                              pbox->y1,
+                              pbox->x2 - pbox->x1,
+                              pbox->y2 - pbox->y1);
+           
+           pbox++;
+       }
+
+       return;
+    }
+    
     while (n--)
     {
 	h = pbox->y2 - pbox->y1;
-	y_src = pbox->y1 - dest_y + src_y;
-	y_msk = pbox->y1 - dest_y + mask_y;
+	y_src = pbox->y1 + src_dy;
+	y_msk = pbox->y1 + mask_dy;
 	y_dst = pbox->y1;
 
 	while (h)
 	{
 	    h_this = h;
 	    w = pbox->x2 - pbox->x1;
-	    x_src = pbox->x1 - dest_x + src_x;
-	    x_msk = pbox->x1 - dest_x + mask_x;
+	    x_src = pbox->x1 + src_dx;
+	    x_msk = pbox->x1 + mask_dx;
 	    x_dst = pbox->x1;
 
 	    if (mask_repeat)
