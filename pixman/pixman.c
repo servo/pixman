@@ -347,14 +347,14 @@ walk_region_internal (pixman_implementation_t *imp,
                       pixman_region32_t *      region,
                       pixman_composite_func_t  composite_rect)
 {
-    int n;
-    const pixman_box32_t *pbox;
     int w, h, w_this, h_this;
     int x_msk, y_msk, x_src, y_src, x_dst, y_dst;
     int src_dy = src_y - dest_y;
     int src_dx = src_x - dest_x;
     int mask_dy = mask_y - dest_y;
     int mask_dx = mask_x - dest_x;
+    const pixman_box32_t *pbox;
+    int n;
 
     pbox = pixman_region32_rectangles (region, &n);
 
@@ -455,67 +455,60 @@ get_image_info (pixman_image_t       *image,
 {
     *flags = 0;
     
-    if (!image)
+    if (!image->common.transform)
     {
-	*code = PIXMAN_null;
+	*flags |= FAST_PATH_ID_TRANSFORM;
     }
     else
     {
-	if (!image->common.transform)
+	if (image->common.transform->matrix[0][1] == 0 &&
+	    image->common.transform->matrix[1][0] == 0 &&
+	    image->common.transform->matrix[2][0] == 0 &&
+	    image->common.transform->matrix[2][1] == 0 &&
+	    image->common.transform->matrix[2][2] == pixman_fixed_1)
 	{
-	    *flags |= FAST_PATH_ID_TRANSFORM;
+	    *flags |= FAST_PATH_SCALE_TRANSFORM;
 	}
-	else
-	{
-	    if (image->common.transform->matrix[0][1] == 0 &&
-		image->common.transform->matrix[1][0] == 0 &&
-		image->common.transform->matrix[2][0] == 0 &&
-		image->common.transform->matrix[2][1] == 0 &&
-		image->common.transform->matrix[2][2] == pixman_fixed_1)
-	    {
-		*flags |= FAST_PATH_SCALE_TRANSFORM;
-	    }
-	}
-	
-	if (!image->common.alpha_map)
-	    *flags |= FAST_PATH_NO_ALPHA_MAP;
-
-	if (image->common.filter != PIXMAN_FILTER_CONVOLUTION)
-	{
-	    *flags |= FAST_PATH_NO_CONVOLUTION_FILTER;
-
-	    if (image->common.filter == PIXMAN_FILTER_NEAREST)
-		*flags |= FAST_PATH_NEAREST_FILTER;
-	}
-
-	if (image->common.repeat != PIXMAN_REPEAT_PAD)
-	    *flags |= FAST_PATH_NO_PAD_REPEAT;
-
-	if (image->common.repeat != PIXMAN_REPEAT_REFLECT)
-	    *flags |= FAST_PATH_NO_REFLECT_REPEAT;
-
-	*flags |= (FAST_PATH_NO_ACCESSORS | FAST_PATH_NO_WIDE_FORMAT);
-	if (image->type == BITS)
-	{
-	    if (image->bits.read_func || image->bits.write_func)
-		*flags &= ~FAST_PATH_NO_ACCESSORS;
-
-	    if (PIXMAN_FORMAT_IS_WIDE (image->bits.format))
-		*flags &= ~FAST_PATH_NO_WIDE_FORMAT;
-	}
-
-	if (image->common.component_alpha)
-	    *flags |= FAST_PATH_COMPONENT_ALPHA;
-	else
-	    *flags |= FAST_PATH_UNIFIED_ALPHA;
-
-	if (_pixman_image_is_solid (image))
-	    *code = PIXMAN_solid;
-	else if (image->common.type == BITS)
-	    *code = image->bits.format;
-	else
-	    *code = PIXMAN_unknown;
     }
+    
+    if (!image->common.alpha_map)
+	*flags |= FAST_PATH_NO_ALPHA_MAP;
+    
+    if (image->common.filter != PIXMAN_FILTER_CONVOLUTION)
+    {
+	*flags |= FAST_PATH_NO_CONVOLUTION_FILTER;
+	
+	if (image->common.filter == PIXMAN_FILTER_NEAREST)
+	    *flags |= FAST_PATH_NEAREST_FILTER;
+    }
+    
+    if (image->common.repeat != PIXMAN_REPEAT_PAD)
+	*flags |= FAST_PATH_NO_PAD_REPEAT;
+    
+    if (image->common.repeat != PIXMAN_REPEAT_REFLECT)
+	*flags |= FAST_PATH_NO_REFLECT_REPEAT;
+    
+    *flags |= (FAST_PATH_NO_ACCESSORS | FAST_PATH_NO_WIDE_FORMAT);
+    if (image->type == BITS)
+    {
+	if (image->bits.read_func || image->bits.write_func)
+	    *flags &= ~FAST_PATH_NO_ACCESSORS;
+	
+	if (PIXMAN_FORMAT_IS_WIDE (image->bits.format))
+	    *flags &= ~FAST_PATH_NO_WIDE_FORMAT;
+    }
+    
+    if (image->common.component_alpha)
+	*flags |= FAST_PATH_COMPONENT_ALPHA;
+    else
+	*flags |= FAST_PATH_UNIFIED_ALPHA;
+    
+    if (_pixman_image_is_solid (image))
+	*code = PIXMAN_solid;
+    else if (image->common.type == BITS)
+	*code = image->bits.format;
+    else
+	*code = PIXMAN_unknown;
 }
 
 static force_inline pixman_bool_t
@@ -560,7 +553,15 @@ do_composite (pixman_implementation_t *imp,
     pixman_box32_t *extents;
 
     get_image_info (src,  &src_format,  &src_flags);
-    get_image_info (mask, &mask_format, &mask_flags);
+    if (mask)
+    {
+	get_image_info (mask, &mask_format, &mask_flags);
+    }
+    else
+    {
+	mask_format = PIXMAN_null;
+	mask_flags = 0;
+    }
     get_image_info (dest, &dest_format, &dest_flags);
     
     /* Check for pixbufs */
