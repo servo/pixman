@@ -407,6 +407,22 @@ calc_op (pixman_op_t op, double src, double dst, double srca, double dsta)
 	    Fb = max (0.0, 1.0 - srca / dsta);
 	return mult_chan (src, dst, Fa, Fb);
 
+    case PIXMAN_OP_MULTIPLY:
+    case PIXMAN_OP_SCREEN:
+    case PIXMAN_OP_OVERLAY:
+    case PIXMAN_OP_DARKEN:
+    case PIXMAN_OP_LIGHTEN:
+    case PIXMAN_OP_COLOR_DODGE:
+    case PIXMAN_OP_COLOR_BURN:
+    case PIXMAN_OP_HARD_LIGHT:
+    case PIXMAN_OP_SOFT_LIGHT:
+    case PIXMAN_OP_DIFFERENCE:
+    case PIXMAN_OP_EXCLUSION:
+    case PIXMAN_OP_HSL_HUE:
+    case PIXMAN_OP_HSL_SATURATION:
+    case PIXMAN_OP_HSL_COLOR:
+    case PIXMAN_OP_HSL_LUMINOSITY:
+    case PIXMAN_OP_NONE:
     default:
 	abort();
     }
@@ -866,6 +882,8 @@ main (void)
 			    ok = composite_test (&dst, op, &src, &mask,
 						 mask.size? TRUE : FALSE);
 			    break;
+                        default:
+                            break;
 			}
 			group_ok = group_ok && ok;
 			tests_passed += ok;

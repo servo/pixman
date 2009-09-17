@@ -157,6 +157,9 @@ repeat (pixman_repeat_t repeat, int size, int *coord)
 
     case PIXMAN_REPEAT_NONE:
 	break;
+
+    default:
+        break;
     }
 }
 
@@ -339,6 +342,9 @@ bits_image_fetch_pixel_filtered (bits_image_t *image,
     case PIXMAN_FILTER_CONVOLUTION:
 	return bits_image_fetch_pixel_convolution (image, x, y);
 	break;
+
+    default:
+        break;
     }
 
     return 0;

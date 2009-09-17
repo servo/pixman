@@ -593,6 +593,10 @@ _pixman_image_is_opaque (pixman_image_t *image)
 	if (ALPHA_8 (image->solid.color) != 0xff)
 	    return FALSE;
 	break;
+
+    default:
+        return FALSE;
+        break;
     }
 
     /* Convolution filters can introduce translucency if the sum of the

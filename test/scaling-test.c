@@ -326,6 +326,9 @@ test_composite (uint32_t initcrc,
     case 3:
 	repeat = PIXMAN_REPEAT_REFLECT;
 	break;
+
+    default:
+        break;
     }
     pixman_image_set_repeat (src_img, repeat);
 
