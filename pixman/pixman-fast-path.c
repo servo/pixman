@@ -723,6 +723,7 @@ fast_composite_over_8888_8888 (pixman_implementation_t *imp,
     }
 }
 
+#if 0
 static void
 fast_composite_over_8888_0888 (pixman_implementation_t *imp,
 			       pixman_op_t              op,
@@ -773,6 +774,7 @@ fast_composite_over_8888_0888 (pixman_implementation_t *imp,
 	}
     }
 }
+#endif
 
 static void
 fast_composite_over_8888_0565 (pixman_implementation_t *imp,

@@ -56,7 +56,8 @@ aligned_malloc (size_t align, size_t size)
     void *result;
 
 #ifdef HAVE_POSIX_MEMALIGN
-    posix_memalign (&result, align, size);
+    if (posix_memalign (&result, align, size) != 0)
+      result = NULL;
 #else
     result = malloc (size);
 #endif

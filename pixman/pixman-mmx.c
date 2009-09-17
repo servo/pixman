@@ -3153,6 +3153,7 @@ mmx_composite_copy_area (pixman_implementation_t *imp,
                     src_x, src_y, dest_x, dest_y, width, height);
 }
 
+#if 0
 static void
 mmx_composite_over_x888_8_8888 (pixman_implementation_t *imp,
                                 pixman_op_t              op,
@@ -3219,6 +3220,7 @@ mmx_composite_over_x888_8_8888 (pixman_implementation_t *imp,
 
     _mm_empty ();
 }
+#endif
 
 static const pixman_fast_path_t mmx_fast_paths[] =
 {
