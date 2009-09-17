@@ -69,3 +69,12 @@
 #   define PIXMAN_EXPORT
 #endif
 
+/* TLS */
+#if defined (__GNUC__) && ((__GNUC__ == 3 && __GNUC_MINOR >= 3) || __GNUC__ > 3)
+#    define THREAD_LOCAL __thread
+#elif defined (_MSC_VER)
+#    define THREAD_LOCAL __declspec(thread)
+#else
+#    warning "unknown compiler"
+#    define THREAD_LOCAL __thread
+#endif
