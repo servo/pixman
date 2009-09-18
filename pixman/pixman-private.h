@@ -103,6 +103,8 @@ struct image_common
 
     pixman_image_destroy_func_t destroy_func;
     void *                      destroy_data;
+
+    uint32_t			flags;
 };
 
 struct source_image

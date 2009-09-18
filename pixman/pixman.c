@@ -453,56 +453,8 @@ get_image_info (pixman_image_t       *image,
 		pixman_format_code_t *code,
 		uint32_t	     *flags)
 {
-    *flags = 0;
-    
-    if (!image->common.transform)
-    {
-	*flags |= FAST_PATH_ID_TRANSFORM;
-    }
-    else
-    {
-	if (image->common.transform->matrix[0][1] == 0 &&
-	    image->common.transform->matrix[1][0] == 0 &&
-	    image->common.transform->matrix[2][0] == 0 &&
-	    image->common.transform->matrix[2][1] == 0 &&
-	    image->common.transform->matrix[2][2] == pixman_fixed_1)
-	{
-	    *flags |= FAST_PATH_SCALE_TRANSFORM;
-	}
-    }
-    
-    if (!image->common.alpha_map)
-	*flags |= FAST_PATH_NO_ALPHA_MAP;
-    
-    if (image->common.filter != PIXMAN_FILTER_CONVOLUTION)
-    {
-	*flags |= FAST_PATH_NO_CONVOLUTION_FILTER;
-	
-	if (image->common.filter == PIXMAN_FILTER_NEAREST)
-	    *flags |= FAST_PATH_NEAREST_FILTER;
-    }
-    
-    if (image->common.repeat != PIXMAN_REPEAT_PAD)
-	*flags |= FAST_PATH_NO_PAD_REPEAT;
-    
-    if (image->common.repeat != PIXMAN_REPEAT_REFLECT)
-	*flags |= FAST_PATH_NO_REFLECT_REPEAT;
-    
-    *flags |= (FAST_PATH_NO_ACCESSORS | FAST_PATH_NO_WIDE_FORMAT);
-    if (image->type == BITS)
-    {
-	if (image->bits.read_func || image->bits.write_func)
-	    *flags &= ~FAST_PATH_NO_ACCESSORS;
-	
-	if (PIXMAN_FORMAT_IS_WIDE (image->bits.format))
-	    *flags &= ~FAST_PATH_NO_WIDE_FORMAT;
-    }
-    
-    if (image->common.component_alpha)
-	*flags |= FAST_PATH_COMPONENT_ALPHA;
-    else
-	*flags |= FAST_PATH_UNIFIED_ALPHA;
-    
+    *flags = image->common.flags;
+
     if (_pixman_image_is_solid (image))
 	*code = PIXMAN_solid;
     else if (image->common.type == BITS)
