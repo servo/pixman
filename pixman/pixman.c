@@ -39,11 +39,16 @@ typedef struct
     pixman_op_t op_src_dst_opaque;
     pixman_op_t op_src_opaque;
     pixman_op_t op_dst_opaque;
-} optimized_operator_info_t;
+} operator_info_t;
 
-static const optimized_operator_info_t optimized_operators[] =
+#define NO_OPTIMIZATION(a) (a), (a), (a), (a)
+
+static const operator_info_t operator_table[] =
 {
     /* Input Operator           SRC&DST Opaque          SRC Opaque              DST Opaque      */
+    { NO_OPTIMIZATION (PIXMAN_OP_CLEAR) },
+    { NO_OPTIMIZATION (PIXMAN_OP_SRC) },
+    { NO_OPTIMIZATION (PIXMAN_OP_DST) },
     { PIXMAN_OP_OVER,           PIXMAN_OP_SRC,          PIXMAN_OP_SRC,          PIXMAN_OP_OVER },
     { PIXMAN_OP_OVER_REVERSE,   PIXMAN_OP_DST,          PIXMAN_OP_OVER_REVERSE, PIXMAN_OP_DST },
     { PIXMAN_OP_IN,             PIXMAN_OP_SRC,          PIXMAN_OP_IN,           PIXMAN_OP_SRC },
@@ -53,49 +58,86 @@ static const optimized_operator_info_t optimized_operators[] =
     { PIXMAN_OP_ATOP,           PIXMAN_OP_SRC,          PIXMAN_OP_IN,           PIXMAN_OP_OVER },
     { PIXMAN_OP_ATOP_REVERSE,   PIXMAN_OP_DST,          PIXMAN_OP_OVER_REVERSE, PIXMAN_OP_IN_REVERSE },
     { PIXMAN_OP_XOR,            PIXMAN_OP_CLEAR,        PIXMAN_OP_OUT,          PIXMAN_OP_OUT_REVERSE },
+    { NO_OPTIMIZATION (PIXMAN_OP_ADD) },
     { PIXMAN_OP_SATURATE,       PIXMAN_OP_DST,          PIXMAN_OP_OVER_REVERSE, PIXMAN_OP_DST },
+
+    { PIXMAN_OP_NONE /* 0x0e */ },
+    { PIXMAN_OP_NONE /* 0x0f */ },
+
+    { NO_OPTIMIZATION (PIXMAN_OP_DISJOINT_CLEAR) },
+    { NO_OPTIMIZATION (PIXMAN_OP_DISJOINT_SRC) },
+    { NO_OPTIMIZATION (PIXMAN_OP_DISJOINT_DST) },
+    { NO_OPTIMIZATION (PIXMAN_OP_DISJOINT_OVER) },
+    { NO_OPTIMIZATION (PIXMAN_OP_DISJOINT_OVER_REVERSE) },
+    { NO_OPTIMIZATION (PIXMAN_OP_DISJOINT_IN) },
+    { NO_OPTIMIZATION (PIXMAN_OP_DISJOINT_IN_REVERSE) },
+    { NO_OPTIMIZATION (PIXMAN_OP_DISJOINT_OUT) },
+    { NO_OPTIMIZATION (PIXMAN_OP_DISJOINT_OUT_REVERSE) },
+    { NO_OPTIMIZATION (PIXMAN_OP_DISJOINT_ATOP) },
+    { NO_OPTIMIZATION (PIXMAN_OP_DISJOINT_ATOP_REVERSE) },
+    { NO_OPTIMIZATION (PIXMAN_OP_DISJOINT_XOR) },
+
+    { PIXMAN_OP_NONE /* 0x1c */ },
+    { PIXMAN_OP_NONE /* 0x1d */ },
+    { PIXMAN_OP_NONE /* 0x1e */ },
+    { PIXMAN_OP_NONE /* 0x1f */ },
+
+    { NO_OPTIMIZATION (PIXMAN_OP_CONJOINT_CLEAR) },
+    { NO_OPTIMIZATION (PIXMAN_OP_CONJOINT_SRC) },
+    { NO_OPTIMIZATION (PIXMAN_OP_CONJOINT_DST) },
+    { NO_OPTIMIZATION (PIXMAN_OP_CONJOINT_OVER) },
+    { NO_OPTIMIZATION (PIXMAN_OP_CONJOINT_OVER_REVERSE) },
+    { NO_OPTIMIZATION (PIXMAN_OP_CONJOINT_IN) },
+    { NO_OPTIMIZATION (PIXMAN_OP_CONJOINT_IN_REVERSE) },
+    { NO_OPTIMIZATION (PIXMAN_OP_CONJOINT_OUT) },
+    { NO_OPTIMIZATION (PIXMAN_OP_CONJOINT_OUT_REVERSE) },
+    { NO_OPTIMIZATION (PIXMAN_OP_CONJOINT_ATOP) },
+    { NO_OPTIMIZATION (PIXMAN_OP_CONJOINT_ATOP_REVERSE) },
+    { NO_OPTIMIZATION (PIXMAN_OP_CONJOINT_XOR) },
+
+    { PIXMAN_OP_NONE /* 0x2c */ },
+    { PIXMAN_OP_NONE /* 0x2d */ },
+    { PIXMAN_OP_NONE /* 0x2e */ },
+    { PIXMAN_OP_NONE /* 0x2f */ },
+
+    { NO_OPTIMIZATION (PIXMAN_OP_MULTIPLY) },
+    { NO_OPTIMIZATION (PIXMAN_OP_SCREEN) },
+    { NO_OPTIMIZATION (PIXMAN_OP_OVERLAY) },
+    { NO_OPTIMIZATION (PIXMAN_OP_DARKEN) },
+    { NO_OPTIMIZATION (PIXMAN_OP_LIGHTEN) },
+    { NO_OPTIMIZATION (PIXMAN_OP_COLOR_DODGE) },
+    { NO_OPTIMIZATION (PIXMAN_OP_COLOR_BURN) },
+    { NO_OPTIMIZATION (PIXMAN_OP_HARD_LIGHT) },
+    { NO_OPTIMIZATION (PIXMAN_OP_SOFT_LIGHT) },
+    { NO_OPTIMIZATION (PIXMAN_OP_DIFFERENCE) },
+    { NO_OPTIMIZATION (PIXMAN_OP_EXCLUSION) },
+    { NO_OPTIMIZATION (PIXMAN_OP_HSL_HUE) },
+    { NO_OPTIMIZATION (PIXMAN_OP_HSL_SATURATION) },
+    { NO_OPTIMIZATION (PIXMAN_OP_HSL_COLOR) },
+    { NO_OPTIMIZATION (PIXMAN_OP_HSL_LUMINOSITY) },
+
     { PIXMAN_OP_NONE }
 };
 
 static pixman_implementation_t *imp;
 
 /*
- * Check if the current operator could be optimized
- */
-static const optimized_operator_info_t*
-pixman_operator_can_be_optimized (pixman_op_t op)
-{
-    const optimized_operator_info_t *info;
-
-    for (info = optimized_operators; info->op != PIXMAN_OP_NONE; info++)
-    {
-	if (info->op == op)
-	    return info;
-    }
-    return NULL;
-}
-
-/*
  * Optimize the current operator based on opacity of source or destination
  * The output operator should be mathematically equivalent to the source.
  */
 static pixman_op_t
-pixman_optimize_operator (pixman_op_t     op,
-                          pixman_image_t *src_image,
-                          pixman_image_t *mask_image,
-                          pixman_image_t *dst_image)
+optimize_operator (pixman_op_t     op,
+		   uint32_t        src_flags,
+		   uint32_t        mask_flags,
+		   uint32_t        dst_flags)
 {
-    pixman_bool_t is_source_opaque;
-    pixman_bool_t is_dest_opaque;
-    const optimized_operator_info_t *info = pixman_operator_can_be_optimized (op);
-    if (!info || mask_image)
-	return op;
+    const operator_info_t *info = &(operator_table[op]);
+    pixman_bool_t is_source_opaque, is_dest_opaque;
 
-    is_source_opaque = src_image->common.flags & FAST_PATH_IS_OPAQUE;
-    is_dest_opaque = dst_image->common.flags & FAST_PATH_IS_OPAQUE;
+    assert (info->op == op);
 
-    if (!is_source_opaque && !is_dest_opaque)
-	return op;
+    is_source_opaque = (src_flags & mask_flags) & FAST_PATH_IS_OPAQUE;
+    is_dest_opaque = dst_flags & FAST_PATH_IS_OPAQUE;
 
     if (is_source_opaque && is_dest_opaque)
 	return info->op_src_dst_opaque;
@@ -105,7 +147,6 @@ pixman_optimize_operator (pixman_op_t     op,
 	return info->op_dst_opaque;
 
     return op;
-
 }
 
 static void
@@ -510,7 +551,7 @@ do_composite (pixman_implementation_t *imp,
     else
     {
 	mask_format = PIXMAN_null;
-	mask_flags = 0;
+	mask_flags = FAST_PATH_IS_OPAQUE;
     }
 
     dest_format = dest->common.extended_format_code;
@@ -554,6 +595,19 @@ do_composite (pixman_implementation_t *imp,
     
     if (mask && image_covers (mask, extents, dest_x - mask_x, dest_y - mask_y))
 	mask_flags |= FAST_PATH_COVERS_CLIP;
+
+    /*
+     * Check if we can replace our operator by a simpler one
+     * if the src or dest are opaque. The output operator should be
+     * mathematically equivalent to the source.
+     */
+    op = optimize_operator (op, src_flags, mask_flags, dest_flags);
+    if (op == PIXMAN_OP_DST ||
+	op == PIXMAN_OP_CONJOINT_DST ||
+	op == PIXMAN_OP_DISJOINT_DST)
+    {
+	return;
+    }
 
     cache = tls_cache;
 
@@ -713,19 +767,6 @@ pixman_image_composite32 (pixman_op_t      op,
     if (mask)
 	_pixman_image_validate (mask);
     _pixman_image_validate (dest);
-    
-    /*
-     * Check if we can replace our operator by a simpler one
-     * if the src or dest are opaque. The output operator should be
-     * mathematically equivalent to the source.
-     */
-    op = pixman_optimize_operator(op, src, mask, dest);
-    if (op == PIXMAN_OP_DST		||
-	op == PIXMAN_OP_CONJOINT_DST	||
-	op == PIXMAN_OP_DISJOINT_DST)
-    {
-        return;
-    }
 
     if (!imp)
 	imp = _pixman_choose_implementation ();
