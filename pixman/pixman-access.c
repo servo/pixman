@@ -180,11 +180,11 @@ fetch_scanline_b8g8r8a8 (pixman_image_t *image,
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     const uint32_t *pixel = (uint32_t *)bits + x;
     const uint32_t *end = pixel + width;
-    
+
     while (pixel < end)
     {
 	uint32_t p = READ (image, pixel++);
-	
+
 	*buffer++ = (((p & 0xff000000) >> 24)	|
 	             ((p & 0x00ff0000) >> 8)	|
 	             ((p & 0x0000ff00) << 8)	|
@@ -840,20 +840,22 @@ fetch_scanline_x4a4 (pixman_image_t *image,
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     const uint8_t *pixel = (const uint8_t *)bits + x;
     const uint8_t *end = pixel + width;
-    
+   
     while (pixel < end)
     {
 	uint8_t p = READ (image, pixel++) & 0xf;
-	
+
 	*buffer++ = (p | (p << 4)) << 24;
     }
 }
 
-#define FETCH_8(img,l,o)    (READ (img, (uint8_t *)(l) + ((o) >> 2)))
+#define FETCH_8(img,l,o)    (READ (img, (((uint8_t *)(l)) + ((o) >> 3))))
 #ifdef WORDS_BIGENDIAN
-#define FETCH_4(img,l,o)    ((o) & 2 ? FETCH_8 (img,l,o) & 0xf : FETCH_8 (img,l,o) >> 4)
+#define FETCH_4(img,l,o)						\
+    (((4 * (o)) & 4) ? (FETCH_8 (img,l, 4 * (o)) & 0xf) : (FETCH_8 (img,l,(4 * (o))) >> 4))
 #else
-#define FETCH_4(img,l,o)    ((o) & 2 ? FETCH_8 (img,l,o) >> 4 : FETCH_8 (img,l,o) & 0xf)
+#define FETCH_4(img,l,o)						\
+    (((4 * (o)) & 4) ? (FETCH_8 (img, l, 4 * (o)) >> 4) : (FETCH_8 (img, l, (4 * (o))) & 0xf))
 #endif
 
 static void
@@ -867,13 +869,13 @@ fetch_scanline_a4 (pixman_image_t *image,
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     int i;
-    
+
     for (i = 0; i < width; ++i)
     {
 	uint32_t p = FETCH_4 (image, bits, i + x);
-	
+
 	p |= p << 4;
-	
+
 	*buffer++ = p << 24;
     }
 }
@@ -923,7 +925,7 @@ fetch_scanline_b1g2r1 (pixman_image_t *image,
 	b = ((p & 0x8) * 0xff) >> 3;
 	g = ((p & 0x6) * 0x55) << 7;
 	r = ((p & 0x1) * 0xff) << 16;
-	
+
 	*buffer++ = 0xff000000 | r | g | b;
     }
 }
@@ -2425,22 +2427,32 @@ store_scanline_x4a4 (bits_image_t *  image,
     uint32_t *bits = image->bits + image->rowstride * y;
     uint8_t   *pixel = ((uint8_t *) bits) + x;
     int i;
-    
+
     for (i = 0; i < width; ++i)
 	WRITE (image, pixel++, values[i] >> 28);
 }
 
 #define STORE_8(img,l,o,v)  (WRITE (img, (uint8_t *)(l) + ((o) >> 3), (v)))
 #ifdef WORDS_BIGENDIAN
-#define STORE_4(img,l,o,v)					    \
-    STORE_8 (img,l,o,((o) & 4 ?					    \
-                      (FETCH_8 (img,l,o) & 0xf0) | (v) :            \
-                      (FETCH_8 (img,l,o) & 0x0f) | ((v) << 4)))
+
+#define STORE_4(img,l,o,v)						\
+    do									\
+    {									\
+	int bo = 4 * (o);						\
+	STORE_8 (img, l, bo, (bo & 4 ?					\
+			      (FETCH_8 (img, l, bo) & 0xf0) | (v) :	\
+			      (FETCH_8 (img, l, bo) & 0x0f) | ((v) << 4))); \
+    } while (0)
 #else
-#define STORE_4(img,l,o,v)					\
-    STORE_8 (img,l,o,((o) & 4 ?					\
-                      (FETCH_8 (img,l,o) & 0x0f) | ((v) << 4) : \
-                      (FETCH_8 (img,l,o) & 0xf0) | (v)))
+
+#define STORE_4(img,l,o,v)						\
+    do									\
+    {									\
+	int bo = 4 * (o);						\
+	STORE_8 (img, l, bo, (bo & 4 ?					\
+			      (FETCH_8 (img, l, bo) & 0x0f) | ((v) << 4) : \
+			      (FETCH_8 (img, l, bo) & 0xf0) | (v)));	\
+    } while (0)
 #endif
 
 static void
@@ -2452,7 +2464,7 @@ store_scanline_a4 (bits_image_t *  image,
 {
     uint32_t *bits = image->bits + image->rowstride * y;
     int i;
-    
+
     for (i = 0; i < width; ++i)
 	STORE_4 (image, bits, i + x, values[i] >> 28);
 }
@@ -2488,11 +2500,11 @@ store_scanline_b1g2r1 (bits_image_t *  image,
 {
     uint32_t *bits = image->bits + image->rowstride * y;
     int i;
-    
+
     for (i = 0; i < width; ++i)
     {
 	uint32_t pixel;
-	
+
 	SPLIT (values[i]);
 	pixel = (((b >> 4) & 0x8) |
 	         ((g >> 5) & 0x6) |
@@ -2510,16 +2522,17 @@ store_scanline_a1r1g1b1 (bits_image_t *  image,
 {
     uint32_t *bits = image->bits + image->rowstride * y;
     int i;
-    
+
     for (i = 0; i < width; ++i)
     {
 	uint32_t pixel;
-	
+
 	SPLIT_A (values[i]);
 	pixel = (((a >> 4) & 0x8) |
 	         ((r >> 5) & 0x4) |
 	         ((g >> 6) & 0x2) |
 	         ((b >> 7)      ));
+
 	STORE_4 (image, bits, i + x, pixel);
     }
 }
@@ -2533,16 +2546,17 @@ store_scanline_a1b1g1r1 (bits_image_t *  image,
 {
     uint32_t *bits = image->bits + image->rowstride * y;
     int i;
-    
+
     for (i = 0; i < width; ++i)
     {
 	uint32_t pixel;
-	
+
 	SPLIT_A (values[i]);
 	pixel = (((a >> 4) & 0x8) |
 	         ((b >> 5) & 0x4) |
 	         ((g >> 6) & 0x2) |
 	         ((r >> 7)      ));
+
 	STORE_4 (image, bits, i + x, pixel);
     }
 }
