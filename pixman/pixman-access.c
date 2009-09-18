@@ -798,7 +798,7 @@ fetch_scanline_a2b2g2r2 (pixman_image_t *image,
 	uint32_t a, r, g, b;
 	
 	a = ((p & 0xc0) * 0x55) << 18;
-	b = ((p & 0x30) * 0x55) >> 6;
+	b = ((p & 0x30) * 0x55) >> 4;
 	g = ((p & 0x0c) * 0x55) << 6;
 	r = ((p & 0x03) * 0x55) << 16;
 	
@@ -1594,7 +1594,7 @@ fetch_pixel_a2b2g2r2 (bits_image_t *image,
     uint32_t a, r, g, b;
     
     a = ((pixel & 0xc0) * 0x55) << 18;
-    b = ((pixel & 0x30) * 0x55) >> 6;
+    b = ((pixel & 0x30) * 0x55) >> 4;
     g = ((pixel & 0x0c) * 0x55) << 6;
     r = ((pixel & 0x03) * 0x55) << 16;
     
