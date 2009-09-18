@@ -287,9 +287,6 @@ _pixman_image_validate (pixman_image_t *image);
 pixman_bool_t
 _pixman_image_is_opaque (pixman_image_t *image);
 
-pixman_bool_t
-_pixman_image_is_solid (pixman_image_t *image);
-
 uint32_t
 _pixman_image_get_solid (pixman_image_t *     image,
                          pixman_format_code_t format);

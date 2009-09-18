@@ -295,18 +295,27 @@ compute_image_info (pixman_image_t *image)
     else
 	flags |= FAST_PATH_UNIFIED_ALPHA;
 
-    if (_pixman_image_is_solid (image))
+    if (image->type == SOLID)
     {
 	code = PIXMAN_solid;
     }
     else if (image->common.type == BITS)
     {
-	code = image->bits.format;
-
-	if (!image->common.transform &&
-	    image->common.repeat == PIXMAN_REPEAT_NORMAL)
+	if (image->bits.width == 1	&&
+	    image->bits.height == 1	&&
+	    image->common.repeat != PIXMAN_REPEAT_NONE)
 	{
-	    flags |= FAST_PATH_SIMPLE_REPEAT;
+	    code = PIXMAN_solid;
+	}
+	else
+	{
+	    code = image->bits.format;
+
+	    if (!image->common.transform &&
+		image->common.repeat == PIXMAN_REPEAT_NORMAL)
+	    {
+		flags |= FAST_PATH_SIMPLE_REPEAT;
+	    }
 	}
     }
     else
@@ -598,25 +607,6 @@ pixman_image_get_depth (pixman_image_t *image)
 	return PIXMAN_FORMAT_DEPTH (image->bits.format);
 
     return 0;
-}
-
-pixman_bool_t
-_pixman_image_is_solid (pixman_image_t *image)
-{
-    if (image->type == SOLID)
-	return TRUE;
-
-    if (image->type != BITS     ||
-        image->bits.width != 1  ||
-        image->bits.height != 1)
-    {
-	return FALSE;
-    }
-
-    if (image->common.repeat == PIXMAN_REPEAT_NONE)
-	return FALSE;
-
-    return TRUE;
 }
 
 uint32_t
