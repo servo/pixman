@@ -314,6 +314,9 @@ free_random_image (uint32_t initcrc,
 	    uint32_t *data = pixman_image_get_data (img);
 	    uint32_t mask = (1 << PIXMAN_FORMAT_DEPTH (fmt)) - 1;
 
+	    if (PIXMAN_FORMAT_TYPE (fmt) == PIXMAN_TYPE_BGRA)
+		mask <<= (PIXMAN_FORMAT_BPP (fmt) - PIXMAN_FORMAT_DEPTH (fmt));
+
 	    for (i = 0; i < 32; i++)
 		mask |= mask << (i * PIXMAN_FORMAT_BPP (fmt));
 
