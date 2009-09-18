@@ -88,14 +88,13 @@ pixman_optimize_operator (pixman_op_t     op,
     pixman_bool_t is_source_opaque;
     pixman_bool_t is_dest_opaque;
     const optimized_operator_info_t *info = pixman_operator_can_be_optimized (op);
-
     if (!info || mask_image)
 	return op;
 
-    is_source_opaque = _pixman_image_is_opaque (src_image);
-    is_dest_opaque = _pixman_image_is_opaque (dst_image);
+    is_source_opaque = src_image->common.flags & FAST_PATH_IS_OPAQUE;
+    is_dest_opaque = dst_image->common.flags & FAST_PATH_IS_OPAQUE;
 
-    if (is_source_opaque == FALSE && is_dest_opaque == FALSE)
+    if (!is_source_opaque && !is_dest_opaque)
 	return op;
 
     if (is_source_opaque && is_dest_opaque)

@@ -298,6 +298,9 @@ compute_image_info (pixman_image_t *image)
     if (image->type == SOLID)
     {
 	code = PIXMAN_solid;
+
+	if (image->solid.color.alpha == 0xffff)
+	    flags |= FAST_PATH_IS_OPAQUE;
     }
     else if (image->common.type == BITS)
     {
@@ -317,10 +320,48 @@ compute_image_info (pixman_image_t *image)
 		flags |= FAST_PATH_SIMPLE_REPEAT;
 	    }
 	}
+
+	if (image->common.repeat != PIXMAN_REPEAT_NONE &&
+	    !PIXMAN_FORMAT_A (image->bits.format))
+	{
+	    flags |= FAST_PATH_IS_OPAQUE;
+	}
     }
     else
     {
 	code = PIXMAN_unknown;
+
+	if (image->type == LINEAR || image->type == RADIAL)
+	{
+	    if (image->common.repeat != PIXMAN_REPEAT_NONE)
+	    {
+		int i;
+
+		flags |= FAST_PATH_IS_OPAQUE;
+
+		for (i = 0; i < image->gradient.n_stops; ++i)
+		{
+		    if (image->gradient.stops[i].color.alpha != 0xffff)
+		    {
+			flags &= ~FAST_PATH_IS_OPAQUE;
+			break;
+		    }
+		}
+	    }
+	}
+    }
+
+    /* Both alpha maps and convolution filters can introduce
+     * non-opaqueness in otherwise opaque images. Also
+     * an image with component alpha turned on is only opaque
+     * if all channels are opaque, so we simply turn it off
+     * unconditionally for those images.
+     */
+    if (image->common.alpha_map					||
+	image->common.filter == PIXMAN_FILTER_CONVOLUTION	||
+	image->common.component_alpha)
+    {
+	flags &= ~FAST_PATH_IS_OPAQUE;
     }
 
     image->common.flags = flags;
@@ -628,58 +669,3 @@ _pixman_image_get_solid (pixman_image_t *     image,
 
     return result;
 }
-
-pixman_bool_t
-_pixman_image_is_opaque (pixman_image_t *image)
-{
-    int i;
-
-    if (image->common.alpha_map)
-	return FALSE;
-
-    switch (image->type)
-    {
-    case BITS:
-	if (image->common.repeat == PIXMAN_REPEAT_NONE)
-	    return FALSE;
-
-	if (PIXMAN_FORMAT_A (image->bits.format))
-	    return FALSE;
-	break;
-
-    case LINEAR:
-    case RADIAL:
-	if (image->common.repeat == PIXMAN_REPEAT_NONE)
-	    return FALSE;
-
-	for (i = 0; i < image->gradient.n_stops; ++i)
-	{
-	    if (image->gradient.stops[i].color.alpha != 0xffff)
-		return FALSE;
-	}
-	break;
-
-    case CONICAL:
-	/* Conical gradients always have a transparent border */
-	return FALSE;
-	break;
-
-    case SOLID:
-	if (image->solid.color.alpha != 0xffff)
-	    return FALSE;
-	break;
-
-    default:
-        return FALSE;
-        break;
-    }
-
-    /* Convolution filters can introduce translucency if the sum of the
-     * weights is lower than 1.
-     */
-    if (image->common.filter == PIXMAN_FILTER_CONVOLUTION)
-	return FALSE;
-
-    return TRUE;
-}
-
