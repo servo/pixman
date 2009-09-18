@@ -731,23 +731,27 @@ fetch_scanline_b2g3r3 (pixman_image_t *image,
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     const uint8_t *pixel = (const uint8_t *)bits + x;
     const uint8_t *end = pixel + width;
-    
+
     while (pixel < end)
     {
 	uint32_t p = READ (image, pixel++);
 	uint32_t r, g, b;
-	
-	b = (((p & 0xc0)     ) |
-	     ((p & 0xc0) >> 2) |
-	     ((p & 0xc0) >> 4) |
-	     ((p & 0xc0) >> 6));
-	
-	g = ((p & 0x38) | ((p & 0x38) >> 3) | ((p & 0x30) << 2)) << 8;
-	
-	r = (((p & 0x07)     ) |
-	     ((p & 0x07) << 3) |
-	     ((p & 0x06) << 6)) << 16;
-	
+
+	b  = p & 0xc0;
+	b |= b >> 2;
+	b |= b >> 4;
+	b &= 0xff;
+
+	g  = (p & 0x38) << 10;
+	g |= g >> 3;
+	g |= g >> 6;
+	g &= 0xff00;
+
+	r  = (p & 0x7) << 21;
+	r |= r >> 3;
+	r |= r >> 6;
+	r &= 0xff0000;
+
 	*buffer++ = 0xff000000 | r | g | b;
     }
 }
@@ -967,12 +971,12 @@ fetch_scanline_a1b1g1r1 (pixman_image_t *image,
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     int i;
-    
+
     for (i = 0; i < width; ++i)
     {
 	uint32_t p = FETCH_4 (image, bits, i + x);
 	uint32_t a, r, g, b;
-	
+
 	a = ((p & 0x8) * 0xff) << 21;
 	b = ((p & 0x4) * 0xff) >> 2;
 	g = ((p & 0x2) * 0xff) << 7;
@@ -1548,23 +1552,25 @@ fetch_pixel_b2g3r3 (bits_image_t *image,
 		    int           line)
 {
     uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t pixel = READ (image, (uint8_t *) bits + offset);
+    uint32_t p = READ (image, (uint8_t *) bits + offset);
     uint32_t r, g, b;
-    
-    b = ((pixel & 0xc0)         |
-	 ((pixel & 0xc0) >> 2)  |
-	 ((pixel & 0xc0) >> 4)  |
-	 ((pixel & 0xc0) >> 6));
-    
-    g = ((pixel & 0x38)         |
-	 ((pixel & 0x38) >> 3)  |
-	 ((pixel & 0x30) << 2)) << 8;
-    
-    r = ((pixel & 0x07)         |
-	 ((pixel & 0x07) << 3)  |
-	 ((pixel & 0x06) << 6)) << 16;
-    
-    return (0xff000000 | r | g | b);
+
+    b  = p & 0xc0;
+    b |= b >> 2;
+    b |= b >> 4;
+    b &= 0xff;
+
+    g  = (p & 0x38) << 10;
+    g |= g >> 3;
+    g |= g >> 6;
+    g &= 0xff00;
+
+    r  = (p & 0x7) << 21;
+    r |= r >> 3;
+    r |= r >> 6;
+    r &= 0xff0000;
+
+    return 0xff000000 | r | g | b;
 }
 
 static uint32_t
@@ -1693,7 +1699,7 @@ fetch_pixel_a1b1g1r1 (bits_image_t *image,
     uint32_t *bits = image->bits + line * image->rowstride;
     uint32_t pixel = FETCH_4 (image, bits, offset);
     uint32_t a, r, g, b;
-    
+
     a = ((pixel & 0x8) * 0xff) << 21;
     b = ((pixel & 0x4) * 0xff) >> 2;
     g = ((pixel & 0x2) * 0xff) << 7;
@@ -1710,7 +1716,7 @@ fetch_pixel_c4 (bits_image_t *image,
     uint32_t *bits = image->bits + line * image->rowstride;
     uint32_t pixel = FETCH_4 (image, bits, offset);
     const pixman_indexed_t * indexed = image->indexed;
-    
+
     return indexed->rgba[pixel];
 }
 
