@@ -640,7 +640,7 @@ main (int argc, char *argv[])
 	    /* Predefined value for running with all the fastpath functions
 	       disabled. It needs to be updated every time when changes are
 	       introduced to this program or behavior of pixman changes! */
-	    if (crc == 0xFE1244BF)
+	    if (crc == 0x481369DE)
 	    {
 		printf ("blitters test passed\n");
 	    }
