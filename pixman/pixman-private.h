@@ -105,6 +105,7 @@ struct image_common
     void *                      destroy_data;
 
     uint32_t			flags;
+    pixman_format_code_t	extended_format_code;
 };
 
 struct source_image

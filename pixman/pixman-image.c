@@ -244,8 +244,9 @@ _pixman_image_reset_clip_region (pixman_image_t *image)
 }
 
 static void
-compute_flags (pixman_image_t *image)
+compute_image_info (pixman_image_t *image)
 {
+    pixman_format_code_t code;
     uint32_t flags = 0;
 
     if (!image->common.transform)
@@ -294,7 +295,27 @@ compute_flags (pixman_image_t *image)
     else
 	flags |= FAST_PATH_UNIFIED_ALPHA;
 
+    if (_pixman_image_is_solid (image))
+    {
+	code = PIXMAN_solid;
+    }
+    else if (image->common.type == BITS)
+    {
+	code = image->bits.format;
+
+	if (!image->common.transform &&
+	    image->common.repeat == PIXMAN_REPEAT_NORMAL)
+	{
+	    flags |= FAST_PATH_SIMPLE_REPEAT;
+	}
+    }
+    else
+    {
+	code = PIXMAN_unknown;
+    }
+
     image->common.flags = flags;
+    image->common.extended_format_code = code;
 }
 
 void
@@ -304,7 +325,7 @@ _pixman_image_validate (pixman_image_t *image)
     {
 	image->common.property_changed (image);
 
-	compute_flags (image);
+	compute_image_info (image);
 
 	image->common.dirty = FALSE;
     }

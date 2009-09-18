@@ -448,30 +448,6 @@ walk_region_internal (pixman_implementation_t *imp,
     }
 }
 
-static void
-get_image_info (pixman_image_t       *image,
-		pixman_format_code_t *code,
-		uint32_t	     *flags)
-{
-    *flags = image->common.flags;
-
-    if (_pixman_image_is_solid (image))
-    {
-	*code = PIXMAN_solid;
-    }
-    else if (image->common.type == BITS)
-    {
-	*code = image->bits.format;
-
-	if (!image->common.transform && image->common.repeat == PIXMAN_REPEAT_NORMAL)
-	    *flags |= FAST_PATH_SIMPLE_REPEAT;
-    }
-    else
-    {
-	*code = PIXMAN_unknown;
-    }
-}
-
 static force_inline pixman_bool_t
 image_covers (pixman_image_t *image,
               pixman_box32_t *extents,
@@ -512,18 +488,23 @@ do_composite (pixman_implementation_t *imp,
     pixman_region32_t region;
     pixman_box32_t *extents;
 
-    get_image_info (src,  &src_format,  &src_flags);
+    src_format = src->common.extended_format_code;
+    src_flags = src->common.flags;
+
     if (mask)
     {
-	get_image_info (mask, &mask_format, &mask_flags);
+	mask_format = mask->common.extended_format_code;
+	mask_flags = mask->common.flags;
     }
     else
     {
 	mask_format = PIXMAN_null;
 	mask_flags = 0;
     }
-    get_image_info (dest, &dest_format, &dest_flags);
-    
+
+    dest_format = dest->common.extended_format_code;
+    dest_flags = dest->common.flags;
+
     /* Check for pixbufs */
     if ((mask_format == PIXMAN_a8r8g8b8 || mask_format == PIXMAN_a8b8g8r8) &&
 	(src->type == BITS && src->bits.bits == mask->bits.bits)	   &&
