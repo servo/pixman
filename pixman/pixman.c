@@ -30,96 +30,89 @@
 
 #include <stdlib.h>
 
-/*
- * Operator optimizations based on source or destination opacity
- */
-typedef struct
-{
-    pixman_op_t op;
-    pixman_op_t op_src_dst_opaque;
-    pixman_op_t op_src_opaque;
-    pixman_op_t op_dst_opaque;
-} operator_info_t;
-
-#define NO_OPTIMIZATION(a) (a), (a), (a), (a)
-
-static const operator_info_t operator_table[] =
-{
-    /* Input Operator           SRC&DST Opaque          SRC Opaque              DST Opaque      */
-    { NO_OPTIMIZATION (PIXMAN_OP_CLEAR) },
-    { NO_OPTIMIZATION (PIXMAN_OP_SRC) },
-    { NO_OPTIMIZATION (PIXMAN_OP_DST) },
-    { PIXMAN_OP_OVER,           PIXMAN_OP_SRC,          PIXMAN_OP_SRC,          PIXMAN_OP_OVER },
-    { PIXMAN_OP_OVER_REVERSE,   PIXMAN_OP_DST,          PIXMAN_OP_OVER_REVERSE, PIXMAN_OP_DST },
-    { PIXMAN_OP_IN,             PIXMAN_OP_SRC,          PIXMAN_OP_IN,           PIXMAN_OP_SRC },
-    { PIXMAN_OP_IN_REVERSE,     PIXMAN_OP_DST,          PIXMAN_OP_DST,          PIXMAN_OP_IN_REVERSE },
-    { PIXMAN_OP_OUT,            PIXMAN_OP_CLEAR,        PIXMAN_OP_OUT,          PIXMAN_OP_CLEAR },
-    { PIXMAN_OP_OUT_REVERSE,    PIXMAN_OP_CLEAR,        PIXMAN_OP_CLEAR,        PIXMAN_OP_OUT_REVERSE },
-    { PIXMAN_OP_ATOP,           PIXMAN_OP_SRC,          PIXMAN_OP_IN,           PIXMAN_OP_OVER },
-    { PIXMAN_OP_ATOP_REVERSE,   PIXMAN_OP_DST,          PIXMAN_OP_OVER_REVERSE, PIXMAN_OP_IN_REVERSE },
-    { PIXMAN_OP_XOR,            PIXMAN_OP_CLEAR,        PIXMAN_OP_OUT,          PIXMAN_OP_OUT_REVERSE },
-    { NO_OPTIMIZATION (PIXMAN_OP_ADD) },
-    { PIXMAN_OP_SATURATE,       PIXMAN_OP_DST,          PIXMAN_OP_OVER_REVERSE, PIXMAN_OP_DST },
-
-    { PIXMAN_OP_NONE /* 0x0e */ },
-    { PIXMAN_OP_NONE /* 0x0f */ },
-
-    { NO_OPTIMIZATION (PIXMAN_OP_DISJOINT_CLEAR) },
-    { NO_OPTIMIZATION (PIXMAN_OP_DISJOINT_SRC) },
-    { NO_OPTIMIZATION (PIXMAN_OP_DISJOINT_DST) },
-    { NO_OPTIMIZATION (PIXMAN_OP_DISJOINT_OVER) },
-    { NO_OPTIMIZATION (PIXMAN_OP_DISJOINT_OVER_REVERSE) },
-    { NO_OPTIMIZATION (PIXMAN_OP_DISJOINT_IN) },
-    { NO_OPTIMIZATION (PIXMAN_OP_DISJOINT_IN_REVERSE) },
-    { NO_OPTIMIZATION (PIXMAN_OP_DISJOINT_OUT) },
-    { NO_OPTIMIZATION (PIXMAN_OP_DISJOINT_OUT_REVERSE) },
-    { NO_OPTIMIZATION (PIXMAN_OP_DISJOINT_ATOP) },
-    { NO_OPTIMIZATION (PIXMAN_OP_DISJOINT_ATOP_REVERSE) },
-    { NO_OPTIMIZATION (PIXMAN_OP_DISJOINT_XOR) },
-
-    { PIXMAN_OP_NONE /* 0x1c */ },
-    { PIXMAN_OP_NONE /* 0x1d */ },
-    { PIXMAN_OP_NONE /* 0x1e */ },
-    { PIXMAN_OP_NONE /* 0x1f */ },
-
-    { NO_OPTIMIZATION (PIXMAN_OP_CONJOINT_CLEAR) },
-    { NO_OPTIMIZATION (PIXMAN_OP_CONJOINT_SRC) },
-    { NO_OPTIMIZATION (PIXMAN_OP_CONJOINT_DST) },
-    { NO_OPTIMIZATION (PIXMAN_OP_CONJOINT_OVER) },
-    { NO_OPTIMIZATION (PIXMAN_OP_CONJOINT_OVER_REVERSE) },
-    { NO_OPTIMIZATION (PIXMAN_OP_CONJOINT_IN) },
-    { NO_OPTIMIZATION (PIXMAN_OP_CONJOINT_IN_REVERSE) },
-    { NO_OPTIMIZATION (PIXMAN_OP_CONJOINT_OUT) },
-    { NO_OPTIMIZATION (PIXMAN_OP_CONJOINT_OUT_REVERSE) },
-    { NO_OPTIMIZATION (PIXMAN_OP_CONJOINT_ATOP) },
-    { NO_OPTIMIZATION (PIXMAN_OP_CONJOINT_ATOP_REVERSE) },
-    { NO_OPTIMIZATION (PIXMAN_OP_CONJOINT_XOR) },
-
-    { PIXMAN_OP_NONE /* 0x2c */ },
-    { PIXMAN_OP_NONE /* 0x2d */ },
-    { PIXMAN_OP_NONE /* 0x2e */ },
-    { PIXMAN_OP_NONE /* 0x2f */ },
-
-    { NO_OPTIMIZATION (PIXMAN_OP_MULTIPLY) },
-    { NO_OPTIMIZATION (PIXMAN_OP_SCREEN) },
-    { NO_OPTIMIZATION (PIXMAN_OP_OVERLAY) },
-    { NO_OPTIMIZATION (PIXMAN_OP_DARKEN) },
-    { NO_OPTIMIZATION (PIXMAN_OP_LIGHTEN) },
-    { NO_OPTIMIZATION (PIXMAN_OP_COLOR_DODGE) },
-    { NO_OPTIMIZATION (PIXMAN_OP_COLOR_BURN) },
-    { NO_OPTIMIZATION (PIXMAN_OP_HARD_LIGHT) },
-    { NO_OPTIMIZATION (PIXMAN_OP_SOFT_LIGHT) },
-    { NO_OPTIMIZATION (PIXMAN_OP_DIFFERENCE) },
-    { NO_OPTIMIZATION (PIXMAN_OP_EXCLUSION) },
-    { NO_OPTIMIZATION (PIXMAN_OP_HSL_HUE) },
-    { NO_OPTIMIZATION (PIXMAN_OP_HSL_SATURATION) },
-    { NO_OPTIMIZATION (PIXMAN_OP_HSL_COLOR) },
-    { NO_OPTIMIZATION (PIXMAN_OP_HSL_LUMINOSITY) },
-
-    { PIXMAN_OP_NONE }
-};
-
 static pixman_implementation_t *imp;
+
+#define PACK(a, b, c, d)			\
+    (((uint8_t)PIXMAN_OP_ ## a <<  0)	|	\
+     ((uint8_t)PIXMAN_OP_ ## b <<  8)	|	\
+     ((uint8_t)PIXMAN_OP_ ## c << 16)	|	\
+     ((uint8_t)PIXMAN_OP_ ## d << 24))
+
+static const uint32_t operator_table[] =
+{
+    /*    Neither Opaque         Src Opaque             Dst Opaque             Both Opaque */
+    PACK (CLEAR,                 CLEAR,                 CLEAR,                 CLEAR),
+    PACK (SRC,                   SRC,                   SRC,                   SRC),
+    PACK (DST,                   DST,                   DST,                   DST),
+    PACK (OVER,                  SRC,                   OVER,                  SRC),
+    PACK (OVER_REVERSE,          OVER_REVERSE,          DST,                   DST),
+    PACK (IN,                    IN,                    SRC,                   SRC),
+    PACK (IN_REVERSE,            DST,                   IN_REVERSE,            DST),
+    PACK (OUT,                   OUT,                   CLEAR,                 CLEAR),
+    PACK (OUT_REVERSE,           CLEAR,                 OUT_REVERSE,           CLEAR),
+    PACK (ATOP,                  IN,                    OVER,                  SRC),
+    PACK (ATOP_REVERSE,          OVER_REVERSE,          IN_REVERSE,            DST),
+    PACK (XOR,                   OUT,                   OUT_REVERSE,           CLEAR),
+    PACK (ADD,                   ADD,                   ADD,                   ADD),
+    PACK (SATURATE,              OVER_REVERSE,          DST,                   DST),
+
+    0 /* 0x0e */,
+    0 /* 0x0f */,
+
+    PACK (DISJOINT_CLEAR,        DISJOINT_CLEAR,        DISJOINT_CLEAR,        DISJOINT_CLEAR),
+    PACK (DISJOINT_SRC,          DISJOINT_SRC,          DISJOINT_SRC,          DISJOINT_SRC),
+    PACK (DISJOINT_DST,          DISJOINT_DST,          DISJOINT_DST,          DISJOINT_DST),
+    PACK (DISJOINT_OVER,         DISJOINT_OVER,         DISJOINT_OVER,         DISJOINT_OVER),
+    PACK (DISJOINT_OVER_REVERSE, DISJOINT_OVER_REVERSE, DISJOINT_OVER_REVERSE, DISJOINT_OVER_REVERSE),
+    PACK (DISJOINT_IN,           DISJOINT_IN,           DISJOINT_IN,           DISJOINT_IN),
+    PACK (DISJOINT_IN_REVERSE,   DISJOINT_IN_REVERSE,   DISJOINT_IN_REVERSE,   DISJOINT_IN_REVERSE),
+    PACK (DISJOINT_OUT,          DISJOINT_OUT,          DISJOINT_OUT,          DISJOINT_OUT),
+    PACK (DISJOINT_OUT_REVERSE,  DISJOINT_OUT_REVERSE,  DISJOINT_OUT_REVERSE,  DISJOINT_OUT_REVERSE),
+    PACK (DISJOINT_ATOP,         DISJOINT_ATOP,         DISJOINT_ATOP,         DISJOINT_ATOP),
+    PACK (DISJOINT_ATOP_REVERSE, DISJOINT_ATOP_REVERSE, DISJOINT_ATOP_REVERSE, DISJOINT_ATOP_REVERSE),
+    PACK (DISJOINT_XOR,          DISJOINT_XOR,          DISJOINT_XOR,          DISJOINT_XOR),
+
+    0 /* 0x1c */,
+    0 /* 0x1d */,
+    0 /* 0x1e */,
+    0 /* 0x1f */,
+
+    PACK (CONJOINT_CLEAR,        CONJOINT_CLEAR,        CONJOINT_CLEAR,        CONJOINT_CLEAR),
+    PACK (CONJOINT_SRC,          CONJOINT_SRC,          CONJOINT_SRC,          CONJOINT_SRC),
+    PACK (CONJOINT_DST,          CONJOINT_DST,          CONJOINT_DST,          CONJOINT_DST),
+    PACK (CONJOINT_OVER,         CONJOINT_OVER,         CONJOINT_OVER,         CONJOINT_OVER),
+    PACK (CONJOINT_OVER_REVERSE, CONJOINT_OVER_REVERSE, CONJOINT_OVER_REVERSE, CONJOINT_OVER_REVERSE),
+    PACK (CONJOINT_IN,           CONJOINT_IN,           CONJOINT_IN,           CONJOINT_IN),
+    PACK (CONJOINT_IN_REVERSE,   CONJOINT_IN_REVERSE,   CONJOINT_IN_REVERSE,   CONJOINT_IN_REVERSE),
+    PACK (CONJOINT_OUT,          CONJOINT_OUT,          CONJOINT_OUT,          CONJOINT_OUT),
+    PACK (CONJOINT_OUT_REVERSE,  CONJOINT_OUT_REVERSE,  CONJOINT_OUT_REVERSE,  CONJOINT_OUT_REVERSE),
+    PACK (CONJOINT_ATOP,         CONJOINT_ATOP,         CONJOINT_ATOP,         CONJOINT_ATOP),
+    PACK (CONJOINT_ATOP_REVERSE, CONJOINT_ATOP_REVERSE, CONJOINT_ATOP_REVERSE, CONJOINT_ATOP_REVERSE),
+    PACK (CONJOINT_XOR,          CONJOINT_XOR,          CONJOINT_XOR,          CONJOINT_XOR),
+
+    0 /* 0x2c */,
+    0 /* 0x2d */,
+    0 /* 0x2e */,
+    0 /* 0x2f */,
+
+    PACK (MULTIPLY,              MULTIPLY,              MULTIPLY,              MULTIPLY),
+    PACK (SCREEN,                SCREEN,                SCREEN,                SCREEN),
+    PACK (OVERLAY,               OVERLAY,               OVERLAY,               OVERLAY),
+    PACK (DARKEN,                DARKEN,                DARKEN,                DARKEN),
+    PACK (LIGHTEN,               LIGHTEN,               LIGHTEN,               LIGHTEN),
+    PACK (COLOR_DODGE,           COLOR_DODGE,           COLOR_DODGE,           COLOR_DODGE),
+    PACK (COLOR_BURN,            COLOR_BURN,            COLOR_BURN,            COLOR_BURN),
+    PACK (HARD_LIGHT,            HARD_LIGHT,            HARD_LIGHT,            HARD_LIGHT),
+    PACK (SOFT_LIGHT,            SOFT_LIGHT,            SOFT_LIGHT,            SOFT_LIGHT),
+    PACK (DIFFERENCE,            DIFFERENCE,            DIFFERENCE,            DIFFERENCE),
+    PACK (EXCLUSION,             EXCLUSION,             EXCLUSION,             EXCLUSION),
+    PACK (HSL_HUE,               HSL_HUE,               HSL_HUE,               HSL_HUE),
+    PACK (HSL_SATURATION,        HSL_SATURATION,        HSL_SATURATION,        HSL_SATURATION),
+    PACK (HSL_COLOR,             HSL_COLOR,             HSL_COLOR,             HSL_COLOR),
+    PACK (HSL_LUMINOSITY,        HSL_LUMINOSITY,        HSL_LUMINOSITY,        HSL_LUMINOSITY),
+
+    0
+};
 
 /*
  * Optimize the current operator based on opacity of source or destination
@@ -131,22 +124,15 @@ optimize_operator (pixman_op_t     op,
 		   uint32_t        mask_flags,
 		   uint32_t        dst_flags)
 {
-    const operator_info_t *info = &(operator_table[op]);
     pixman_bool_t is_source_opaque, is_dest_opaque;
+    int shift;
 
-    assert (info->op == op);
+    is_source_opaque = ((src_flags & mask_flags) & FAST_PATH_IS_OPAQUE) != 0;
+    is_dest_opaque = (dst_flags & FAST_PATH_IS_OPAQUE) != 0;
 
-    is_source_opaque = (src_flags & mask_flags) & FAST_PATH_IS_OPAQUE;
-    is_dest_opaque = dst_flags & FAST_PATH_IS_OPAQUE;
+    shift = 8 * ((is_dest_opaque << 1) | is_source_opaque);
 
-    if (is_source_opaque && is_dest_opaque)
-	return info->op_src_dst_opaque;
-    else if (is_source_opaque)
-	return info->op_src_opaque;
-    else if (is_dest_opaque)
-	return info->op_dst_opaque;
-
-    return op;
+    return (operator_table[op] >> shift) & 0xff;
 }
 
 static void
