@@ -59,9 +59,9 @@ static const uint32_t operator_table[] =
     0 /* 0x0e */,
     0 /* 0x0f */,
 
-    PACK (DISJOINT_CLEAR,        DISJOINT_CLEAR,        DISJOINT_CLEAR,        DISJOINT_CLEAR),
-    PACK (DISJOINT_SRC,          DISJOINT_SRC,          DISJOINT_SRC,          DISJOINT_SRC),
-    PACK (DISJOINT_DST,          DISJOINT_DST,          DISJOINT_DST,          DISJOINT_DST),
+    PACK (CLEAR,                 CLEAR,                 CLEAR,                 CLEAR),
+    PACK (SRC,                   SRC,                   SRC,                   SRC),
+    PACK (DST,                   DST,                   DST,                   DST),
     PACK (DISJOINT_OVER,         DISJOINT_OVER,         DISJOINT_OVER,         DISJOINT_OVER),
     PACK (DISJOINT_OVER_REVERSE, DISJOINT_OVER_REVERSE, DISJOINT_OVER_REVERSE, DISJOINT_OVER_REVERSE),
     PACK (DISJOINT_IN,           DISJOINT_IN,           DISJOINT_IN,           DISJOINT_IN),
@@ -77,9 +77,9 @@ static const uint32_t operator_table[] =
     0 /* 0x1e */,
     0 /* 0x1f */,
 
-    PACK (CONJOINT_CLEAR,        CONJOINT_CLEAR,        CONJOINT_CLEAR,        CONJOINT_CLEAR),
-    PACK (CONJOINT_SRC,          CONJOINT_SRC,          CONJOINT_SRC,          CONJOINT_SRC),
-    PACK (CONJOINT_DST,          CONJOINT_DST,          CONJOINT_DST,          CONJOINT_DST),
+    PACK (CLEAR,                 CLEAR,                 CLEAR,                 CLEAR),
+    PACK (SRC,                   SRC,                   SRC,                   SRC),
+    PACK (DST,                   DST,                   DST,                   DST),
     PACK (CONJOINT_OVER,         CONJOINT_OVER,         CONJOINT_OVER,         CONJOINT_OVER),
     PACK (CONJOINT_OVER_REVERSE, CONJOINT_OVER_REVERSE, CONJOINT_OVER_REVERSE, CONJOINT_OVER_REVERSE),
     PACK (CONJOINT_IN,           CONJOINT_IN,           CONJOINT_IN,           CONJOINT_IN),
@@ -588,13 +588,10 @@ do_composite (pixman_implementation_t *imp,
      * mathematically equivalent to the source.
      */
     op = optimize_operator (op, src_flags, mask_flags, dest_flags);
-    if (op == PIXMAN_OP_DST ||
-	op == PIXMAN_OP_CONJOINT_DST ||
-	op == PIXMAN_OP_DISJOINT_DST)
-    {
+    if (op == PIXMAN_OP_DST)
 	return;
-    }
 
+    /* Check cache for fast paths */
     cache = tls_cache;
 
     for (i = 0; i < N_CACHED_FAST_PATHS; ++i)
