@@ -429,9 +429,15 @@ save_128_unaligned (__m128i* dst,
  */
 
 static force_inline __m64
+load_32_1x64 (uint32_t data)
+{
+    return _mm_cvtsi32_si64 (data);
+}
+
+static force_inline __m64
 unpack_32_1x64 (uint32_t data)
 {
-    return _mm_unpacklo_pi8 (_mm_cvtsi32_si64 (data), _mm_setzero_si64 ());
+    return _mm_unpacklo_pi8 (load_32_1x64 (data), _mm_setzero_si64 ());
 }
 
 static force_inline __m64
@@ -3237,7 +3243,7 @@ sse2_composite_add_n_8888_8888_ca (pixman_implementation_t *imp,
 	    if (m)
 	    {
 		d = *pd;
-		
+
 		mmx_mask = unpack_32_1x64 (m);
 		mmx_dest = unpack_32_1x64 (d);
 
@@ -5499,8 +5505,6 @@ sse2_composite_over_x888_8_8888 (pixman_implementation_t *imp,
             s = 0xff000000 | *src++;
             m = (uint32_t) *mask++;
             d = *dst;
-            
-            
             ms = unpack_32_1x64 (s);
 
             if (m != 0xff)
@@ -5593,6 +5597,175 @@ sse2_composite_over_x888_8_8888 (pixman_implementation_t *imp,
     _mm_empty ();
 }
 
+static void
+sse2_composite_over_8888_8_8888 (pixman_implementation_t *imp,
+                                 pixman_op_t              op,
+                                 pixman_image_t *         src_image,
+                                 pixman_image_t *         mask_image,
+                                 pixman_image_t *         dst_image,
+                                 int32_t                  src_x,
+                                 int32_t                  src_y,
+                                 int32_t                  mask_x,
+                                 int32_t                  mask_y,
+                                 int32_t                  dest_x,
+                                 int32_t                  dest_y,
+                                 int32_t                  width,
+                                 int32_t                  height)
+{
+    uint32_t    *src, *src_line, s;
+    uint32_t    *dst, *dst_line, d;
+    uint8_t         *mask, *mask_line;
+    uint32_t m;
+    int src_stride, mask_stride, dst_stride;
+    uint16_t w;
+
+    __m128i xmm_src, xmm_src_lo, xmm_src_hi, xmm_srca_lo, xmm_srca_hi;
+    __m128i xmm_dst, xmm_dst_lo, xmm_dst_hi;
+    __m128i xmm_mask, xmm_mask_lo, xmm_mask_hi;
+
+    PIXMAN_IMAGE_GET_LINE (
+	dst_image, dest_x, dest_y, uint32_t, dst_stride, dst_line, 1);
+    PIXMAN_IMAGE_GET_LINE (
+	mask_image, mask_x, mask_y, uint8_t, mask_stride, mask_line, 1);
+    PIXMAN_IMAGE_GET_LINE (
+	src_image, src_x, src_y, uint32_t, src_stride, src_line, 1);
+
+    while (height--)
+    {
+        src = src_line;
+        src_line += src_stride;
+        dst = dst_line;
+        dst_line += dst_stride;
+        mask = mask_line;
+        mask_line += mask_stride;
+
+        w = width;
+
+        /* call prefetch hint to optimize cache load*/
+        cache_prefetch ((__m128i *)src);
+        cache_prefetch ((__m128i *)dst);
+        cache_prefetch ((__m128i *)mask);
+
+        while (w && (unsigned long)dst & 15)
+        {
+	    uint32_t sa;
+
+            s = *src++;
+            m = (uint32_t) *mask++;
+            d = *dst;
+
+	    sa = s >> 24;
+
+	    if (m)
+	    {
+		if (sa == 0xff && m == 0xff)
+		{
+		    *dst = s;
+		}
+		else
+		{
+		    __m64 ms, md, ma, msa;
+
+		    ma = expand_alpha_rev_1x64 (load_32_1x64 (m));
+		    ms = unpack_32_1x64 (s);
+		    md = unpack_32_1x64 (d);
+
+		    msa = expand_alpha_rev_1x64 (load_32_1x64 (sa));
+
+		    *dst = pack_1x64_32 (in_over_1x64 (&ms, &msa, &ma, &md));
+		}
+	    }
+
+	    dst++;
+            w--;
+        }
+
+        /* call prefetch hint to optimize cache load*/
+        cache_prefetch ((__m128i *)src);
+        cache_prefetch ((__m128i *)dst);
+        cache_prefetch ((__m128i *)mask);
+
+        while (w >= 4)
+        {
+            /* fill cache line with next memory */
+            cache_prefetch_next ((__m128i *)src);
+            cache_prefetch_next ((__m128i *)dst);
+            cache_prefetch_next ((__m128i *)mask);
+
+            m = *(uint32_t *) mask;
+
+	    if (m)
+	    {
+		xmm_src = load_128_unaligned ((__m128i*)src);
+
+		if (m == 0xffffffff && is_opaque (xmm_src))
+		{
+		    save_128_aligned ((__m128i *)dst, xmm_src);
+		}
+		else
+		{
+		    xmm_dst = load_128_aligned ((__m128i *)dst);
+
+		    xmm_mask = _mm_unpacklo_epi16 (unpack_32_1x128 (m), _mm_setzero_si128());
+
+		    unpack_128_2x128 (xmm_src, &xmm_src_lo, &xmm_src_hi);
+		    unpack_128_2x128 (xmm_mask, &xmm_mask_lo, &xmm_mask_hi);
+		    unpack_128_2x128 (xmm_dst, &xmm_dst_lo, &xmm_dst_hi);
+
+		    expand_alpha_2x128 (xmm_src_lo, xmm_src_hi, &xmm_srca_lo, &xmm_srca_hi);
+		    expand_alpha_rev_2x128 (xmm_mask_lo, xmm_mask_hi, &xmm_mask_lo, &xmm_mask_hi);
+		    
+		    in_over_2x128 (&xmm_src_lo, &xmm_src_hi, &xmm_srca_lo, &xmm_srca_hi,
+				   &xmm_mask_lo, &xmm_mask_hi, &xmm_dst_lo, &xmm_dst_hi);
+
+		    save_128_aligned ((__m128i*)dst, pack_2x128_128 (xmm_dst_lo, xmm_dst_hi));
+		}
+	    }
+
+            src += 4;
+            dst += 4;
+            mask += 4;
+            w -= 4;
+        }
+
+        while (w)
+        {
+	    uint32_t sa;
+
+            s = *src++;
+            m = (uint32_t) *mask++;
+            d = *dst;
+
+	    sa = s >> 24;
+
+	    if (m)
+	    {
+		if (sa == 0xff && m == 0xff)
+		{
+		    *dst = s;
+		}
+		else
+		{
+		    __m64 ms, md, ma, msa;
+
+		    ma = expand_alpha_rev_1x64 (load_32_1x64 (m));
+		    ms = unpack_32_1x64 (s);
+		    md = unpack_32_1x64 (d);
+
+		    msa = expand_alpha_rev_1x64 (load_32_1x64 (sa));
+
+		    *dst = pack_1x64_32 (in_over_1x64 (&ms, &msa, &ma, &md));
+		}
+	    }
+
+	    dst++;
+            w--;
+        }
+    }
+
+    _mm_empty ();
+}
+
 static const pixman_fast_path_t sse2_fast_paths[] =
 {
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_r5g6b5,   sse2_composite_over_n_8_0565,       0 },
@@ -5610,6 +5783,10 @@ static const pixman_fast_path_t sse2_fast_paths[] =
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_x8r8g8b8, sse2_composite_over_n_8_8888,       0 },
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_a8b8g8r8, sse2_composite_over_n_8_8888,       0 },
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_x8b8g8r8, sse2_composite_over_n_8_8888,       0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8,       PIXMAN_x8r8g8b8, sse2_composite_over_8888_8_8888,    0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8,       PIXMAN_a8r8g8b8, sse2_composite_over_8888_8_8888,    0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_a8,       PIXMAN_x8b8g8r8, sse2_composite_over_8888_8_8888,    0 },
+    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_a8,       PIXMAN_a8b8g8r8, sse2_composite_over_8888_8_8888,    0 },
     { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8,       PIXMAN_x8r8g8b8, sse2_composite_over_x888_8_8888,    0 },
     { PIXMAN_OP_OVER, PIXMAN_x8r8g8b8, PIXMAN_a8,       PIXMAN_a8r8g8b8, sse2_composite_over_x888_8_8888,    0 },
     { PIXMAN_OP_OVER, PIXMAN_x8b8g8r8, PIXMAN_a8,       PIXMAN_x8b8g8r8, sse2_composite_over_x888_8_8888,    0 },
