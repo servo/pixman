@@ -3168,9 +3168,9 @@ mmx_composite_over_x888_8_8888 (pixman_implementation_t *imp,
                                 int32_t                  width,
                                 int32_t                  height)
 {
-    uint32_t    *src, *src_line;
-    uint32_t    *dst, *dst_line;
-    uint8_t     *mask, *mask_line;
+    uint32_t  *src, *src_line;
+    uint32_t  *dst, *dst_line;
+    uint8_t  *mask, *mask_line;
     int src_stride, mask_stride, dst_stride;
     uint16_t w;
 

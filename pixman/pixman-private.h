@@ -437,10 +437,10 @@ struct pixman_implementation_t
     pixman_blt_func_t        blt;
     pixman_fill_func_t       fill;
 
-    pixman_combine_32_func_t combine_32[PIXMAN_OP_LAST];
-    pixman_combine_32_func_t combine_32_ca[PIXMAN_OP_LAST];
-    pixman_combine_64_func_t combine_64[PIXMAN_OP_LAST];
-    pixman_combine_64_func_t combine_64_ca[PIXMAN_OP_LAST];
+    pixman_combine_32_func_t combine_32[PIXMAN_N_OPERATORS];
+    pixman_combine_32_func_t combine_32_ca[PIXMAN_N_OPERATORS];
+    pixman_combine_64_func_t combine_64[PIXMAN_N_OPERATORS];
+    pixman_combine_64_func_t combine_64_ca[PIXMAN_N_OPERATORS];
 };
 
 pixman_implementation_t *

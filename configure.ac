@@ -90,6 +90,8 @@ then
   CFLAGS="-O -g"
 fi
 
+CFLAGS="$CFLAGS -DPIXMAN_DISABLE_DEPRECATED -DPIXMAN_INTERNAL_API"
+
 # 
 # We ignore pixman_major in the version here because the major version should
 # always be encoded in the actual library name. Ie., the soname is:
