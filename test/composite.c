@@ -857,6 +857,7 @@ main (void)
 			    break;
 			case 0:
 			    ok = composite_test (&dst, op, &src, &mask, FALSE);
+			    break;
 			case 1:
 			    ok = composite_test (&dst, op, &src, &mask,
 						 mask.size? TRUE : FALSE);
