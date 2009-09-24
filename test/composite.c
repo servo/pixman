@@ -853,10 +853,13 @@ main (void)
 			switch (ca)
 			{
 			case -1:
-			    ok = composite_test (&dst, op, &src, NULL, ca);
+			    ok = composite_test (&dst, op, &src, NULL, FALSE);
 			    break;
-			default:
-			    ok = composite_test (&dst, op, &src, &mask, ca);
+			case 0:
+			    ok = composite_test (&dst, op, &src, &mask, FALSE);
+			case 1:
+			    ok = composite_test (&dst, op, &src, &mask,
+						 mask.size? TRUE : FALSE);
 			    break;
 			}
 			group_ok = group_ok && ok;
