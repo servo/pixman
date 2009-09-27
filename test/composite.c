@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <stdlib.h> /* abort() */
 #include <math.h>
+#include <config.h>
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -502,6 +503,9 @@ get_pixel (pixman_image_t *image,
     unsigned long val;
 
     val = *(unsigned long *) pixman_image_get_data (image);
+#ifdef WORDS_BIGENDIAN
+    val >>= 8 * sizeof(val) - PIXMAN_FORMAT_BPP (format);
+#endif
 
     /* Number of bits in each channel */
     a = PIXMAN_FORMAT_A (format);
