@@ -137,7 +137,7 @@ compute_crc32 (uint32_t    in_crc32,
 	0x54DE5729, 0x23D967BF, 0xB3667A2E, 0xC4614AB8, 0x5D681B02, 0x2A6F2B94,
 	0xB40BBE37, 0xC30C8EA1, 0x5A05DF1B, 0x2D02EF8D
     };
-    
+
     uint32_t              crc32;
     unsigned char *       byte_buf;
     size_t                i;
@@ -148,7 +148,7 @@ compute_crc32 (uint32_t    in_crc32,
 
     for (i = 0; i < buf_len; i++)
 	crc32 = (crc32 >> 8) ^ crc_table[(crc32 ^ byte_buf[i]) & 0xFF];
-    
+
     return (crc32 ^ 0xFFFFFFFF);
 }
 
@@ -170,7 +170,7 @@ image_endian_swap (pixman_image_t *img,
     for (i = 0; i < height; i++)
     {
 	char *line_data = (char *)data + stride * i;
-	
+
 	/* swap bytes only for 16, 24 and 32 bpp for now */
 	switch (bpp)
 	{
@@ -266,7 +266,7 @@ test_composite (uint32_t initcrc,
 
     if (src_stride & 3)
 	src_stride += 2;
-    
+
     if (dst_stride & 3)
 	dst_stride += 2;
 
@@ -332,6 +332,11 @@ test_composite (uint32_t initcrc,
     }
     pixman_image_set_repeat (src_img, repeat);
 
+    if (lcg_rand_n (2))
+	pixman_image_set_filter (src_img, PIXMAN_FILTER_NEAREST, NULL, 0);
+    else
+	pixman_image_set_filter (src_img, PIXMAN_FILTER_BILINEAR, NULL, 0);
+
     if (verbose)
     {
 	printf ("src_fmt=%08X, dst_fmt=%08X\n", src_fmt, dst_fmt);
@@ -365,7 +370,7 @@ test_composite (uint32_t initcrc,
 		        clip_boxes[i].x2, clip_boxes[i].y2);
 	    }
 	}
-	
+
 	pixman_region_init_rects (&clip, clip_boxes, n);
 	pixman_image_set_clip_region (src_img, &clip);
 	pixman_image_set_source_clipping (src_img, 1);
@@ -461,7 +466,7 @@ main (int   argc, char *argv[])
 	    /* predefined value for running with all the fastpath functions disabled  */
 	    /* it needs to be updated every time changes are introduced to this program! */
 
-	    if (crc == 0x0B633CF4)
+	    if (crc == 0x2168ACD1)
 	    {
 		printf ("scaling test passed\n");
 	    }
