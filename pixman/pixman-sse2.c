@@ -5465,6 +5465,7 @@ sse2_composite_over_x888_8_8888 (pixman_implementation_t *imp,
     uint32_t m;
     int src_stride, mask_stride, dst_stride;
     uint16_t w;
+    __m64 ms;
 
     __m128i xmm_src, xmm_src_lo, xmm_src_hi;
     __m128i xmm_dst, xmm_dst_lo, xmm_dst_hi;
@@ -5498,8 +5499,9 @@ sse2_composite_over_x888_8_8888 (pixman_implementation_t *imp,
             s = 0xff000000 | *src++;
             m = (uint32_t) *mask++;
             d = *dst;
-
-            __m64 ms = unpack_32_1x64 (s);
+            
+            
+            ms = unpack_32_1x64 (s);
 
             if (m != 0xff)
             {
