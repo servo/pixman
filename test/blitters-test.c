@@ -174,7 +174,7 @@ image_endian_swap (pixman_image_t *img, int bpp)
 {
     int stride = pixman_image_get_stride (img);
     uint32_t *data = pixman_image_get_data (img);
-    int height = pixman_image_get_height (img);;
+    int height = pixman_image_get_height (img);
     int i, j;
 
     /* swap bytes only on big endian systems */
