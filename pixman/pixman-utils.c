@@ -33,8 +33,6 @@
 /*
  * Computing composite region
  */
-#define BOUND(v)        (int16_t) ((v) < INT16_MIN ? INT16_MIN : (v) > INT16_MAX ? INT16_MAX : (v))
-
 static inline pixman_bool_t
 clip_general_image (pixman_region32_t * region,
                     pixman_region32_t * clip,
@@ -49,17 +47,17 @@ clip_general_image (pixman_region32_t * region,
 	int v;
 
 	if (rbox->x1 < (v = cbox->x1 + dx))
-	    rbox->x1 = BOUND (v);
+	    rbox->x1 = v;
 	if (rbox->x2 > (v = cbox->x2 + dx))
-	    rbox->x2 = BOUND (v);
+	    rbox->x2 = v;
 	if (rbox->y1 < (v = cbox->y1 + dy))
-	    rbox->y1 = BOUND (v);
+	    rbox->y1 = v;
 	if (rbox->y2 > (v = cbox->y2 + dy))
-	    rbox->y2 = BOUND (v);
-	if (rbox->x1 >= rbox->x2 ||
-	    rbox->y1 >= rbox->y2)
+	    rbox->y2 = v;
+	if (rbox->x1 >= rbox->x2 || rbox->y1 >= rbox->y2)
 	{
 	    pixman_region32_init (region);
+	    return FALSE;
 	}
     }
     else if (!pixman_region32_not_empty (clip))
@@ -70,11 +68,14 @@ clip_general_image (pixman_region32_t * region,
     {
 	if (dx || dy)
 	    pixman_region32_translate (region, -dx, -dy);
+
 	if (!pixman_region32_intersect (region, region, clip))
 	    return FALSE;
+
 	if (dx || dy)
 	    pixman_region32_translate (region, dx, dy);
     }
+
     return pixman_region32_not_empty (region);
 }
 
@@ -115,14 +116,10 @@ pixman_compute_composite_region32 (pixman_region32_t * region,
                                    uint16_t            width,
                                    uint16_t            height)
 {
-    int v;
-
     region->extents.x1 = dest_x;
-    v = dest_x + width;
-    region->extents.x2 = BOUND (v);
+    region->extents.x2 = dest_x + width;
     region->extents.y1 = dest_y;
-    v = dest_y + height;
-    region->extents.y2 = BOUND (v);
+    region->extents.y2 = dest_y + height;
 
     region->extents.x1 = MAX (region->extents.x1, 0);
     region->extents.y1 = MAX (region->extents.y1, 0);
@@ -617,7 +614,7 @@ sources_cover (pixman_image_t *src,
 
     if (!mask)
 	return TRUE;
-    
+
     if (!image_covers (mask, extents, dest_x - mask_x, dest_y - mask_y))
 	return FALSE;
 
