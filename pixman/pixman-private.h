@@ -120,8 +120,6 @@ struct gradient
     int                     n_stops;
     pixman_gradient_stop_t *stops;
     int                     stop_range;
-    uint32_t *              color_table;
-    int                     color_table_size;
 };
 
 struct linear_gradient
