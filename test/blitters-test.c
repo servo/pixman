@@ -473,6 +473,7 @@ test_composite (uint32_t initcrc, int testnum, int verbose)
     int src_stride, dst_stride;
     int src_x, src_y;
     int dst_x, dst_y;
+    int mask_x, mask_y;
     int w, h;
     int op;
     pixman_format_code_t src_fmt, dst_fmt, mask_fmt;
@@ -516,6 +517,8 @@ test_composite (uint32_t initcrc, int testnum, int verbose)
 
     mask_img = NULL;
     mask_fmt = -1;
+    mask_x = 0;
+    mask_y = 0;
 
     if (lcg_rand_n (2))
     {
@@ -534,6 +537,9 @@ test_composite (uint32_t initcrc, int testnum, int verbose)
 
 	if (lcg_rand_n (2))
 	    pixman_image_set_component_alpha (mask_img, 1);
+
+	mask_x = lcg_rand_n (pixman_image_get_width (mask_img));
+	mask_y = lcg_rand_n (pixman_image_get_height (mask_img));
     }
 
     src_width = pixman_image_get_width (src_img);
@@ -568,7 +574,7 @@ test_composite (uint32_t initcrc, int testnum, int verbose)
     }
 
     pixman_image_composite (op, src_img, mask_img, dst_img,
-			    src_x, src_y, src_x, src_y, dst_x, dst_y, w, h);
+			    src_x, src_y, mask_x, mask_y, dst_x, dst_y, w, h);
 
     if (verbose)
     {
@@ -641,7 +647,7 @@ main (int argc, char *argv[])
 	    /* Predefined value for running with all the fastpath functions
 	       disabled. It needs to be updated every time when changes are
 	       introduced to this program or behavior of pixman changes! */
-	    if (crc == 0x481369DE)
+	    if (crc == 0x1911E2C3)
 	    {
 		printf ("blitters test passed\n");
 	    }
