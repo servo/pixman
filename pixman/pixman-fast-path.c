@@ -1025,6 +1025,64 @@ fast_composite_add_n_8_8 (pixman_implementation_t *imp,
     }
 }
 
+#ifdef WORDS_BIGENDIAN
+#define CREATE_BITMASK(n) (0x80000000 >> (n))
+#define UPDATE_BITMASK(n) ((n) >> 1)
+#else
+#define CREATE_BITMASK(n) (1 << (n))
+#define UPDATE_BITMASK(n) ((n) << 1)
+#endif
+
+#define TEST_BIT(p, n) \
+	(*((p) + ((n) >> 5)) & CREATE_BITMASK ((n) & 31))
+#define SET_BIT(p, n) \
+	do { *((p) + ((n) >> 5)) |= CREATE_BITMASK ((n) & 31); } while (0);
+
+static void
+fast_composite_add_1000_1000 (pixman_implementation_t *imp,
+                              pixman_op_t              op,
+                              pixman_image_t *         src_image,
+                              pixman_image_t *         mask_image,
+                              pixman_image_t *         dst_image,
+                              int32_t                  src_x,
+                              int32_t                  src_y,
+                              int32_t                  mask_x,
+                              int32_t                  mask_y,
+                              int32_t                  dest_x,
+                              int32_t                  dest_y,
+                              int32_t                  width,
+                              int32_t                  height)
+{
+    uint32_t     *dst_line, *dst;
+    uint32_t     *src_line, *src;
+    int           dst_stride, src_stride;
+    int32_t       w;
+
+    PIXMAN_IMAGE_GET_LINE (src_image, 0, src_y, uint32_t,
+                           src_stride, src_line, 1);
+    PIXMAN_IMAGE_GET_LINE (dst_image, 0, dest_y, uint32_t,
+                           dst_stride, dst_line, 1);
+
+    while (height--)
+    {
+	dst = dst_line;
+	dst_line += dst_stride;
+	src = src_line;
+	src_line += src_stride;
+	w = width;
+
+	while (w--)
+	{
+	    /*
+	     * TODO: improve performance by processing uint32_t data instead
+	     *       of individual bits
+	     */
+	    if (TEST_BIT (src, src_x + w))
+		SET_BIT (dst, dest_x + w);
+	}
+    }
+}
+
 /*
  * Simple bitblt
  */
@@ -1126,6 +1184,7 @@ static const pixman_fast_path_t c_fast_paths[] =
     { PIXMAN_OP_ADD, PIXMAN_a8r8g8b8,  PIXMAN_null,     PIXMAN_a8r8g8b8, fast_composite_add_8888_8888,   0 },
     { PIXMAN_OP_ADD, PIXMAN_a8b8g8r8,  PIXMAN_null,     PIXMAN_a8b8g8r8, fast_composite_add_8888_8888,   0 },
     { PIXMAN_OP_ADD, PIXMAN_a8,        PIXMAN_null,     PIXMAN_a8,       fast_composite_add_8000_8000,   0 },
+    { PIXMAN_OP_ADD, PIXMAN_a1,        PIXMAN_null,     PIXMAN_a1,       fast_composite_add_1000_1000,   0 },
     { PIXMAN_OP_ADD, PIXMAN_solid,     PIXMAN_a8r8g8b8, PIXMAN_a8r8g8b8, fast_composite_add_n_8888_8888_ca, NEED_COMPONENT_ALPHA },
     { PIXMAN_OP_ADD, PIXMAN_solid,     PIXMAN_a8,       PIXMAN_a8,       fast_composite_add_n_8_8,    0 },
     { PIXMAN_OP_SRC, PIXMAN_solid,     PIXMAN_null,     PIXMAN_a8r8g8b8, fast_composite_solid_fill, 0 },
