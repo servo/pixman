@@ -294,6 +294,8 @@ pixman_fill_neon (uint32_t *bits,
 
 static const pixman_fast_path_t arm_neon_fast_path_array[] =
 {
+    { PIXMAN_OP_SRC,  PIXMAN_r5g6b5,   PIXMAN_null,     PIXMAN_r5g6b5,   neon_composite_src_0565_0565,    0 },
+    { PIXMAN_OP_SRC,  PIXMAN_b5g6r5,   PIXMAN_null,     PIXMAN_b5g6r5,   neon_composite_src_0565_0565,    0 },
     { PIXMAN_OP_NONE },
 };
 
