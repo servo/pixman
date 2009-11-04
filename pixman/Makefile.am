@@ -109,12 +109,14 @@ endif
 if USE_ARM_NEON
 noinst_LTLIBRARIES += libpixman-arm-neon.la
 libpixman_arm_neon_la_SOURCES = \
-        pixman-arm-neon.c
-libpixman_arm_neon_la_CFLAGS = $(DEP_CFLAGS) $(ARM_NEON_CFLAGS)
+        pixman-arm-neon.c	\
+        pixman-arm-neon-asm.S	\
+        pixman-arm-neon-asm.h
+libpixman_arm_neon_la_CFLAGS = $(DEP_CFLAGS)
 libpixman_arm_neon_la_LIBADD = $(DEP_LIBS)
 libpixman_1_la_LIBADD += libpixman-arm-neon.la
 
-$(libpixman_arm_neon_la_SOURCES:.c=.s) : ASM_CFLAGS=$(ARM_NEON_CFLAGS)
+$(libpixman_arm_neon_la_SOURCES:.c=.s) : ASM_CFLAGS=
 endif
 
 .c.s : $(libpixmaninclude_HEADERS) $(BUILT_SOURCES)
