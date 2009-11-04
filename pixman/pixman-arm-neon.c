@@ -320,6 +320,7 @@ static const pixman_fast_path_t arm_neon_fast_path_array[] =
     { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,     PIXMAN_a8b8g8r8, neon_composite_over_8888_8888,   0 },
     { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,     PIXMAN_x8b8g8r8, neon_composite_over_8888_8888,   0 },
     { PIXMAN_OP_ADD,  PIXMAN_solid,    PIXMAN_a8,       PIXMAN_a8,       neon_composite_add_n_8_8,        0 },
+    { PIXMAN_OP_ADD,  PIXMAN_a8,       PIXMAN_a8,       PIXMAN_a8,       neon_composite_add_8_8_8,        0 },
     { PIXMAN_OP_NONE },
 };
 
