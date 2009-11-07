@@ -192,6 +192,7 @@ pixman_image_composite32 (pixman_op_t      op,
     int mask_dx, mask_dy;
     uint32_t *dest_bits;
     int dest_dx, dest_dy;
+    pixman_implementation_t *i;
 
     _pixman_image_validate (src);
     if (mask)
@@ -221,13 +222,19 @@ pixman_image_composite32 (pixman_op_t      op,
     if (dest->common.need_workaround)
 	apply_workaround (dest, &dest_x, &dest_y, &dest_bits, &dest_dx, &dest_dy);
 
-    _pixman_implementation_composite (imp, op,
-                                      src, mask, dest,
-                                      src_x, src_y,
-                                      mask_x, mask_y,
-                                      dest_x, dest_y,
-                                      width, height);
-
+    for (i = imp; i != NULL; i = i->delegate)
+    {
+	if (_pixman_run_fast_path (i->fast_paths, imp,
+				   op, src, mask, dest,
+				   src_x, src_y,
+				   mask_x, mask_y,
+				   dest_x, dest_y,
+				   width, height))
+	{
+	    break;
+	}
+    }
+		
     if (src->common.need_workaround)
 	unapply_workaround (src, src_bits, src_dx, src_dy);
     if (mask && mask->common.need_workaround)
