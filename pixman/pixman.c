@@ -160,6 +160,37 @@ unapply_workaround (pixman_image_t *image, uint32_t *bits, int dx, int dy)
     }
 }
 
+static void
+do_composite (pixman_implementation_t *imp,
+	      pixman_op_t	       op,
+	      pixman_image_t	      *src,
+	      pixman_image_t	      *mask,
+	      pixman_image_t	      *dest,
+	      int		       src_x,
+	      int		       src_y,
+	      int		       mask_x,
+	      int		       mask_y,
+	      int		       dest_x,
+	      int		       dest_y,
+	      int		       width,
+	      int		       height)
+{
+    while (imp)
+    {
+	if (_pixman_run_fast_path (imp->fast_paths, imp,
+				   op, src, mask, dest,
+				   src_x, src_y,
+				   mask_x, mask_y,
+				   dest_x, dest_y,
+				   width, height))
+	{
+	    return;
+	}
+
+	imp = imp->delegate;
+    }
+}
+
 /*
  * Work around GCC bug causing crashes in Mozilla with SSE2
  *
@@ -217,7 +248,6 @@ pixman_image_composite32 (pixman_op_t      op,
     int mask_dx, mask_dy;
     uint32_t *dest_bits;
     int dest_dx, dest_dy;
-    pixman_implementation_t *i;
     pixman_bool_t need_workaround;
 
     _pixman_image_validate (src);
@@ -253,18 +283,12 @@ pixman_image_composite32 (pixman_op_t      op,
 	apply_workaround (dest, &dest_x, &dest_y, &dest_bits, &dest_dx, &dest_dy);
     }
 
-    for (i = imp; i != NULL; i = i->delegate)
-    {
-	if (_pixman_run_fast_path (i->fast_paths, imp,
-				   op, src, mask, dest,
-				   src_x, src_y,
-				   mask_x, mask_y,
-				   dest_x, dest_y,
-				   width, height))
-	{
-	    break;
-	}
-    }
+    do_composite (imp, op,
+		  src, mask, dest,
+		  src_x, src_y,
+		  mask_x, mask_y,
+		  dest_x, dest_y,
+		  width, height);
     
     if (need_workaround)
     {
