@@ -422,7 +422,6 @@ calc_op (pixman_op_t op, double src, double dst, double srca, double dsta)
     case PIXMAN_OP_HSL_SATURATION:
     case PIXMAN_OP_HSL_COLOR:
     case PIXMAN_OP_HSL_LUMINOSITY:
-    case PIXMAN_OP_NONE:
     default:
 	abort();
     }
