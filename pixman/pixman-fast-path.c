@@ -1175,6 +1175,104 @@ fast_composite_over_n_1_8888 (pixman_implementation_t *imp,
     }
 }
 
+static void
+fast_composite_over_n_1_0565 (pixman_implementation_t *imp,
+                              pixman_op_t              op,
+                              pixman_image_t *         src_image,
+                              pixman_image_t *         mask_image,
+                              pixman_image_t *         dst_image,
+                              int32_t                  src_x,
+                              int32_t                  src_y,
+                              int32_t                  mask_x,
+                              int32_t                  mask_y,
+                              int32_t                  dest_x,
+                              int32_t                  dest_y,
+                              int32_t                  width,
+                              int32_t                  height)
+{
+    uint32_t     src, srca;
+    uint16_t    *dst, *dst_line;
+    uint32_t    *mask, *mask_line;
+    int          mask_stride, dst_stride;
+    uint32_t     bitcache, bitmask;
+    int32_t      w;
+    uint32_t     d;
+    uint16_t     src565;
+
+    if (width <= 0)
+	return;
+
+    src = _pixman_image_get_solid (src_image, dst_image->bits.format);
+    srca = src >> 24;
+    if (src == 0)
+	return;
+
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint16_t,
+                           dst_stride, dst_line, 1);
+    PIXMAN_IMAGE_GET_LINE (mask_image, 0, mask_y, uint32_t,
+                           mask_stride, mask_line, 1);
+    mask_line += mask_x >> 5;
+
+    if (srca == 0xff)
+    {
+	src565 = CONVERT_8888_TO_0565 (src);
+	while (height--)
+	{
+	    dst = dst_line;
+	    dst_line += dst_stride;
+	    mask = mask_line;
+	    mask_line += mask_stride;
+	    w = width;
+
+	    bitcache = *mask++;
+	    bitmask = CREATE_BITMASK (mask_x & 31);
+
+	    while (w--)
+	    {
+		if (bitmask == 0)
+		{
+		    bitcache = *mask++;
+		    bitmask = CREATE_BITMASK (0);
+		}
+		if (bitcache & bitmask)
+		    *dst = src565;
+		bitmask = UPDATE_BITMASK (bitmask);
+		dst++;
+	    }
+	}
+    }
+    else
+    {
+	while (height--)
+	{
+	    dst = dst_line;
+	    dst_line += dst_stride;
+	    mask = mask_line;
+	    mask_line += mask_stride;
+	    w = width;
+
+	    bitcache = *mask++;
+	    bitmask = CREATE_BITMASK (mask_x & 31);
+
+	    while (w--)
+	    {
+		if (bitmask == 0)
+		{
+		    bitcache = *mask++;
+		    bitmask = CREATE_BITMASK (0);
+		}
+		if (bitcache & bitmask)
+		{
+		    d = over (src, CONVERT_0565_TO_0888 (*dst));
+		    *dst = CONVERT_8888_TO_0565 (d);
+		}
+		bitmask = UPDATE_BITMASK (bitmask);
+		dst++;
+	    }
+	}
+    }
+}
+
 /*
  * Simple bitblt
  */
@@ -1261,6 +1359,8 @@ static const pixman_fast_path_t c_fast_paths[] =
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a1,       PIXMAN_x8r8g8b8, fast_composite_over_n_1_8888, },
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a1,       PIXMAN_a8b8g8r8, fast_composite_over_n_1_8888, },
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a1,       PIXMAN_x8b8g8r8, fast_composite_over_n_1_8888, },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a1,       PIXMAN_r5g6b5,   fast_composite_over_n_1_0565 },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a1,       PIXMAN_b5g6r5,   fast_composite_over_n_1_0565 },
     { PIXMAN_OP_OVER, PIXMAN_solid, PIXMAN_a8r8g8b8_ca, PIXMAN_a8r8g8b8, fast_composite_over_n_8888_8888_ca },
     { PIXMAN_OP_OVER, PIXMAN_solid, PIXMAN_a8r8g8b8_ca, PIXMAN_x8r8g8b8, fast_composite_over_n_8888_8888_ca },
     { PIXMAN_OP_OVER, PIXMAN_solid, PIXMAN_a8r8g8b8_ca, PIXMAN_r5g6b5,   fast_composite_over_n_8888_0565_ca },
