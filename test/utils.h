@@ -35,3 +35,7 @@ compute_crc32 (uint32_t    in_crc32,
 	       const void *buf,
 	       size_t      buf_len);
 
+/* perform endian conversion of pixel data
+ */
+void
+image_endian_swap (pixman_image_t *img, int bpp);
