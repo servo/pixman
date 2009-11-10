@@ -14,11 +14,13 @@ TESTPROGRAMS =			\
 fetch_test_LDADD = $(TEST_LDADD)
 region_test_LDADD = $(TEST_LDADD)
 scaling_test_LDADD = $(TEST_LDADD)
-blitters_test_LDADD = $(TEST_LDADD)
 composite_LDADD = $(TEST_LDADD)
 trap_crasher_LDADD = $(TEST_LDADD)
 oob_test_LDADD = $(TEST_LDADD)
 window_test_LDADD = $(TEST_LDADD)
+
+blitters_test_LDADD = $(TEST_LDADD)
+blitters_test_SOURCES = blitters-test.c utils.c utils.h
 
 # GTK using test programs
 
