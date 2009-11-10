@@ -1,5 +1,10 @@
 #include "utils.h"
 
+/* Random number seed
+ */
+
+uint32_t lcg_seed;
+
 /*----------------------------------------------------------------------------*\
  *  CRC-32 version 2.0.0 by Craig Bruce, 2006-04-29.
  *

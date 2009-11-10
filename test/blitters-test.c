@@ -25,31 +25,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <config.h>
-#include "pixman.h"
 #include "utils.h"
 
 /* A primitive pseudorandom number generator, taken from POSIX.1-2001 example */
-
-static uint32_t lcg_seed;
-
-static inline uint32_t
-lcg_rand (void)
-{
-    lcg_seed = lcg_seed * 1103515245 + 12345;
-    return ((uint32_t)(lcg_seed / 65536) % 32768);
-}
-
-static inline void
-lcg_srand (uint32_t seed)
-{
-    lcg_seed = seed;
-}
-
-static inline uint32_t
-lcg_rand_n (int max)
-{
-    return lcg_rand () % max;
-}
 
 static void *
 aligned_malloc (size_t align, size_t size)
