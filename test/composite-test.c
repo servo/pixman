@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "pixman.h"
-#include "utils.h"
+#include "gtk-utils.h"
 
 #define WIDTH	60
 #define HEIGHT	60

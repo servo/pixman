@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "pixman.h"
-#include "utils.h"
+#include "gtk-utils.h"
 
 #define WIDTH 200
 #define HEIGHT 200

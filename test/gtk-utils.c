@@ -3,7 +3,7 @@
 #include "pixman-private.h"	/* For image->bits.format
 				 * FIXME: there should probably be public API for this
 				 */
-#include "utils.h"
+#include "gtk-utils.h"
 
 GdkPixbuf *
 pixbuf_from_argb32 (uint32_t *bits,
