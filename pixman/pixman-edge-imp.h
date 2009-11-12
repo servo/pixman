@@ -49,10 +49,14 @@ RASTERIZE_EDGES (pixman_image_t  *image,
 	rx = r->x;
 #if N_BITS == 1
 	/* For the non-antialiased case, round the coordinates up, in effect
-	 * sampling the center of the pixel. (The AA case does a similar 
-	 * adjustment in RENDER_SAMPLES_X) */
-	lx += X_FRAC_FIRST(1);
-	rx += X_FRAC_FIRST(1);
+	 * sampling just slightly to the left of the pixel. This is so that
+	 * when the sample point lies exactly on the line, we round towards
+	 * north-west.
+	 *
+	 * (The AA case does a similar  adjustment in RENDER_SAMPLES_X)
+	 */
+	lx += X_FRAC_FIRST(1) - pixman_fixed_e;
+	rx += X_FRAC_FIRST(1) - pixman_fixed_e;
 #endif
 	/* clip X */
 	if (lx < 0)
