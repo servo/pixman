@@ -31,7 +31,7 @@ if HAVE_GTK
 GTK_LDADD = $(TEST_LDADD) $(GTK_LIBS)
 GTK_UTILS = gtk-utils.c gtk-utils.h
 
-TESTPROGRAMS +=			\
+TESTPROGRAMS_GTK =		\
 	clip-test		\
 	clip-in			\
 	composite-test		\
@@ -69,5 +69,7 @@ convolution_test_SOURCES = convolution-test.c $(GTK_UTILS)
 
 endif
 
-noinst_PROGRAMS = $(TESTPROGRAMS)
+check_PROGRAMS = $(TESTPROGRAMS) $(TESTPROGRAMS_GTK)
+
+TESTS = $(TESTPROGRAMS)
 
