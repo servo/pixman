@@ -96,7 +96,7 @@ free_random_image (uint32_t initcrc,
     uint32_t crc32 = 0;
     int stride = pixman_image_get_stride (img);
     uint32_t *data = pixman_image_get_data (img);
-    int height = pixman_image_get_height (img);;
+    int height = pixman_image_get_height (img);
 
     if (fmt != -1)
     {
