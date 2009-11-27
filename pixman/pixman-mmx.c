@@ -1883,22 +1883,13 @@ pixman_fill_mmx (uint32_t *bits,
     if (bpp != 16 && bpp != 32 && bpp != 8)
 	return FALSE;
 
-    if (bpp == 16 && (xor >> 16 != (xor & 0xffff)))
-	return FALSE;
-
-    if (bpp == 8 &&
-        ((xor >> 16 != (xor & 0xffff)) ||
-         (xor >> 24 != (xor & 0x00ff) >> 16)))
-    {
-	return FALSE;
-    }
-
     if (bpp == 8)
     {
 	stride = stride * (int) sizeof (uint32_t) / 1;
 	byte_line = (uint8_t *)(((uint8_t *)bits) + stride * y + x);
 	byte_width = width;
 	stride *= 1;
+        xor = (xor & 0xff) * 0x01010101;
     }
     else if (bpp == 16)
     {
@@ -1906,6 +1897,7 @@ pixman_fill_mmx (uint32_t *bits,
 	byte_line = (uint8_t *)(((uint16_t *)bits) + stride * y + x);
 	byte_width = 2 * width;
 	stride *= 2;
+        xor = (xor & 0xffff) * 0x00010001;
     }
     else
     {
