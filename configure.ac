@@ -253,7 +253,7 @@ AC_COMPILE_IFELSE([
 #include <xmmintrin.h>
 #include <emmintrin.h>
 int main () {
-    __m128i a, b, c;
+    __m128i a = _mm_set1_epi32 (0), b = _mm_set1_epi32 (0), c;
 	c = _mm_xor_si128 (a, b);
     return 0;
 }], have_sse2_intrinsics=yes)
