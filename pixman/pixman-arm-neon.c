@@ -226,6 +226,7 @@ BIND_N_MASK_DST(add_n_8_8, uint8_t, 1, uint8_t, 1)
 BIND_SRC_N_DST(over_8888_n_8888, uint32_t, 1, uint32_t, 1)
 
 BIND_SRC_MASK_DST(add_8_8_8, uint8_t, 1, uint8_t, 1, uint8_t, 1)
+BIND_SRC_MASK_DST(over_8888_8_8888, uint32_t, 1, uint8_t, 1, uint32_t, 1)
 BIND_SRC_MASK_DST(over_8888_8888_8888, uint32_t, 1, uint32_t, 1, uint32_t, 1)
 
 void
@@ -354,6 +355,10 @@ static const pixman_fast_path_t arm_neon_fast_path_array[] =
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_x8b8g8r8, neon_composite_over_n_8_8888    },
     { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_solid,    PIXMAN_a8r8g8b8, neon_composite_over_8888_n_8888 },
     { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_solid,    PIXMAN_x8r8g8b8, neon_composite_over_8888_n_8888 },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8,       PIXMAN_a8r8g8b8, neon_composite_over_8888_8_8888 },
+    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8,       PIXMAN_x8r8g8b8, neon_composite_over_8888_8_8888 },
+    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_a8,       PIXMAN_a8b8g8r8, neon_composite_over_8888_8_8888 },
+    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_a8,       PIXMAN_x8b8g8r8, neon_composite_over_8888_8_8888 },
     { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8r8g8b8, PIXMAN_a8r8g8b8, neon_composite_over_8888_8888_8888 },
     { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,     PIXMAN_r5g6b5,   neon_composite_over_8888_0565   },
     { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,     PIXMAN_b5g6r5,   neon_composite_over_8888_0565   },
