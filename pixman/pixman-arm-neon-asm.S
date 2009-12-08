@@ -41,6 +41,7 @@
 
     .text
     .fpu neon
+    .arch armv7a
     .altmacro
 
 #include "pixman-arm-neon-asm.h"
