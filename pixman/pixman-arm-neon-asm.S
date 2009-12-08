@@ -427,6 +427,38 @@ generate_composite_function \
 
 /******************************************************************************/
 
+.macro pixman_composite_add_8888_8888_process_pixblock_tail_head
+    vld1.8      {d0, d1, d2, d3}, [SRC]!
+                                    PF add PF_X, PF_X, #8
+                                    PF tst PF_CTL, #0xF
+    vld1.8      {d4, d5, d6, d7}, [DST_R, :128]!
+                                    PF addne PF_X, PF_X, #8
+                                    PF subne PF_CTL, PF_CTL, #1
+        vst1.8      {d28, d29, d30, d31}, [DST_W, :128]!
+                                    PF cmp PF_X, ORIG_W
+                                    PF pld, [PF_SRC, PF_X, lsl #src_bpp_shift]
+                                    PF pld, [PF_DST, PF_X, lsl #dst_bpp_shift]
+                                    PF subge PF_X, PF_X, ORIG_W
+                                    PF subges PF_CTL, PF_CTL, #0x10
+    vqadd.u8    q14, q0, q2
+                                    PF ldrgeb DUMMY, [PF_SRC, SRC_STRIDE, lsl #src_bpp_shift]!
+                                    PF ldrgeb DUMMY, [PF_DST, DST_STRIDE, lsl #dst_bpp_shift]!
+    vqadd.u8    q15, q1, q3
+.endm
+
+generate_composite_function \
+    pixman_composite_add_8888_8888_asm_neon, 32, 0, 32, \
+    FLAG_DST_READWRITE, \
+    8, /* number of pixels, processed in a single block */ \
+    10, /* prefetch distance */ \
+    default_init, \
+    default_cleanup, \
+    pixman_composite_add_8000_8000_process_pixblock_head, \
+    pixman_composite_add_8000_8000_process_pixblock_tail, \
+    pixman_composite_add_8888_8888_process_pixblock_tail_head
+
+/******************************************************************************/
+
 .macro pixman_composite_over_8888_8888_process_pixblock_head
     vmvn.8      d24, d3  /* get inverted alpha */
     /* do alpha blending */
