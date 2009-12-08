@@ -983,6 +983,53 @@ generate_composite_function \
 
 /******************************************************************************/
 
+.macro pixman_composite_add_8888_8888_8888_process_pixblock_head
+    /* expecting source data in {d0, d1, d2, d3} */
+    /* destination data in {d4, d5, d6, d7} */
+    /* mask in {d24, d25, d26, d27} */
+    vmull.u8    q8, d27, d0
+    vmull.u8    q9, d27, d1
+    vmull.u8    q10, d27, d2
+    vmull.u8    q11, d27, d3
+    vrshr.u16   q0, q8, #8
+    vrshr.u16   q1, q9, #8
+    vrshr.u16   q12, q10, #8
+    vrshr.u16   q13, q11, #8
+    vraddhn.u16 d0, q0, q8
+    vraddhn.u16 d1, q1, q9
+    vraddhn.u16 d2, q12, q10
+    vraddhn.u16 d3, q13, q11
+    vqadd.u8    q14, q0, q2
+    vqadd.u8    q15, q1, q3
+.endm
+
+.macro pixman_composite_add_8888_8888_8888_process_pixblock_tail
+.endm
+
+/* TODO: expand macros and do better instructions scheduling */
+.macro pixman_composite_add_8888_8888_8888_process_pixblock_tail_head
+    pixman_composite_add_8888_8888_8888_process_pixblock_tail
+    vst4.8      {d28, d29, d30, d31}, [DST_W, :128]!
+    vld4.8      {d4, d5, d6, d7}, [DST_R, :128]!
+    vld4.8      {d24, d25, d26, d27}, [MASK]!
+    vld4.8      {d0, d1, d2, d3}, [SRC]!
+    cache_preload 8, 8
+    pixman_composite_add_8888_8888_8888_process_pixblock_head
+.endm
+
+generate_composite_function \
+    pixman_composite_add_8888_8888_8888_asm_neon, 32, 32, 32, \
+    FLAG_DST_READWRITE | FLAG_DEINTERLEAVE_32BPP, \
+    8, /* number of pixels, processed in a single block */ \
+    10, /* prefetch distance */ \
+    default_init, \
+    default_cleanup, \
+    pixman_composite_add_8888_8888_8888_process_pixblock_head, \
+    pixman_composite_add_8888_8888_8888_process_pixblock_tail, \
+    pixman_composite_add_8888_8888_8888_process_pixblock_tail_head
+
+/******************************************************************************/
+
 .macro pixman_composite_over_8888_n_8888_process_pixblock_head
     /* expecting source data in {d0, d1, d2, d3} */
     /* destination data in {d4, d5, d6, d7} */
