@@ -71,6 +71,46 @@ neon_composite_##name (pixman_implementation_t *imp,                    \
                                         src_line, src_stride);          \
 }
 
+#define BIND_N_NULL_DST(name, dst_type, dst_cnt)                        \
+void                                                                    \
+pixman_composite_##name##_asm_neon (int32_t    w,                       \
+                                    int32_t    h,                       \
+                                    dst_type  *dst,                     \
+                                    int32_t    dst_stride,              \
+                                    uint32_t   src);                    \
+                                                                        \
+static void                                                             \
+neon_composite_##name (pixman_implementation_t *imp,                    \
+                       pixman_op_t              op,                     \
+                       pixman_image_t *         src_image,              \
+                       pixman_image_t *         mask_image,             \
+                       pixman_image_t *         dst_image,              \
+                       int32_t                  src_x,                  \
+                       int32_t                  src_y,                  \
+                       int32_t                  mask_x,                 \
+                       int32_t                  mask_y,                 \
+                       int32_t                  dest_x,                 \
+                       int32_t                  dest_y,                 \
+                       int32_t                  width,                  \
+                       int32_t                  height)                 \
+{                                                                       \
+    dst_type  *dst_line;                                                \
+    int32_t    dst_stride;                                              \
+    uint32_t   src;                                                     \
+                                                                        \
+    src = _pixman_image_get_solid (src_image, dst_image->bits.format);  \
+                                                                        \
+    if (src == 0)                                                       \
+	return;                                                         \
+                                                                        \
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, dst_type,         \
+                           dst_stride, dst_line, dst_cnt);              \
+                                                                        \
+    pixman_composite_##name##_asm_neon (width, height,                  \
+                                        dst_line, dst_stride,           \
+                                        src);                           \
+}
+
 #define BIND_N_MASK_DST(name, mask_type, mask_cnt, dst_type, dst_cnt)   \
 void                                                                    \
 pixman_composite_##name##_asm_neon (int32_t    w,                       \
@@ -218,6 +258,8 @@ BIND_SRC_NULL_DST(src_0565_8888, uint16_t, 1, uint32_t, 1)
 BIND_SRC_NULL_DST(add_8000_8000, uint8_t, 1, uint8_t, 1)
 BIND_SRC_NULL_DST(add_8888_8888, uint32_t, 1, uint32_t, 1)
 
+BIND_N_NULL_DST(over_n_0565, uint16_t, 1)
+
 BIND_SRC_NULL_DST(over_8888_0565, uint32_t, 1, uint16_t, 1)
 BIND_SRC_NULL_DST(over_8888_8888, uint32_t, 1, uint32_t, 1)
 
@@ -360,6 +402,7 @@ static const pixman_fast_path_t arm_neon_fast_path_array[] =
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_x8r8g8b8, neon_composite_over_n_8_8888    },
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_a8b8g8r8, neon_composite_over_n_8_8888    },
     { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_x8b8g8r8, neon_composite_over_n_8_8888    },
+    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_null,     PIXMAN_r5g6b5,   neon_composite_over_n_0565      },
     { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_solid,    PIXMAN_a8r8g8b8, neon_composite_over_8888_n_8888 },
     { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_solid,    PIXMAN_x8r8g8b8, neon_composite_over_8888_n_8888 },
     { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_a8,       PIXMAN_a8r8g8b8, neon_composite_over_8888_8_8888 },

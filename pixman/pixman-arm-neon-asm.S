@@ -344,6 +344,75 @@ generate_composite_function \
 
 /******************************************************************************/
 
+.macro pixman_composite_over_n_0565_process_pixblock_head
+    /* convert 8 r5g6b5 pixel data from {d4, d5} to planar 8-bit format
+       and put data into d6 - red, d7 - green, d30 - blue */
+    vshrn.u16   d6, q2, #8
+    vshrn.u16   d7, q2, #3
+    vsli.u16    q2, q2, #5
+    vsri.u8     d6, d6, #5
+    vsri.u8     d7, d7, #6
+    vshrn.u16   d30, q2, #2
+    /* now do alpha blending, storing results in 8-bit planar format
+       into d16 - red, d19 - green, d18 - blue */
+    vmull.u8    q10, d3, d6
+    vmull.u8    q11, d3, d7
+    vmull.u8    q12, d3, d30
+    vrshr.u16   q13, q10, #8
+    vrshr.u16   q3, q11, #8
+    vrshr.u16   q15, q12, #8
+    vraddhn.u16 d20, q10, q13
+    vraddhn.u16 d23, q11, q3
+    vraddhn.u16 d22, q12, q15
+.endm
+
+.macro pixman_composite_over_n_0565_process_pixblock_tail
+    /* ... continue alpha blending */
+    vqadd.u8    d16, d2, d20
+    vqadd.u8    q9, q0, q11
+    /* convert the result to r5g6b5 and store it into {d28, d29} */
+    vshll.u8    q14, d16, #8
+    vshll.u8    q8, d19, #8
+    vshll.u8    q9, d18, #8
+    vsri.u16    q14, q8, #5
+    vsri.u16    q14, q9, #11
+.endm
+
+/* TODO: expand macros and do better instructions scheduling */
+.macro pixman_composite_over_n_0565_process_pixblock_tail_head
+    pixman_composite_over_n_0565_process_pixblock_tail
+    vld1.16     {d4, d5}, [DST_R, :128]!
+    vst1.16     {d28, d29}, [DST_W, :128]!
+    pixman_composite_over_n_0565_process_pixblock_head
+.endm
+
+.macro pixman_composite_over_n_0565_init
+    add         DUMMY, sp, #ARGS_STACK_OFFSET
+    vld1.32     {d3[0]}, [DUMMY]
+    vdup.8      d0, d3[0]
+    vdup.8      d1, d3[1]
+    vdup.8      d2, d3[2]
+    vdup.8      d3, d3[3]
+    vmvn.8      d3, d3      /* invert source alpha */
+.endm
+
+generate_composite_function \
+    pixman_composite_over_n_0565_asm_neon, 0, 0, 16, \
+    FLAG_DST_READWRITE, \
+    8, /* number of pixels, processed in a single block */ \
+    5, /* prefetch distance */ \
+    pixman_composite_over_n_0565_init, \
+    default_cleanup, \
+    pixman_composite_over_n_0565_process_pixblock_head, \
+    pixman_composite_over_n_0565_process_pixblock_tail, \
+    pixman_composite_over_n_0565_process_pixblock_tail_head, \
+    28, /* dst_w_basereg */ \
+    4,  /* dst_r_basereg */ \
+    0,  /* src_basereg   */ \
+    24  /* mask_basereg  */
+
+/******************************************************************************/
+
 .macro pixman_composite_src_8888_0565_process_pixblock_head
     vshll.u8    q8, d1, #8
     vshll.u8    q14, d2, #8
