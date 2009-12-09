@@ -630,6 +630,36 @@ generate_composite_function \
 
 /******************************************************************************/
 
+/* TODO: expand macros and do better instructions scheduling */
+.macro pixman_composite_over_n_8888_process_pixblock_tail_head
+    pixman_composite_over_8888_8888_process_pixblock_tail
+    vld4.8      {d4, d5, d6, d7}, [DST_R, :128]!
+    vst4.8      {d28, d29, d30, d31}, [DST_W, :128]!
+    pixman_composite_over_8888_8888_process_pixblock_head
+.endm
+
+.macro pixman_composite_over_n_8888_init
+    add         DUMMY, sp, #ARGS_STACK_OFFSET
+    vld1.32     {d3[0]}, [DUMMY]
+    vdup.8      d0, d3[0]
+    vdup.8      d1, d3[1]
+    vdup.8      d2, d3[2]
+    vdup.8      d3, d3[3]
+.endm
+
+generate_composite_function \
+    pixman_composite_over_n_8888_asm_neon, 0, 0, 32, \
+    FLAG_DST_READWRITE | FLAG_DEINTERLEAVE_32BPP, \
+    8, /* number of pixels, processed in a single block */ \
+    5, /* prefetch distance */ \
+    pixman_composite_over_n_8888_init, \
+    default_cleanup, \
+    pixman_composite_over_8888_8888_process_pixblock_head, \
+    pixman_composite_over_8888_8888_process_pixblock_tail, \
+    pixman_composite_over_n_8888_process_pixblock_tail_head
+
+/******************************************************************************/
+
 .macro pixman_composite_over_n_8_0565_process_pixblock_head
     /* in */
     vmull.u8    q0, d24, d8
