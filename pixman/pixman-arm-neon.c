@@ -214,6 +214,7 @@ BIND_SRC_NULL_DST(src_8888_8888, uint32_t, 1, uint32_t, 1)
 BIND_SRC_NULL_DST(src_0565_0565, uint16_t, 1, uint16_t, 1)
 BIND_SRC_NULL_DST(src_0888_0888, uint8_t, 3, uint8_t, 3)
 BIND_SRC_NULL_DST(src_8888_0565, uint32_t, 1, uint16_t, 1)
+BIND_SRC_NULL_DST(src_0565_8888, uint16_t, 1, uint32_t, 1)
 BIND_SRC_NULL_DST(add_8000_8000, uint8_t, 1, uint8_t, 1)
 BIND_SRC_NULL_DST(add_8888_8888, uint32_t, 1, uint32_t, 1)
 
@@ -344,6 +345,10 @@ static const pixman_fast_path_t arm_neon_fast_path_array[] =
     { PIXMAN_OP_SRC,  PIXMAN_x8r8g8b8, PIXMAN_null,     PIXMAN_r5g6b5,   neon_composite_src_8888_0565    },
     { PIXMAN_OP_SRC,  PIXMAN_a8b8g8r8, PIXMAN_null,     PIXMAN_b5g6r5,   neon_composite_src_8888_0565    },
     { PIXMAN_OP_SRC,  PIXMAN_x8b8g8r8, PIXMAN_null,     PIXMAN_b5g6r5,   neon_composite_src_8888_0565    },
+    { PIXMAN_OP_SRC,  PIXMAN_r5g6b5,   PIXMAN_null,     PIXMAN_a8r8g8b8, neon_composite_src_0565_8888    },
+    { PIXMAN_OP_SRC,  PIXMAN_r5g6b5,   PIXMAN_null,     PIXMAN_x8r8g8b8, neon_composite_src_0565_8888    },
+    { PIXMAN_OP_SRC,  PIXMAN_b5g6r5,   PIXMAN_null,     PIXMAN_a8b8g8r8, neon_composite_src_0565_8888    },
+    { PIXMAN_OP_SRC,  PIXMAN_b5g6r5,   PIXMAN_null,     PIXMAN_x8b8g8r8, neon_composite_src_0565_8888    },
     { PIXMAN_OP_SRC,  PIXMAN_a8r8g8b8, PIXMAN_null,     PIXMAN_x8r8g8b8, neon_composite_src_8888_8888    },
     { PIXMAN_OP_SRC,  PIXMAN_x8r8g8b8, PIXMAN_null,     PIXMAN_x8r8g8b8, neon_composite_src_8888_8888    },
     { PIXMAN_OP_SRC,  PIXMAN_a8b8g8r8, PIXMAN_null,     PIXMAN_x8b8g8r8, neon_composite_src_8888_8888    },

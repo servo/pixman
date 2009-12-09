@@ -387,6 +387,41 @@ generate_composite_function \
 
 /******************************************************************************/
 
+.macro pixman_composite_src_0565_8888_process_pixblock_head
+    vshrn.u16   d30, q0, #8
+    vshrn.u16   d29, q0, #3
+    vsli.u16    q0, q0, #5
+    vmov.u8     d31, #255
+    vsri.u8     d30, d30, #5
+    vsri.u8     d29, d29, #6
+    vshrn.u16   d28, q0, #2
+.endm
+
+.macro pixman_composite_src_0565_8888_process_pixblock_tail
+.endm
+
+/* TODO: expand macros and do better instructions scheduling */
+.macro pixman_composite_src_0565_8888_process_pixblock_tail_head
+    pixman_composite_src_0565_8888_process_pixblock_tail
+    vst4.8     {d28, d29, d30, d31}, [DST_W, :128]!
+    vld1.16    {d0, d1}, [SRC]!
+    pixman_composite_src_0565_8888_process_pixblock_head
+    cache_preload 8, 8
+.endm
+
+generate_composite_function \
+    pixman_composite_src_0565_8888_asm_neon, 16, 0, 32, \
+    FLAG_DST_WRITEONLY | FLAG_DEINTERLEAVE_32BPP, \
+    8, /* number of pixels, processed in a single block */ \
+    10, /* prefetch distance */ \
+    default_init, \
+    default_cleanup, \
+    pixman_composite_src_0565_8888_process_pixblock_head, \
+    pixman_composite_src_0565_8888_process_pixblock_tail, \
+    pixman_composite_src_0565_8888_process_pixblock_tail_head
+
+/******************************************************************************/
+
 .macro pixman_composite_add_8000_8000_process_pixblock_head
     vqadd.u8    q14, q0, q2
     vqadd.u8    q15, q1, q3
