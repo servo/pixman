@@ -544,6 +544,7 @@ neon_combine_##name##_u (pixman_implementation_t *imp,                   \
 }
 
 BIND_COMBINE_U (over)
+BIND_COMBINE_U (add)
 
 pixman_implementation_t *
 _pixman_implementation_create_arm_neon (void)
@@ -552,6 +553,7 @@ _pixman_implementation_create_arm_neon (void)
     pixman_implementation_t *imp = _pixman_implementation_create (general);
 
     imp->combine_32[PIXMAN_OP_OVER] = neon_combine_over_u;
+    imp->combine_32[PIXMAN_OP_ADD] = neon_combine_add_u;
 
     imp->composite = arm_neon_composite;
     imp->blt = arm_neon_blt;
