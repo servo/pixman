@@ -516,11 +516,42 @@ arm_neon_fill (pixman_implementation_t *imp,
 	imp->delegate, bits, stride, bpp, x, y, width, height, xor);
 }
 
+#define BIND_COMBINE_U(name)                                             \
+void                                                                     \
+pixman_composite_scanline_##name##_mask_asm_neon (int32_t         w,     \
+                                                  const uint32_t *dst,   \
+                                                  const uint32_t *src,   \
+                                                  const uint32_t *mask); \
+                                                                         \
+void                                                                     \
+pixman_composite_scanline_##name##_asm_neon (int32_t         w,          \
+                                             const uint32_t *dst,        \
+                                             const uint32_t *src);       \
+                                                                         \
+static void                                                              \
+neon_combine_##name##_u (pixman_implementation_t *imp,                   \
+                         pixman_op_t              op,                    \
+                         uint32_t *               dest,                  \
+                         const uint32_t *         src,                   \
+                         const uint32_t *         mask,                  \
+                         int                      width)                 \
+{                                                                        \
+    if (mask)                                                            \
+	pixman_composite_scanline_##name##_mask_asm_neon (width, dest,   \
+	                                                  src, mask);    \
+    else                                                                 \
+	pixman_composite_scanline_##name##_asm_neon (width, dest, src);  \
+}
+
+BIND_COMBINE_U (over)
+
 pixman_implementation_t *
 _pixman_implementation_create_arm_neon (void)
 {
     pixman_implementation_t *general = _pixman_implementation_create_fast_path ();
     pixman_implementation_t *imp = _pixman_implementation_create (general);
+
+    imp->combine_32[PIXMAN_OP_OVER] = neon_combine_over_u;
 
     imp->composite = arm_neon_composite;
     imp->blt = arm_neon_blt;
