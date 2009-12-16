@@ -3,13 +3,13 @@ INCLUDES = -I$(top_srcdir)/pixman -I$(top_builddir)/pixman
 
 TESTPROGRAMS =			\
 	region-test		\
-	scaling-test		\
-	blitters-test		\
-	composite		\
 	fetch-test		\
 	oob-test		\
 	window-test		\
-	trap-crasher
+	trap-crasher		\
+	blitters-test		\
+	scaling-test		\
+	composite
 
 fetch_test_LDADD = $(TEST_LDADD)
 region_test_LDADD = $(TEST_LDADD)
@@ -69,7 +69,7 @@ convolution_test_SOURCES = convolution-test.c $(GTK_UTILS)
 
 endif
 
-check_PROGRAMS = $(TESTPROGRAMS) $(TESTPROGRAMS_GTK)
+noinst_PROGRAMS = $(TESTPROGRAMS) $(TESTPROGRAMS_GTK)
 
 TESTS = $(TESTPROGRAMS)
 
