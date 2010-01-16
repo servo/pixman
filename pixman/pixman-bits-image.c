@@ -115,7 +115,7 @@ bits_image_fetch_pixel_alpha (bits_image_t *image, int x, int y)
     }
     else
     {
-	pixel_a = image->fetch_pixel_raw_32 (
+	pixel_a = image->common.alpha_map->fetch_pixel_raw_32 (
 	    image->common.alpha_map, x, y);
 	pixel_a = ALPHA_8 (pixel_a);
     }
