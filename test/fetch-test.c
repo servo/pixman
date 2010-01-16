@@ -6,7 +6,7 @@
 
 #define SIZE 1024
 
-static const pixman_indexed_t mono_pallete =
+static const pixman_indexed_t mono_palette =
 {
     .rgba = { 0x00000000, 0x00ffffff },
 };
@@ -55,7 +55,7 @@ static const testcase_t testcases[] =
 	    0x00ffffff, 0x00000000, 0x00ffffff, 0x00000000, 0x00ffffff, 0x00000000, 0x00ffffff, 0x00000000,
 	    0x00000000, 0x00ffffff, 0x00000000, 0x00ffffff, 0x00000000, 0x00ffffff, 0x00000000, 0x00ffffff
 	},
-	.indexed = &mono_pallete,
+	.indexed = &mono_palette,
     },
 #if 0
     {
