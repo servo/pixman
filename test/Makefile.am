@@ -7,6 +7,7 @@ TESTPROGRAMS =			\
 	oob-test		\
 	window-test		\
 	trap-crasher		\
+	alphamap		\
 	blitters-test		\
 	scaling-test		\
 	composite
@@ -24,6 +25,9 @@ blitters_test_SOURCES = blitters-test.c utils.c utils.h
 scaling_test_LDADD = $(TEST_LDADD)
 scaling_test_SOURCES = scaling-test.c utils.c utils.h
 
+alphamap_LDADD = $(TEST_LDADD)
+alphamap_SOURCES = alphamap.c utils.c utils.h
+
 # GTK using test programs
 
 if HAVE_GTK
@@ -39,7 +43,8 @@ TESTPROGRAMS_GTK =		\
 	alpha-test		\
 	screen-test		\
 	convolution-test	\
-	trap-test
+	trap-test		\
+	alphamap
 
 INCLUDES += $(GTK_CFLAGS)
 
