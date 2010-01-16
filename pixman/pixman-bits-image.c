@@ -120,7 +120,8 @@ bits_image_fetch_pixel_alpha (bits_image_t *image, int x, int y)
 	pixel_a = ALPHA_8 (pixel_a);
     }
 
-    UN8x4_MUL_UN8 (pixel, pixel_a);
+    pixel &= 0x00ffffff;
+    pixel |= (pixel_a << 24);
 
     return pixel;
 }
