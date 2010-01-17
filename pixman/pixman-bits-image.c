@@ -1044,6 +1044,12 @@ pixman_image_create_bits (pixman_format_code_t format,
     return_val_if_fail (bits == NULL ||
                         (rowstride_bytes % sizeof (uint32_t)) == 0, NULL);
 
+    if (PIXMAN_FORMAT_BPP (format) < PIXMAN_FORMAT_DEPTH (format))
+    {
+	fprintf (stderr, "Bad format passed to pixman_image_create_bits();\n");
+	return NULL;
+    }
+
     if (!bits && width && height)
     {
 	free_me = bits = create_bits (format, width, height, &rowstride_bytes);
