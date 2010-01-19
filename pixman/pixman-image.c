@@ -247,7 +247,7 @@ _pixman_image_validate (pixman_image_t *image)
     }
 
     if (image->common.alpha_map)
-	_pixman_image_validate (image->common.alpha_map);
+	_pixman_image_validate ((pixman_image_t *)image->common.alpha_map);
 }
 
 PIXMAN_EXPORT pixman_bool_t
