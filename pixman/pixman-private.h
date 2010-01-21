@@ -114,7 +114,10 @@ struct source_image
 struct solid_fill
 {
     source_image_t common;
-    uint32_t       color;    /* FIXME: shouldn't this be a pixman_color_t? */
+    pixman_color_t color;
+    
+    uint32_t	   color_32;
+    uint64_t	   color_64;
 };
 
 struct gradient

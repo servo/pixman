@@ -591,7 +591,7 @@ _pixman_image_is_opaque (pixman_image_t *image)
 	break;
 
     case SOLID:
-	if (ALPHA_8 (image->solid.color) != 0xff)
+	if (image->solid.color.alpha != 0xffff)
 	    return FALSE;
 	break;
 
