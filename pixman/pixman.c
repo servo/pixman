@@ -109,8 +109,8 @@ pixman_optimize_operator (pixman_op_t     op,
 
 static void
 apply_workaround (pixman_image_t *image,
-		  int16_t *       x,
-		  int16_t *       y,
+		  int32_t *       x,
+		  int32_t *       y,
 		  uint32_t **     save_bits,
 		  int *           save_dx,
 		  int *           save_dy)
@@ -165,6 +165,24 @@ pixman_image_composite (pixman_op_t      op,
                         int16_t          dest_y,
                         uint16_t         width,
                         uint16_t         height)
+{
+    pixman_image_composite32 (op, src, mask, dest, src_x, src_y, 
+                              mask_x, mask_y, dest_x, dest_y, width, height);
+}
+
+PIXMAN_EXPORT void
+pixman_image_composite32 (pixman_op_t      op,
+                          pixman_image_t * src,
+                          pixman_image_t * mask,
+                          pixman_image_t * dest,
+                          int32_t          src_x,
+                          int32_t          src_y,
+                          int32_t          mask_x,
+                          int32_t          mask_y,
+                          int32_t          dest_x,
+                          int32_t          dest_y,
+                          int32_t          width,
+                          int32_t          height)
 {
     uint32_t *src_bits;
     int src_dx, src_dy;
