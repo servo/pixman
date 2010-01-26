@@ -2470,7 +2470,7 @@ PREFIX (_selfcheck) (region_type_t *reg)
 
 PIXMAN_EXPORT pixman_bool_t
 PREFIX (_init_rects) (region_type_t *region,
-                      box_type_t *boxes, int count)
+                      const box_type_t *boxes, int count)
 {
     box_type_t *rects;
     int displacement;
