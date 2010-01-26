@@ -28,6 +28,8 @@
 #endif
 #include "pixman-private.h"
 
+#include <stdlib.h>
+
 /*
  * Operator optimizations based on source or destination opacity
  */
@@ -341,84 +343,36 @@ pixman_image_fill_rectangles (pixman_op_t                 op,
                               int                         n_rects,
                               const pixman_rectangle16_t *rects)
 {
-    pixman_image_t *solid;
-    pixman_color_t c;
+    pixman_box32_t stack_boxes[6];
+    pixman_box32_t *boxes;
+    pixman_bool_t result;
     int i;
 
-    _pixman_image_validate (dest);
-    
-    if (color->alpha == 0xffff)
+    if (n_rects > 6)
     {
-	if (op == PIXMAN_OP_OVER)
-	    op = PIXMAN_OP_SRC;
+        boxes = pixman_malloc_ab (sizeof (pixman_box32_t), n_rects);
+        if (boxes == NULL)
+            return FALSE;
     }
-
-    if (op == PIXMAN_OP_CLEAR)
+    else
     {
-	c.red = 0;
-	c.green = 0;
-	c.blue = 0;
-	c.alpha = 0;
-
-	color = &c;
-
-	op = PIXMAN_OP_SRC;
+        boxes = stack_boxes;
     }
-
-    if (op == PIXMAN_OP_SRC)
-    {
-	uint32_t pixel;
-
-	if (color_to_pixel (color, &pixel, dest->bits.format))
-	{
-	    for (i = 0; i < n_rects; ++i)
-	    {
-		pixman_region32_t fill_region;
-		int n_boxes, j;
-		pixman_box32_t *boxes;
-
-		pixman_region32_init_rect (&fill_region, rects[i].x, rects[i].y, rects[i].width, rects[i].height);
-
-		if (dest->common.have_clip_region)
-		{
-		    if (!pixman_region32_intersect (&fill_region,
-		                                    &fill_region,
-		                                    &dest->common.clip_region))
-			return FALSE;
-		}
-
-		boxes = pixman_region32_rectangles (&fill_region, &n_boxes);
-		for (j = 0; j < n_boxes; ++j)
-		{
-		    const pixman_box32_t *box = &(boxes[j]);
-		    pixman_fill (dest->bits.bits, dest->bits.rowstride, PIXMAN_FORMAT_BPP (dest->bits.format),
-		                 box->x1, box->y1, box->x2 - box->x1, box->y2 - box->y1,
-		                 pixel);
-		}
-
-		pixman_region32_fini (&fill_region);
-	    }
-	    return TRUE;
-	}
-    }
-
-    solid = pixman_image_create_solid_fill (color);
-    if (!solid)
-	return FALSE;
 
     for (i = 0; i < n_rects; ++i)
     {
-	const pixman_rectangle16_t *rect = &(rects[i]);
-
-	pixman_image_composite (op, solid, NULL, dest,
-	                        0, 0, 0, 0,
-	                        rect->x, rect->y,
-	                        rect->width, rect->height);
+        boxes[i].x1 = rects[i].x;
+        boxes[i].y1 = rects[i].y;
+        boxes[i].x2 = boxes[i].x1 + rects[i].width;
+        boxes[i].y2 = boxes[i].y1 + rects[i].height;
     }
 
-    pixman_image_unref (solid);
+    result = pixman_image_fill_boxes (op, dest, color, n_rects, boxes);
 
-    return TRUE;
+    if (boxes != stack_boxes)
+        free (boxes);
+    
+    return result;
 }
 
 PIXMAN_EXPORT pixman_bool_t
