@@ -421,6 +421,91 @@ pixman_image_fill_rectangles (pixman_op_t                 op,
     return TRUE;
 }
 
+PIXMAN_EXPORT pixman_bool_t
+pixman_image_fill_boxes (pixman_op_t           op,
+                         pixman_image_t *      dest,
+                         pixman_color_t *      color,
+                         int                   n_boxes,
+                         const pixman_box32_t *boxes)
+{
+    pixman_image_t *solid;
+    pixman_color_t c;
+    int i;
+
+    _pixman_image_validate (dest);
+    
+    if (color->alpha == 0xffff)
+    {
+        if (op == PIXMAN_OP_OVER)
+            op = PIXMAN_OP_SRC;
+    }
+
+    if (op == PIXMAN_OP_CLEAR)
+    {
+        c.red = 0;
+        c.green = 0;
+        c.blue = 0;
+        c.alpha = 0;
+
+        color = &c;
+
+        op = PIXMAN_OP_SRC;
+    }
+
+    if (op == PIXMAN_OP_SRC)
+    {
+        uint32_t pixel;
+
+        if (color_to_pixel (color, &pixel, dest->bits.format))
+        {
+            pixman_region32_t fill_region;
+            int n_rects, j;
+            pixman_box32_t *rects;
+
+            if (!pixman_region32_init_rects (&fill_region, boxes, n_boxes))
+                return FALSE;
+
+            if (dest->common.have_clip_region)
+            {
+                if (!pixman_region32_intersect (&fill_region,
+                                                &fill_region,
+                                                &dest->common.clip_region))
+                    return FALSE;
+            }
+
+            rects = pixman_region32_rectangles (&fill_region, &n_rects);
+            for (j = 0; j < n_rects; ++j)
+            {
+                const pixman_box32_t *rect = &(rects[j]);
+                pixman_fill (dest->bits.bits, dest->bits.rowstride, PIXMAN_FORMAT_BPP (dest->bits.format),
+                             rect->x1, rect->y1, rect->x2 - rect->x1, rect->y2 - rect->y1,
+                             pixel);
+            }
+
+            pixman_region32_fini (&fill_region);
+            return TRUE;
+        }
+    }
+
+    solid = pixman_image_create_solid_fill (color);
+    if (!solid)
+        return FALSE;
+
+    for (i = 0; i < n_boxes; ++i)
+    {
+        const pixman_box32_t *box = &(boxes[i]);
+
+        pixman_image_composite32 (op, solid, NULL, dest,
+                                  0, 0, 0, 0,
+                                  box->x1, box->y1,
+                                  box->x2 - box->x1, box->y2 - box->y1);
+    }
+
+    pixman_image_unref (solid);
+
+    return TRUE;
+}
+
 /**
  * pixman_version:
  *

@@ -761,6 +761,11 @@ pixman_bool_t	pixman_image_fill_rectangles	     (pixman_op_t		    op,
 						      pixman_color_t		   *color,
 						      int			    n_rects,
 						      const pixman_rectangle16_t   *rects);
+pixman_bool_t   pixman_image_fill_boxes              (pixman_op_t                   op,
+                                                      pixman_image_t               *dest,
+                                                      pixman_color_t               *color,
+                                                      int                           n_boxes,
+                                                      const pixman_box32_t         *boxes);
 
 /* Composite */
 pixman_bool_t pixman_compute_composite_region (pixman_region16_t *region,
