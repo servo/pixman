@@ -429,7 +429,7 @@ pixman_bool_t           pixman_region_contains_point     (pixman_region16_t *reg
 							  int                x,
 							  int                y,
 							  pixman_box16_t    *box);
-pixman_region_overlap_t pixman_region_contains_rectangle (pixman_region16_t *pixman_region16_t,
+pixman_region_overlap_t pixman_region_contains_rectangle (pixman_region16_t *region,
 							  pixman_box16_t    *prect);
 pixman_bool_t           pixman_region_not_empty          (pixman_region16_t *region);
 pixman_box16_t *        pixman_region_extents            (pixman_region16_t *region);
