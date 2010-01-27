@@ -125,7 +125,7 @@ fast_composite_over_x888_8_8888 (pixman_implementation_t *imp,
     int src_stride, mask_stride, dst_stride;
     uint8_t m;
     uint32_t s, d;
-    uint16_t w;
+    int32_t w;
 
     PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint32_t, dst_stride, dst_line, 1);
     PIXMAN_IMAGE_GET_LINE (mask_image, mask_x, mask_y, uint8_t, mask_stride, mask_line, 1);
@@ -183,7 +183,7 @@ fast_composite_in_n_8_8 (pixman_implementation_t *imp,
     uint8_t     *dst_line, *dst;
     uint8_t     *mask_line, *mask, m;
     int dst_stride, mask_stride;
-    uint16_t w;
+    int32_t w;
     uint16_t t;
 
     src = _pixman_image_get_solid (src_image, dest_image->bits.format);
@@ -260,7 +260,7 @@ fast_composite_in_8_8 (pixman_implementation_t *imp,
     uint8_t     *dst_line, *dst;
     uint8_t     *src_line, *src;
     int dst_stride, src_stride;
-    uint16_t w;
+    int32_t w;
     uint8_t s;
     uint16_t t;
 
@@ -308,7 +308,7 @@ fast_composite_over_n_8_8888 (pixman_implementation_t *imp,
     uint32_t    *dst_line, *dst, d;
     uint8_t     *mask_line, *mask, m;
     int dst_stride, mask_stride;
-    uint16_t w;
+    int32_t w;
 
     src = _pixman_image_get_solid (src_image, dst_image->bits.format);
 
@@ -366,7 +366,7 @@ fast_composite_add_n_8888_8888_ca (pixman_implementation_t *imp,
     uint32_t    *dst_line, *dst, d;
     uint32_t    *mask_line, *mask, ma;
     int dst_stride, mask_stride;
-    uint16_t w;
+    int32_t w;
 
     src = _pixman_image_get_solid (src_image, dst_image->bits.format);
 
@@ -423,7 +423,7 @@ fast_composite_over_n_8888_8888_ca (pixman_implementation_t *imp,
     uint32_t    *dst_line, *dst, d;
     uint32_t    *mask_line, *mask, ma;
     int dst_stride, mask_stride;
-    uint16_t w;
+    int32_t w;
 
     src = _pixman_image_get_solid (src_image, dst_image->bits.format);
 
@@ -490,7 +490,7 @@ fast_composite_over_n_8_0888 (pixman_implementation_t *imp,
     uint32_t d;
     uint8_t     *mask_line, *mask, m;
     int dst_stride, mask_stride;
-    uint16_t w;
+    int32_t w;
 
     src = _pixman_image_get_solid (src_image, dst_image->bits.format);
 
@@ -555,7 +555,7 @@ fast_composite_over_n_8_0565 (pixman_implementation_t *imp,
     uint32_t d;
     uint8_t     *mask_line, *mask, m;
     int dst_stride, mask_stride;
-    uint16_t w;
+    int32_t w;
 
     src = _pixman_image_get_solid (src_image, dst_image->bits.format);
 
@@ -622,7 +622,7 @@ fast_composite_over_n_8888_0565_ca (pixman_implementation_t *imp,
     uint32_t  d;
     uint32_t *mask_line, *mask, ma;
     int dst_stride, mask_stride;
-    uint16_t w;
+    int32_t w;
 
     src = _pixman_image_get_solid (src_image, dst_image->bits.format);
 
@@ -697,7 +697,7 @@ fast_composite_over_8888_8888 (pixman_implementation_t *imp,
     uint32_t    *src_line, *src, s;
     int dst_stride, src_stride;
     uint8_t a;
-    uint16_t w;
+    int32_t w;
 
     PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint32_t, dst_stride, dst_line, 1);
     PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint32_t, src_stride, src_line, 1);
@@ -744,7 +744,7 @@ fast_composite_over_8888_0888 (pixman_implementation_t *imp,
     uint32_t    *src_line, *src, s;
     uint8_t a;
     int dst_stride, src_stride;
-    uint16_t w;
+    int32_t w;
 
     PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint8_t, dst_stride, dst_line, 3);
     PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint32_t, src_stride, src_line, 1);
@@ -796,7 +796,7 @@ fast_composite_over_8888_0565 (pixman_implementation_t *imp,
     uint32_t    *src_line, *src, s;
     uint8_t a;
     int dst_stride, src_stride;
-    uint16_t w;
+    int32_t w;
 
     PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint32_t, src_stride, src_line, 1);
     PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint16_t, dst_stride, dst_line, 1);
@@ -849,7 +849,7 @@ fast_composite_src_x888_0565 (pixman_implementation_t *imp,
     uint16_t    *dst_line, *dst;
     uint32_t    *src_line, *src, s;
     int dst_stride, src_stride;
-    uint16_t w;
+    int32_t w;
 
     PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint32_t, src_stride, src_line, 1);
     PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint16_t, dst_stride, dst_line, 1);
@@ -889,7 +889,7 @@ fast_composite_add_8000_8000 (pixman_implementation_t *imp,
     uint8_t     *dst_line, *dst;
     uint8_t     *src_line, *src;
     int dst_stride, src_stride;
-    uint16_t w;
+    int32_t w;
     uint8_t s, d;
     uint16_t t;
 
@@ -940,7 +940,7 @@ fast_composite_add_8888_8888 (pixman_implementation_t *imp,
     uint32_t    *dst_line, *dst;
     uint32_t    *src_line, *src;
     int dst_stride, src_stride;
-    uint16_t w;
+    int32_t w;
     uint32_t s, d;
 
     PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint32_t, src_stride, src_line, 1);
@@ -990,7 +990,7 @@ fast_composite_add_n_8_8 (pixman_implementation_t *imp,
     uint8_t     *dst_line, *dst;
     uint8_t     *mask_line, *mask;
     int dst_stride, mask_stride;
-    uint16_t w;
+    int32_t w;
     uint32_t src;
     uint8_t sa;
 
