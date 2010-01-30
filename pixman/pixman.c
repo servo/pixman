@@ -32,13 +32,20 @@
 
 static pixman_implementation_t *imp;
 
-#define PACK(a, b, c, d)			\
-    (((uint8_t)PIXMAN_OP_ ## a <<  0)	|	\
-     ((uint8_t)PIXMAN_OP_ ## b <<  8)	|	\
-     ((uint8_t)PIXMAN_OP_ ## c << 16)	|	\
-     ((uint8_t)PIXMAN_OP_ ## d << 24))
+typedef struct operator_info_t operator_info_t;
 
-static const uint32_t operator_table[] =
+struct operator_info_t
+{
+    uint8_t	opaque_info[4];
+};
+
+#define PACK(neither, src, dest, both)			\
+    {{	    (uint8_t)PIXMAN_OP_ ## neither,		\
+	    (uint8_t)PIXMAN_OP_ ## src,			\
+	    (uint8_t)PIXMAN_OP_ ## dest,		\
+	    (uint8_t)PIXMAN_OP_ ## both		}}
+
+static const operator_info_t operator_table[] =
 {
     /*    Neither Opaque         Src Opaque             Dst Opaque             Both Opaque */
     PACK (CLEAR,                 CLEAR,                 CLEAR,                 CLEAR),
@@ -56,8 +63,8 @@ static const uint32_t operator_table[] =
     PACK (ADD,                   ADD,                   ADD,                   ADD),
     PACK (SATURATE,              OVER_REVERSE,          DST,                   DST),
 
-    0 /* 0x0e */,
-    0 /* 0x0f */,
+    {{ 0 /* 0x0e */ }},
+    {{ 0 /* 0x0f */ }},
 
     PACK (CLEAR,                 CLEAR,                 CLEAR,                 CLEAR),
     PACK (SRC,                   SRC,                   SRC,                   SRC),
@@ -72,10 +79,10 @@ static const uint32_t operator_table[] =
     PACK (DISJOINT_ATOP_REVERSE, DISJOINT_ATOP_REVERSE, DISJOINT_ATOP_REVERSE, DISJOINT_ATOP_REVERSE),
     PACK (DISJOINT_XOR,          DISJOINT_XOR,          DISJOINT_XOR,          DISJOINT_XOR),
 
-    0 /* 0x1c */,
-    0 /* 0x1d */,
-    0 /* 0x1e */,
-    0 /* 0x1f */,
+    {{ 0 /* 0x1c */ }},
+    {{ 0 /* 0x1d */ }},
+    {{ 0 /* 0x1e */ }},
+    {{ 0 /* 0x1f */ }},
 
     PACK (CLEAR,                 CLEAR,                 CLEAR,                 CLEAR),
     PACK (SRC,                   SRC,                   SRC,                   SRC),
@@ -90,10 +97,10 @@ static const uint32_t operator_table[] =
     PACK (CONJOINT_ATOP_REVERSE, CONJOINT_ATOP_REVERSE, CONJOINT_ATOP_REVERSE, CONJOINT_ATOP_REVERSE),
     PACK (CONJOINT_XOR,          CONJOINT_XOR,          CONJOINT_XOR,          CONJOINT_XOR),
 
-    0 /* 0x2c */,
-    0 /* 0x2d */,
-    0 /* 0x2e */,
-    0 /* 0x2f */,
+    {{ 0 /* 0x2c */ }},
+    {{ 0 /* 0x2d */ }},
+    {{ 0 /* 0x2e */ }},
+    {{ 0 /* 0x2f */ }},
 
     PACK (MULTIPLY,              MULTIPLY,              MULTIPLY,              MULTIPLY),
     PACK (SCREEN,                SCREEN,                SCREEN,                SCREEN),
@@ -110,8 +117,6 @@ static const uint32_t operator_table[] =
     PACK (HSL_SATURATION,        HSL_SATURATION,        HSL_SATURATION,        HSL_SATURATION),
     PACK (HSL_COLOR,             HSL_COLOR,             HSL_COLOR,             HSL_COLOR),
     PACK (HSL_LUMINOSITY,        HSL_LUMINOSITY,        HSL_LUMINOSITY,        HSL_LUMINOSITY),
-
-    0
 };
 
 /*
@@ -125,14 +130,14 @@ optimize_operator (pixman_op_t     op,
 		   uint32_t        dst_flags)
 {
     pixman_bool_t is_source_opaque, is_dest_opaque;
-    int shift;
+    int opaqueness;
 
     is_source_opaque = ((src_flags & mask_flags) & FAST_PATH_IS_OPAQUE) != 0;
     is_dest_opaque = (dst_flags & FAST_PATH_IS_OPAQUE) != 0;
 
-    shift = 8 * ((is_dest_opaque << 1) | is_source_opaque);
+    opaqueness = ((is_dest_opaque << 1) | is_source_opaque);
 
-    return (operator_table[op] >> shift) & 0xff;
+    return operator_table[op].opaque_info[opaqueness];
 }
 
 static void
