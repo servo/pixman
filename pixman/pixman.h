@@ -71,6 +71,10 @@ SOFTWARE.
 
 #include <pixman-version.h>
 
+#ifdef  __cplusplus
+extern "C" {
+#endif
+
 /*
  * Standard integers
  */
@@ -908,5 +912,9 @@ void           pixman_rasterize_trapezoid  (pixman_image_t            *image,
 					    const pixman_trapezoid_t  *trap,
 					    int                        x_off,
 					    int                        y_off);
+
+#ifdef  __cplusplus
+}
+#endif
 
 #endif /* PIXMAN_H__ */
