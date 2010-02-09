@@ -231,6 +231,12 @@ pixman_image_set_destroy_function (pixman_image_t *            image,
     image->common.destroy_data = data;
 }
 
+PIXMAN_EXPORT void *
+pixman_image_get_destroy_data (pixman_image_t *image)
+{
+  return image->common.destroy_data;
+}
+
 void
 _pixman_image_reset_clip_region (pixman_image_t *image)
 {

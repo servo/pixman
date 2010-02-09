@@ -726,6 +726,7 @@ pixman_bool_t   pixman_image_unref                   (pixman_image_t            
 void		pixman_image_set_destroy_function    (pixman_image_t		   *image,
 						      pixman_image_destroy_func_t   function,
 						      void			   *data);
+void *		pixman_image_get_destroy_data        (pixman_image_t		   *image);
 
 /* Set properties */
 pixman_bool_t   pixman_image_set_clip_region         (pixman_image_t               *image,
