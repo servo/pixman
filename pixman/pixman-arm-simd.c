@@ -421,19 +421,19 @@ arm_composite_over_n_8_8888 (pixman_implementation_t * impl,
 
 static const pixman_fast_path_t arm_simd_fast_path_array[] =
 {
-    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,     PIXMAN_a8r8g8b8, arm_composite_over_8888_8888    },
-    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_null,     PIXMAN_x8r8g8b8, arm_composite_over_8888_8888    },
-    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,     PIXMAN_a8b8g8r8, arm_composite_over_8888_8888    },
-    { PIXMAN_OP_OVER, PIXMAN_a8b8g8r8, PIXMAN_null,     PIXMAN_x8b8g8r8, arm_composite_over_8888_8888    },
-    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_solid,    PIXMAN_a8r8g8b8, arm_composite_over_8888_n_8888  },
-    { PIXMAN_OP_OVER, PIXMAN_a8r8g8b8, PIXMAN_solid,    PIXMAN_x8r8g8b8, arm_composite_over_8888_n_8888  },
+    PIXMAN_STD_FAST_PATH (OVER, a8r8g8b8, null, a8r8g8b8, arm_composite_over_8888_8888),
+    PIXMAN_STD_FAST_PATH (OVER, a8r8g8b8, null, x8r8g8b8, arm_composite_over_8888_8888),
+    PIXMAN_STD_FAST_PATH (OVER, a8b8g8r8, null, a8b8g8r8, arm_composite_over_8888_8888),
+    PIXMAN_STD_FAST_PATH (OVER, a8b8g8r8, null, x8b8g8r8, arm_composite_over_8888_8888),
+    PIXMAN_STD_FAST_PATH (OVER, a8r8g8b8, solid, a8r8g8b8, arm_composite_over_8888_n_8888),
+    PIXMAN_STD_FAST_PATH (OVER, a8r8g8b8, solid, x8r8g8b8, arm_composite_over_8888_n_8888),
 
-    { PIXMAN_OP_ADD, PIXMAN_a8,        PIXMAN_null,     PIXMAN_a8,       arm_composite_add_8000_8000     },
+    PIXMAN_STD_FAST_PATH (ADD, a8, null, a8, arm_composite_add_8000_8000),
 
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_a8r8g8b8, arm_composite_over_n_8_8888     },
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_x8r8g8b8, arm_composite_over_n_8_8888     },
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_a8b8g8r8, arm_composite_over_n_8_8888     },
-    { PIXMAN_OP_OVER, PIXMAN_solid,    PIXMAN_a8,       PIXMAN_x8b8g8r8, arm_composite_over_n_8_8888     },
+    PIXMAN_STD_FAST_PATH (OVER, solid, a8, a8r8g8b8, arm_composite_over_n_8_8888),
+    PIXMAN_STD_FAST_PATH (OVER, solid, a8, x8r8g8b8, arm_composite_over_n_8_8888),
+    PIXMAN_STD_FAST_PATH (OVER, solid, a8, a8b8g8r8, arm_composite_over_n_8_8888),
+    PIXMAN_STD_FAST_PATH (OVER, solid, a8, x8b8g8r8, arm_composite_over_n_8_8888),
 
     { PIXMAN_OP_NONE },
 };
