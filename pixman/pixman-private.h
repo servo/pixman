@@ -762,18 +762,37 @@ pixman_region16_copy_from_region32 (pixman_region16_t *dst,
  */
 
 #undef DEBUG
-#define DEBUG 0
 
-#if DEBUG
+/* Turn on debugging depending on what type of release this is
+ */
+#if (((PIXMAN_VERSION_MICRO % 2) == 0) && ((PIXMAN_VERSION_MINOR % 2) == 1))
+
+/* Debugging gets turned on for development releases because these
+ * are the things that end up in bleeding edge distributions such
+ * as Rawhide etc.
+ *
+ * For performance reasons we don't turn it on for stable releases or
+ * random git checkouts. (Random git checkouts are often used for
+ * performance work).
+ */
+
+#    define DEBUG
+
+#endif
+
+#ifdef DEBUG
+
+void
+_pixman_log_error (const char *function, const char *message);
 
 #define return_if_fail(expr)                                            \
     do                                                                  \
     {                                                                   \
-	if (!(expr))                                                    \
-	{                                                               \
-	    fprintf (stderr, "In %s: %s failed\n", FUNC, # expr);	\
-	    return;                                                     \
-	}                                                               \
+	if (!(expr))							\
+	{								\
+	    _pixman_log_error (FUNC, "The expression " # expr " was false"); \
+	    return;							\
+	}								\
     }                                                                   \
     while (0)
 
@@ -781,16 +800,27 @@ pixman_region16_copy_from_region32 (pixman_region16_t *dst,
     do                                                                  \
     {                                                                   \
 	if (!(expr))                                                    \
-	{                                                               \
-	    fprintf (stderr, "In %s: %s failed\n", FUNC, # expr);	\
-	    return (retval);                                            \
-	}                                                               \
+	{								\
+	    _pixman_log_error (FUNC, "The expression " # expr " was false"); \
+	    return (retval);						\
+	}								\
     }                                                                   \
     while (0)
 
+#define critical_if_fail(expr)						\
+    do									\
+    {									\
+	if (!(expr))							\
+	    _pixman_log_error (FUNC, "The expression " # expr " was false"); \
+    }									\
+    while (0)
+
+
 #else
 
-#define return_if_fail(expr)                                            \
+#define _pixman_log_error(f,m) do { } while (0)				\
+
+#define return_if_fail(expr)						\
     do                                                                  \
     {                                                                   \
 	if (!(expr))							\
@@ -806,6 +836,11 @@ pixman_region16_copy_from_region32 (pixman_region16_t *dst,
     }                                                                   \
     while (0)
 
+#define critical_if_fail(expr)						\
+    do									\
+    {									\
+    }									\
+    while (0)
 #endif
 
 /*

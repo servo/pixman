@@ -766,3 +766,24 @@ pixman_region32_copy_from_region16 (pixman_region32_t *dst,
 
     return retval;
 }
+
+#ifdef DEBUG
+
+void
+_pixman_log_error (const char *function, const char *message)
+{
+    static int n_messages = 0;
+
+    if (n_messages < 10)
+    {
+	fprintf (stderr,
+		 "*** BUG ***\n"
+		 "In %s: %s\n"
+		 "Set a breakpoint on '_pixman_log_error' to debug\n\n",
+                 function, message);
+
+	n_messages++;
+    }
+}
+
+#endif

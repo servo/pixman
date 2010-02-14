@@ -85,63 +85,17 @@
 #define GOOD_RECT(rect) ((rect)->x1 < (rect)->x2 && (rect)->y1 < (rect)->y2)
 #define BAD_RECT(rect) ((rect)->x1 > (rect)->x2 || (rect)->y1 > (rect)->y2)
 
-/* Turn on debugging depending on what type of release this is
- */
-#if (((PIXMAN_VERSION_MICRO % 2) == 0) && ((PIXMAN_VERSION_MINOR % 2) == 1))
-/* This is a development snapshot, so we want self-checking in order to
- * catch as many bugs as possible. However, we don't turn on the asserts
- * because that just leads to the X server crashing which leads to
- * people not running the snapshots.
- */
-#    define noFATAL_BUGS
-#    define SELF_CHECKS
-#else
-/* This is either a stable release or a random git checkout. We don't
- * want self checks in either case for performance reasons. (Random
- * git checkouts are often used for performance work
- */
-#    define noFATAL_BUGS
-#    define noSELF_CHECKS
-#endif
-
-#ifndef FATAL_BUGS
-#    undef assert
-#    undef abort
-#    define assert(expr)
-#    define abort()
-#endif
-
-#ifdef SELF_CHECKS
-
-static void
-log_region_error (const char *function, const char *message)
-{
-    static int n_messages = 0;
-
-    if (n_messages < 5)
-    {
-	fprintf (stderr,
-		 "*** BUG ***\n"
-		 "%s: %s\n"
-		 "Set a breakpoint on 'log_region_error' to debug\n\n",
-                 function, message);
-
-        abort (); /* This is #defined away unless FATAL_BUGS is defined */
-
-	n_messages++;
-    }
-}
+#ifdef DEBUG
 
 #define GOOD(reg)							\
     do									\
     {									\
 	if (!PREFIX (_selfcheck (reg)))					\
-	    log_region_error (FUNC, "Malformed region " # reg);         \
+	    _pixman_log_error (FUNC, "Malformed region " # reg);	\
     } while (0)
 
 #else
 
-#define log_region_error(function, name)
 #define GOOD(reg)
 
 #endif
@@ -303,7 +257,7 @@ alloc_data (size_t n)
 	}								\
 	ADDRECT (next_rect, nx1, ny1, nx2, ny2);			\
 	region->data->numRects++;					\
-	assert (region->data->numRects <= region->data->size);		\
+	critical_if_fail (region->data->numRects <= region->data->size);		\
     } while (0)
 
 #define DOWNSIZE(reg, numRects)						\
@@ -428,7 +382,7 @@ PREFIX (_init_rect) (region_type_t *	region,
     if (!GOOD_RECT (&region->extents))
     {
         if (BAD_RECT (&region->extents))
-            log_region_error (FUNC, "Invalid rectangle passed");
+            _pixman_log_error (FUNC, "Invalid rectangle passed");
         PREFIX (_init) (region);
         return;
     }
@@ -442,7 +396,7 @@ PREFIX (_init_with_extents) (region_type_t *region, box_type_t *extents)
     if (!GOOD_RECT (extents))
     {
         if (BAD_RECT (extents))
-            log_region_error (FUNC, "Invalid rectangle passed");
+            _pixman_log_error (FUNC, "Invalid rectangle passed");
         PREFIX (_init) (region);
         return;
     }
@@ -620,7 +574,7 @@ pixman_coalesce (region_type_t * region,      /* Region to coalesce		 */
      * Figure out how many rectangles are in the band.
      */
     numRects = cur_start - prev_start;
-    assert (numRects == region->data->numRects - cur_start);
+    critical_if_fail (numRects == region->data->numRects - cur_start);
 
     if (!numRects) return cur_start;
 
@@ -708,8 +662,8 @@ pixman_region_append_non_o (region_type_t * region,
 
     new_rects = r_end - r;
 
-    assert (y1 < y2);
-    assert (new_rects != 0);
+    critical_if_fail (y1 < y2);
+    critical_if_fail (new_rects != 0);
 
     /* Make sure we have enough space for all rectangles to be added */
     RECTALLOC (region, new_rects);
@@ -718,7 +672,7 @@ pixman_region_append_non_o (region_type_t * region,
 
     do
     {
-	assert (r->x1 < r->x2);
+	critical_if_fail (r->x1 < r->x2);
 	ADDRECT (next_rect, r->x1, y1, r->x2, y2);
 	r++;
     }
@@ -843,8 +797,8 @@ pixman_op (region_type_t *  new_reg,               /* Place to store result	    
     r2 = PIXREGION_RECTS (reg2);
     r2_end = r2 + numRects;
     
-    assert (r1 != r1_end);
-    assert (r2 != r2_end);
+    critical_if_fail (r1 != r1_end);
+    critical_if_fail (r2 != r2_end);
 
     old_data = (region_data_type_t *)NULL;
 
@@ -912,8 +866,8 @@ pixman_op (region_type_t *  new_reg,               /* Place to store result	    
 	 * rectangle after the last one in the current band for their
 	 * respective regions.
 	 */
-        assert (r1 != r1_end);
-        assert (r2 != r2_end);
+        critical_if_fail (r1 != r1_end);
+        critical_if_fail (r2 != r2_end);
 
         FIND_BAND (r1, r1_band_end, r1_end, r1y1);
         FIND_BAND (r2, r2_band_end, r2_end, r2y1);
@@ -1120,7 +1074,7 @@ pixman_set_extents (region_type_t *region)
     region->extents.x2 = box_end->x2;
     region->extents.y2 = box_end->y2;
 
-    assert (region->extents.y1 < region->extents.y2);
+    critical_if_fail (region->extents.y1 < region->extents.y2);
 
     while (box <= box_end)
     {
@@ -1131,7 +1085,7 @@ pixman_set_extents (region_type_t *region)
         box++;
     }
 
-    assert (region->extents.x1 < region->extents.x2);
+    critical_if_fail (region->extents.x1 < region->extents.x2);
 }
 
 /*======================================================================
@@ -1167,8 +1121,8 @@ pixman_region_intersect_o (region_type_t *region,
 
     next_rect = PIXREGION_TOP (region);
 
-    assert (y1 < y2);
-    assert (r1 != r1_end && r2 != r2_end);
+    critical_if_fail (y1 < y2);
+    critical_if_fail (r1 != r1_end && r2 != r2_end);
 
     do
     {
@@ -1325,8 +1279,8 @@ pixman_region_union_o (region_type_t *region,
     int x1;            /* left and right side of current union */
     int x2;
 
-    assert (y1 < y2);
-    assert (r1 != r1_end && r2 != r2_end);
+    critical_if_fail (y1 < y2);
+    critical_if_fail (r1 != r1_end && r2 != r2_end);
 
     next_rect = PIXREGION_TOP (region);
 
@@ -1396,10 +1350,10 @@ PREFIX (_union_rect) (region_type_t *dest,
     if (!GOOD_RECT (&region.extents))
     {
         if (BAD_RECT (&region.extents))
-            log_region_error (FUNC, "Invalid rectangle passed");
+            _pixman_log_error (FUNC, "Invalid rectangle passed");
 	return PREFIX (_copy) (dest, source);
     }
-    
+
     region.data = NULL;
 
     return PREFIX (_union) (dest, source, &region);
@@ -1889,8 +1843,8 @@ pixman_region_subtract_o (region_type_t * region,
 
     x1 = r1->x1;
 
-    assert (y1 < y2);
-    assert (r1 != r1_end && r2 != r2_end);
+    critical_if_fail (y1 < y2);
+    critical_if_fail (r1 != r1_end && r2 != r2_end);
 
     next_rect = PIXREGION_TOP (region);
 
@@ -1934,7 +1888,7 @@ pixman_region_subtract_o (region_type_t * region,
 	     * Left part of subtrahend covers part of minuend: add uncovered
 	     * part of minuend to region and skip to next subtrahend.
 	     */
-            assert (x1 < r2->x1);
+            critical_if_fail (x1 < r2->x1);
             NEWRECT (region, next_rect, x1, y1, r2->x1, y2);
 
             x1 = r2->x2;
@@ -1976,7 +1930,7 @@ pixman_region_subtract_o (region_type_t * region,
      */
     while (r1 != r1_end)
     {
-        assert (x1 < r1->x2);
+        critical_if_fail (x1 < r1->x2);
 
         NEWRECT (region, next_rect, x1, y1, r1->x2, y2);
 
@@ -2338,7 +2292,7 @@ PREFIX (_reset) (region_type_t *region, box_type_t *box)
 {
     GOOD (region);
 
-    assert (GOOD_RECT (box));
+    critical_if_fail (GOOD_RECT (box));
 
     region->extents = *box;
 
