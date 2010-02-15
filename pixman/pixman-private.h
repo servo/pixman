@@ -749,6 +749,14 @@ pixman_region16_copy_from_region32 (pixman_region16_t *dst,
      PIXMAN_FORMAT_G (f) > 8 ||						\
      PIXMAN_FORMAT_B (f) > 8)
 
+#ifdef WORDS_BIGENDIAN
+#   define SCREEN_SHIFT_LEFT(x,n)	((x) << (n))
+#   define SCREEN_SHIFT_RIGHT(x,n)	((x) >> (n))
+#else
+#   define SCREEN_SHIFT_LEFT(x,n)	((x) >> (n))
+#   define SCREEN_SHIFT_RIGHT(x,n)	((x) << (n))
+#endif
+
 /*
  * Various debugging code
  */
