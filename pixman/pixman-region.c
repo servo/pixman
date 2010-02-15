@@ -42,6 +42,25 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  *
+ * Copyright © 1998 Keith Packard
+ *
+ * Permission to use, copy, modify, distribute, and sell this software and its
+ * documentation for any purpose is hereby granted without fee, provided that
+ * the above copyright notice appear in all copies and that both that
+ * copyright notice and this permission notice appear in supporting
+ * documentation, and that the name of Keith Packard not be used in
+ * advertising or publicity pertaining to distribution of the software without
+ * specific, written prior permission.  Keith Packard makes no
+ * representations about the suitability of this software for any purpose.  It
+ * is provided "as is" without express or implied warranty.
+ *
+ * KEITH PACKARD DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+ * INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
+ * EVENT SHALL KEITH PACKARD BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+ * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+ * DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+ * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ * PERFORMANCE OF THIS SOFTWARE.
  */
 
 #include <stdlib.h>
@@ -2538,4 +2557,241 @@ PREFIX (_init_rects) (region_type_t *region,
     region->extents.x1 = region->extents.x2 = 0;
 
     return validate (region, &i);
+}
+
+#define READ(_ptr) (*(_ptr))
+
+static inline box_type_t *
+bitmap_addrect (region_type_t *reg,
+                box_type_t *r,
+                box_type_t **first_rect,
+                int rx1, int ry1,
+                int rx2, int ry2)
+{
+    if ((rx1 < rx2) && (ry1 < ry2) &&
+	(!(reg->data->numRects &&
+	   ((r-1)->y1 == ry1) && ((r-1)->y2 == ry2) &&
+	   ((r-1)->x1 <= rx1) && ((r-1)->x2 >= rx2))))
+    {
+	if (!reg->data ||
+	    reg->data->numRects == reg->data->size)
+	{
+	    if (!pixman_rect_alloc (reg, 1))
+		return NULL;
+	    *first_rect = PIXREGION_BOXPTR(reg);
+	    r = *first_rect + reg->data->numRects;
+	}
+	r->x1 = rx1;
+	r->y1 = ry1;
+	r->x2 = rx2;
+	r->y2 = ry2;
+	reg->data->numRects++;
+	if (r->x1 < reg->extents.x1)
+	    reg->extents.x1 = r->x1;
+	if (r->x2 > reg->extents.x2)
+	    reg->extents.x2 = r->x2;
+	r++;
+    }
+    return r;
+}
+
+/* Convert bitmap clip mask into clipping region.
+ * First, goes through each line and makes boxes by noting the transitions
+ * from 0 to 1 and 1 to 0.
+ * Then it coalesces the current line with the previous if they have boxes
+ * at the same X coordinates.
+ * Stride is in number of uint32_t per line.
+ */
+PIXMAN_EXPORT void
+PREFIX (_init_from_image) (region_type_t *region,
+                           pixman_image_t *image)
+{
+    uint32_t mask0 = 0xffffffff & ~SCREEN_SHIFT_RIGHT(0xffffffff, 1);
+    box_type_t *first_rect, *rects, *prect_line_start;
+    box_type_t *old_rect, *new_rect;
+    uint32_t *pw, w, *pw_line, *pw_line_end;
+    int	irect_prev_start, irect_line_start;
+    int	h, base, rx1 = 0, crects;
+    int	ib;
+    pixman_bool_t in_box, same;
+    int width, height, stride;
+
+    PREFIX(_init) (region);
+
+    return_if_fail (image->type == BITS);
+    return_if_fail (image->bits.format == PIXMAN_a1);
+
+    pw_line = pixman_image_get_data (image);
+    width = pixman_image_get_width (image);
+    height = pixman_image_get_height (image);
+    stride = pixman_image_get_stride (image) / 4;
+
+    first_rect = PIXREGION_BOXPTR(region);
+    rects = first_rect;
+
+    region->extents.x1 = width - 1;
+    region->extents.x2 = 0;
+    irect_prev_start = -1;
+    for (h = 0; h < height; h++)
+    {
+        pw = pw_line;
+        pw_line += stride;
+        irect_line_start = rects - first_rect;
+
+        /* If the Screen left most bit of the word is set, we're starting in
+         * a box */
+        if (READ(pw) & mask0)
+        {
+            in_box = TRUE;
+            rx1 = 0;
+        }
+        else
+        {
+            in_box = FALSE;
+        }
+
+        /* Process all words which are fully in the pixmap */
+        pw_line_end = pw + (width >> 5);
+        for (base = 0; pw < pw_line_end; base += 32)
+        {
+            w = READ(pw++);
+            if (in_box)
+            {
+                if (!~w)
+                    continue;
+            }
+            else
+            {
+                if (!w)
+                    continue;
+            }
+            for (ib = 0; ib < 32; ib++)
+            {
+                /* If the Screen left most bit of the word is set, we're
+                 * starting a box */
+                if (w & mask0)
+                {
+                    if (!in_box)
+                    {
+                        rx1 = base + ib;
+                        /* start new box */
+                        in_box = TRUE;
+                    }
+                }
+                else
+                {
+                    if (in_box)
+                    {
+                        /* end box */
+                        rects = bitmap_addrect (region, rects, &first_rect,
+                                                rx1, h, base + ib, h + 1);
+                        if (rects == NULL)
+                            goto error;
+                        in_box = FALSE;
+                    }
+                }
+                /* Shift the word VISUALLY left one. */
+                w = SCREEN_SHIFT_LEFT(w, 1);
+            }
+        }
+
+        if (width & 31)
+        {
+            /* Process final partial word on line */
+             w = READ(pw++);
+            for (ib = 0; ib < (width & 31); ib++)
+            {
+                /* If the Screen left most bit of the word is set, we're
+                 * starting a box */
+                if (w & mask0)
+                {
+                    if (!in_box)
+                    {
+                        rx1 = base + ib;
+                        /* start new box */
+                        in_box = TRUE;
+                    }
+                }
+                else
+                {
+                    if (in_box)
+                    {
+                        /* end box */
+                        rects = bitmap_addrect(region, rects, &first_rect,
+					       rx1, h, base + ib, h + 1);
+			if (rects == NULL)
+			    goto error;
+                        in_box = FALSE;
+                    }
+                }
+                /* Shift the word VISUALLY left one. */
+                w = SCREEN_SHIFT_LEFT(w, 1);
+            }
+        }
+        /* If scanline ended with last bit set, end the box */
+        if (in_box)
+        {
+            rects = bitmap_addrect(region, rects, &first_rect,
+				   rx1, h, base + (width & 31), h + 1);
+	    if (rects == NULL)
+		goto error;
+        }
+        /* if all rectangles on this line have the same x-coords as
+         * those on the previous line, then add 1 to all the previous  y2s and
+         * throw away all the rectangles from this line
+         */
+        same = FALSE;
+        if (irect_prev_start != -1)
+        {
+            crects = irect_line_start - irect_prev_start;
+            if (crects != 0 &&
+                crects == ((rects - first_rect) - irect_line_start))
+            {
+                old_rect = first_rect + irect_prev_start;
+                new_rect = prect_line_start = first_rect + irect_line_start;
+                same = TRUE;
+                while (old_rect < prect_line_start)
+                {
+                    if ((old_rect->x1 != new_rect->x1) ||
+                        (old_rect->x2 != new_rect->x2))
+                    {
+                          same = FALSE;
+                          break;
+                    }
+                    old_rect++;
+                    new_rect++;
+                }
+                if (same)
+                {
+                    old_rect = first_rect + irect_prev_start;
+                    while (old_rect < prect_line_start)
+                    {
+                        old_rect->y2 += 1;
+                        old_rect++;
+                    }
+                    rects -= crects;
+                    region->data->numRects -= crects;
+                }
+            }
+        }
+        if(!same)
+            irect_prev_start = irect_line_start;
+    }
+    if (!region->data->numRects)
+    {
+        region->extents.x1 = region->extents.x2 = 0;
+    }
+    else
+    {
+        region->extents.y1 = PIXREGION_BOXPTR(region)->y1;
+        region->extents.y2 = PIXREGION_END(region)->y2;
+        if (region->data->numRects == 1)
+        {
+            free (region->data);
+            region->data = NULL;
+        }
+    }
+
+ error:
+    return;
 }
