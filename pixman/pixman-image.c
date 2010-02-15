@@ -276,7 +276,8 @@ source_image_needs_out_of_bounds_workaround (bits_image_t *image)
 	     * drawable geometry, it must be because the X server generated the
 	     * bogus clip region.
 	     */
-	    const pixman_box32_t *extents = pixman_region32_extents (&image->common.clip_region);
+	    const pixman_box32_t *extents =
+		pixman_region32_extents (&image->common.clip_region);
 
 	    if (extents->x1 >= 0 && extents->x2 <= image->width &&
 		extents->y1 >= 0 && extents->y2 <= image->height)
@@ -297,12 +298,12 @@ compute_image_info (pixman_image_t *image)
     pixman_format_code_t code;
     uint32_t flags = 0;
 
+    /* Transform */
     if (!image->common.transform)
     {
 	flags |= FAST_PATH_ID_TRANSFORM;
     }
-    else if (image->common.transform &&
-	     image->common.transform->matrix[0][1] == 0 &&
+    else if (image->common.transform->matrix[0][1] == 0 &&
 	     image->common.transform->matrix[1][0] == 0 &&
 	     image->common.transform->matrix[2][0] == 0 &&
 	     image->common.transform->matrix[2][1] == 0 &&
@@ -311,47 +312,61 @@ compute_image_info (pixman_image_t *image)
 	flags |= FAST_PATH_SCALE_TRANSFORM;
     }
 
+    /* Alpha map */
     if (!image->common.alpha_map)
 	flags |= FAST_PATH_NO_ALPHA_MAP;
 
-    if (image->common.filter != PIXMAN_FILTER_CONVOLUTION)
+    /* Filter */
+    switch (image->common.filter)
     {
+    case PIXMAN_FILTER_NEAREST:
+    case PIXMAN_FILTER_FAST:
+	flags |= (FAST_PATH_NEAREST_FILTER | FAST_PATH_NO_CONVOLUTION_FILTER);
+	break;
+
+    case PIXMAN_FILTER_CONVOLUTION:
+	break;
+
+    default:
 	flags |= FAST_PATH_NO_CONVOLUTION_FILTER;
-
-	if (image->common.filter == PIXMAN_FILTER_NEAREST)
-	    flags |= FAST_PATH_NEAREST_FILTER;
+	break;
     }
 
-    if (image->common.repeat != PIXMAN_REPEAT_PAD)
-	flags |= FAST_PATH_NO_PAD_REPEAT;
-
-    if (image->common.repeat != PIXMAN_REPEAT_REFLECT)
-	flags |= FAST_PATH_NO_REFLECT_REPEAT;
-
-    flags |= (FAST_PATH_NO_ACCESSORS | FAST_PATH_NO_WIDE_FORMAT);
-    if (image->common.type == BITS)
+    /* Repeat mode */
+    switch (image->common.repeat)
     {
-	if (image->bits.read_func || image->bits.write_func)
-	    flags &= ~FAST_PATH_NO_ACCESSORS;
+    case PIXMAN_REPEAT_REFLECT:
+	flags |= FAST_PATH_NO_PAD_REPEAT;
+	break;
 
-	if (PIXMAN_FORMAT_IS_WIDE (image->bits.format))
-	    flags &= ~FAST_PATH_NO_WIDE_FORMAT;
+    case PIXMAN_REPEAT_PAD:
+	flags |= FAST_PATH_NO_REFLECT_REPEAT;
+	break;
+
+    default:
+	flags |= (FAST_PATH_NO_REFLECT_REPEAT | FAST_PATH_NO_PAD_REPEAT);
+	break;
     }
 
+    /* Component alpha */
     if (image->common.component_alpha)
 	flags |= FAST_PATH_COMPONENT_ALPHA;
     else
 	flags |= FAST_PATH_UNIFIED_ALPHA;
 
-    if (image->type == SOLID)
+    flags |= (FAST_PATH_NO_ACCESSORS | FAST_PATH_NO_WIDE_FORMAT);
+
+    /* Type specific checks */
+    switch (image->type)
     {
+    case SOLID:
 	code = PIXMAN_solid;
 
 	if (image->solid.color.alpha == 0xffff)
 	    flags |= FAST_PATH_IS_OPAQUE;
-    }
-    else if (image->common.type == BITS)
-    {
+	break;
+
+    case BITS:
 	if (image->bits.width == 1	&&
 	    image->bits.height == 1	&&
 	    image->common.repeat != PIXMAN_REPEAT_NONE)
@@ -377,29 +392,37 @@ compute_image_info (pixman_image_t *image)
 
 	if (source_image_needs_out_of_bounds_workaround (&image->bits))
 	    flags |= FAST_PATH_NEEDS_WORKAROUND;
-    }
-    else
-    {
+
+	if (image->bits.read_func || image->bits.write_func)
+	    flags &= ~FAST_PATH_NO_ACCESSORS;
+
+	if (PIXMAN_FORMAT_IS_WIDE (image->bits.format))
+	    flags &= ~FAST_PATH_NO_WIDE_FORMAT;
+	break;
+
+    case LINEAR:
+    case RADIAL:
 	code = PIXMAN_unknown;
 
-	if (image->type == LINEAR || image->type == RADIAL)
+	if (image->common.repeat != PIXMAN_REPEAT_NONE)
 	{
-	    if (image->common.repeat != PIXMAN_REPEAT_NONE)
+	    int i;
+
+	    flags |= FAST_PATH_IS_OPAQUE;
+	    for (i = 0; i < image->gradient.n_stops; ++i)
 	    {
-		int i;
-
-		flags |= FAST_PATH_IS_OPAQUE;
-
-		for (i = 0; i < image->gradient.n_stops; ++i)
+		if (image->gradient.stops[i].color.alpha != 0xffff)
 		{
-		    if (image->gradient.stops[i].color.alpha != 0xffff)
-		    {
-			flags &= ~FAST_PATH_IS_OPAQUE;
-			break;
-		    }
+		    flags &= ~FAST_PATH_IS_OPAQUE;
+		    break;
 		}
 	    }
 	}
+	break;
+
+    default:
+	code = PIXMAN_unknown;
+	break;
     }
 
     /* Both alpha maps and convolution filters can introduce
