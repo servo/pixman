@@ -5955,8 +5955,12 @@ __attribute__((__force_align_arg_pointer__))
 pixman_implementation_t *
 _pixman_implementation_create_sse2 (void)
 {
-    pixman_implementation_t *mmx = _pixman_implementation_create_mmx ();
-    pixman_implementation_t *imp = _pixman_implementation_create (mmx);
+#ifdef USE_MMX
+    pixman_implementation_t *fallback = _pixman_implementation_create_mmx ();
+#else
+    pixman_implementation_t *fallback = _pixman_implementation_create_fast_path ();
+#endif
+    pixman_implementation_t *imp = _pixman_implementation_create (fallback);
 
     /* SSE2 constants */
     mask_565_r  = create_mask_2x32_128 (0x00f80000, 0x00f80000);
