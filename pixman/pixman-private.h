@@ -372,7 +372,6 @@ pixman_rasterize_edges_accessors (pixman_image_t *image,
 /*
  * Implementations
  */
-
 typedef struct pixman_implementation_t pixman_implementation_t;
 
 typedef void (*pixman_combine_32_func_t) (pixman_implementation_t *imp,
@@ -428,23 +427,36 @@ typedef pixman_bool_t (*pixman_fill_func_t) (pixman_implementation_t *imp,
 void _pixman_setup_combiner_functions_32 (pixman_implementation_t *imp);
 void _pixman_setup_combiner_functions_64 (pixman_implementation_t *imp);
 
+typedef struct
+{
+    pixman_op_t             op;
+    pixman_format_code_t    src_format;
+    uint32_t		    src_flags;
+    pixman_format_code_t    mask_format;
+    uint32_t		    mask_flags;
+    pixman_format_code_t    dest_format;
+    uint32_t		    dest_flags;
+    pixman_composite_func_t func;
+} pixman_fast_path_t;
+
 struct pixman_implementation_t
 {
-    pixman_implementation_t *toplevel;
-    pixman_implementation_t *delegate;
+    pixman_implementation_t *	toplevel;
+    pixman_implementation_t *	delegate;
+    const pixman_fast_path_t *	fast_paths;
+    
+    pixman_blt_func_t		blt;
+    pixman_fill_func_t		fill;
 
-    pixman_composite_func_t  composite;
-    pixman_blt_func_t        blt;
-    pixman_fill_func_t       fill;
-
-    pixman_combine_32_func_t combine_32[PIXMAN_N_OPERATORS];
-    pixman_combine_32_func_t combine_32_ca[PIXMAN_N_OPERATORS];
-    pixman_combine_64_func_t combine_64[PIXMAN_N_OPERATORS];
-    pixman_combine_64_func_t combine_64_ca[PIXMAN_N_OPERATORS];
+    pixman_combine_32_func_t	combine_32[PIXMAN_N_OPERATORS];
+    pixman_combine_32_func_t	combine_32_ca[PIXMAN_N_OPERATORS];
+    pixman_combine_64_func_t	combine_64[PIXMAN_N_OPERATORS];
+    pixman_combine_64_func_t	combine_64_ca[PIXMAN_N_OPERATORS];
 };
 
 pixman_implementation_t *
-_pixman_implementation_create (pixman_implementation_t *delegate);
+_pixman_implementation_create (pixman_implementation_t *delegate,
+			       const pixman_fast_path_t *fast_paths);
 
 void
 _pixman_implementation_combine_32 (pixman_implementation_t *imp,
@@ -474,20 +486,6 @@ _pixman_implementation_combine_64_ca (pixman_implementation_t *imp,
                                       const uint64_t *         src,
                                       const uint64_t *         mask,
                                       int                      width);
-void
-_pixman_implementation_composite (pixman_implementation_t *imp,
-                                  pixman_op_t              op,
-                                  pixman_image_t *         src,
-                                  pixman_image_t *         mask,
-                                  pixman_image_t *         dest,
-                                  int32_t                  src_x,
-                                  int32_t                  src_y,
-                                  int32_t                  mask_x,
-                                  int32_t                  mask_y,
-                                  int32_t                  dest_x,
-                                  int32_t                  dest_y,
-                                  int32_t                  width,
-                                  int32_t                  height);
 
 pixman_bool_t
 _pixman_implementation_blt (pixman_implementation_t *imp,
@@ -564,17 +562,22 @@ _pixman_choose_implementation (void);
 #define PIXMAN_pixbuf		PIXMAN_FORMAT (0, 2, 0, 0, 0, 0)
 #define PIXMAN_rpixbuf		PIXMAN_FORMAT (0, 3, 0, 0, 0, 0)
 #define PIXMAN_unknown		PIXMAN_FORMAT (0, 4, 0, 0, 0, 0)
+#define PIXMAN_any		PIXMAN_FORMAT (0, 5, 0, 0, 0, 0)	
 
-#define FAST_PATH_ID_TRANSFORM			(1 << 0)
-#define FAST_PATH_NO_ALPHA_MAP			(1 << 1)
-#define FAST_PATH_NO_CONVOLUTION_FILTER		(1 << 2)
-#define FAST_PATH_NO_PAD_REPEAT			(1 << 3)
-#define FAST_PATH_NO_REFLECT_REPEAT		(1 << 4)
-#define FAST_PATH_NO_ACCESSORS			(1 << 5)
-#define FAST_PATH_NO_WIDE_FORMAT		(1 << 6)
-#define FAST_PATH_reserved			(1 << 7)
-#define FAST_PATH_COMPONENT_ALPHA		(1 << 8)
-#define FAST_PATH_UNIFIED_ALPHA			(1 << 9)
+#define PIXMAN_OP_any		(PIXMAN_N_OPERATORS + 1)
+
+#define FAST_PATH_ID_TRANSFORM			(1 <<  0)
+#define FAST_PATH_NO_ALPHA_MAP			(1 <<  1)
+#define FAST_PATH_NO_CONVOLUTION_FILTER		(1 <<  2)
+#define FAST_PATH_NO_PAD_REPEAT			(1 <<  3)
+#define FAST_PATH_NO_REFLECT_REPEAT		(1 <<  4)
+#define FAST_PATH_NO_ACCESSORS			(1 <<  5)
+#define FAST_PATH_NO_WIDE_FORMAT		(1 <<  6)
+#define FAST_PATH_COVERS_CLIP			(1 <<  7)
+#define FAST_PATH_COMPONENT_ALPHA		(1 <<  8)
+#define FAST_PATH_UNIFIED_ALPHA			(1 <<  9)
+#define FAST_PATH_SCALE_TRANSFORM		(1 << 10)
+#define FAST_PATH_NEAREST_FILTER		(1 << 11)
 
 #define _FAST_PATH_STANDARD_FLAGS					\
     (FAST_PATH_ID_TRANSFORM		|				\
@@ -583,7 +586,8 @@ _pixman_choose_implementation (void);
      FAST_PATH_NO_PAD_REPEAT		|				\
      FAST_PATH_NO_REFLECT_REPEAT	|				\
      FAST_PATH_NO_ACCESSORS		|				\
-     FAST_PATH_NO_WIDE_FORMAT)
+     FAST_PATH_NO_WIDE_FORMAT		|				\
+     FAST_PATH_COVERS_CLIP)
 
 #define FAST_PATH_STD_SRC_FLAGS						\
     _FAST_PATH_STANDARD_FLAGS
@@ -596,18 +600,6 @@ _pixman_choose_implementation (void);
 #define FAST_PATH_STD_DEST_FLAGS					\
     (FAST_PATH_NO_ACCESSORS		|				\
      FAST_PATH_NO_WIDE_FORMAT)
-
-typedef struct
-{
-    pixman_op_t             op;
-    pixman_format_code_t    src_format;
-    uint32_t		    src_flags;
-    pixman_format_code_t    mask_format;
-    uint32_t		    mask_flags;
-    pixman_format_code_t    dest_format;
-    uint32_t		    dest_flags;
-    pixman_composite_func_t func;
-} pixman_fast_path_t;
 
 #define FAST_PATH(op, src, src_flags, mask, mask_flags, dest, dest_flags, func) \
     PIXMAN_OP_ ## op,							\
@@ -649,38 +641,6 @@ pixman_bool_t
 pixman_addition_overflows_int (unsigned int a, unsigned int b);
 
 /* Compositing utilities */
-pixman_bool_t
-_pixman_run_fast_path (const pixman_fast_path_t *paths,
-                       pixman_implementation_t * imp,
-                       pixman_op_t               op,
-                       pixman_image_t *          src,
-                       pixman_image_t *          mask,
-                       pixman_image_t *          dest,
-                       int32_t                   src_x,
-                       int32_t                   src_y,
-                       int32_t                   mask_x,
-                       int32_t                   mask_y,
-                       int32_t                   dest_x,
-                       int32_t                   dest_y,
-                       int32_t                   width,
-                       int32_t                   height);
-
-void
-_pixman_walk_composite_region (pixman_implementation_t *imp,
-                               pixman_op_t              op,
-                               pixman_image_t *         src_image,
-                               pixman_image_t *         mask_image,
-                               pixman_image_t *         dst_image,
-                               int32_t                  src_x,
-                               int32_t                  src_y,
-                               int32_t                  mask_x,
-                               int32_t                  mask_y,
-                               int32_t                  dest_x,
-                               int32_t                  dest_y,
-                               int32_t                  width,
-                               int32_t                  height,
-                               pixman_composite_func_t  composite_rect);
-
 void
 pixman_expand (uint64_t *           dst,
                const uint32_t *     src,
