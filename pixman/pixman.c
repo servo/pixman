@@ -456,11 +456,20 @@ get_image_info (pixman_image_t       *image,
     *flags = image->common.flags;
 
     if (_pixman_image_is_solid (image))
+    {
 	*code = PIXMAN_solid;
+    }
     else if (image->common.type == BITS)
+    {
 	*code = image->bits.format;
+
+	if (!image->common.transform && image->common.repeat == PIXMAN_REPEAT_NORMAL)
+	    *flags |= FAST_PATH_SIMPLE_REPEAT;
+    }
     else
+    {
 	*code = PIXMAN_unknown;
+    }
 }
 
 static force_inline pixman_bool_t
@@ -500,7 +509,6 @@ do_composite (pixman_implementation_t *imp,
 {
     pixman_format_code_t src_format, mask_format, dest_format;
     uint32_t src_flags, mask_flags, dest_flags;
-    pixman_bool_t src_repeat, mask_repeat;
     pixman_region32_t region;
     pixman_box32_t *extents;
 
@@ -528,19 +536,6 @@ do_composite (pixman_implementation_t *imp,
 	    src_format = mask_format = PIXMAN_rpixbuf;
     }
 	    
-    src_repeat =
-	src->type == BITS					&&
-	src_flags & FAST_PATH_ID_TRANSFORM			&&
-	src->common.repeat == PIXMAN_REPEAT_NORMAL		&&
-	src_format != PIXMAN_solid;
-    
-    mask_repeat =
-	mask							&&
-	mask->type == BITS					&&
-	mask_flags & FAST_PATH_ID_TRANSFORM			&&
-	mask->common.repeat == PIXMAN_REPEAT_NORMAL		&&
-	mask_format != PIXMAN_solid;
-    
     pixman_region32_init (&region);
     
     if (!pixman_compute_composite_region32 (
@@ -583,7 +578,8 @@ do_composite (pixman_implementation_t *imp,
 				      src_x, src_y, mask_x, mask_y,
 				      dest_x, dest_y,
 				      width, height,
-				      src_repeat, mask_repeat,
+				      (src_flags & FAST_PATH_SIMPLE_REPEAT),
+				      (mask_flags & FAST_PATH_SIMPLE_REPEAT),
 				      &region,
 				      info->func);
 		
