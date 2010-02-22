@@ -116,7 +116,7 @@ apply_workaround (pixman_image_t *image,
 		  int *           save_dx,
 		  int *           save_dy)
 {
-    if (image && image->common.need_workaround)
+    if (image && (image->common.flags & FAST_PATH_NEEDS_WORKAROUND))
     {
 	/* Some X servers generate images that point to the
 	 * wrong place in memory, but then set the clip region
@@ -152,7 +152,7 @@ apply_workaround (pixman_image_t *image,
 static void
 unapply_workaround (pixman_image_t *image, uint32_t *bits, int dx, int dy)
 {
-    if (image && image->common.need_workaround)
+    if (image && (image->common.flags & FAST_PATH_NEEDS_WORKAROUND))
     {
 	image->bits.bits = bits;
 	pixman_region32_translate (&image->common.clip_region, dx, dy);
@@ -486,6 +486,13 @@ do_composite (pixman_implementation_t *imp,
     uint32_t src_flags, mask_flags, dest_flags;
     pixman_region32_t region;
     pixman_box32_t *extents;
+    uint32_t *src_bits;
+    int src_dx, src_dy;
+    uint32_t *mask_bits;
+    int mask_dx, mask_dy;
+    uint32_t *dest_bits;
+    int dest_dx, dest_dy;
+    pixman_bool_t need_workaround;
 
     src_format = src->common.extended_format_code;
     src_flags = src->common.flags;
@@ -515,7 +522,17 @@ do_composite (pixman_implementation_t *imp,
 	else if (src_format == PIXMAN_x8r8g8b8)
 	    src_format = mask_format = PIXMAN_rpixbuf;
     }
-	    
+
+    /* Check for workaround */
+    need_workaround = (src_flags | mask_flags | dest_flags) & FAST_PATH_NEEDS_WORKAROUND;
+
+    if (need_workaround)
+    {
+	apply_workaround (src, &src_x, &src_y, &src_bits, &src_dx, &src_dy);
+	apply_workaround (mask, &mask_x, &mask_y, &mask_bits, &mask_dx, &mask_dy);
+	apply_workaround (dest, &dest_x, &dest_y, &dest_bits, &dest_dx, &dest_dy);
+    }
+
     pixman_region32_init (&region);
     
     if (!pixman_compute_composite_region32 (
@@ -571,6 +588,13 @@ do_composite (pixman_implementation_t *imp,
     }
 
 done:
+    if (need_workaround)
+    {
+	unapply_workaround (src, src_bits, src_dx, src_dy);
+	unapply_workaround (mask, mask_bits, mask_dx, mask_dy);
+	unapply_workaround (dest, dest_bits, dest_dx, dest_dy);
+    }
+
     pixman_region32_fini (&region);
 }
 
@@ -625,14 +649,6 @@ pixman_image_composite32 (pixman_op_t      op,
                           int32_t          width,
                           int32_t          height)
 {
-    uint32_t *src_bits;
-    int src_dx, src_dy;
-    uint32_t *mask_bits;
-    int mask_dx, mask_dy;
-    uint32_t *dest_bits;
-    int dest_dx, dest_dy;
-    pixman_bool_t need_workaround;
-
     _pixman_image_validate (src);
     if (mask)
 	_pixman_image_validate (mask);
@@ -654,34 +670,12 @@ pixman_image_composite32 (pixman_op_t      op,
     if (!imp)
 	imp = _pixman_choose_implementation ();
 
-    need_workaround =
-	(src->common.need_workaround)			||
-	(mask && mask->common.need_workaround)		||
-	(dest->common.need_workaround);
-   
-    if (need_workaround)
-    {
-	apply_workaround (src, &src_x, &src_y, &src_bits, &src_dx, &src_dy);
-	apply_workaround (mask, &mask_x, &mask_y, &mask_bits, &mask_dx, &mask_dy);
-	apply_workaround (dest, &dest_x, &dest_y, &dest_bits, &dest_dx, &dest_dy);
-    }
-
     do_composite (imp, op,
 		  src, mask, dest,
 		  src_x, src_y,
 		  mask_x, mask_y,
 		  dest_x, dest_y,
 		  width, height);
-    
-    if (need_workaround)
-    {
-	if (src->common.need_workaround)
-	    unapply_workaround (src, src_bits, src_dx, src_dy);
-	if (mask && mask->common.need_workaround)
-	    unapply_workaround (mask, mask_bits, mask_dx, mask_dy);
-	if (dest->common.need_workaround)
-	    unapply_workaround (dest, dest_bits, dest_dx, dest_dy);
-    }
 }
 
 PIXMAN_EXPORT pixman_bool_t

@@ -117,7 +117,6 @@ _pixman_image_allocate (void)
 	common->client_clip = FALSE;
 	common->destroy_func = NULL;
 	common->destroy_data = NULL;
-	common->need_workaround = FALSE;
 	common->dirty = TRUE;
     }
 
@@ -373,9 +372,15 @@ _pixman_image_validate (pixman_image_t *image)
 {
     if (image->common.dirty)
     {
-	image->common.property_changed (image);
-
 	compute_image_info (image);
+
+	/* It is important that property_changed is 
+	 * called *after* compute_image_info() because
+	 * the NEEDS_WORKAROUND flag is computed in
+	 * property_changed(). And compute_image_info()
+	 * completely overwrites the flags field
+	 */
+	image->common.property_changed (image);
 
 	image->common.dirty = FALSE;
     }

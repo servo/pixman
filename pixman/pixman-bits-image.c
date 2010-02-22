@@ -986,8 +986,10 @@ bits_image_property_changed (pixman_image_t *image)
     bits->store_scanline_64 = bits_image_store_scanline_64;
     bits->store_scanline_32 = bits_image_store_scanline_32;
 
-    bits->common.need_workaround =
-        source_image_needs_out_of_bounds_workaround (bits);
+    if (source_image_needs_out_of_bounds_workaround (bits))
+	bits->common.flags |= FAST_PATH_NEEDS_WORKAROUND;
+    else
+	bits->common.flags &= ~FAST_PATH_NEEDS_WORKAROUND;
 }
 
 static uint32_t *

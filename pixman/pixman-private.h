@@ -86,7 +86,6 @@ struct image_common
 						     * the image is used as a source
 						     */
     pixman_bool_t		dirty;
-    pixman_bool_t               need_workaround;
     pixman_transform_t *        transform;
     pixman_repeat_t             repeat;
     pixman_filter_t             filter;
@@ -559,7 +558,7 @@ _pixman_choose_implementation (void);
 #define PIXMAN_pixbuf		PIXMAN_FORMAT (0, 2, 0, 0, 0, 0)
 #define PIXMAN_rpixbuf		PIXMAN_FORMAT (0, 3, 0, 0, 0, 0)
 #define PIXMAN_unknown		PIXMAN_FORMAT (0, 4, 0, 0, 0, 0)
-#define PIXMAN_any		PIXMAN_FORMAT (0, 5, 0, 0, 0, 0)	
+#define PIXMAN_any		PIXMAN_FORMAT (0, 5, 0, 0, 0, 0)
 
 #define PIXMAN_OP_any		(PIXMAN_N_OPERATORS + 1)
 
@@ -577,6 +576,7 @@ _pixman_choose_implementation (void);
 #define FAST_PATH_NEAREST_FILTER		(1 << 11)
 #define FAST_PATH_SIMPLE_REPEAT			(1 << 12)
 #define FAST_PATH_IS_OPAQUE			(1 << 13)
+#define FAST_PATH_NEEDS_WORKAROUND		(1 << 14)
 
 #define _FAST_PATH_STANDARD_FLAGS					\
     (FAST_PATH_ID_TRANSFORM		|				\
