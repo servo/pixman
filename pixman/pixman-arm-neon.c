@@ -264,6 +264,7 @@ BIND_SRC_NULL_DST(add_8888_8888, uint32_t, 1, uint32_t, 1)
 
 BIND_N_NULL_DST(over_n_0565, uint16_t, 1)
 BIND_N_NULL_DST(over_n_8888, uint32_t, 1)
+BIND_N_NULL_DST(over_reverse_n_8888, uint32_t, 1)
 
 BIND_SRC_NULL_DST(over_8888_0565, uint32_t, 1, uint16_t, 1)
 BIND_SRC_NULL_DST(over_8888_8888, uint32_t, 1, uint32_t, 1)
@@ -443,6 +444,8 @@ static const pixman_fast_path_t arm_neon_fast_paths[] =
     PIXMAN_STD_FAST_PATH (ADD,  a8,       null,     a8,       neon_composite_add_8000_8000),
     PIXMAN_STD_FAST_PATH (ADD,  a8r8g8b8, null,     a8r8g8b8, neon_composite_add_8888_8888),
     PIXMAN_STD_FAST_PATH (ADD,  a8b8g8r8, null,     a8b8g8r8, neon_composite_add_8888_8888),
+    PIXMAN_STD_FAST_PATH (OVER_REVERSE, solid, null, a8r8g8b8, neon_composite_over_reverse_n_8888),
+    PIXMAN_STD_FAST_PATH (OVER_REVERSE, solid, null, a8b8g8r8, neon_composite_over_reverse_n_8888),
 
     { PIXMAN_OP_NONE },
 };

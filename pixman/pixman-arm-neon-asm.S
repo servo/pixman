@@ -680,6 +680,61 @@ generate_composite_function \
 
 /******************************************************************************/
 
+.macro pixman_composite_over_reverse_n_8888_process_pixblock_tail_head
+        vrshr.u16   q14, q8, #8
+                                    PF add PF_X, PF_X, #8
+                                    PF tst PF_CTL, #0xF
+        vrshr.u16   q15, q9, #8
+        vrshr.u16   q12, q10, #8
+        vrshr.u16   q13, q11, #8
+                                    PF addne PF_X, PF_X, #8
+                                    PF subne PF_CTL, PF_CTL, #1
+        vraddhn.u16 d28, q14, q8
+        vraddhn.u16 d29, q15, q9
+                                    PF cmp PF_X, ORIG_W
+        vraddhn.u16 d30, q12, q10
+        vraddhn.u16 d31, q13, q11
+        vqadd.u8    q14, q0, q14
+        vqadd.u8    q15, q1, q15
+    vld4.8      {d0, d1, d2, d3}, [DST_R, :128]!
+    vmvn.8      d22, d3
+                                    PF pld, [PF_DST, PF_X, lsl #dst_bpp_shift]
+        vst4.8      {d28, d29, d30, d31}, [DST_W, :128]!
+                                    PF subge PF_X, PF_X, ORIG_W
+    vmull.u8    q8, d22, d4
+                                    PF subges PF_CTL, PF_CTL, #0x10
+    vmull.u8    q9, d22, d5
+    vmull.u8    q10, d22, d6
+                                    PF ldrgeb DUMMY, [PF_DST, DST_STRIDE, lsl #dst_bpp_shift]!
+    vmull.u8    q11, d22, d7
+.endm
+
+.macro pixman_composite_over_reverse_n_8888_init
+    add         DUMMY, sp, #ARGS_STACK_OFFSET
+    vld1.32     {d7[0]}, [DUMMY]
+    vdup.8      d4, d7[0]
+    vdup.8      d5, d7[1]
+    vdup.8      d6, d7[2]
+    vdup.8      d7, d7[3]
+.endm
+
+generate_composite_function \
+    pixman_composite_over_reverse_n_8888_asm_neon, 0, 0, 32, \
+    FLAG_DST_READWRITE | FLAG_DEINTERLEAVE_32BPP, \
+    8, /* number of pixels, processed in a single block */ \
+    5, /* prefetch distance */ \
+    pixman_composite_over_reverse_n_8888_init, \
+    default_cleanup, \
+    pixman_composite_over_8888_8888_process_pixblock_head, \
+    pixman_composite_over_8888_8888_process_pixblock_tail, \
+    pixman_composite_over_reverse_n_8888_process_pixblock_tail_head, \
+    28, /* dst_w_basereg */ \
+    0,  /* dst_r_basereg */ \
+    4,  /* src_basereg   */ \
+    24  /* mask_basereg  */
+
+/******************************************************************************/
+
 .macro pixman_composite_over_n_8_0565_process_pixblock_head
     /* in */
     vmull.u8    q0, d24, d8
