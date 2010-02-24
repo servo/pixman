@@ -251,6 +251,7 @@ neon_composite_##name (pixman_implementation_t *imp,                    \
 
 
 BIND_SRC_NULL_DST(src_8888_8888, uint32_t, 1, uint32_t, 1)
+BIND_SRC_NULL_DST(src_x888_8888, uint32_t, 1, uint32_t, 1)
 BIND_SRC_NULL_DST(src_0565_0565, uint16_t, 1, uint16_t, 1)
 BIND_SRC_NULL_DST(src_0888_0888, uint8_t, 3, uint8_t, 3)
 BIND_SRC_NULL_DST(src_8888_0565, uint32_t, 1, uint16_t, 1)
@@ -400,6 +401,10 @@ static const pixman_fast_path_t arm_neon_fast_paths[] =
     PIXMAN_STD_FAST_PATH (SRC,  x8r8g8b8, null,     x8r8g8b8, neon_composite_src_8888_8888),
     PIXMAN_STD_FAST_PATH (SRC,  a8b8g8r8, null,     x8b8g8r8, neon_composite_src_8888_8888),
     PIXMAN_STD_FAST_PATH (SRC,  x8b8g8r8, null,     x8b8g8r8, neon_composite_src_8888_8888),
+    PIXMAN_STD_FAST_PATH (SRC,  a8r8g8b8, null,     a8r8g8b8, neon_composite_src_8888_8888),
+    PIXMAN_STD_FAST_PATH (SRC,  a8b8g8r8, null,     a8b8g8r8, neon_composite_src_8888_8888),
+    PIXMAN_STD_FAST_PATH (SRC,  x8r8g8b8, null,     a8r8g8b8, neon_composite_src_x888_8888),
+    PIXMAN_STD_FAST_PATH (SRC,  x8b8g8r8, null,     a8b8g8r8, neon_composite_src_x888_8888),
     PIXMAN_STD_FAST_PATH (SRC,  r8g8b8,   null,     r8g8b8,   neon_composite_src_0888_0888),
     PIXMAN_STD_FAST_PATH (SRC,  b8g8r8,   null,     x8r8g8b8, neon_composite_src_0888_8888_rev),
     PIXMAN_STD_FAST_PATH (SRC,  b8g8r8,   null,     r5g6b5,   neon_composite_src_0888_0565_rev),
@@ -430,6 +435,8 @@ static const pixman_fast_path_t arm_neon_fast_paths[] =
     PIXMAN_STD_FAST_PATH (OVER, a8r8g8b8, null,     x8r8g8b8, neon_composite_over_8888_8888),
     PIXMAN_STD_FAST_PATH (OVER, a8b8g8r8, null,     a8b8g8r8, neon_composite_over_8888_8888),
     PIXMAN_STD_FAST_PATH (OVER, a8b8g8r8, null,     x8b8g8r8, neon_composite_over_8888_8888),
+    PIXMAN_STD_FAST_PATH (OVER, x8r8g8b8, null,     a8r8g8b8, neon_composite_src_x888_8888),
+    PIXMAN_STD_FAST_PATH (OVER, x8b8g8r8, null,     a8b8g8r8, neon_composite_src_x888_8888),
     PIXMAN_STD_FAST_PATH (ADD,  solid,    a8,       a8,       neon_composite_add_n_8_8),
     PIXMAN_STD_FAST_PATH (ADD,  a8,       a8,       a8,       neon_composite_add_8_8_8),
     PIXMAN_STD_FAST_PATH (ADD,  a8r8g8b8, a8r8g8b8, a8r8g8b8, neon_composite_add_8888_8888_8888),
