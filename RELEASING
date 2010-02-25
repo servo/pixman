@@ -11,29 +11,26 @@ Here are the steps to follow to create a new pixman release:
 	git log master...origin		(no output; note: *3* dots)
 
 2) Increment pixman_(major|minor|micro) in configure.ac according to
-   the directions in that file.
+   the directions in that file. Use git commit to record this.
 
-3) Run 
+3) Make sure that new version works, including
 
-	make PREV=<last version> release-check
+	- make distcheck passes
 
-   and fix things until it passes. If your freedesktop username is
-   different from your local username, then also set the variable
-   USER on the commandline.
+	- the X server still works with the new pixman version
+	  installed
 
-   A very useful thing to do is to run the cairo test suite
-   against pixman. This can be done by running the following
-   commands in the "test" directory of the latest cairo release:
+	- the cairo test suite hasn't gained any new failures compared
+	  to last pixman version.
 
-	tar xzf cairo-X.Y.Z.tar.gz
-	cd cairo
-	CAIRO_TEST_TARGET=image make test
-
-4) Use "git commit" to record any changes made in steps 2 and 3.
+4) Use "git commit" to record any changes made in step 3.
 
 5) Generate and publish the tar files by running 
 
 	make PREV=<last version> GPGKEY=<your gpg key id> release-publish
+
+   If your freedesktop user name is different from your local one,
+   then also set the variable USER to your freedesktop user name.
 
 6) Run 
 
@@ -44,7 +41,7 @@ Here are the steps to follow to create a new pixman release:
 
 	cairo-announce@cairographics.org
 
-   and 
+	pixman@lists.freedesktop.org
 
 	xorg-announce@lists.freedesktop.org
 
@@ -56,5 +53,5 @@ Here are the steps to follow to create a new pixman release:
 	git push --tags
 
    You must use "--tags" here; otherwise the new tag will not
-   be pushed out. This is because technobabble.
+   be pushed out.
 
