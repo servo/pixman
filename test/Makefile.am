@@ -2,6 +2,7 @@ TEST_LDADD = $(top_builddir)/pixman/libpixman-1.la
 INCLUDES = -I$(top_srcdir)/pixman -I$(top_builddir)/pixman
 
 TESTPROGRAMS =			\
+	a1-trap-test		\
 	region-test		\
 	fetch-test		\
 	oob-test		\
@@ -12,6 +13,7 @@ TESTPROGRAMS =			\
 	scaling-test		\
 	composite
 
+a1_trap_test_LDADD = $(TEST_LDADD)
 fetch_test_LDADD = $(TEST_LDADD)
 composite_LDADD = $(TEST_LDADD)
 trap_crasher_LDADD = $(TEST_LDADD)
