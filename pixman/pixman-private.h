@@ -349,13 +349,13 @@ _pixman_gradient_walker_pixel (pixman_gradient_walker_t *walker,
 #define STEP_Y_SMALL(n) (pixman_fixed_1 / N_Y_FRAC (n))
 #define STEP_Y_BIG(n)   (pixman_fixed_1 - (N_Y_FRAC (n) - 1) * STEP_Y_SMALL (n))
 
-#define Y_FRAC_FIRST(n) (STEP_Y_SMALL (n) / 2)
+#define Y_FRAC_FIRST(n) (STEP_Y_BIG (n) / 2)
 #define Y_FRAC_LAST(n)  (Y_FRAC_FIRST (n) + (N_Y_FRAC (n) - 1) * STEP_Y_SMALL (n))
 
 #define STEP_X_SMALL(n) (pixman_fixed_1 / N_X_FRAC (n))
 #define STEP_X_BIG(n)   (pixman_fixed_1 - (N_X_FRAC (n) - 1) * STEP_X_SMALL (n))
 
-#define X_FRAC_FIRST(n) (STEP_X_SMALL (n) / 2)
+#define X_FRAC_FIRST(n) (STEP_X_BIG (n) / 2)
 #define X_FRAC_LAST(n)  (X_FRAC_FIRST (n) + (N_X_FRAC (n) - 1) * STEP_X_SMALL (n))
 
 #define RENDER_SAMPLES_X(x, n)						\
