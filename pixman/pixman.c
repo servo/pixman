@@ -598,6 +598,24 @@ done:
     pixman_region32_fini (&region);
 }
 
+PIXMAN_EXPORT void
+pixman_image_composite (pixman_op_t      op,
+                        pixman_image_t * src,
+                        pixman_image_t * mask,
+                        pixman_image_t * dest,
+                        int16_t          src_x,
+                        int16_t          src_y,
+                        int16_t          mask_x,
+                        int16_t          mask_y,
+                        int16_t          dest_x,
+                        int16_t          dest_y,
+                        uint16_t         width,
+                        uint16_t         height)
+{
+    pixman_image_composite32 (op, src, mask, dest, src_x, src_y, 
+                              mask_x, mask_y, dest_x, dest_y, width, height);
+}
+
 /*
  * Work around GCC bug causing crashes in Mozilla with SSE2
  *
@@ -617,24 +635,6 @@ done:
 #if defined (USE_SSE2) && defined(__GNUC__) && !defined(__x86_64__) && !defined(__amd64__)
 __attribute__((__force_align_arg_pointer__))
 #endif
-PIXMAN_EXPORT void
-pixman_image_composite (pixman_op_t      op,
-                        pixman_image_t * src,
-                        pixman_image_t * mask,
-                        pixman_image_t * dest,
-                        int16_t          src_x,
-                        int16_t          src_y,
-                        int16_t          mask_x,
-                        int16_t          mask_y,
-                        int16_t          dest_x,
-                        int16_t          dest_y,
-                        uint16_t         width,
-                        uint16_t         height)
-{
-    pixman_image_composite32 (op, src, mask, dest, src_x, src_y, 
-                              mask_x, mask_y, dest_x, dest_y, width, height);
-}
-
 PIXMAN_EXPORT void
 pixman_image_composite32 (pixman_op_t      op,
                           pixman_image_t * src,
