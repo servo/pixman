@@ -88,7 +88,7 @@ static const format_t formats[] =
 {
 #define P(x) { PIXMAN_##x, #x }
 
-    /* 32bpp formats */
+    /* 32 bpp formats */
     P(a8r8g8b8),
     P(x8r8g8b8),
     P(a8b8g8r8),
@@ -97,30 +97,18 @@ static const format_t formats[] =
     P(b8g8r8x8),
     P(x2r10g10b10),
     P(x2b10g10r10),
+    P(a2r10g10b10),
+    P(a2b10g10r10),
 
-    /* 24bpp formats */
+    /* 24 bpp formats */
     P(r8g8b8),
     P(b8g8r8),
     P(r5g6b5),
     P(b5g6r5),
 
-    /* 16bpp formats */
+    /* 16 bpp formats */
     P(x1r5g5b5),
     P(x1b5g5r5),
-
-    /* 8bpp formats */
-    P(a8),
-
-#if 0
-    /* XXX: and here the errors begin!
-     *
-     * The formats below all have channels with 4 bits or less, and
-     * the eval_diff code doesn't deal correctly with that.
-     */
-    P(a2r10g10b10),
-    P(a2b10g10r10),
-
-    /* 16bpp formats */
     P(a1r5g5b5),
     P(a1b5g5r5),
     P(a4b4g4r4),
@@ -128,24 +116,23 @@ static const format_t formats[] =
     P(a4r4g4b4),
     P(x4r4g4b4),
 
-    /* 8bpp formats */
+    /* 8 bpp formats */
+    P(a8),
     P(r3g3b2),
     P(b2g3r3),
     P(a2r2g2b2),
     P(a2b2g2r2),
-
     P(x4a4),
 
-    /* 4bpp formats */
+    /* 4 bpp formats */
     P(a4),
     P(r1g2b1),
     P(b1g2r1),
     P(a1r1g1b1),
     P(a1b1g1r1),
 
-    /* 1bpp formats */
+    /* 1 bpp formats */
     P(a1)
-#endif
 #undef P
 };
 
@@ -604,18 +591,15 @@ get_pixel (pixman_image_t *image,
 }
 
 static double
-eval_diff (color_t *expected, color_t *test)
+eval_diff (color_t *expected, color_t *test, pixman_format_code_t format)
 {
     double rscale, gscale, bscale, ascale;
     double rdiff, gdiff, bdiff, adiff;
 
-    /* XXX: Need to be provided mask shifts so we can produce useful error
-     * values.
-     */
-    rscale = 1.0 * (1 << 5);
-    gscale = 1.0 * (1 << 6);
-    bscale = 1.0 * (1 << 5);
-    ascale = 1.0 * 32;
+    rscale = 1.0 * ((1 << PIXMAN_FORMAT_R (format)) - 1);
+    gscale = 1.0 * ((1 << PIXMAN_FORMAT_G (format)) - 1);
+    bscale = 1.0 * ((1 << PIXMAN_FORMAT_B (format)) - 1);
+    ascale = 1.0 * ((1 << PIXMAN_FORMAT_A (format)) - 1);
 
     rdiff = fabs (test->r - expected->r) * rscale;
     bdiff = fabs (test->g - expected->g) * gscale;
@@ -709,7 +693,7 @@ composite_test (image_t *dst,
 		  &expected, component_alpha);
     color_correct (dst->format->format, &expected);
 
-    diff = eval_diff (&expected, &result);
+    diff = eval_diff (&expected, &result, dst->format->format);
     if (diff > 3.0)
     {
 	char buf[40];
