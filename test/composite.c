@@ -1,6 +1,8 @@
 /*
  * Copyright © 2005 Eric Anholt
  * Copyright © 2009 Chris Wilson
+ * Copyright © 2010 Soeren Sandmann
+ * Copyright © 2010 Red Hat, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that
@@ -85,7 +87,6 @@ compute_pixman_color (const color_t *color,
 static const format_t formats[] =
 {
 #define P(x) { PIXMAN_##x, #x }
-    P(a8),
 
     /* 32bpp formats */
     P(a8r8g8b8),
@@ -94,33 +95,40 @@ static const format_t formats[] =
     P(x8b8g8r8),
     P(b8g8r8a8),
     P(b8g8r8x8),
-
-    /* XXX: and here the errors begin! */
-#if 0
     P(x2r10g10b10),
-    P(a2r10g10b10),
     P(x2b10g10r10),
-    P(a2b10g10r10),
 
     /* 24bpp formats */
     P(r8g8b8),
     P(b8g8r8),
-
-    /* 16bpp formats */
     P(r5g6b5),
     P(b5g6r5),
 
-    P(a1r5g5b5),
+    /* 16bpp formats */
     P(x1r5g5b5),
-    P(a1b5g5r5),
     P(x1b5g5r5),
-    P(a4r4g4b4),
-    P(x4r4g4b4),
-    P(a4b4g4r4),
-    P(x4b4g4r4),
 
     /* 8bpp formats */
     P(a8),
+
+#if 0
+    /* XXX: and here the errors begin!
+     *
+     * The formats below all have channels with 4 bits or less, and
+     * the eval_diff code doesn't deal correctly with that.
+     */
+    P(a2r10g10b10),
+    P(a2b10g10r10),
+
+    /* 16bpp formats */
+    P(a1r5g5b5),
+    P(a1b5g5r5),
+    P(a4b4g4r4),
+    P(x4b4g4r4),
+    P(a4r4g4b4),
+    P(x4r4g4b4),
+
+    /* 8bpp formats */
     P(r3g3b2),
     P(b2g3r3),
     P(a2r2g2b2),
@@ -482,8 +490,9 @@ static void
 color_correct (pixman_format_code_t format,
 	       color_t *color)
 {
-#define round_pix(pix, mask) \
-    ((int)((pix) * (mask) + .5) / (double) (mask))
+#define MASK(x) ((1 << (x)) - 1)
+#define round_pix(pix, m)						\
+    ((int)((pix) * (MASK(m)) + .5) / (double) (MASK(m)))
 
     if (PIXMAN_FORMAT_R (format) == 0)
     {
@@ -504,6 +513,7 @@ color_correct (pixman_format_code_t format,
 	color->a = round_pix (color->a, PIXMAN_FORMAT_A (format));
 
 #undef round_pix
+#undef MASK
 }
 
 static void
