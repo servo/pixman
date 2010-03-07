@@ -22,15 +22,14 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
-
+#define PIXMAN_USE_INTERNAL_API
 #include <pixman.h>
 #include <stdio.h>
 #include <stdlib.h> /* abort() */
 #include <math.h>
 #include <config.h>
-
-#define FALSE 0
-#define TRUE !FALSE
+#include <time.h>
+#include "utils.h"
 
 #define ARRAY_LENGTH(A) ((int) (sizeof (A) / sizeof ((A) [0])))
 #define min(a,b) ((a) <= (b) ? (a) : (b))
@@ -52,9 +51,8 @@ struct format_t
     const char *name;
 };
 
-static color_t colors[] =
+static const color_t colors[] =
 {
-    /* these are premultiplied in main() */
     { 1.0, 1.0, 1.0, 1.0 },
     { 1.0, 0.0, 0.0, 1.0 },
     { 0.0, 1.0, 0.0, 1.0 },
@@ -83,6 +81,17 @@ compute_pixman_color (const color_t *color,
     out->blue  = _color_double_to_short (color->b);
     out->alpha = _color_double_to_short (color->a);
 }
+
+#define REPEAT 0x01000000
+#define FLAGS  0xff000000
+
+static const int sizes[] =
+{
+    0,
+    1,
+    1 | REPEAT,
+    10
+};
 
 static const format_t formats[] =
 {
@@ -694,6 +703,11 @@ composite_test (image_t *dst,
     color_correct (dst->format->format, &expected);
 
     diff = eval_diff (&expected, &result, dst->format->format);
+
+    /* FIXME: We should find out what deviation is acceptable. 3.0
+     * is clearly absurd for 2 bit formats for example. On the other
+     * hand currently 1.0 does not work.
+     */
     if (diff > 3.0)
     {
 	char buf[40];
@@ -711,7 +725,7 @@ composite_test (image_t *dst,
 		result.r, result.g, result.b, result.a,
 		*(unsigned long *) pixman_image_get_data (dst->image),
 		expected.r, expected.g, expected.b, expected.a);
-	
+
 	if (mask != NULL)
 	{
 	    printf ("src color: %.2f %.2f %.2f %.2f\n"
@@ -745,9 +759,6 @@ composite_test (image_t *dst,
     return success;
 }
 
-#define REPEAT 0x01000000
-#define FLAGS  0xff000000
-
 static void
 image_init (image_t *info,
 	    int color,
@@ -760,7 +771,7 @@ image_init (image_t *info,
     compute_pixman_color (info->color, &fill);
 
     info->format = &formats[format];
-    info->size = size & ~FLAGS;
+    info->size = sizes[size] & ~FLAGS;
     info->repeat = PIXMAN_REPEAT_NONE;
 
     if (info->size)
@@ -794,103 +805,103 @@ image_fini (image_t *info)
     pixman_image_unref (info->image);
 }
 
-int
-main (void)
+static int
+random_size (void)
 {
-    pixman_bool_t ok, group_ok = TRUE, ca;
-    int i, d, m, s;
-    int tests_passed = 0, tests_total = 0;
-    int sizes[] = { 1, 1 | REPEAT, 10 };
-    int num_tests;
+    return lcg_rand_n (ARRAY_LENGTH (sizes));
+}
 
-    for (i = 0; i < ARRAY_LENGTH (colors); i++)
+static int
+random_color (void)
+{
+    return lcg_rand_n (ARRAY_LENGTH (colors));
+}
+
+static int
+random_format (void)
+{
+    return lcg_rand_n (ARRAY_LENGTH (formats));
+}
+
+static pixman_bool_t
+run_test (uint32_t seed)
+{
+    image_t src, mask, dst;
+    const operator_t *op;
+    int ca;
+    int ok;
+
+    lcg_srand (seed);
+    
+    image_init (&dst, random_color(), random_format(), 1);
+    image_init (&src, random_color(), random_format(), random_size());
+    image_init (&mask, random_color(), random_format(), random_size());
+
+    op = &(operators [lcg_rand_n (ARRAY_LENGTH (operators))]);
+
+    ca = lcg_rand_n (3);
+
+    switch (ca)
     {
-	colors[i].r *= colors[i].a;
-	colors[i].g *= colors[i].a;
-	colors[i].b *= colors[i].a;
+    case 0:
+	ok = composite_test (&dst, op, &src, NULL, FALSE);
+	break;
+    case 1:
+	ok = composite_test (&dst, op, &src, &mask, FALSE);
+	break;
+    case 2:
+	ok = composite_test (&dst, op, &src, &mask,
+			     mask.size? TRUE : FALSE);
+	break;
+    default:
+	ok = FALSE;
+	break;
     }
 
-    num_tests = ARRAY_LENGTH (colors) * ARRAY_LENGTH (formats);
+    image_fini (&src);
+    image_fini (&mask);
+    image_fini (&dst);
 
-    for (d = 0; d < num_tests; d++)
+    return ok;
+}
+
+int
+main (int argc, char **argv)
+{
+#define N_TESTS (8 * 1024 * 1024)
+    int result = 0;
+    int i;
+
+    if (argc > 1)
     {
-	image_t dst;
+	char *end;
+	
+	i = strtol (argv[1], &end, 0);
 
-	image_init (
-	    &dst, d / ARRAY_LENGTH (formats), d % ARRAY_LENGTH (formats), 1);
-
-
-	for (s = -ARRAY_LENGTH (colors);
-	     s < ARRAY_LENGTH (sizes) * num_tests;
-	     s++)
+	if (end != argv[1])
 	{
-	    image_t src;
-
-	    if (s < 0)
-	    {
-		image_init (&src, -s - 1, 0, 0);
-	    }
+	    if (!run_test (i))
+		return 1;
 	    else
-	    {
-		image_init (&src,
-			    s / ARRAY_LENGTH (sizes) / ARRAY_LENGTH (formats),
-			    s / ARRAY_LENGTH (sizes) % ARRAY_LENGTH (formats),
-			    sizes[s % ARRAY_LENGTH (sizes)]);
-	    }
-
-	    for (m = -ARRAY_LENGTH (colors);
-		 m < ARRAY_LENGTH (sizes) * num_tests;
-		 m++)
-	    {
-		image_t mask;
-
-		if (m < 0)
-		{
-		    image_init (&mask, -m - 1, 0, 0);
-		}
-		else
-		{
-		    image_init (
-			&mask,
-			m / ARRAY_LENGTH (sizes) / ARRAY_LENGTH (formats),
-			m / ARRAY_LENGTH (sizes) % ARRAY_LENGTH (formats),
-			sizes[m % ARRAY_LENGTH (sizes)]);
-		}
-
-		for (ca = -1; ca <= 1; ca++)
-		{
-		    for (i = 0; i < ARRAY_LENGTH (operators); i++)
-		    {
-			const operator_t *op = &operators[i];
-
-			switch (ca)
-			{
-			case -1:
-			    ok = composite_test (&dst, op, &src, NULL, FALSE);
-			    break;
-			case 0:
-			    ok = composite_test (&dst, op, &src, &mask, FALSE);
-			    break;
-			case 1:
-			    ok = composite_test (&dst, op, &src, &mask,
-						 mask.size? TRUE : FALSE);
-			    break;
-                        default:
-			    ok = FALSE; /* Silence GCC */
-                            break;
-			}
-			group_ok = group_ok && ok;
-			tests_passed += ok;
-			tests_total++;
-		    }
-		}
-
-		image_fini (&mask);
-	    }
-	    image_fini (&src);
+		return 0;
 	}
-	image_fini (&dst);
+	else
+	{
+	    printf ("Usage:\n\n   %s <number>\n\n", argv[0]);
+	    return -1;
+	}
     }
-
-    return group_ok == FALSE;
+    
+    for (i = 1; i <= N_TESTS; ++i)
+    {
+	if (!run_test (i))
+	{
+	    printf ("Test %d failed.\n", i);
+	    
+	    result = i;
+	    break;
+	}
+    }
+    
+    return result;
 }
