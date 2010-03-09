@@ -363,18 +363,28 @@ AM_CONDITIONAL(USE_VMX, test $have_vmx_intrinsics = yes)
 
 dnl ===========================================================================
 dnl Check for ARM SIMD instructions
-ARM_SIMD_CFLAGS="-mcpu=arm1136j-s"
+ARM_SIMD_CFLAGS=""
 
 have_arm_simd=no
 AC_MSG_CHECKING(whether to use ARM SIMD assembler)
-xserver_save_CFLAGS=$CFLAGS
-CFLAGS="$ARM_SIMD_CFLAGS $CFLAGS"
+# check with default CFLAGS in case the toolchain turns on a sufficiently recent -mcpu=
 AC_COMPILE_IFELSE([
 int main () {
     asm("uqadd8 r1, r1, r2");
     return 0;
-}], have_arm_simd=yes)
-CFLAGS=$xserver_save_CFLAGS
+}], have_arm_simd=yes,
+    # check again with an explicit -mcpu= in case the toolchain defaults to an
+    # older one; note that uqadd8 isn't available in Thumb mode on arm1136j-s
+    # so we force ARM mode
+    ARM_SIMD_CFLAGS="-mcpu=arm1136j-s -marm"
+    xserver_save_CFLAGS=$CFLAGS
+    CFLAGS="$ARM_SIMD_CFLAGS $CFLAGS"
+    AC_COMPILE_IFELSE([
+    int main () {
+        asm("uqadd8 r1, r1, r2");
+        return 0;
+    }], have_arm_simd=yes)
+    CFLAGS=$xserver_save_CFLAGS)
 
 AC_ARG_ENABLE(arm-simd,
    [AC_HELP_STRING([--disable-arm-simd],
