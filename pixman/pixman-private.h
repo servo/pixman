@@ -579,6 +579,7 @@ _pixman_choose_implementation (void);
 #define FAST_PATH_SIMPLE_REPEAT			(1 << 12)
 #define FAST_PATH_IS_OPAQUE			(1 << 13)
 #define FAST_PATH_NEEDS_WORKAROUND		(1 << 14)
+#define FAST_PATH_NO_NONE_REPEAT		(1 << 15)
 
 #define _FAST_PATH_STANDARD_FLAGS					\
     (FAST_PATH_ID_TRANSFORM		|				\

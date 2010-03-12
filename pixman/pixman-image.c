@@ -335,16 +335,20 @@ compute_image_info (pixman_image_t *image)
     /* Repeat mode */
     switch (image->common.repeat)
     {
+    case PIXMAN_REPEAT_NONE:
+	flags |= FAST_PATH_NO_REFLECT_REPEAT | FAST_PATH_NO_PAD_REPEAT;
+	break;
+
     case PIXMAN_REPEAT_REFLECT:
-	flags |= FAST_PATH_NO_PAD_REPEAT;
+	flags |= FAST_PATH_NO_PAD_REPEAT | FAST_PATH_NO_NONE_REPEAT;
 	break;
 
     case PIXMAN_REPEAT_PAD:
-	flags |= FAST_PATH_NO_REFLECT_REPEAT;
+	flags |= FAST_PATH_NO_REFLECT_REPEAT | FAST_PATH_NO_NONE_REPEAT;
 	break;
 
     default:
-	flags |= (FAST_PATH_NO_REFLECT_REPEAT | FAST_PATH_NO_PAD_REPEAT);
+	flags |= FAST_PATH_NO_REFLECT_REPEAT | FAST_PATH_NO_PAD_REPEAT | FAST_PATH_NO_NONE_REPEAT;
 	break;
     }
 
