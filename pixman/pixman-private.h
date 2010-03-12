@@ -704,6 +704,8 @@ pixman_region16_copy_from_region32 (pixman_region16_t *dst,
      ((((s) << 5) & 0xfc00) | (((s) >> 1) & 0x300)) |			\
      ((((s) << 8) & 0xf80000) | (((s) << 3) & 0x70000)))
 
+#define CONVERT_0565_TO_8888(s) (CONVERT_0565_TO_0888(s) | 0xff000000)
+
 #define PIXMAN_FORMAT_IS_WIDE(f)					\
     (PIXMAN_FORMAT_A (f) > 8 ||						\
      PIXMAN_FORMAT_R (f) > 8 ||						\
