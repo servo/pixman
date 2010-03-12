@@ -479,24 +479,75 @@ walk_region_internal (pixman_implementation_t *imp,
     }
 }
 
-static force_inline pixman_bool_t
-image_covers (pixman_image_t *image,
-              pixman_box32_t *extents,
-              int             x,
-              int             y)
+#define IS_16BIT(x) (((x) >= INT16_MIN) && ((x) <= INT16_MAX))
+
+static force_inline uint32_t
+compute_src_extents_flags (pixman_image_t *image,
+			   pixman_box32_t *extents,
+			   int             x,
+			   int             y)
 {
-    if (image->common.type == BITS &&
-	image->common.repeat == PIXMAN_REPEAT_NONE)
+    pixman_box16_t extents16;
+    uint32_t flags;
+
+    flags = FAST_PATH_COVERS_CLIP;
+
+    if (image->common.type != BITS)
+	return flags;
+
+    if (image->common.repeat == PIXMAN_REPEAT_NONE &&
+	(x > extents->x1 || y > extents->y1 ||
+	 x + image->bits.width < extents->x2 ||
+	 y + image->bits.height < extents->y2))
     {
-	if (x > extents->x1 || y > extents->y1 ||
-	    x + image->bits.width < extents->x2 ||
-	    y + image->bits.height < extents->y2)
+	flags &= ~FAST_PATH_COVERS_CLIP;
+    }
+
+    if (IS_16BIT (extents->x1 - x) &&
+	IS_16BIT (extents->y1 - y) &&
+	IS_16BIT (extents->x2 - x) &&
+	IS_16BIT (extents->y2 - y))
+    {
+	extents16.x1 = extents->x1 - x;
+	extents16.y1 = extents->y1 - y;
+	extents16.x2 = extents->x2 - x;
+	extents16.y2 = extents->y2 - y;
+
+	if (!image->common.transform ||
+	    pixman_transform_bounds (image->common.transform, &extents16))
 	{
-	    return FALSE;
+	    if (extents16.x1 >= 0  && extents16.y1 >= 0 &&
+		extents16.x2 <= image->bits.width &&
+		extents16.y2 <= image->bits.height)
+	    {
+		flags |= FAST_PATH_SAMPLES_COVER_CLIP;
+	    }
 	}
     }
 
-    return TRUE;
+    if (IS_16BIT (extents->x1 - x - 1) &&
+	IS_16BIT (extents->y1 - y - 1) &&
+	IS_16BIT (extents->x2 - x + 1) &&
+	IS_16BIT (extents->y2 - y + 1))
+    {
+	extents16.x1 = extents->x1 - x - 1;
+	extents16.y1 = extents->y1 - y - 1;
+	extents16.x2 = extents->x2 - x + 1;
+	extents16.y2 = extents->y2 - y + 1;
+
+	if (/* src space expanded by one in dest space fits in 16 bit */
+	    (!image->common.transform ||
+	     pixman_transform_bounds (image->common.transform, &extents16)) &&
+	    /* And src image size can be used as 16.16 fixed point */
+	    image->bits.width < 0x7fff &&
+	    image->bits.height < 0x7fff)
+	{
+	    /* Then we're "16bit safe" */
+	    flags |= FAST_PATH_16BIT_SAFE;
+	}
+    }
+
+    return flags;
 }
 
 #define N_CACHED_FAST_PATHS 8
@@ -588,11 +639,10 @@ do_composite (pixman_implementation_t *imp,
     
     extents = pixman_region32_extents (&region);
     
-    if (image_covers (src, extents, dest_x - src_x, dest_y - src_y))
-	src_flags |= FAST_PATH_COVERS_CLIP;
-    
-    if (mask && image_covers (mask, extents, dest_x - mask_x, dest_y - mask_y))
-	mask_flags |= FAST_PATH_COVERS_CLIP;
+    src_flags |= compute_src_extents_flags (src, extents, dest_x - src_x, dest_y - src_y);
+
+    if (mask)
+	mask_flags |= compute_src_extents_flags (mask, extents, dest_x - mask_x, dest_y - mask_y);
 
     /*
      * Check if we can replace our operator by a simpler one
