@@ -680,6 +680,12 @@ pixman_image_set_component_alpha   (pixman_image_t *image,
     image_property_changed (image);
 }
 
+PIXMAN_EXPORT pixman_bool_t
+pixman_image_get_component_alpha   (pixman_image_t       *image)
+{
+    return image->common.component_alpha;
+}
+
 PIXMAN_EXPORT void
 pixman_image_set_accessors (pixman_image_t *           image,
                             pixman_read_memory_func_t  read_func,
