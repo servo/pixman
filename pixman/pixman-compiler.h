@@ -70,7 +70,7 @@
 #endif
 
 /* TLS */
-#if defined (__GNUC__) && ((__GNUC__ == 3 && __GNUC_MINOR >= 3) || __GNUC__ > 3)
+#if (defined (__GNUC__) && ((__GNUC__ == 3 && __GNUC_MINOR >= 3) || __GNUC__ > 3)) || defined(__SUNPRO_C)
 #    define THREAD_LOCAL __thread
 #elif defined (_MSC_VER)
 #    define THREAD_LOCAL __declspec(thread)
