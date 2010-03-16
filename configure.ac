@@ -58,7 +58,7 @@ m4_define([pixman_micro], 11)
 
 m4_define([pixman_version],[pixman_major.pixman_minor.pixman_micro])
 
-AC_INIT(pixman, pixman_version, "sandmann@daimi.au.dk", pixman)
+AC_INIT(pixman, pixman_version, "pixman@lists.freedesktop.org", pixman)
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 
 # Suppress verbose compile lines
