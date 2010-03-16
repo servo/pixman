@@ -523,6 +523,86 @@ if test x$have_posix_memalign = xyes; then
    AC_DEFINE(HAVE_POSIX_MEMALIGN, 1, [Whether we have posix_memalign()])
 fi
 
+dnl =====================================
+dnl Thread local storage
+
+support_for__thread=no
+
+AC_MSG_CHECKING(for __thread)
+AC_COMPILE_IFELSE([
+__thread int x ;
+int main () { return 0; }
+], support_for__thread=yes)
+
+if test $support_for__thread = yes; then 
+   AC_DEFINE([TOOLCHAIN_SUPPORTS__THREAD],[],[Whether the tool chain supports __thread])
+fi
+
+AC_MSG_RESULT($support_for__thread)
+
+dnl posix tls
+
+if test $support_for__thread = no; then
+
+support_for_pthread_setspecific=no
+   
+AC_MSG_CHECKING(for pthread_setspecific)
+
+save_LDFLAGS=$LDFLAGS
+
+LDFLAGS="-pthread"
+
+AC_LINK_IFELSE([
+#include <pthread.h>
+
+#include <stdlib.h>
+#include <pthread.h>
+
+static pthread_once_t once_control = PTHREAD_ONCE_INIT;
+static pthread_key_t key;
+
+static void
+make_key (void)
+{
+    pthread_key_create (&key, NULL);
+}
+
+int
+main ()
+{
+    void *value = NULL;
+    
+    if (pthread_once (&once_control, make_key) != 0)
+    {
+	value = NULL;
+    }
+    else
+    {
+	value = pthread_getspecific (key);
+	if (!value)
+	{
+	    value = malloc (100);
+	    pthread_setspecific (key, value);
+	}
+    }
+}
+], support_for_pthread_setspecific=yes);
+
+LDFLAGS=$save_LDFLAGS
+
+if test $support_for_pthread_setspecific = yes; then
+   PTHREAD_LDFLAGS="-pthread"
+   AC_DEFINE([HAVE_PTHREAD_SETSPECIFIC], [], [Whether pthread_setspecific() is supported])
+fi
+
+AC_MSG_RESULT($support_for_pthread_setspecific);
+
+fi
+
+AC_SUBST(TOOLCHAIN_SUPPORTS__THREAD)
+AC_SUBST(HAVE_PTHREAD_SETSPECIFIC)
+AC_SUBST(PTHREAD_LDFLAGS)
+
 AC_OUTPUT([pixman-1.pc
            pixman-1-uninstalled.pc
            Makefile
