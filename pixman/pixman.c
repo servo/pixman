@@ -499,6 +499,15 @@ image_covers (pixman_image_t *image,
     return TRUE;
 }
 
+#define N_CACHED_FAST_PATHS 8
+
+typedef struct
+{
+    pixman_fast_path_t cache [N_CACHED_FAST_PATHS];
+} cache_t;
+
+PIXMAN_DEFINE_THREAD_LOCAL (cache_t, fast_path_cache);
+
 static void
 do_composite (pixman_implementation_t *imp,
 	      pixman_op_t	       op,
@@ -514,8 +523,6 @@ do_composite (pixman_implementation_t *imp,
 	      int		       width,
 	      int		       height)
 {
-#define N_CACHED_FAST_PATHS 8
-    static THREAD_LOCAL pixman_fast_path_t tls_cache[N_CACHED_FAST_PATHS];
     pixman_format_code_t src_format, mask_format, dest_format;
     uint32_t src_flags, mask_flags, dest_flags;
     pixman_region32_t region;
@@ -527,8 +534,8 @@ do_composite (pixman_implementation_t *imp,
     uint32_t *dest_bits;
     int dest_dx, dest_dy;
     pixman_bool_t need_workaround;
-    pixman_fast_path_t *cache;
     const pixman_fast_path_t *info;
+    cache_t *cache;
     int i;
 
     src_format = src->common.extended_format_code;
@@ -597,11 +604,11 @@ do_composite (pixman_implementation_t *imp,
 	return;
 
     /* Check cache for fast paths */
-    cache = tls_cache;
+    cache = PIXMAN_GET_THREAD_LOCAL (fast_path_cache);
 
     for (i = 0; i < N_CACHED_FAST_PATHS; ++i)
     {
-	info = &(cache[i]);
+	info = &(cache->cache[i]);
 
 	/* Note that we check for equality here, not whether
 	 * the cached fast path matches. This is to prevent
@@ -677,16 +684,16 @@ found:
 	pixman_composite_func_t func = info->func;
 	
 	while (i--)
-	    cache[i + 1] = cache[i];
+	    cache->cache[i + 1] = cache->cache[i];
 
-	cache[0].op = op;
-	cache[0].src_format = src_format;
-	cache[0].src_flags = src_flags;
-	cache[0].mask_format = mask_format;
-	cache[0].mask_flags = mask_flags;
-	cache[0].dest_format = dest_format;
-	cache[0].dest_flags = dest_flags;
-	cache[0].func = func;
+	cache->cache[0].op = op;
+	cache->cache[0].src_format = src_format;
+	cache->cache[0].src_flags = src_flags;
+	cache->cache[0].mask_format = mask_format;
+	cache->cache[0].mask_flags = mask_flags;
+	cache->cache[0].dest_format = dest_format;
+	cache->cache[0].dest_flags = dest_flags;
+	cache->cache[0].func = func;
     }
 
 out:
