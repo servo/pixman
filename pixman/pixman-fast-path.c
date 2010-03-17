@@ -1836,7 +1836,7 @@ static const pixman_fast_path_t c_fast_paths[] =
     SIMPLE_NEAREST_FAST_PATH (OVER, a8r8g8b8, a8r8g8b8, x888_x888),
     SIMPLE_NEAREST_FAST_PATH (OVER, a8b8g8r8, a8b8g8r8, x888_x888),
 
-    SIMPLE_NEAREST_FAST_PATH (OVER, a8b8g8r8, r5g6b5, 8888_565),
+    SIMPLE_NEAREST_FAST_PATH (OVER, a8r8g8b8, r5g6b5, 8888_565),
 
 #define NEAREST_FAST_PATH(op,s,d)		\
     {   PIXMAN_OP_ ## op,			\
