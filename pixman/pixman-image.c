@@ -301,15 +301,21 @@ compute_image_info (pixman_image_t *image)
     /* Transform */
     if (!image->common.transform)
     {
-	flags |= FAST_PATH_ID_TRANSFORM;
+	flags |= (FAST_PATH_ID_TRANSFORM | FAST_PATH_X_UNIT_POSITIVE);
     }
-    else if (image->common.transform->matrix[0][1] == 0 &&
-	     image->common.transform->matrix[1][0] == 0 &&
-	     image->common.transform->matrix[2][0] == 0 &&
-	     image->common.transform->matrix[2][1] == 0 &&
-	     image->common.transform->matrix[2][2] == pixman_fixed_1)
+    else
     {
-	flags |= FAST_PATH_SCALE_TRANSFORM;
+	if (image->common.transform->matrix[0][1] == 0 &&
+	    image->common.transform->matrix[1][0] == 0 &&
+	    image->common.transform->matrix[2][0] == 0 &&
+	    image->common.transform->matrix[2][1] == 0 &&
+	    image->common.transform->matrix[2][2] == pixman_fixed_1)
+	{
+	    flags |= FAST_PATH_SCALE_TRANSFORM;
+	}
+
+	if (image->common.transform->matrix[0][0] > 0)
+	    flags |= FAST_PATH_X_UNIT_POSITIVE;
     }
 
     /* Alpha map */
