@@ -1485,13 +1485,21 @@ fast_composite_scaled_nearest_ ## scale_func_name ## _ ## OP (pixman_implementat
 	    x1 = vx >> 16;									\
 	    vx += unit_x;									\
 	    if (do_repeat)									\
-		repeat (PIXMAN_REPEAT_NORMAL, &vx, max_vx);					\
+	    {											\
+		/* This works because we know that unit_x is positive */			\
+		while (vx >= max_vx)								\
+		    vx -= max_vx;								\
+	    }											\
 	    s1 = src[x1];									\
 												\
 	    x2 = vx >> 16;									\
 	    vx += unit_x;									\
 	    if (do_repeat)									\
-		repeat (PIXMAN_REPEAT_NORMAL, &vx, max_vx);					\
+	    {											\
+		/* This works because we know that unit_x is positive */			\
+		while (vx >= max_vx)								\
+		    vx -= max_vx;								\
+	    }											\
 	    s2 = src[x2];									\
 												\
 	    if (PIXMAN_OP_ ## OP == PIXMAN_OP_OVER)						\
@@ -1537,7 +1545,11 @@ fast_composite_scaled_nearest_ ## scale_func_name ## _ ## OP (pixman_implementat
 	    x1 = vx >> 16;									\
 	    vx += unit_x;									\
 	    if (do_repeat)									\
-		repeat (PIXMAN_REPEAT_NORMAL, &vx, max_vx);					\
+	    {											\
+		/* This works because we know that unit_x is positive */			\
+		while (vx >= max_vx)								\
+		    vx -= max_vx;								\
+	    }											\
 	    s1 = src[x1];									\
 												\
 	    if (PIXMAN_OP_ ## OP == PIXMAN_OP_OVER)						\
@@ -1806,7 +1818,7 @@ static const pixman_fast_path_t c_fast_paths[] =
 #define SIMPLE_NEAREST_FAST_PATH(op,s,d,func)				\
     {   PIXMAN_OP_ ## op,						\
 	PIXMAN_ ## s,							\
-	SCALED_NEAREST_FLAGS | HAS_NORMAL_REPEAT_FLAGS | FAST_PATH_16BIT_SAFE,	\
+	SCALED_NEAREST_FLAGS | HAS_NORMAL_REPEAT_FLAGS | FAST_PATH_16BIT_SAFE | FAST_PATH_X_UNIT_POSITIVE, \
 	PIXMAN_null, 0,							\
 	PIXMAN_ ## d, FAST_PATH_STD_DEST_FLAGS,				\
 	fast_composite_scaled_nearest_ ## func ## _normal ## _ ## op,	\
