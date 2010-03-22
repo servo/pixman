@@ -30,6 +30,8 @@
 #include "pixman-private.h"
 #include "pixman-arm-common.h"
 
+#if 0 /* This code was moved to 'pixman-arm-simd-asm.S' */
+
 void
 pixman_composite_add_8000_8000_asm_armv6 (int32_t  width,
                                           int32_t  height,
@@ -370,6 +372,8 @@ pixman_composite_over_n_8_8888_asm_armv6 (int32_t   width,
 	    : "r4", "r5", "r6", "r7", "r8", "cc", "memory");
     }
 }
+
+#endif
 
 PIXMAN_ARM_BIND_FAST_PATH_SRC_DST (armv6, add_8000_8000,
                                    uint8_t, 1, uint8_t, 1)

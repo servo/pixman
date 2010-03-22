@@ -361,30 +361,24 @@ AC_SUBST(VMX_CFLAGS)
 
 AM_CONDITIONAL(USE_VMX, test $have_vmx_intrinsics = yes)
 
-dnl ===========================================================================
-dnl Check for ARM SIMD instructions
-ARM_SIMD_CFLAGS=""
-
+dnl ==========================================================================
+dnl Check if assembler is gas compatible and supports ARM SIMD instructions
 have_arm_simd=no
 AC_MSG_CHECKING(whether to use ARM SIMD assembler)
-# check with default CFLAGS in case the toolchain turns on a sufficiently recent -mcpu=
-AC_COMPILE_IFELSE([
-int main () {
-    asm("uqadd8 r1, r1, r2");
-    return 0;
-}], have_arm_simd=yes,
-    # check again with an explicit -mcpu= in case the toolchain defaults to an
-    # older one; note that uqadd8 isn't available in Thumb mode on arm1136j-s
-    # so we force ARM mode
-    ARM_SIMD_CFLAGS="-mcpu=arm1136j-s -marm"
-    xserver_save_CFLAGS=$CFLAGS
-    CFLAGS="$ARM_SIMD_CFLAGS $CFLAGS"
-    AC_COMPILE_IFELSE([
-    int main () {
-        asm("uqadd8 r1, r1, r2");
-        return 0;
-    }], have_arm_simd=yes)
-    CFLAGS=$xserver_save_CFLAGS)
+xserver_save_CFLAGS=$CFLAGS
+CFLAGS="-x assembler-with-cpp $CFLAGS"
+AC_COMPILE_IFELSE([[
+.text
+.arch armv6
+.object_arch armv4
+.arm
+.altmacro
+#ifndef __ARM_EABI__
+#error EABI is required (to be sure that calling conventions are compatible)
+#endif
+pld [r0]
+uqadd8 r0, r0, r0]], have_arm_simd=yes)
+CFLAGS=$xserver_save_CFLAGS
 
 AC_ARG_ENABLE(arm-simd,
    [AC_HELP_STRING([--disable-arm-simd],
@@ -396,19 +390,15 @@ if test $enable_arm_simd = no ; then
 fi
 
 if test $have_arm_simd = yes ; then
-   AC_DEFINE(USE_ARM_SIMD, 1, [use ARM SIMD compiler intrinsics])
-else
-   ARM_SIMD_CFLAGS=
+   AC_DEFINE(USE_ARM_SIMD, 1, [use ARM SIMD assembly optimizations])
 fi
+
+AM_CONDITIONAL(USE_ARM_SIMD, test $have_arm_simd = yes)
 
 AC_MSG_RESULT($have_arm_simd)
 if test $enable_arm_simd = yes && test $have_arm_simd = no ; then
    AC_MSG_ERROR([ARM SIMD intrinsics not detected])
 fi
-
-AC_SUBST(ARM_SIMD_CFLAGS)
-
-AM_CONDITIONAL(USE_ARM_SIMD, test $have_arm_simd = yes)
 
 dnl ==========================================================================
 dnl Check if assembler is gas compatible and supports NEON instructions
