@@ -415,10 +415,14 @@ dnl Check if assembler is gas compatible and supports NEON instructions
 have_arm_neon=no
 AC_MSG_CHECKING(whether to use ARM NEON assembler)
 xserver_save_CFLAGS=$CFLAGS
-CFLAGS="-x assembler-with-cpp"
+CFLAGS="-x assembler-with-cpp $CFLAGS"
 AC_COMPILE_IFELSE([[
 .text
 .fpu neon
+.arch armv7a
+.object_arch armv4
+.eabi_attribute 10, 0
+.arm
 .altmacro
 #ifndef __ARM_EABI__
 #error EABI is required (to be sure that calling conventions are compatible)
