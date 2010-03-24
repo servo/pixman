@@ -69,7 +69,11 @@
 #include <stdio.h>
 #include "pixman-private.h"
 
-#define PIXREGION_NIL(reg) ((reg)->data && !(reg)->data->numRects)
+#define PIXREGION_NIL(reg) (((reg)->data && !(reg)->data->numRects) ||	\
+			    (! (reg)->data &&				\
+			     (reg)->extents.x1 == (reg)->extents.x2 &&	\
+			     (reg)->extents.y1 == (reg)->extents.y2))
+
 /* not a region */
 #define PIXREGION_NAR(reg)      ((reg)->data == pixman_broken_data)
 #define PIXREGION_NUMRECTS(reg) ((reg)->data ? (reg)->data->numRects : 1)
