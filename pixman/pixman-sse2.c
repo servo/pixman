@@ -3981,23 +3981,39 @@ pixman_fill_sse2 (uint32_t *bits,
 
     __m128i xmm_def;
 
-    if (bpp != 16 && bpp != 32)
-	return FALSE;
+    if (bpp == 8)
+    {
+	uint8_t b;
+	uint16_t w;
 
-    if (bpp == 16)
+	stride = stride * (int) sizeof (uint32_t) / 1;
+	byte_line = (uint8_t *)(((uint8_t *)bits) + stride * y + x);
+	byte_width = width;
+	stride *= 1;
+
+	b = data & 0xff;
+	w = (b << 8) | b;
+	data = (w << 16) | w;
+    }
+    else if (bpp == 16)
     {
 	stride = stride * (int) sizeof (uint32_t) / 2;
 	byte_line = (uint8_t *)(((uint16_t *)bits) + stride * y + x);
 	byte_width = 2 * width;
 	stride *= 2;
+
         data = (data & 0xffff) * 0x00010001;
     }
-    else
+    else if (bpp == 32)
     {
 	stride = stride * (int) sizeof (uint32_t) / 4;
 	byte_line = (uint8_t *)(((uint32_t *)bits) + stride * y + x);
 	byte_width = 4 * width;
 	stride *= 4;
+    }
+    else
+    {
+	return FALSE;
     }
 
     cache_prefetch ((__m128i*)byte_line);
@@ -4010,8 +4026,14 @@ pixman_fill_sse2 (uint32_t *bits,
 	byte_line += stride;
 	w = byte_width;
 
-
 	cache_prefetch_next ((__m128i*)d);
+
+	while (w >= 1 && ((unsigned long)d & 1))
+	{
+	    *(uint8_t *)d = data;
+	    w -= 1;
+	    d += 1;
+	}
 
 	while (w >= 2 && ((unsigned long)d & 3))
 	{
@@ -4094,6 +4116,13 @@ pixman_fill_sse2 (uint32_t *bits,
 	    *(uint16_t *)d = data;
 	    w -= 2;
 	    d += 2;
+	}
+
+	if (w >= 1)
+	{
+	    *(uint8_t *)d = data;
+	    w -= 1;
+	    d += 1;
 	}
     }
 
