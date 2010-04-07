@@ -99,16 +99,16 @@
     }									\
 									\
     static type *							\
-    tls_ ## name ## _alloc (key)					\
+    tls_ ## name ## _alloc (void)					\
     {									\
 	type *value = calloc (1, sizeof (type));			\
 	if (value)							\
-	    pthread_setspecific (key, value);				\
+	    pthread_setspecific (tls_ ## name ## _key, value);		\
 	return value;							\
     }									\
 									\
     static force_inline type *						\
-    tls_ ## name ## _get (key)						\
+    tls_ ## name ## _get (void)						\
     {									\
 	type *value = NULL;						\
 	if (pthread_once (&tls_ ## name ## _once_control,		\
@@ -116,13 +116,13 @@
 	{								\
 	    value = pthread_getspecific (tls_ ## name ## _key);		\
 	    if (!value)							\
-		value = tls_ ## name ## _alloc (key);			\
+		value = tls_ ## name ## _alloc ();			\
 	}								\
 	return value;							\
     }
 
 #   define PIXMAN_GET_THREAD_LOCAL(name)				\
-    tls_ ## name ## _get (tls_ ## name ## _key)
+    tls_ ## name ## _get ()
 
 #else
 
