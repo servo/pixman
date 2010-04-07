@@ -101,7 +101,7 @@
     static type *							\
     tls_ ## name ## _alloc (key)					\
     {									\
-	type *value = malloc (sizeof (type));				\
+	type *value = calloc (1, sizeof (type));			\
 	if (value)							\
 	    pthread_setspecific (key, value);				\
 	return value;							\
