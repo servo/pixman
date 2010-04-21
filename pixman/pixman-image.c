@@ -739,6 +739,15 @@ pixman_image_get_depth (pixman_image_t *image)
     return 0;
 }
 
+PIXMAN_EXPORT pixman_format_code_t
+pixman_image_get_format (pixman_image_t *image)
+{
+    if (image->type == BITS)
+	return image->bits.format;
+
+    return 0;
+}
+
 uint32_t
 _pixman_image_get_solid (pixman_image_t *     image,
                          pixman_format_code_t format)
