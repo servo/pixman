@@ -47,8 +47,7 @@ TESTPROGRAMS_GTK =		\
 	alpha-test		\
 	screen-test		\
 	convolution-test	\
-	trap-test		\
-	alphamap
+	trap-test
 
 INCLUDES += $(GTK_CFLAGS)
 
