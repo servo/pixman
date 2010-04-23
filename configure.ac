@@ -524,6 +524,9 @@ support_for__thread=no
 
 AC_MSG_CHECKING(for __thread)
 AC_COMPILE_IFELSE([
+#ifdef __MINGW32__
+#error MinGW has broken __thread support
+#endif
 __thread int x ;
 int main () { return 0; }
 ], support_for__thread=yes)
