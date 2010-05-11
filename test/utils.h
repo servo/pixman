@@ -43,3 +43,12 @@ image_endian_swap (pixman_image_t *img, int bpp);
 /* Generate n_bytes random bytes in malloced memory */
 uint8_t *
 make_random_bytes (int n_bytes);
+
+/* main body of the fuzzer test */
+int
+fuzzer_test_main (const char *test_name,
+		  int         default_number_of_iterations,
+		  uint32_t    expected_checksum,
+		  uint32_t    (*test_function)(int testnum, int verbose),
+		  int         argc,
+		  const char *argv[]);
