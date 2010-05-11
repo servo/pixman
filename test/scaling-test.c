@@ -1,24 +1,11 @@
 /*
- * Test program, which can detect problems with nearest neighbout scaling
- * implementation. Also SRC and OVER opetations tested for 16bpp and 32bpp
- * images.
+ * Test program, which can detect some problems with nearest neighbour
+ * and bilinear scaling in pixman. Testing is done by running lots
+ * of random SRC and OVER compositing operations a8r8g8b8, x8a8r8g8b8
+ * and r5g6b5 color formats.
  *
- * Just run it without any command line arguments, and it will report either
- *   "scaling test passed" - everything is ok
- *   "scaling test failed!" - there is some problem
- *
- * In the case of failure, finding the problem involves the following steps:
- * 1. Get the reference 'scaling-test' binary. It makes sense to disable all
- *    the cpu specific optimizations in pixman and also configure it with
- *    '--disable-shared' option. Those who are paranoid can also tweak the
- *    sources to disable all fastpath functions. The resulting binary
- *    can be renamed to something like 'scaling-test.ref'.
- * 2. Compile the buggy binary (also with the '--disable-shared' option).
- * 3. Run 'ruby scaling-test-bisect.rb ./scaling-test.ref ./scaling-test'
- * 4. Look at the information about failed case (destination buffer content
- *    will be shown) and try to figure out what is wrong. It is possible
- *    to use debugging print to stderr in pixman to get more information,
- *    this does not interfere with the testing script.
+ * Script 'fuzzer-find-diff.pl' can be used to narrow down the problem in
+ * the case of test failure.
  */
 #include <assert.h>
 #include <stdlib.h>
@@ -35,8 +22,7 @@
  * Composite operation with pseudorandom images
  */
 uint32_t
-test_composite (uint32_t initcrc,
-		int      testnum,
+test_composite (int      testnum,
 		int      verbose)
 {
     int                i;
@@ -239,53 +225,17 @@ test_composite (uint32_t initcrc,
     pixman_image_unref (src_img);
     pixman_image_unref (dst_img);
 
-    crc32 = compute_crc32 (initcrc, dstbuf, dst_stride * dst_height);
+    crc32 = compute_crc32 (0, dstbuf, dst_stride * dst_height);
     free (srcbuf);
     free (dstbuf);
     return crc32;
 }
 
 int
-main (int   argc, char *argv[])
+main (int argc, const char *argv[])
 {
-    int      i, n = 0;
-    uint32_t crc = 0;
-
     pixman_disable_out_of_bounds_workaround ();
 
-    if (argc >= 2)
-	n = atoi (argv[1]);
-
-    if (n == 0) n = 3000000;
-
-    if (n < 0)
-    {
-	crc = test_composite (0, -n, 1);
-	printf ("crc32=%08X\n", crc);
-    }
-    else
-    {
-	for (i = 1; i <= n; i++)
-	    crc = test_composite (crc, i, 0);
-
-	printf ("crc32=%08X\n", crc);
-
-	if (n == 3000000)
-	{
-	    /* predefined value for running with all the fastpath functions disabled  */
-	    /* it needs to be updated every time changes are introduced to this program! */
-
-	    if (crc == 0x2168ACD1)
-	    {
-		printf ("scaling test passed\n");
-	    }
-	    else
-	    {
-		printf ("scaling test failed!\n");
-		return 1;
-	    }
-	}
-    }
-
-    return 0;
+    return fuzzer_test_main("scaling", 3000000, 0x7833766A,
+			    test_composite, argc, argv);
 }
