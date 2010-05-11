@@ -2,24 +2,8 @@
  * Test program, which stresses the use of different color formats and
  * compositing operations.
  *
- * Just run it without any command line arguments, and it will report either
- *   "blitters test passed" - everything is ok
- *   "blitters test failed!" - there is some problem
- *
- * In the case of failure, finding the problem involves the following steps:
- * 1. Get the reference 'blitters-test' binary. It makes sense to disable all
- *    the cpu specific optimizations in pixman and also configure it with
- *    '--disable-shared' option. Those who are paranoid can also tweak the
- *    sources to disable all fastpath functions. The resulting binary
- *    can be renamed to something like 'blitters-test.ref'.
- * 2. Compile the buggy binary (also with the '--disable-shared' option).
- * 3. Run 'ruby blitters-test-bisect.rb ./blitters-test.ref ./blitters-test'
- * 4. Look at the information about failed case (destination buffer content
- *    will be shown) and try to figure out what is wrong. Loading
- *    test program in gdb, specifying failed test number in the command
- *    line with '-' character prepended and setting breakpoint on
- *    'pixman_image_composite' function can provide detailed information
- *    about function arguments
+ * Script 'fuzzer-find-diff.pl' can be used to narrow down the problem in
+ * the case of test failure.
  */
 #include <assert.h>
 #include <stdlib.h>
@@ -260,7 +244,7 @@ static pixman_format_code_t mask_fmt_list[] = {
  * Composite operation with pseudorandom images
  */
 uint32_t
-test_composite (uint32_t initcrc, int testnum, int verbose)
+test_composite (int testnum, int verbose)
 {
     int i;
     pixman_image_t *src_img = NULL;
@@ -410,15 +394,15 @@ test_composite (uint32_t initcrc, int testnum, int verbose)
 	printf ("---\n");
     }
 
-    free_random_image (initcrc, src_img, -1);
-    crc32 = free_random_image (initcrc, dst_img, dst_fmt);
+    free_random_image (0, src_img, -1);
+    crc32 = free_random_image (0, dst_img, dst_fmt);
 
     if (mask_img)
     {
 	if (srcbuf == maskbuf)
 	    pixman_image_unref(mask_img);
 	else
-	    free_random_image (initcrc, mask_img, -1);
+	    free_random_image (0, mask_img, -1);
     }
 
 
@@ -438,60 +422,10 @@ initialize_palette (void)
 }
 
 int
-main (int argc, char *argv[])
+main (int argc, const char *argv[])
 {
-    int i, n1 = 1, n2 = 0;
-    uint32_t crc = 0;
-    int verbose = getenv ("VERBOSE") != NULL;
-
     initialize_palette();
 
-    if (argc >= 3)
-    {
-	n1 = atoi (argv[1]);
-	n2 = atoi (argv[2]);
-    }
-    else if (argc >= 2)
-    {
-	n2 = atoi (argv[1]);
-    }
-    else
-    {
-	n1 = 1;
-	n2 = 2000000;
-    }
-
-    if (n2 < 0)
-    {
-	crc = test_composite (0, abs (n2), 1);
-	printf ("crc32=%08X\n", crc);
-    }
-    else
-    {
-	for (i = n1; i <= n2; i++)
-	{
-	    crc = test_composite (crc, i, 0);
-
-	    if (verbose)
-		printf ("%d: %08X\n", i, crc);
-	}
-	printf ("crc32=%08X\n", crc);
-
-	if (n2 == 2000000)
-	{
-	    /* Predefined value for running with all the fastpath functions
-	       disabled. It needs to be updated every time when changes are
-	       introduced to this program or behavior of pixman changes! */
-	    if (crc == 0x8F9F7DC1)
-	    {
-		printf ("blitters test passed\n");
-	    }
-	    else
-	    {
-		printf ("blitters test failed!\n");
-		return 1;
-	    }
-	}
-    }
-    return 0;
+    return fuzzer_test_main("blitters", 2000000, 0x2CFE57ED,
+			    test_composite, argc, argv);
 }
