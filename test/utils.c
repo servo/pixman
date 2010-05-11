@@ -286,6 +286,8 @@ fuzzer_test_main (const char *test_name,
 	n2 = default_number_of_iterations;
     }
 
+    #pragma omp parallel for reduction(+:checksum) default(none) \
+					shared(n1, n2, test_function, verbose)
     for (i = n1; i <= n2; i++)
     {
 	uint32_t crc = test_function (i, 0);

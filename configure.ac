@@ -77,6 +77,10 @@ AC_CHECK_FUNCS([getisax])
 AC_C_BIGENDIAN
 AC_C_INLINE
 
+# Check for OpenMP support (only supported by autoconf >=2.62)
+OPENMP_CFLAGS=
+m4_ifdef([AC_OPENMP], [AC_OPENMP], [AC_SUBST(OPENMP_CFLAGS)])
+
 AC_CHECK_SIZEOF(long)
 
 # Checks for Sun Studio compilers

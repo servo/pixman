@@ -7,6 +7,7 @@
  */
 
 extern uint32_t lcg_seed;
+#pragma omp threadprivate(lcg_seed)
 
 static inline uint32_t
 lcg_rand (void)
