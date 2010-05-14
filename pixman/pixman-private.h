@@ -421,6 +421,13 @@ typedef void (*pixman_combine_64_func_t) (pixman_implementation_t *imp,
 					  const uint64_t *         mask,
 					  int                      width);
 
+typedef void (*pixman_combine_float_func_t) (pixman_implementation_t *imp,
+					     pixman_op_t	      op,
+					     float *		      dest,
+					     const float *	      src,
+					     const float *	      mask,
+					     int		      n_pixels);
+
 typedef void (*pixman_composite_func_t) (pixman_implementation_t *imp,
 					 pixman_composite_info_t *info);
 typedef pixman_bool_t (*pixman_blt_func_t) (pixman_implementation_t *imp,
@@ -450,6 +457,7 @@ typedef pixman_bool_t (*pixman_iter_init_func_t) (pixman_implementation_t *imp,
 
 void _pixman_setup_combiner_functions_32 (pixman_implementation_t *imp);
 void _pixman_setup_combiner_functions_64 (pixman_implementation_t *imp);
+void _pixman_setup_combiner_functions_float (pixman_implementation_t *imp);
 
 typedef struct
 {
@@ -478,6 +486,8 @@ struct pixman_implementation_t
     pixman_combine_32_func_t	combine_32_ca[PIXMAN_N_OPERATORS];
     pixman_combine_64_func_t	combine_64[PIXMAN_N_OPERATORS];
     pixman_combine_64_func_t	combine_64_ca[PIXMAN_N_OPERATORS];
+    pixman_combine_float_func_t	combine_float[PIXMAN_N_OPERATORS];
+    pixman_combine_float_func_t	combine_float_ca[PIXMAN_N_OPERATORS];
 };
 
 uint32_t

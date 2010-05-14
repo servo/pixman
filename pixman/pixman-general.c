@@ -213,6 +213,7 @@ _pixman_implementation_create_general (void)
 
     _pixman_setup_combiner_functions_32 (imp);
     _pixman_setup_combiner_functions_64 (imp);
+    _pixman_setup_combiner_functions_float (imp);
 
     imp->src_iter_init = general_src_iter_init;
     imp->dest_iter_init = general_dest_iter_init;
