@@ -94,8 +94,7 @@ fetch_scanline_a8r8g8b8 (pixman_image_t *image,
                          int             y,
                          int             width,
                          uint32_t *      buffer,
-                         const uint32_t *mask,
-                         uint32_t        mask_bits)
+                         const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     
@@ -110,8 +109,7 @@ fetch_scanline_x8r8g8b8 (pixman_image_t *image,
                          int             y,
                          int             width,
                          uint32_t *      buffer,
-                         const uint32_t *mask,
-                         uint32_t        mask_bits)
+                         const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     const uint32_t *pixel = (const uint32_t *)bits + x;
@@ -127,8 +125,7 @@ fetch_scanline_a8b8g8r8 (pixman_image_t *image,
                          int             y,
                          int             width,
                          uint32_t *      buffer,
-                         const uint32_t *mask,
-                         uint32_t        mask_bits)
+                         const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     const uint32_t *pixel = (uint32_t *)bits + x;
@@ -150,8 +147,7 @@ fetch_scanline_x8b8g8r8 (pixman_image_t *image,
                          int             y,
                          int             width,
                          uint32_t *      buffer,
-                         const uint32_t *mask,
-                         uint32_t        mask_bits)
+                         const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     const uint32_t *pixel = (uint32_t *)bits + x;
@@ -174,8 +170,7 @@ fetch_scanline_b8g8r8a8 (pixman_image_t *image,
                          int             y,
                          int             width,
                          uint32_t *      buffer,
-                         const uint32_t *mask,
-                         uint32_t        mask_bits)
+                         const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     const uint32_t *pixel = (uint32_t *)bits + x;
@@ -198,8 +193,7 @@ fetch_scanline_b8g8r8x8 (pixman_image_t *image,
                          int             y,
                          int             width,
                          uint32_t *      buffer,
-                         const uint32_t *mask,
-                         uint32_t        mask_bits)
+                         const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     const uint32_t *pixel = (uint32_t *)bits + x;
@@ -223,8 +217,7 @@ fetch_scanline_a2r10g10b10 (pixman_image_t *image,
                             int             y,
                             int             width,
                             uint32_t *      b,
-                            const uint32_t *mask,
-                            uint32_t        mask_bits)
+                            const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     const uint32_t *pixel = bits + x;
@@ -259,8 +252,7 @@ fetch_scanline_x2r10g10b10 (pixman_image_t *image,
                             int             y,
                             int             width,
                             uint32_t *      b,
-                            const uint32_t *mask,
-                            uint32_t        mask_bits)
+                            const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     const uint32_t *pixel = (uint32_t *)bits + x;
@@ -289,8 +281,7 @@ fetch_scanline_a2b10g10r10 (pixman_image_t *image,
                             int             y,
                             int             width,
                             uint32_t *      b,
-                            const uint32_t *mask,
-                            uint32_t        mask_bits)
+                            const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     const uint32_t *pixel = bits + x;
@@ -325,8 +316,7 @@ fetch_scanline_x2b10g10r10 (pixman_image_t *image,
                             int             y,
                             int             width,
                             uint32_t *      b,
-                            const uint32_t *mask,
-                            uint32_t        mask_bits)
+                            const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     const uint32_t *pixel = (uint32_t *)bits + x;
@@ -354,8 +344,7 @@ fetch_scanline_r8g8b8 (pixman_image_t *image,
                        int             y,
                        int             width,
                        uint32_t *      buffer,
-                       const uint32_t *mask,
-                       uint32_t        mask_bits)
+                       const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     const uint8_t *pixel = (const uint8_t *)bits + 3 * x;
@@ -385,8 +374,7 @@ fetch_scanline_b8g8r8 (pixman_image_t *image,
                        int             y,
                        int             width,
                        uint32_t *      buffer,
-                       const uint32_t *mask,
-                       uint32_t        mask_bits)
+                       const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     const uint8_t *pixel = (const uint8_t *)bits + 3 * x;
@@ -414,8 +402,7 @@ fetch_scanline_r5g6b5 (pixman_image_t *image,
                        int             y,
                        int             width,
                        uint32_t *      buffer,
-                       const uint32_t *mask,
-                       uint32_t        mask_bits)
+                       const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     const uint16_t *pixel = (const uint16_t *)bits + x;
@@ -441,8 +428,7 @@ fetch_scanline_b5g6r5 (pixman_image_t *image,
                        int             y,
                        int             width,
                        uint32_t *      buffer,
-                       const uint32_t *mask,
-                       uint32_t        mask_bits)
+                       const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     const uint16_t *pixel = (const uint16_t *)bits + x;
@@ -467,8 +453,7 @@ fetch_scanline_a1r5g5b5 (pixman_image_t *image,
                          int             y,
                          int             width,
                          uint32_t *      buffer,
-                         const uint32_t *mask,
-                         uint32_t        mask_bits)
+                         const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     const uint16_t *pixel = (const uint16_t *)bits + x;
@@ -494,8 +479,7 @@ fetch_scanline_x1r5g5b5 (pixman_image_t *image,
                          int             y,
                          int             width,
                          uint32_t *      buffer,
-                         const uint32_t *mask,
-                         uint32_t        mask_bits)
+                         const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     const uint16_t *pixel = (const uint16_t *)bits + x;
@@ -520,8 +504,7 @@ fetch_scanline_a1b5g5r5 (pixman_image_t *image,
                          int             y,
                          int             width,
                          uint32_t *      buffer,
-                         const uint32_t *mask,
-                         uint32_t        mask_bits)
+                         const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     const uint16_t *pixel = (const uint16_t *)bits + x;
@@ -547,8 +530,7 @@ fetch_scanline_x1b5g5r5 (pixman_image_t *image,
                          int             y,
                          int             width,
                          uint32_t *      buffer,
-                         const uint32_t *mask,
-                         uint32_t        mask_bits)
+                         const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     const uint16_t *pixel = (const uint16_t *)bits + x;
@@ -573,8 +555,7 @@ fetch_scanline_a4r4g4b4 (pixman_image_t *image,
                          int             y,
                          int             width,
                          uint32_t *      buffer,
-                         const uint32_t *mask,
-                         uint32_t        mask_bits)
+                         const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     const uint16_t *pixel = (const uint16_t *)bits + x;
@@ -600,8 +581,7 @@ fetch_scanline_x4r4g4b4 (pixman_image_t *image,
                          int             y,
                          int             width,
                          uint32_t *      buffer,
-                         const uint32_t *mask,
-                         uint32_t        mask_bits)
+                         const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     const uint16_t *pixel = (const uint16_t *)bits + x;
@@ -626,8 +606,7 @@ fetch_scanline_a4b4g4r4 (pixman_image_t *image,
                          int             y,
                          int             width,
                          uint32_t *      buffer,
-                         const uint32_t *mask,
-                         uint32_t        mask_bits)
+                         const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     const uint16_t *pixel = (const uint16_t *)bits + x;
@@ -653,8 +632,7 @@ fetch_scanline_x4b4g4r4 (pixman_image_t *image,
                          int             y,
                          int             width,
                          uint32_t *      buffer,
-                         const uint32_t *mask,
-                         uint32_t        mask_bits)
+                         const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     const uint16_t *pixel = (const uint16_t *)bits + x;
@@ -679,8 +657,7 @@ fetch_scanline_a8 (pixman_image_t *image,
                    int             y,
                    int             width,
                    uint32_t *      buffer,
-                   const uint32_t *mask,
-                   uint32_t        mask_bits)
+                   const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     const uint8_t *pixel = (const uint8_t *)bits + x;
@@ -696,8 +673,7 @@ fetch_scanline_r3g3b2 (pixman_image_t *image,
                        int             y,
                        int             width,
                        uint32_t *      buffer,
-                       const uint32_t *mask,
-                       uint32_t        mask_bits)
+                       const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     const uint8_t *pixel = (const uint8_t *)bits + x;
@@ -725,8 +701,7 @@ fetch_scanline_b2g3r3 (pixman_image_t *image,
                        int             y,
                        int             width,
                        uint32_t *      buffer,
-                       const uint32_t *mask,
-                       uint32_t        mask_bits)
+                       const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     const uint8_t *pixel = (const uint8_t *)bits + x;
@@ -762,8 +737,7 @@ fetch_scanline_a2r2g2b2 (pixman_image_t *image,
                          int             y,
                          int             width,
                          uint32_t *      buffer,
-                         const uint32_t *mask,
-                         uint32_t        mask_bits)
+                         const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     const uint8_t *pixel = (const uint8_t *)bits + x;
@@ -789,8 +763,7 @@ fetch_scanline_a2b2g2r2 (pixman_image_t *image,
                          int             y,
                          int             width,
                          uint32_t *      buffer,
-                         const uint32_t *mask,
-                         uint32_t        mask_bits)
+                         const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     const uint8_t *pixel = (const uint8_t *)bits + x;
@@ -816,8 +789,7 @@ fetch_scanline_c8 (pixman_image_t *image,
                    int             y,
                    int             width,
                    uint32_t *      buffer,
-                   const uint32_t *mask,
-                   uint32_t        mask_bits)
+                   const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     const pixman_indexed_t * indexed = image->bits.indexed;
@@ -838,8 +810,7 @@ fetch_scanline_x4a4 (pixman_image_t *image,
                      int             y,
                      int             width,
                      uint32_t *      buffer,
-                     const uint32_t *mask,
-                     uint32_t        mask_bits)
+                     const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     const uint8_t *pixel = (const uint8_t *)bits + x;
@@ -868,8 +839,7 @@ fetch_scanline_a4 (pixman_image_t *image,
                    int             y,
                    int             width,
                    uint32_t *      buffer,
-                   const uint32_t *mask,
-                   uint32_t        mask_bits)
+                   const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     int i;
@@ -890,8 +860,7 @@ fetch_scanline_r1g2b1 (pixman_image_t *image,
                        int             y,
                        int             width,
                        uint32_t *      buffer,
-                       const uint32_t *mask,
-                       uint32_t        mask_bits)
+                       const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     int i;
@@ -915,8 +884,7 @@ fetch_scanline_b1g2r1 (pixman_image_t *image,
                        int             y,
                        int             width,
                        uint32_t *      buffer,
-                       const uint32_t *mask,
-                       uint32_t        mask_bits)
+                       const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     int i;
@@ -940,8 +908,7 @@ fetch_scanline_a1r1g1b1 (pixman_image_t *image,
                          int             y,
                          int             width,
                          uint32_t *      buffer,
-                         const uint32_t *mask,
-                         uint32_t        mask_bits)
+                         const uint32_t *mask)
 {
     uint32_t a, r, g, b;
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
@@ -966,8 +933,7 @@ fetch_scanline_a1b1g1r1 (pixman_image_t *image,
                          int             y,
                          int             width,
                          uint32_t *      buffer,
-                         const uint32_t *mask,
-                         uint32_t        mask_bits)
+                         const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     int i;
@@ -992,8 +958,7 @@ fetch_scanline_c4 (pixman_image_t *image,
                    int             y,
                    int             width,
                    uint32_t *      buffer,
-                   const uint32_t *mask,
-                   uint32_t        mask_bits)
+                   const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     const pixman_indexed_t * indexed = image->bits.indexed;
@@ -1013,8 +978,7 @@ fetch_scanline_a1 (pixman_image_t *image,
                    int             y,
                    int             width,
                    uint32_t *      buffer,
-                   const uint32_t *mask,
-                   uint32_t        mask_bits)
+                   const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     int i;
@@ -1044,8 +1008,7 @@ fetch_scanline_g1 (pixman_image_t *image,
                    int             y,
                    int             width,
                    uint32_t *      buffer,
-                   const uint32_t *mask,
-                   uint32_t        mask_bits)
+                   const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
     const pixman_indexed_t * indexed = image->bits.indexed;
@@ -1073,8 +1036,7 @@ fetch_scanline_yuy2 (pixman_image_t *image,
                      int             line,
                      int             width,
                      uint32_t *      buffer,
-                     const uint32_t *mask,
-                     uint32_t        mask_bits)
+                     const uint32_t *mask)
 {
     const uint32_t *bits = image->bits.bits + image->bits.rowstride * line;
     int i;
@@ -1108,8 +1070,7 @@ fetch_scanline_yv12 (pixman_image_t *image,
                      int             line,
                      int             width,
                      uint32_t *      buffer,
-                     const uint32_t *mask,
-                     uint32_t        mask_bits)
+                     const uint32_t *mask)
 {
     YV12_SETUP (image);
     uint8_t *y_line = YV12_Y (line);
@@ -2684,13 +2645,12 @@ fetch_scanline_generic_64 (pixman_image_t *image,
                            int             y,
                            int             width,
                            uint32_t *      buffer,
-                           const uint32_t *mask,
-                           uint32_t        mask_bits)
+                           const uint32_t *mask)
 {
     /* Fetch the pixels into the first half of buffer and then expand them in
      * place.
      */
-    image->bits.fetch_scanline_raw_32 (image, x, y, width, buffer, NULL, 0);
+    image->bits.fetch_scanline_raw_32 (image, x, y, width, buffer, NULL);
     
     pixman_expand ((uint64_t *)buffer, buffer, image->bits.format, width);
 }

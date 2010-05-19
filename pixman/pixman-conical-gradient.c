@@ -38,8 +38,7 @@ conical_gradient_get_scanline_32 (pixman_image_t *image,
                                   int             y,
                                   int             width,
                                   uint32_t *      buffer,
-                                  const uint32_t *mask,
-                                  uint32_t        mask_bits)
+                                  const uint32_t *mask)
 {
     source_image_t *source = (source_image_t *)image;
     gradient_t *gradient = (gradient_t *)source;
@@ -91,7 +90,7 @@ conical_gradient_get_scanline_32 (pixman_image_t *image,
 	{
 	    double angle;
 
-	    if (!mask || *mask++ & mask_bits)
+	    if (!mask || *mask++)
 	    {
 		pixman_fixed_48_16_t t;
 
@@ -114,7 +113,7 @@ conical_gradient_get_scanline_32 (pixman_image_t *image,
 	    double x, y;
 	    double angle;
 
-	    if (!mask || *mask++ & mask_bits)
+	    if (!mask || *mask++)
 	    {
 		pixman_fixed_48_16_t t;
 
