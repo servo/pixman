@@ -388,6 +388,7 @@ generate_composite_function \
     vld1.16     {d4, d5}, [DST_R, :128]!
     vst1.16     {d28, d29}, [DST_W, :128]!
     pixman_composite_over_n_0565_process_pixblock_head
+    cache_preload 8, 8
 .endm
 
 .macro pixman_composite_over_n_0565_init
@@ -710,6 +711,7 @@ generate_composite_function_single_scanline \
     vld4.8      {d4, d5, d6, d7}, [DST_R, :128]!
     vst4.8      {d28, d29, d30, d31}, [DST_W, :128]!
     pixman_composite_over_8888_8888_process_pixblock_head
+    cache_preload 8, 8
 .endm
 
 .macro pixman_composite_over_n_8888_init
