@@ -56,6 +56,14 @@
 
 /* Fetch macros */
 
+#ifdef WORDS_BIGENDIAN
+#define FETCH_1(img,l,o)						\
+    (((READ ((img), ((uint32_t *)(l)) + ((o) >> 5))) >> (0x1f - ((o) & 0x1f))) & 0x1)
+#else
+#define FETCH_1(img,l,o)						\
+    ((((READ ((img), ((uint32_t *)(l)) + ((o) >> 5))) >> ((o) & 0x1f))) & 0x1)
+#endif
+
 #define FETCH_8(img,l,o)    (READ (img, (((uint8_t *)(l)) + ((o) >> 3))))
 
 #ifdef WORDS_BIGENDIAN
@@ -79,6 +87,34 @@
 #endif
 
 /* Store macros */
+
+#ifdef WORDS_BIGENDIAN
+#define STORE_1(img,l,o,v)						\
+    do									\
+    {									\
+	uint32_t  *__d = ((uint32_t *)(l)) + ((o) >> 5);		\
+	uint32_t __m, __v;						\
+									\
+	__m = 1 << (0x1f - ((o) & 0x1f));				\
+	__v = (v)? __m : 0;						\
+									\
+	WRITE((img), __d, (READ((img), __d) & ~__m) | __v);		\
+    }									\
+    while (0)
+#else
+#define STORE_1(img,l,o,v)						\
+    do									\
+    {									\
+	uint32_t  *__d = ((uint32_t *)(l)) + ((o) >> 5);		\
+	uint32_t __m, __v;						\
+									\
+	__m = 1 << ((o) & 0x1f);					\
+	__v = (v)? __m : 0;						\
+									\
+	WRITE((img), __d, (READ((img), __d) & ~__m) | __v);		\
+    }									\
+    while (0)
+#endif
 
 #define STORE_8(img,l,o,v)  (WRITE (img, (uint8_t *)(l) + ((o) >> 3), (v)))
 
@@ -128,7 +164,7 @@
 	WRITE ((img), __tmp++, ((v) & 0x000000ff) >>  0);	       \
 	WRITE ((img), __tmp++, ((v) & 0x0000ff00) >>  8);	       \
 	WRITE ((img), __tmp++, ((v) & 0x00ff0000) >> 16);	       \
-    }                                                                  \
+    }								       \
     while (0)
 #endif
 
@@ -286,6 +322,10 @@ fetch_and_convert_pixel (pixman_image_t	*	image,
 
     switch (PIXMAN_FORMAT_BPP (format))
     {
+    case 1:
+	pixel = FETCH_1 (image, bits, offset);
+	break;
+
     case 4:
 	pixel = FETCH_4 (image, bits, offset);
 	break;
@@ -325,6 +365,10 @@ convert_and_store_pixel (bits_image_t *		image,
 
     switch (PIXMAN_FORMAT_BPP (format))
     {
+    case 1:
+	STORE_1 (image, dest, offset, converted & 0x01);
+	break;
+
     case 4:
 	STORE_4 (image, dest, offset, converted & 0xf);
 	break;
@@ -435,6 +479,7 @@ MAKE_ACCESSORS(r1g2b1);
 MAKE_ACCESSORS(b1g2r1);
 MAKE_ACCESSORS(a1r1g1b1);
 MAKE_ACCESSORS(a1b1g1r1);
+MAKE_ACCESSORS(a1);
 
 /********************************** Fetch ************************************/
 
@@ -604,36 +649,6 @@ fetch_scanline_c4 (pixman_image_t *image,
 	uint32_t p = FETCH_4 (image, bits, i + x);
 	
 	*buffer++ = indexed->rgba[p];
-    }
-}
-
-static void
-fetch_scanline_a1 (pixman_image_t *image,
-                   int             x,
-                   int             y,
-                   int             width,
-                   uint32_t *      buffer,
-                   const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	uint32_t p = READ (image, bits + ((i + x) >> 5));
-	uint32_t a;
-	
-#ifdef WORDS_BIGENDIAN
-	a = p >> (0x1f - ((i + x) & 0x1f));
-#else
-	a = p >> ((i + x) & 0x1f);
-#endif
-	a = a & 1;
-	a |= a << 1;
-	a |= a << 2;
-	a |= a << 4;
-	
-	*buffer++ = a << 24;
     }
 }
 
@@ -848,28 +863,6 @@ fetch_pixel_c4 (bits_image_t *image,
     const pixman_indexed_t * indexed = image->indexed;
 
     return indexed->rgba[pixel];
-}
-
-static uint32_t
-fetch_pixel_a1 (bits_image_t *image,
-		int           offset,
-		int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t pixel = READ (image, bits + (offset >> 5));
-    uint32_t a;
-    
-#ifdef WORDS_BIGENDIAN
-    a = pixel >> (0x1f - (offset & 0x1f));
-#else
-    a = pixel >> (offset & 0x1f);
-#endif
-    a = a & 1;
-    a |= a << 1;
-    a |= a << 2;
-    a |= a << 4;
-    
-    return a << 24;
 }
 
 static uint32_t
@@ -1104,32 +1097,6 @@ store_scanline_g4 (bits_image_t *  image,
 	
 	pixel = RGB24_TO_ENTRY_Y (indexed, values[i]);
 	STORE_4 (image, bits, i + x, pixel);
-    }
-}
-
-static void
-store_scanline_a1 (bits_image_t *  image,
-                   int             x,
-                   int             y,
-                   int             width,
-                   const uint32_t *values)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	uint32_t  *pixel = ((uint32_t *) bits) + ((i + x) >> 5);
-	uint32_t mask, v;
-	
-#ifdef WORDS_BIGENDIAN
-	mask = 1 << (0x1f - ((i + x) & 0x1f));
-#else
-	mask = 1 << ((i + x) & 0x1f);
-#endif
-	v = values[i] & 0x80000000 ? mask : 0;
-	
-	WRITE (image, pixel, (READ (image, pixel) & ~mask) | v);
     }
 }
 
