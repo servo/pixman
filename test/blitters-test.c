@@ -426,6 +426,6 @@ main (int argc, const char *argv[])
 {
     initialize_palette();
 
-    return fuzzer_test_main("blitters", 2000000, 0x2CFE57ED,
+    return fuzzer_test_main("blitters", 2000000, 0xF3A16994,
 			    test_composite, argc, argv);
 }

@@ -2601,7 +2601,7 @@ store_scanline_g1 (bits_image_t *  image,
 #else
 	mask = 1 << ((i + x) & 0x1f);
 #endif
-	v = RGB24_TO_ENTRY_Y (indexed, values[i]) ? mask : 0;
+	v = RGB24_TO_ENTRY_Y (indexed, values[i]) & 0x1 ? mask : 0;
 	
 	WRITE (image, pixel, (READ (image, pixel) & ~mask) | v);
     }
