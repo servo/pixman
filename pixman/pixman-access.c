@@ -2385,6 +2385,22 @@ store_scanline_c8 (bits_image_t *  image,
 }
 
 static void
+store_scanline_g8 (bits_image_t *  image,
+                   int             x,
+                   int             y,
+                   int             width,
+                   const uint32_t *values)
+{
+    uint32_t *bits = image->bits + image->rowstride * y;
+    uint8_t *pixel = ((uint8_t *) bits) + x;
+    const pixman_indexed_t *indexed = image->indexed;
+    int i;
+
+    for (i = 0; i < width; ++i)
+	WRITE (image, pixel++, RGB24_TO_ENTRY_Y (indexed,values[i]));
+}
+
+static void
 store_scanline_x4a4 (bits_image_t *  image,
                      int             x,
                      int             y,
@@ -2550,6 +2566,26 @@ store_scanline_c4 (bits_image_t *  image,
 	uint32_t pixel;
 	
 	pixel = RGB24_TO_ENTRY (indexed, values[i]);
+	STORE_4 (image, bits, i + x, pixel);
+    }
+}
+
+static void
+store_scanline_g4 (bits_image_t *  image,
+                   int             x,
+                   int             y,
+                   int             width,
+                   const uint32_t *values)
+{
+    uint32_t *bits = image->bits + image->rowstride * y;
+    const pixman_indexed_t *indexed = image->indexed;
+    int i;
+    
+    for (i = 0; i < width; ++i)
+    {
+	uint32_t pixel;
+	
+	pixel = RGB24_TO_ENTRY_Y (indexed, values[i]);
 	STORE_4 (image, bits, i + x, pixel);
     }
 }
@@ -2746,7 +2782,6 @@ static const format_info_t accessors[] =
     
 #define fetch_scanline_g8 fetch_scanline_c8
 #define fetch_pixel_g8 fetch_pixel_c8
-#define store_scanline_g8 store_scanline_c8
     FORMAT_INFO (g8),
     
 #define fetch_scanline_x4c4 fetch_scanline_c8
@@ -2756,7 +2791,7 @@ static const format_info_t accessors[] =
     
 #define fetch_scanline_x4g4 fetch_scanline_c8
 #define fetch_pixel_x4g4 fetch_pixel_c8
-#define store_scanline_x4g4 store_scanline_c8
+#define store_scanline_x4g4 store_scanline_g8
     FORMAT_INFO (x4g4),
     
     FORMAT_INFO (x4a4),
@@ -2772,7 +2807,6 @@ static const format_info_t accessors[] =
     
 #define fetch_scanline_g4 fetch_scanline_c4
 #define fetch_pixel_g4 fetch_pixel_c4
-#define store_scanline_g4 store_scanline_c4
     FORMAT_INFO (g4),
     
 /* 1bpp formats */
