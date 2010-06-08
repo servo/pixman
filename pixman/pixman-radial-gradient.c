@@ -330,8 +330,6 @@ pixman_image_create_radial_gradient (pixman_point_fixed_t *        inner,
     pixman_image_t *image;
     radial_gradient_t *radial;
 
-    return_val_if_fail (n_stops >= 2, NULL);
-
     image = _pixman_image_allocate ();
 
     if (!image)

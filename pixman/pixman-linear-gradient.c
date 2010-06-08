@@ -265,8 +265,6 @@ pixman_image_create_linear_gradient (pixman_point_fixed_t *        p1,
     pixman_image_t *image;
     linear_gradient_t *linear;
 
-    return_val_if_fail (n_stops >= 2, NULL);
-
     image = _pixman_image_allocate ();
 
     if (!image)
