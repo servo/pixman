@@ -10,6 +10,7 @@ TESTPROGRAMS =			\
 	fetch-test		\
 	oob-test		\
 	window-test		\
+	gradient-crash-test	\
 	trap-crasher		\
 	alphamap		\
 	blitters-test		\
@@ -19,6 +20,7 @@ TESTPROGRAMS =			\
 a1_trap_test_LDADD = $(TEST_LDADD)
 fetch_test_LDADD = $(TEST_LDADD)
 composite_LDADD = $(TEST_LDADD)
+gradient_crash_test_LDADD = $(TEST_LDADD)
 trap_crasher_LDADD = $(TEST_LDADD)
 oob_test_LDADD = $(TEST_LDADD)
 window_test_LDADD = $(TEST_LDADD)
