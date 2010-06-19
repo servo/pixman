@@ -32,6 +32,24 @@
 #include <math.h>
 #include "pixman-private.h"
 
+static force_inline double
+coordinates_to_parameter (double x, double y, double angle)
+{
+    double t;
+
+    t = atan2 (y, x) + angle;
+
+    while (t < 0)
+	t += 2 * M_PI;
+
+    while (t >= 2 * M_PI)
+	t -= 2 * M_PI;
+
+    return 1 - t * (1 / (2 * M_PI)); /* Scale t to [0, 1] and
+				      * make rotation CCW
+				      */
+}
+
 static void
 conical_gradient_get_scanline_32 (pixman_image_t *image,
                                   int             x,
@@ -52,7 +70,7 @@ conical_gradient_get_scanline_32 (pixman_image_t *image,
     double rx = x + 0.5;
     double ry = y + 0.5;
     double rz = 1.;
-    double a = (conical->angle * M_PI) / (180. * 65536);
+    double a = pixman_fixed_to_double ((conical->angle * M_PI) / 180.0);
 
     _pixman_gradient_walker_init (&walker, gradient, source->common.repeat);
 
@@ -71,11 +89,11 @@ conical_gradient_get_scanline_32 (pixman_image_t *image,
 	cx = source->common.transform->matrix[0][0] / 65536.;
 	cy = source->common.transform->matrix[1][0] / 65536.;
 	cz = source->common.transform->matrix[2][0] / 65536.;
-	
+
 	rx = v.vector[0] / 65536.;
 	ry = v.vector[1] / 65536.;
 	rz = v.vector[2] / 65536.;
-	
+
 	affine =
 	    source->common.transform->matrix[2][0] == 0 &&
 	    v.vector[2] == pixman_fixed_1;
@@ -88,20 +106,16 @@ conical_gradient_get_scanline_32 (pixman_image_t *image,
 
 	while (buffer < end)
 	{
-	    double angle;
-
 	    if (!mask || *mask++)
 	    {
-		pixman_fixed_48_16_t t;
+		double t = coordinates_to_parameter (rx, ry, a);
 
-		angle = atan2 (ry, rx) + a;
-		t     = (pixman_fixed_48_16_t) (angle * (65536. / (2 * M_PI)));
-
-		*buffer = _pixman_gradient_walker_pixel (&walker, t);
+		*buffer = _pixman_gradient_walker_pixel (
+		    &walker, (pixman_fixed_48_16_t)pixman_double_to_fixed (t));
 	    }
 
 	    ++buffer;
-	    
+
 	    rx += cx;
 	    ry += cy;
 	}
@@ -111,11 +125,10 @@ conical_gradient_get_scanline_32 (pixman_image_t *image,
 	while (buffer < end)
 	{
 	    double x, y;
-	    double angle;
 
 	    if (!mask || *mask++)
 	    {
-		pixman_fixed_48_16_t t;
+		double t;
 
 		if (rz != 0)
 		{
@@ -129,15 +142,15 @@ conical_gradient_get_scanline_32 (pixman_image_t *image,
 
 		x -= conical->center.x / 65536.;
 		y -= conical->center.y / 65536.;
-		
-		angle = atan2 (y, x) + a;
-		t     = (pixman_fixed_48_16_t) (angle * (65536. / (2 * M_PI)));
 
-		*buffer = _pixman_gradient_walker_pixel (&walker, t);
+		t = coordinates_to_parameter (x, y, a);
+
+		*buffer = _pixman_gradient_walker_pixel (
+		    &walker, (pixman_fixed_48_16_t)pixman_double_to_fixed (t));
 	    }
 
 	    ++buffer;
-	    
+
 	    rx += cx;
 	    ry += cy;
 	    rz += cz;
@@ -174,7 +187,7 @@ pixman_image_create_conical_gradient (pixman_point_fixed_t *        center,
 
     image->type = CONICAL;
     conical->center = *center;
-    conical->angle = angle;
+    conical->angle = MOD (angle, 360 << 16);
 
     image->common.property_changed = conical_gradient_property_changed;
 
