@@ -161,7 +161,7 @@ struct conical_gradient
 {
     gradient_t           common;
     pixman_point_fixed_t center;
-    pixman_fixed_t       angle;
+    double		 angle;
 };
 
 struct bits_image
