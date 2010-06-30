@@ -72,9 +72,9 @@
 /* TLS */
 #if defined(PIXMAN_NO_TLS)
 
-#   define PIXMAN_DEFINE_THREAD_LOCAL(type, name)            \
+#   define PIXMAN_DEFINE_THREAD_LOCAL(type, name)			\
     static type name
-#   define PIXMAN_GET_THREAD_LOCAL(name)                \
+#   define PIXMAN_GET_THREAD_LOCAL(name)				\
     (&name)
 
 #elif defined(TOOLCHAIN_SUPPORTS__THREAD)
@@ -165,9 +165,16 @@ extern __stdcall int ReleaseMutex (void *);
     static pthread_key_t tls_ ## name ## _key;				\
 									\
     static void								\
+    tls_ ## name ## _destroy_value (void *value)			\
+    {									\
+	free (value);							\
+    }									\
+									\
+    static void								\
     tls_ ## name ## _make_key (void)					\
     {									\
-	pthread_key_create (&tls_ ## name ## _key, NULL);		\
+	pthread_key_create (&tls_ ## name ## _key,			\
+			    tls_ ## name ## _destroy_value);		\
     }									\
 									\
     static type *							\
