@@ -179,10 +179,6 @@ struct bits_image
     fetch_pixel_32_t	       fetch_pixel_raw_32;
     fetch_pixel_64_t	       fetch_pixel_raw_64;
 
-    /* Fetch a pixel, taking alpha maps into account */
-    fetch_pixel_32_t	       fetch_pixel_32;
-    fetch_pixel_64_t	       fetch_pixel_64;
-
     /* Fetch raw scanlines, with no regard for transformations, alpha maps etc. */
     fetch_scanline_t           fetch_scanline_raw_32;
     fetch_scanline_t           fetch_scanline_raw_64;

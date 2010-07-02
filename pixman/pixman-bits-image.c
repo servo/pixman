@@ -96,38 +96,47 @@ _pixman_image_store_scanline_64 (bits_image_t *  image,
 /* Fetch functions */
 
 static uint32_t
-bits_image_fetch_pixel_alpha (bits_image_t *image, int x, int y)
+fetch_pixel_general (bits_image_t *image, int x, int y, pixman_bool_t check_bounds)
 {
     uint32_t pixel;
-    uint32_t pixel_a;
+
+    if (check_bounds &&
+	(x < 0 || x >= image->width || y < 0 || y >= image->height))
+    {
+	return 0;
+    }
 
     pixel = image->fetch_pixel_raw_32 (image, x, y);
 
-    assert (image->common.alpha_map);
-
-    x -= image->common.alpha_origin_x;
-    y -= image->common.alpha_origin_y;
-
-    if (x < 0 || x >= image->common.alpha_map->width ||
-	y < 0 || y >= image->common.alpha_map->height)
+    if (image->common.alpha_map)
     {
-	pixel_a = 0;
-    }
-    else
-    {
-	pixel_a = image->common.alpha_map->fetch_pixel_raw_32 (
-	    image->common.alpha_map, x, y);
-	pixel_a = ALPHA_8 (pixel_a);
-    }
+	uint32_t pixel_a;
 
-    pixel &= 0x00ffffff;
-    pixel |= (pixel_a << 24);
+	x -= image->common.alpha_origin_x;
+	y -= image->common.alpha_origin_y;
+
+	if (x < 0 || x >= image->common.alpha_map->width ||
+	    y < 0 || y >= image->common.alpha_map->height)
+	{
+	    pixel_a = 0;
+	}
+	else
+	{
+	    pixel_a = image->common.alpha_map->fetch_pixel_raw_32 (
+		image->common.alpha_map, x, y);
+
+	    pixel_a = ALPHA_8 (pixel_a);
+	}
+
+	pixel &= 0x00ffffff;
+	pixel |= (pixel_a << 24);
+    }
 
     return pixel;
 }
 
 static force_inline uint32_t
-get_pixel (bits_image_t *image, int x, int y, pixman_bool_t check_bounds)
+fetch_pixel_no_alpha (bits_image_t *image, int x, int y, pixman_bool_t check_bounds)
 {
     if (check_bounds &&
 	(x < 0 || x >= image->width || y < 0 || y >= image->height))
@@ -135,8 +144,11 @@ get_pixel (bits_image_t *image, int x, int y, pixman_bool_t check_bounds)
 	return 0;
     }
 
-    return image->fetch_pixel_32 (image, x, y);
+    return image->fetch_pixel_raw_32 (image, x, y);
 }
+
+typedef uint32_t (* get_pixel_t) (bits_image_t *image,
+				  int x, int y, pixman_bool_t check_bounds);
 
 static force_inline void
 repeat (pixman_repeat_t repeat, int size, int *coord)
@@ -169,7 +181,8 @@ repeat (pixman_repeat_t repeat, int size, int *coord)
 static force_inline uint32_t
 bits_image_fetch_pixel_nearest (bits_image_t   *image,
 				pixman_fixed_t  x,
-				pixman_fixed_t  y)
+				pixman_fixed_t  y,
+				get_pixel_t	get_pixel)
 {
     int x0 = pixman_fixed_to_int (x - pixman_fixed_e);
     int y0 = pixman_fixed_to_int (y - pixman_fixed_e);
@@ -281,7 +294,8 @@ bilinear_interpolation (uint32_t tl, uint32_t tr,
 static force_inline uint32_t
 bits_image_fetch_pixel_bilinear (bits_image_t   *image,
 				 pixman_fixed_t  x,
-				 pixman_fixed_t  y)
+				 pixman_fixed_t  y,
+				 get_pixel_t	 get_pixel)
 {
     pixman_repeat_t repeat_mode = image->common.repeat;
     int width = image->width;
@@ -538,7 +552,8 @@ bits_image_fetch_bilinear_no_repeat_8888 (pixman_image_t * ima,
 static force_inline uint32_t
 bits_image_fetch_pixel_convolution (bits_image_t   *image,
 				    pixman_fixed_t  x,
-				    pixman_fixed_t  y)
+				    pixman_fixed_t  y,
+				    get_pixel_t     get_pixel)
 {
     pixman_fixed_t *params = image->common.filter_params;
     int x_off = (params[0] - pixman_fixed_1) >> 1;
@@ -611,23 +626,24 @@ bits_image_fetch_pixel_convolution (bits_image_t   *image,
 static force_inline uint32_t
 bits_image_fetch_pixel_filtered (bits_image_t *image,
 				 pixman_fixed_t x,
-				 pixman_fixed_t y)
+				 pixman_fixed_t y,
+				 get_pixel_t    get_pixel)
 {
     switch (image->common.filter)
     {
     case PIXMAN_FILTER_NEAREST:
     case PIXMAN_FILTER_FAST:
-	return bits_image_fetch_pixel_nearest (image, x, y);
+	return bits_image_fetch_pixel_nearest (image, x, y, get_pixel);
 	break;
 
     case PIXMAN_FILTER_BILINEAR:
     case PIXMAN_FILTER_GOOD:
     case PIXMAN_FILTER_BEST:
-	return bits_image_fetch_pixel_bilinear (image, x, y);
+	return bits_image_fetch_pixel_bilinear (image, x, y, get_pixel);
 	break;
 
     case PIXMAN_FILTER_CONVOLUTION:
-	return bits_image_fetch_pixel_convolution (image, x, y);
+	return bits_image_fetch_pixel_convolution (image, x, y, get_pixel);
 	break;
 
     default:
@@ -684,7 +700,7 @@ bits_image_fetch_transformed (pixman_image_t * image,
 	    if (!mask || mask[i])
 	    {
 		buffer[i] =
-		    bits_image_fetch_pixel_filtered (&image->bits, x, y);
+		    bits_image_fetch_pixel_filtered (&image->bits, x, y, fetch_pixel_general);
 	    }
 
 	    x += ux;
@@ -711,7 +727,7 @@ bits_image_fetch_transformed (pixman_image_t * image,
 		}
 
 		buffer[i] =
-		    bits_image_fetch_pixel_filtered (&image->bits, x0, y0);
+		    bits_image_fetch_pixel_filtered (&image->bits, x0, y0, fetch_pixel_general);
 	    }
 
 	    x += ux;
@@ -885,16 +901,12 @@ bits_image_property_changed (pixman_image_t *image)
 
     _pixman_bits_image_setup_raw_accessors (bits);
 
-    image->bits.fetch_pixel_32 = image->bits.fetch_pixel_raw_32;
-
     if (bits->common.alpha_map)
     {
 	image->common.get_scanline_64 =
 	    _pixman_image_get_scanline_generic_64;
 	image->common.get_scanline_32 =
 	    bits_image_fetch_transformed;
-
-	image->bits.fetch_pixel_32 = bits_image_fetch_pixel_alpha;
     }
     else if ((bits->common.repeat != PIXMAN_REPEAT_NONE) &&
              bits->width == 1 &&
