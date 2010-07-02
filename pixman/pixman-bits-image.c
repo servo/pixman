@@ -906,62 +906,88 @@ bits_image_fetch_untransformed_64 (pixman_image_t * image,
     }
 }
 
+typedef struct
+{
+    pixman_format_code_t	format;
+    uint32_t			flags;
+    fetch_scanline_t		fetch_32;
+    fetch_scanline_t		fetch_64;
+} fetcher_info_t;
+
+static const fetcher_info_t fetcher_info[] =
+{
+    { PIXMAN_solid,
+      FAST_PATH_NO_ALPHA_MAP,
+      bits_image_fetch_solid_32,
+      bits_image_fetch_solid_64
+    },
+
+    { PIXMAN_any,
+      (FAST_PATH_NO_ALPHA_MAP			|
+       FAST_PATH_ID_TRANSFORM			|
+       FAST_PATH_NO_CONVOLUTION_FILTER		|
+       FAST_PATH_NO_PAD_REPEAT			|
+       FAST_PATH_NO_REFLECT_REPEAT),
+      bits_image_fetch_untransformed_32,
+      bits_image_fetch_untransformed_64
+    },
+
+#define FAST_BILINEAR_FLAGS						\
+    (FAST_PATH_NO_ALPHA_MAP		|				\
+     FAST_PATH_NO_ACCESSORS		|				\
+     FAST_PATH_HAS_TRANSFORM		|				\
+     FAST_PATH_AFFINE_TRANSFORM		|				\
+     FAST_PATH_X_UNIT_POSITIVE		|				\
+     FAST_PATH_Y_UNIT_ZERO		|				\
+     FAST_PATH_NONE_REPEAT		|				\
+     FAST_PATH_BILINEAR_FILTER)
+
+    { PIXMAN_a8r8g8b8,
+      FAST_BILINEAR_FLAGS,
+      bits_image_fetch_bilinear_no_repeat_8888,
+      _pixman_image_get_scanline_generic_64
+    },
+
+    { PIXMAN_x8r8g8b8,
+      FAST_BILINEAR_FLAGS,
+      bits_image_fetch_bilinear_no_repeat_8888,
+      _pixman_image_get_scanline_generic_64
+    },
+
+    { PIXMAN_any,
+      (FAST_PATH_NO_ALPHA_MAP |
+       FAST_PATH_HAS_TRANSFORM |
+       FAST_PATH_AFFINE_TRANSFORM),
+      bits_image_fetch_affine_no_alpha,
+      _pixman_image_get_scanline_generic_64
+    },
+
+    { PIXMAN_any, 0, bits_image_fetch_general, _pixman_image_get_scanline_generic_64 },
+
+    { PIXMAN_null },
+};
+
 static void
 bits_image_property_changed (pixman_image_t *image)
 {
-    bits_image_t *bits = (bits_image_t *)image;
+    uint32_t flags = image->common.flags;
+    pixman_format_code_t format = image->common.extended_format_code;
+    const fetcher_info_t *info;
 
-    _pixman_bits_image_setup_accessors (bits);
+    _pixman_bits_image_setup_accessors (&image->bits);
 
-    if (bits->common.alpha_map)
+    info = fetcher_info;
+    while (info->format != PIXMAN_null)
     {
-	image->common.get_scanline_64 = _pixman_image_get_scanline_generic_64;
-	image->common.get_scanline_32 = bits_image_fetch_general;
-    }
-    else if ((bits->common.repeat != PIXMAN_REPEAT_NONE) &&
-             bits->width == 1 &&
-             bits->height == 1)
-    {
-	image->common.get_scanline_64 = bits_image_fetch_solid_64;
-	image->common.get_scanline_32 = bits_image_fetch_solid_32;
-    }
-    else if (!bits->common.transform &&
-             bits->common.filter != PIXMAN_FILTER_CONVOLUTION &&
-             (bits->common.repeat == PIXMAN_REPEAT_NONE ||
-              bits->common.repeat == PIXMAN_REPEAT_NORMAL))
-    {
-	image->common.get_scanline_64 = bits_image_fetch_untransformed_64;
-	image->common.get_scanline_32 = bits_image_fetch_untransformed_32;
-    }
-    else if (bits->common.transform					&&
-	     bits->common.transform->matrix[2][0] == 0			&&
-	     bits->common.transform->matrix[2][1] == 0			&&
-	     bits->common.transform->matrix[2][2] == pixman_fixed_1	&&
-	     bits->common.transform->matrix[0][0] > 0			&&
-	     bits->common.transform->matrix[1][0] == 0			&&
-	     !bits->read_func						&&
-	     (bits->common.filter == PIXMAN_FILTER_BILINEAR ||
-	      bits->common.filter == PIXMAN_FILTER_GOOD	    ||
-	      bits->common.filter == PIXMAN_FILTER_BEST)		&&
-	     bits->common.repeat == PIXMAN_REPEAT_NONE			&&
-	     (bits->format == PIXMAN_a8r8g8b8	||
-	      bits->format == PIXMAN_x8r8g8b8))
-    {
-	image->common.get_scanline_64 = _pixman_image_get_scanline_generic_64;
-	image->common.get_scanline_32 = bits_image_fetch_bilinear_no_repeat_8888;
-    }
-    else if (bits->common.transform					&&
-	     bits->common.transform->matrix[2][0] == 0			&&
-	     bits->common.transform->matrix[2][1] == 0			&&
-	     bits->common.transform->matrix[2][2] == pixman_fixed_1)
-    {
-	image->common.get_scanline_64 = _pixman_image_get_scanline_generic_64;
-	image->common.get_scanline_32 = bits_image_fetch_affine_no_alpha;
-    }
-    else
-    {
-	image->common.get_scanline_64 = _pixman_image_get_scanline_generic_64;
-	image->common.get_scanline_32 = bits_image_fetch_general;
+	if ((info->format == format || info->format == PIXMAN_any)	&&
+	    (info->flags & flags) == info->flags)
+	{
+	    image->common.get_scanline_32 = info->fetch_32;
+	    image->common.get_scanline_64 = info->fetch_64;
+	    break;
+	}
+
+	info++;
     }
 }
 
