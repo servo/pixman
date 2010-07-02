@@ -36,13 +36,12 @@
 #include "pixman-combine32.h"
 
 /* Store functions */
-
-static void
-bits_image_store_scanline_32 (bits_image_t *  image,
-                              int             x,
-                              int             y,
-                              int             width,
-                              const uint32_t *buffer)
+void
+_pixman_image_store_scanline_32 (bits_image_t *  image,
+                                 int             x,
+                                 int             y,
+                                 int             width,
+                                 const uint32_t *buffer)
 {
     image->store_scanline_raw_32 (image, x, y, width, buffer);
 
@@ -51,36 +50,9 @@ bits_image_store_scanline_32 (bits_image_t *  image,
 	x -= image->common.alpha_origin_x;
 	y -= image->common.alpha_origin_y;
 
-	image->common.alpha_map->store_scanline_raw_32 (image->common.alpha_map, x, y, width, buffer);
+	image->common.alpha_map->store_scanline_raw_32 (
+	    image->common.alpha_map, x, y, width, buffer);
     }
-}
-
-static void
-bits_image_store_scanline_64 (bits_image_t *  image,
-                              int             x,
-                              int             y,
-                              int             width,
-                              const uint32_t *buffer)
-{
-    image->store_scanline_raw_64 (image, x, y, width, buffer);
-
-    if (image->common.alpha_map)
-    {
-	x -= image->common.alpha_origin_x;
-	y -= image->common.alpha_origin_y;
-
-	image->common.alpha_map->store_scanline_raw_64 (image->common.alpha_map, x, y, width, buffer);
-    }
-}
-
-void
-_pixman_image_store_scanline_32 (bits_image_t *  image,
-                                 int             x,
-                                 int             y,
-                                 int             width,
-                                 const uint32_t *buffer)
-{
-    image->store_scanline_32 (image, x, y, width, buffer);
 }
 
 void
@@ -90,7 +62,16 @@ _pixman_image_store_scanline_64 (bits_image_t *  image,
                                  int             width,
                                  const uint32_t *buffer)
 {
-    image->store_scanline_64 (image, x, y, width, buffer);
+    image->store_scanline_raw_64 (image, x, y, width, buffer);
+
+    if (image->common.alpha_map)
+    {
+	x -= image->common.alpha_origin_x;
+	y -= image->common.alpha_origin_y;
+
+	image->common.alpha_map->store_scanline_raw_64 (
+	    image->common.alpha_map, x, y, width, buffer);
+    }
 }
 
 /* Fetch functions */
@@ -983,9 +964,6 @@ bits_image_property_changed (pixman_image_t *image)
 	image->common.get_scanline_64 = _pixman_image_get_scanline_generic_64;
 	image->common.get_scanline_32 = bits_image_fetch_general;
     }
-
-    bits->store_scanline_64 = bits_image_store_scanline_64;
-    bits->store_scanline_32 = bits_image_store_scanline_32;
 }
 
 static uint32_t *

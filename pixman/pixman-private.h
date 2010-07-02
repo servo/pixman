@@ -187,10 +187,6 @@ struct bits_image
     store_scanline_t           store_scanline_raw_32;
     store_scanline_t           store_scanline_raw_64;
 
-    /* Store a scanline, taking alpha maps into account */
-    store_scanline_t           store_scanline_32;
-    store_scanline_t           store_scanline_64;
-
     /* Used for indirect access to the bits */
     pixman_read_memory_func_t  read_func;
     pixman_write_memory_func_t write_func;
