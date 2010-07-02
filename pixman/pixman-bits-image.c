@@ -51,7 +51,7 @@ bits_image_store_scanline_32 (bits_image_t *  image,
 	x -= image->common.alpha_origin_x;
 	y -= image->common.alpha_origin_y;
 
-	bits_image_store_scanline_32 (image->common.alpha_map, x, y, width, buffer);
+	image->common.alpha_map->store_scanline_raw_32 (image->common.alpha_map, x, y, width, buffer);
     }
 }
 
@@ -69,7 +69,7 @@ bits_image_store_scanline_64 (bits_image_t *  image,
 	x -= image->common.alpha_origin_x;
 	y -= image->common.alpha_origin_y;
 
-	bits_image_store_scanline_64 (image->common.alpha_map, x, y, width, buffer);
+	image->common.alpha_map->store_scanline_raw_64 (image->common.alpha_map, x, y, width, buffer);
     }
 }
 
