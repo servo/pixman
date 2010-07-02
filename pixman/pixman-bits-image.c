@@ -954,7 +954,6 @@ bits_image_property_changed (pixman_image_t *image)
 	     bits->common.transform->matrix[2][0] == 0			&&
 	     bits->common.transform->matrix[2][1] == 0			&&
 	     bits->common.transform->matrix[2][2] == pixman_fixed_1)
-	     
     {
 	image->common.get_scanline_64 = _pixman_image_get_scanline_generic_64;
 	image->common.get_scanline_32 = bits_image_fetch_affine_no_alpha;
