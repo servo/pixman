@@ -95,48 +95,9 @@ _pixman_image_store_scanline_64 (bits_image_t *  image,
 
 /* Fetch functions */
 
-static uint32_t
-fetch_pixel_general (bits_image_t *image, int x, int y, pixman_bool_t check_bounds)
-{
-    uint32_t pixel;
-
-    if (check_bounds &&
-	(x < 0 || x >= image->width || y < 0 || y >= image->height))
-    {
-	return 0;
-    }
-
-    pixel = image->fetch_pixel_raw_32 (image, x, y);
-
-    if (image->common.alpha_map)
-    {
-	uint32_t pixel_a;
-
-	x -= image->common.alpha_origin_x;
-	y -= image->common.alpha_origin_y;
-
-	if (x < 0 || x >= image->common.alpha_map->width ||
-	    y < 0 || y >= image->common.alpha_map->height)
-	{
-	    pixel_a = 0;
-	}
-	else
-	{
-	    pixel_a = image->common.alpha_map->fetch_pixel_raw_32 (
-		image->common.alpha_map, x, y);
-
-	    pixel_a = ALPHA_8 (pixel_a);
-	}
-
-	pixel &= 0x00ffffff;
-	pixel |= (pixel_a << 24);
-    }
-
-    return pixel;
-}
-
 static force_inline uint32_t
-fetch_pixel_no_alpha (bits_image_t *image, int x, int y, pixman_bool_t check_bounds)
+fetch_pixel_no_alpha (bits_image_t *image,
+		      int x, int y, pixman_bool_t check_bounds)
 {
     if (check_bounds &&
 	(x < 0 || x >= image->width || y < 0 || y >= image->height))
@@ -654,12 +615,101 @@ bits_image_fetch_pixel_filtered (bits_image_t *image,
 }
 
 static void
-bits_image_fetch_transformed (pixman_image_t * image,
-                              int              offset,
-                              int              line,
-                              int              width,
-                              uint32_t *       buffer,
-                              const uint32_t * mask)
+bits_image_fetch_affine_no_alpha (pixman_image_t * image,
+				  int              offset,
+				  int              line,
+				  int              width,
+				  uint32_t *       buffer,
+				  const uint32_t * mask)
+{
+    pixman_fixed_t x, y;
+    pixman_fixed_t ux, uy;
+    pixman_vector_t v;
+    int i;
+
+    /* reference point is the center of the pixel */
+    v.vector[0] = pixman_int_to_fixed (offset) + pixman_fixed_1 / 2;
+    v.vector[1] = pixman_int_to_fixed (line) + pixman_fixed_1 / 2;
+    v.vector[2] = pixman_fixed_1;
+
+    if (image->common.transform)
+    {
+	if (!pixman_transform_point_3d (image->common.transform, &v))
+	    return;
+
+	ux = image->common.transform->matrix[0][0];
+	uy = image->common.transform->matrix[1][0];
+    }
+    else
+    {
+	ux = pixman_fixed_1;
+	uy = 0;
+    }
+
+    x = v.vector[0];
+    y = v.vector[1];
+
+    for (i = 0; i < width; ++i)
+    {
+	if (!mask || mask[i])
+	{
+	    buffer[i] = bits_image_fetch_pixel_filtered (
+		&image->bits, x, y, fetch_pixel_no_alpha);
+	}
+	
+	x += ux;
+	y += uy;
+    }
+}
+
+/* General fetcher */
+static force_inline uint32_t
+fetch_pixel_general (bits_image_t *image, int x, int y, pixman_bool_t check_bounds)
+{
+    uint32_t pixel;
+
+    if (check_bounds &&
+	(x < 0 || x >= image->width || y < 0 || y >= image->height))
+    {
+	return 0;
+    }
+
+    pixel = image->fetch_pixel_raw_32 (image, x, y);
+
+    if (image->common.alpha_map)
+    {
+	uint32_t pixel_a;
+
+	x -= image->common.alpha_origin_x;
+	y -= image->common.alpha_origin_y;
+
+	if (x < 0 || x >= image->common.alpha_map->width ||
+	    y < 0 || y >= image->common.alpha_map->height)
+	{
+	    pixel_a = 0;
+	}
+	else
+	{
+	    pixel_a = image->common.alpha_map->fetch_pixel_raw_32 (
+		image->common.alpha_map, x, y);
+
+	    pixel_a = ALPHA_8 (pixel_a);
+	}
+
+	pixel &= 0x00ffffff;
+	pixel |= (pixel_a << 24);
+    }
+
+    return pixel;
+}
+
+static void
+bits_image_fetch_general (pixman_image_t * image,
+			  int              offset,
+			  int              line,
+			  int              width,
+			  uint32_t *       buffer,
+			  const uint32_t * mask)
 {
     pixman_fixed_t x, y, w;
     pixman_fixed_t ux, uy, uw;
@@ -671,8 +721,6 @@ bits_image_fetch_transformed (pixman_image_t * image,
     v.vector[1] = pixman_int_to_fixed (line) + pixman_fixed_1 / 2;
     v.vector[2] = pixman_fixed_1;
 
-    /* when using convolution filters or PIXMAN_REPEAT_PAD one
-     * might get here without a transform */
     if (image->common.transform)
     {
 	if (!pixman_transform_point_3d (image->common.transform, &v))
@@ -693,47 +741,30 @@ bits_image_fetch_transformed (pixman_image_t * image,
     y = v.vector[1];
     w = v.vector[2];
 
-    if (w == pixman_fixed_1 && uw == 0) /* Affine */
+    for (i = 0; i < width; ++i)
     {
-	for (i = 0; i < width; ++i)
+	pixman_fixed_t x0, y0;
+
+	if (!mask || mask[i])
 	{
-	    if (!mask || mask[i])
+	    if (w != 0)
 	    {
-		buffer[i] =
-		    bits_image_fetch_pixel_filtered (&image->bits, x, y, fetch_pixel_general);
+		x0 = ((pixman_fixed_48_16_t)x << 16) / w;
+		y0 = ((pixman_fixed_48_16_t)y << 16) / w;
+	    }
+	    else
+	    {
+		x0 = 0;
+		y0 = 0;
 	    }
 
-	    x += ux;
-	    y += uy;
+	    buffer[i] = bits_image_fetch_pixel_filtered (
+		&image->bits, x0, y0, fetch_pixel_general);
 	}
-    }
-    else
-    {
-	for (i = 0; i < width; ++i)
-	{
-	    if (!mask || mask[i])
-	    {
-		pixman_fixed_t x0, y0;
 
-		if (w != 0)
-		{
-		    x0 = ((pixman_fixed_48_16_t)x << 16) / w;
-		    y0 = ((pixman_fixed_48_16_t)y << 16) / w;
-		}
-		else
-		{
-		    x0 = 0;
-		    y0 = 0;
-		}
-
-		buffer[i] =
-		    bits_image_fetch_pixel_filtered (&image->bits, x0, y0, fetch_pixel_general);
-	    }
-
-	    x += ux;
-	    y += uy;
-	    w += uw;
-	}
+	x += ux;
+	y += uy;
+	w += uw;
     }
 }
 
@@ -903,10 +934,8 @@ bits_image_property_changed (pixman_image_t *image)
 
     if (bits->common.alpha_map)
     {
-	image->common.get_scanline_64 =
-	    _pixman_image_get_scanline_generic_64;
-	image->common.get_scanline_32 =
-	    bits_image_fetch_transformed;
+	image->common.get_scanline_64 = _pixman_image_get_scanline_generic_64;
+	image->common.get_scanline_32 = bits_image_fetch_general;
     }
     else if ((bits->common.repeat != PIXMAN_REPEAT_NONE) &&
              bits->width == 1 &&
@@ -937,17 +966,22 @@ bits_image_property_changed (pixman_image_t *image)
 	     (bits->format == PIXMAN_a8r8g8b8	||
 	      bits->format == PIXMAN_x8r8g8b8))
     {
-	image->common.get_scanline_64 =
-	    _pixman_image_get_scanline_generic_64;
-	image->common.get_scanline_32 =
-	    bits_image_fetch_bilinear_no_repeat_8888;
+	image->common.get_scanline_64 = _pixman_image_get_scanline_generic_64;
+	image->common.get_scanline_32 = bits_image_fetch_bilinear_no_repeat_8888;
+    }
+    else if (bits->common.transform					&&
+	     bits->common.transform->matrix[2][0] == 0			&&
+	     bits->common.transform->matrix[2][1] == 0			&&
+	     bits->common.transform->matrix[2][2] == pixman_fixed_1)
+	     
+    {
+	image->common.get_scanline_64 = _pixman_image_get_scanline_generic_64;
+	image->common.get_scanline_32 = bits_image_fetch_affine_no_alpha;
     }
     else
     {
-	image->common.get_scanline_64 =
-	    _pixman_image_get_scanline_generic_64;
-	image->common.get_scanline_32 =
-	    bits_image_fetch_transformed;
+	image->common.get_scanline_64 = _pixman_image_get_scanline_generic_64;
+	image->common.get_scanline_32 = bits_image_fetch_general;
     }
 
     bits->store_scanline_64 = bits_image_store_scanline_64;
