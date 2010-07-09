@@ -527,12 +527,12 @@ dnl Thread local storage
 support_for__thread=no
 
 AC_MSG_CHECKING(for __thread)
-AC_COMPILE_IFELSE([
+AC_LINK_IFELSE([
 #ifdef __MINGW32__
 #error MinGW has broken __thread support
 #endif
-__thread int x ;
-int main () { return 0; }
+static __thread int x ;
+int main () { x = 123; return x; }
 ], support_for__thread=yes)
 
 if test $support_for__thread = yes; then 
@@ -541,21 +541,11 @@ fi
 
 AC_MSG_RESULT($support_for__thread)
 
+dnl
 dnl posix tls
+dnl
 
-if test $support_for__thread = no; then
-
-support_for_pthread_setspecific=no
-   
-AC_MSG_CHECKING(for pthread_setspecific)
-
-save_LDFLAGS=$LDFLAGS
-
-LDFLAGS="-pthread"
-
-AC_LINK_IFELSE([
-#include <pthread.h>
-
+m4_define([pthread_test_program],[dnl
 #include <stdlib.h>
 #include <pthread.h>
 
@@ -572,7 +562,7 @@ int
 main ()
 {
     void *value = NULL;
-    
+
     if (pthread_once (&once_control, make_key) != 0)
     {
 	value = NULL;
@@ -586,23 +576,50 @@ main ()
 	    pthread_setspecific (key, value);
 	}
     }
+    return 0;
 }
-], support_for_pthread_setspecific=yes);
+])
 
-LDFLAGS=$save_LDFLAGS
+AC_DEFUN([PIXMAN_CHECK_PTHREAD],[dnl
+    if test "z$support_for_pthread_setspecific" != "zyes"; then
+	save_CFLAGS="$CFLAGS"
+	save_LDFLAGS="$LDFLAGS"
+	save_LIBS="$LIBS"
+	CFLAGS=""
+	LDFLAGS=""
+	LIBS=""
+	$1
+	AC_LINK_IFELSE([pthread_test_program],
+		[PTHREAD_CFLAGS="$CFLAGS"
+		 PTHREAD_LIBS="$LIBS"
+		 PTHREAD_LDFLAGS="$LDFLAGS"
+		 support_for_pthread_setspecific=yes])
+	CFLAGS="$save_CFLAGS"
+	LDFLAGS="$save_LDFLAGS"
+	LIBS="$save_LIBS"
+    fi
+])
 
-if test $support_for_pthread_setspecific = yes; then
-   PTHREAD_LDFLAGS="-pthread"
-   AC_DEFINE([HAVE_PTHREAD_SETSPECIFIC], [], [Whether pthread_setspecific() is supported])
-fi
+if test $support_for__thread = no; then
+    support_for_pthread_setspecific=no
 
-AC_MSG_RESULT($support_for_pthread_setspecific);
+    AC_MSG_CHECKING(for pthread_setspecific)
 
+    PIXMAN_CHECK_PTHREAD([CFLAGS="-D_REENTRANT"; LIBS="-lpthread"])
+    PIXMAN_CHECK_PTHREAD([CFLAGS="-pthread"; LDFLAGS="-pthread"])
+
+    if test $support_for_pthread_setspecific = yes; then
+	CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+	AC_DEFINE([HAVE_PTHREAD_SETSPECIFIC], [], [Whether pthread_setspecific() is supported])
+    fi
+
+    AC_MSG_RESULT($support_for_pthread_setspecific);
 fi
 
 AC_SUBST(TOOLCHAIN_SUPPORTS__THREAD)
 AC_SUBST(HAVE_PTHREAD_SETSPECIFIC)
 AC_SUBST(PTHREAD_LDFLAGS)
+AC_SUBST(PTHREAD_LIBS)
 
 AC_OUTPUT([pixman-1.pc
            pixman-1-uninstalled.pc
