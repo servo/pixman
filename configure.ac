@@ -531,6 +531,9 @@ AC_LINK_IFELSE([
 #ifdef __MINGW32__
 #error MinGW has broken __thread support
 #endif
+#ifdef __OpenBSD__
+#error OpenBSD has broken __thread support
+#endif
 static __thread int x ;
 int main () { x = 123; return x; }
 ], support_for__thread=yes)
