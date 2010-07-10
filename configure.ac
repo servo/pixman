@@ -77,9 +77,10 @@ AC_CHECK_FUNCS([getisax])
 AC_C_BIGENDIAN
 AC_C_INLINE
 
-dnl PIXMAN_LINK_WITH_ENV(
-dnl	CFLAGS=... LDFLAGS=... LIBS=...,
-dnl	program, true-action, false-action)
+dnl PIXMAN_LINK_WITH_ENV(env-setup, program, true-action, false-action)
+dnl
+dnl Compiles and links the given program in the environment setup by env-setup
+dnl and executes true-action on success and false-action on failure.
 AC_DEFUN([PIXMAN_LINK_WITH_ENV],[dnl
 	save_CFLAGS="$CFLAGS"
 	save_LDFLAGS="$LDFLAGS"
@@ -88,10 +89,55 @@ AC_DEFUN([PIXMAN_LINK_WITH_ENV],[dnl
 	LDFLAGS=""
 	LIBS=""
 	$1
-	AC_LINK_IFELSE([$2], [$3], [$4])
-	CFLAGS="$save_CFLAGS"
-	LDFLAGS="$save_LDFLAGS"
-	LIBS="$save_LIBS"
+	AC_LINK_IFELSE(
+		[$2],
+		[pixman_cc_stderr=`test -f conftest.err && cat conftest.err`
+		 pixman_cc_flag=yes],
+		[pixman_cc_stderr=`test -f conftest.err && cat conftest.err`
+		 pixman_cc_flag=no])
+
+	if test "x$pixman_cc_stderr" != "x"; then
+		pixman_cc_flag=no
+	fi
+
+	if test "x$pixman_cc_flag" = "xyes"; then
+		ifelse([$3], , :, [$3])
+	else
+		ifelse([$4], , :, [$4])
+	fi
+	CFLAGS="$save_cflags"
+	LDFLAGS="$save_ldflags"
+	LIBS="$save_libs"
+])
+
+dnl Find a -Werror for catching warnings.
+WERROR=
+for w in -Werror -errwarn; do
+    if test "z$WERROR" = "z"; then
+        AC_MSG_CHECKING([whether the compiler supports $w])
+        PIXMAN_LINK_WITH_ENV(
+		[CFLAGS=$w],
+		[int main(int c, char **v) { (void)c; (void)v; return 0; }],
+		[WERROR=$w; yesno=yes], [yesno=no])
+	AC_MSG_RESULT($_yesno)
+    fi
+done
+
+dnl PIXMAN_CHECK_CFLAG(flag, [program])
+dnl  Adds flag to CFLAGS if the given program links without warnings or errors.
+AC_DEFUN([PIXMAN_CHECK_CFLAG], [dnl
+	AC_MSG_CHECKING([whether the compiler supports $1])
+	PIXMAN_LINK_WITH_ENV(
+		[CFLAGS="$WERROR $1"],
+		[$2
+		 int main(int c, char **v) { (void)c; (void)v; return 0; }
+		],
+		[_yesno=yes],
+		[_yesno=no])
+	if test "x$_yesno" = xyes; then
+	   CFLAGS="$CFLAGS $1"
+	fi
+	AC_MSG_RESULT($_yesno)
 ])
 
 AC_CHECK_SIZEOF(long)
@@ -134,20 +180,8 @@ AC_SUBST(LT_VERSION_INFO)
 # Check for dependencies
 #PKG_CHECK_MODULES(DEP, x11)
 
-changequote(,)dnl
-if test "x$GCC" = "xyes"; then
-
-  case " $CFLAGS " in
-  *[\ \	]-Wall[\ \	]*) ;;
-  *) CFLAGS="$CFLAGS -Wall" ;;
-  esac 
-
-  case " $CFLAGS " in
-  *[\ \	]-fno-strict-aliasing[\ \	]*) ;;
-  *) CFLAGS="$CFLAGS -fno-strict-aliasing" ;;
-  esac
-
-fi changequote([,])dnl
+PIXMAN_CHECK_CFLAG([-Wall])
+PIXMAN_CHECK_CFLAG([-fno-strict-aliasing])
 
 AC_PATH_PROG(PERL, perl, no)
 if test "x$PERL" = xno; then
@@ -213,35 +247,19 @@ AC_SUBST(OPENMP_CFLAGS)
 dnl =========================================================================
 dnl -fvisibility stuff
 
-have_gcc4=no
-AC_MSG_CHECKING(for -fvisibility)
-AC_COMPILE_IFELSE([
+PIXMAN_CHECK_CFLAG([-fvisibility=hidden], [dnl
 #if defined(__GNUC__) && (__GNUC__ >= 4)
 #else
 error Need GCC 4.0 for visibility
 #endif
-int main () { return 0; } 
-], have_gcc4=yes)
+])
 
-if test "x$have_gcc4" = "xyes"; then
-   CFLAGS="$CFLAGS -fvisibility=hidden"
-fi
-AC_MSG_RESULT($have_gcc4)
-
-have_sunstudio8=no
-AC_MSG_CHECKING([for -xldscope (Sun compilers)])
-AC_COMPILE_IFELSE([
+PIXMAN_CHECK_CFLAG([-xldscope=hidden], [dnl
 #if defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
 #else
 error Need Sun Studio 8 for visibility
 #endif
-int main () { return 0; } 
-], have_sunstudio8=yes)
-
-if test "x$have_sunstudio8" = "xyes"; then
-   CFLAGS="$CFLAGS -xldscope=hidden"
-fi
-AC_MSG_RESULT($have_sunstudio8)
+])
 
 dnl ===========================================================================
 dnl Check for MMX
