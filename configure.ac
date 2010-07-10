@@ -77,9 +77,22 @@ AC_CHECK_FUNCS([getisax])
 AC_C_BIGENDIAN
 AC_C_INLINE
 
-# Check for OpenMP support (only supported by autoconf >=2.62)
-OPENMP_CFLAGS=
-m4_ifdef([AC_OPENMP], [AC_OPENMP], [AC_SUBST(OPENMP_CFLAGS)])
+dnl PIXMAN_LINK_WITH_ENV(
+dnl	CFLAGS=... LDFLAGS=... LIBS=...,
+dnl	program, true-action, false-action)
+AC_DEFUN([PIXMAN_LINK_WITH_ENV],[dnl
+	save_CFLAGS="$CFLAGS"
+	save_LDFLAGS="$LDFLAGS"
+	save_LIBS="$LIBS"
+	CFLAGS=""
+	LDFLAGS=""
+	LIBS=""
+	$1
+	AC_LINK_IFELSE([$2], [$3], [$4])
+	CFLAGS="$save_CFLAGS"
+	LDFLAGS="$save_LDFLAGS"
+	LIBS="$save_LIBS"
+])
 
 AC_CHECK_SIZEOF(long)
 
@@ -141,6 +154,61 @@ if test "x$PERL" = xno; then
     AC_MSG_ERROR([Perl is required to build pixman.])
 fi
 AC_SUBST(PERL)
+
+dnl =========================================================================
+dnl OpenMP for the test suite?
+dnl
+
+# Check for OpenMP support (only supported by autoconf >=2.62)
+OPENMP_CFLAGS=
+m4_ifdef([AC_OPENMP], [AC_OPENMP])
+
+m4_define([openmp_test_program],[dnl
+#include <stdio.h>
+
+extern unsigned int lcg_seed;
+#pragma omp threadprivate(lcg_seed)
+unsigned int lcg_seed;
+
+unsigned function(unsigned a, unsigned b)
+{
+	lcg_seed ^= b;
+	return ((a + b) ^ a ) + lcg_seed;
+}
+
+int main(int argc, char **argv)
+{
+	int i;
+	int n1 = 0, n2 = argc;
+	unsigned checksum = 0;
+	int verbose = argv != NULL;
+	unsigned (*test_function)(unsigned, unsigned);
+	test_function = function;
+    #pragma omp parallel for reduction(+:checksum) default(none) \
+					shared(n1, n2, test_function, verbose)
+	for (i = n1; i < n2; i++)
+    	{
+		unsigned crc = test_function (i, 0);
+		if (verbose)
+			printf ("%d: %08X\n", i, crc);
+		checksum += crc;
+	}
+	printf("%u\n", checksum);
+	return 0;
+}
+])
+
+PIXMAN_LINK_WITH_ENV(
+	[CFLAGS="$OPENMP_CFLAGS" LDFLAGS="$OPENMP_CFLAGS"],
+	[openmp_test_program],
+	[have_openmp=yes],
+	[have_openmp=no])
+if test "x$have_openmp" = "xyes"; then
+   AC_DEFINE(USE_OPENMP, 1, [use OpenMP in the test suite])
+else
+   OPENMP_CFLAGS=""
+fi
+AC_SUBST(OPENMP_CFLAGS)
 
 dnl =========================================================================
 dnl -fvisibility stuff
@@ -585,21 +653,12 @@ main ()
 
 AC_DEFUN([PIXMAN_CHECK_PTHREAD],[dnl
     if test "z$support_for_pthread_setspecific" != "zyes"; then
-	save_CFLAGS="$CFLAGS"
-	save_LDFLAGS="$LDFLAGS"
-	save_LIBS="$LIBS"
-	CFLAGS=""
-	LDFLAGS=""
-	LIBS=""
-	$1
-	AC_LINK_IFELSE([pthread_test_program],
+	PIXMAN_LINK_WITH_ENV(
+		[$1], [pthread_test_program],
 		[PTHREAD_CFLAGS="$CFLAGS"
 		 PTHREAD_LIBS="$LIBS"
 		 PTHREAD_LDFLAGS="$LDFLAGS"
 		 support_for_pthread_setspecific=yes])
-	CFLAGS="$save_CFLAGS"
-	LDFLAGS="$save_LDFLAGS"
-	LIBS="$save_LIBS"
     fi
 ])
 
