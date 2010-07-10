@@ -572,9 +572,105 @@ typedef struct
 
 PIXMAN_DEFINE_THREAD_LOCAL (cache_t, fast_path_cache);
 
+static force_inline void
+lookup_composite_function (pixman_op_t			op,
+			   pixman_format_code_t		src_format,
+			   uint32_t			src_flags,
+			   pixman_format_code_t		mask_format,
+			   uint32_t			mask_flags,
+			   pixman_format_code_t		dest_format,
+			   uint32_t			dest_flags,
+			   pixman_implementation_t    **out_imp,
+			   pixman_composite_func_t     *out_func)
+{
+    pixman_implementation_t *imp;
+    cache_t *cache;
+    int i;
+
+    /* Check cache for fast paths */
+    cache = PIXMAN_GET_THREAD_LOCAL (fast_path_cache);
+
+    for (i = 0; i < N_CACHED_FAST_PATHS; ++i)
+    {
+	const pixman_fast_path_t *info = &(cache->cache[i].fast_path);
+
+	/* Note that we check for equality here, not whether
+	 * the cached fast path matches. This is to prevent
+	 * us from selecting an overly general fast path
+	 * when a more specific one would work.
+	 */
+	if (info->op == op			&&
+	    info->src_format == src_format	&&
+	    info->mask_format == mask_format	&&
+	    info->dest_format == dest_format	&&
+	    info->src_flags == src_flags	&&
+	    info->mask_flags == mask_flags	&&
+	    info->dest_flags == dest_flags	&&
+	    info->func)
+	{
+	    *out_imp = cache->cache[i].imp;
+	    *out_func = cache->cache[i].fast_path.func;
+
+	    goto update_cache;
+	}
+    }
+
+    for (imp = get_implementation (); imp != NULL; imp = imp->delegate)
+    {
+	const pixman_fast_path_t *info = imp->fast_paths;
+
+	while (info->op != PIXMAN_OP_NONE)
+	{
+	    if ((info->op == op || info->op == PIXMAN_OP_any)		&&
+		/* Formats */
+		((info->src_format == src_format) ||
+		 (info->src_format == PIXMAN_any))			&&
+		((info->mask_format == mask_format) ||
+		 (info->mask_format == PIXMAN_any))			&&
+		((info->dest_format == dest_format) ||
+		 (info->dest_format == PIXMAN_any))			&&
+		/* Flags */
+		(info->src_flags & src_flags) == info->src_flags	&&
+		(info->mask_flags & mask_flags) == info->mask_flags	&&
+		(info->dest_flags & dest_flags) == info->dest_flags)
+	    {
+		*out_imp = imp;
+		*out_func = info->func;
+
+		/* Set i to the last spot in the cache so that the
+		 * move-to-front code below will work
+		 */
+		i = N_CACHED_FAST_PATHS - 1;
+
+		goto update_cache;
+	    }
+
+	    ++info;
+	}
+    }
+    return;
+
+update_cache:
+    if (i)
+    {
+	while (i--)
+	    cache->cache[i + 1] = cache->cache[i];
+
+	cache->cache[0].imp = *out_imp;
+	cache->cache[0].fast_path.op = op;
+	cache->cache[0].fast_path.src_format = src_format;
+	cache->cache[0].fast_path.src_flags = src_flags;
+	cache->cache[0].fast_path.mask_format = mask_format;
+	cache->cache[0].fast_path.mask_flags = mask_flags;
+	cache->cache[0].fast_path.dest_format = dest_format;
+	cache->cache[0].fast_path.dest_flags = dest_flags;
+	cache->cache[0].fast_path.func = *out_func;
+    }
+}
+
+
 static void
-do_composite (pixman_implementation_t *imp,
-	      pixman_op_t	       op,
+do_composite (pixman_op_t	       op,
 	      pixman_image_t	      *src,
 	      pixman_image_t	      *mask,
 	      pixman_image_t	      *dest,
@@ -598,9 +694,8 @@ do_composite (pixman_implementation_t *imp,
     uint32_t *dest_bits;
     int dest_dx, dest_dy;
     pixman_bool_t need_workaround;
-    const pixman_fast_path_t *info;
-    cache_t *cache;
-    int i;
+    pixman_implementation_t *imp;
+    pixman_composite_func_t func;
 
     src_format = src->common.extended_format_code;
     src_flags = src->common.flags;
@@ -666,71 +761,12 @@ do_composite (pixman_implementation_t *imp,
     if (op == PIXMAN_OP_DST)
 	return;
 
-    /* Check cache for fast paths */
-    cache = PIXMAN_GET_THREAD_LOCAL (fast_path_cache);
+    lookup_composite_function (op,
+			       src_format, src_flags,
+			       mask_format, mask_flags,
+			       dest_format, dest_flags,
+			       &imp, &func);			       
 
-    for (i = 0; i < N_CACHED_FAST_PATHS; ++i)
-    {
-	info = &(cache->cache[i].fast_path);
-
-	/* Note that we check for equality here, not whether
-	 * the cached fast path matches. This is to prevent
-	 * us from selecting an overly general fast path
-	 * when a more specific one would work.
-	 */
-	if (info->op == op			&&
-	    info->src_format == src_format	&&
-	    info->mask_format == mask_format	&&
-	    info->dest_format == dest_format	&&
-	    info->src_flags == src_flags	&&
-	    info->mask_flags == mask_flags	&&
-	    info->dest_flags == dest_flags	&&
-	    info->func)
-	{
-	    imp = cache->cache[i].imp;
-	    goto found;
-	}
-    }
-
-    while (imp)
-    {
-	info = imp->fast_paths;
-
-	while (info->op != PIXMAN_OP_NONE)
-	{
-	    if ((info->op == op || info->op == PIXMAN_OP_any)		&&
-		/* Formats */
-		((info->src_format == src_format) ||
-		 (info->src_format == PIXMAN_any))			&&
-		((info->mask_format == mask_format) ||
-		 (info->mask_format == PIXMAN_any))			&&
-		((info->dest_format == dest_format) ||
-		 (info->dest_format == PIXMAN_any))			&&
-		/* Flags */
-		(info->src_flags & src_flags) == info->src_flags	&&
-		(info->mask_flags & mask_flags) == info->mask_flags	&&
-		(info->dest_flags & dest_flags) == info->dest_flags)
-	    {
-		/* Set i to the last spot in the cache so that the
-		 * move-to-front code below will work
-		 */
-		i = N_CACHED_FAST_PATHS - 1;
-
-		goto found;
-	    }
-
-	    ++info;
-	}
-
-	imp = imp->delegate;
-    }
-
-    /* We didn't find a compositing routine. This should not happen, but if
-     * it somehow does, just exit rather than crash.
-     */
-    goto out;
-
-found:
     walk_region_internal (imp, op,
 			  src, mask, dest,
 			  src_x, src_y, mask_x, mask_y,
@@ -738,30 +774,8 @@ found:
 			  width, height,
 			  (src_flags & FAST_PATH_SIMPLE_REPEAT),
 			  (mask_flags & FAST_PATH_SIMPLE_REPEAT),
-			  &region, info->func);
+			  &region, func);
 
-    if (i)
-    {
-	/* Make a copy of info->func, because info->func may change when
-	 * we update the cache.
-	 */
-	pixman_composite_func_t func = info->func;
-	
-	while (i--)
-	    cache->cache[i + 1] = cache->cache[i];
-
-	cache->cache[0].imp = imp;
-	cache->cache[0].fast_path.op = op;
-	cache->cache[0].fast_path.src_format = src_format;
-	cache->cache[0].fast_path.src_flags = src_flags;
-	cache->cache[0].fast_path.mask_format = mask_format;
-	cache->cache[0].fast_path.mask_flags = mask_flags;
-	cache->cache[0].fast_path.dest_format = dest_format;
-	cache->cache[0].fast_path.dest_flags = dest_flags;
-	cache->cache[0].fast_path.func = func;
-    }
-
-out:
     if (need_workaround)
     {
 	unapply_workaround (src, src_bits, src_dx, src_dy);
@@ -828,7 +842,7 @@ pixman_image_composite32 (pixman_op_t      op,
 	_pixman_image_validate (mask);
     _pixman_image_validate (dest);
 
-    do_composite (get_implementation(), op,
+    do_composite (op,
 		  src, mask, dest,
 		  src_x, src_y,
 		  mask_x, mask_y,
