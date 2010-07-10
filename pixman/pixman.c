@@ -563,7 +563,11 @@ compute_src_extents_flags (pixman_image_t *image,
 
 typedef struct
 {
-    pixman_fast_path_t cache [N_CACHED_FAST_PATHS];
+    struct
+    {
+	pixman_implementation_t *	imp;
+	pixman_fast_path_t		fast_path;
+    } cache [N_CACHED_FAST_PATHS];
 } cache_t;
 
 PIXMAN_DEFINE_THREAD_LOCAL (cache_t, fast_path_cache);
@@ -667,7 +671,7 @@ do_composite (pixman_implementation_t *imp,
 
     for (i = 0; i < N_CACHED_FAST_PATHS; ++i)
     {
-	info = &(cache->cache[i]);
+	info = &(cache->cache[i].fast_path);
 
 	/* Note that we check for equality here, not whether
 	 * the cached fast path matches. This is to prevent
@@ -683,6 +687,7 @@ do_composite (pixman_implementation_t *imp,
 	    info->dest_flags == dest_flags	&&
 	    info->func)
 	{
+	    imp = cache->cache[i].imp;
 	    goto found;
 	}
     }
@@ -745,14 +750,15 @@ found:
 	while (i--)
 	    cache->cache[i + 1] = cache->cache[i];
 
-	cache->cache[0].op = op;
-	cache->cache[0].src_format = src_format;
-	cache->cache[0].src_flags = src_flags;
-	cache->cache[0].mask_format = mask_format;
-	cache->cache[0].mask_flags = mask_flags;
-	cache->cache[0].dest_format = dest_format;
-	cache->cache[0].dest_flags = dest_flags;
-	cache->cache[0].func = func;
+	cache->cache[0].imp = imp;
+	cache->cache[0].fast_path.op = op;
+	cache->cache[0].fast_path.src_format = src_format;
+	cache->cache[0].fast_path.src_flags = src_flags;
+	cache->cache[0].fast_path.mask_format = mask_format;
+	cache->cache[0].fast_path.mask_flags = mask_flags;
+	cache->cache[0].fast_path.dest_format = dest_format;
+	cache->cache[0].fast_path.dest_flags = dest_flags;
+	cache->cache[0].fast_path.func = func;
     }
 
 out:
