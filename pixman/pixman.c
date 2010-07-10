@@ -30,7 +30,16 @@
 
 #include <stdlib.h>
 
-static pixman_implementation_t *imp;
+static force_inline pixman_implementation_t *
+get_implementation (void)
+{
+    static pixman_implementation_t *global_implementation;
+
+    if (!global_implementation)
+	global_implementation = _pixman_choose_implementation ();
+
+    return global_implementation;
+}
 
 typedef struct operator_info_t operator_info_t;
 
@@ -813,10 +822,7 @@ pixman_image_composite32 (pixman_op_t      op,
 	_pixman_image_validate (mask);
     _pixman_image_validate (dest);
 
-    if (!imp)
-	imp = _pixman_choose_implementation ();
-
-    do_composite (imp, op,
+    do_composite (get_implementation(), op,
 		  src, mask, dest,
 		  src_x, src_y,
 		  mask_x, mask_y,
@@ -838,10 +844,8 @@ pixman_blt (uint32_t *src_bits,
             int       width,
             int       height)
 {
-    if (!imp)
-	imp = _pixman_choose_implementation ();
-
-    return _pixman_implementation_blt (imp, src_bits, dst_bits, src_stride, dst_stride,
+    return _pixman_implementation_blt (get_implementation(),
+				       src_bits, dst_bits, src_stride, dst_stride,
                                        src_bpp, dst_bpp,
                                        src_x, src_y,
                                        dst_x, dst_y,
@@ -858,10 +862,8 @@ pixman_fill (uint32_t *bits,
              int       height,
              uint32_t xor)
 {
-    if (!imp)
-	imp = _pixman_choose_implementation ();
-
-    return _pixman_implementation_fill (imp, bits, stride, bpp, x, y, width, height, xor);
+    return _pixman_implementation_fill (
+	get_implementation(), bits, stride, bpp, x, y, width, height, xor);
 }
 
 static uint32_t
