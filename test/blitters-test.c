@@ -11,7 +11,8 @@
 #include <config.h>
 #include "utils.h"
 
-static pixman_indexed_t palette;
+static pixman_indexed_t rgb_palette[9];
+static pixman_indexed_t y_palette[9];
 
 static void *
 aligned_malloc (size_t align, size_t size)
@@ -66,10 +67,13 @@ create_random_image (pixman_format_code_t *allowed_formats,
 
     img = pixman_image_create_bits (fmt, width, height, buf, stride);
 
-    if (PIXMAN_FORMAT_TYPE (fmt) == PIXMAN_TYPE_COLOR	||
-	PIXMAN_FORMAT_TYPE (fmt) == PIXMAN_TYPE_GRAY)
+    if (PIXMAN_FORMAT_TYPE (fmt) == PIXMAN_TYPE_COLOR)
     {
-	pixman_image_set_indexed (img, &palette);
+	pixman_image_set_indexed (img, &(rgb_palette[PIXMAN_FORMAT_BPP (fmt)]));
+    }
+    else if (PIXMAN_FORMAT_TYPE (fmt) == PIXMAN_TYPE_GRAY)
+    {
+	pixman_image_set_indexed (img, &(y_palette[PIXMAN_FORMAT_BPP (fmt)]));
     }
 
     image_endian_swap (img, PIXMAN_FORMAT_BPP (fmt));
@@ -409,23 +413,71 @@ test_composite (int testnum, int verbose)
     return crc32;
 }
 
+#define CONVERT_15(c, is_rgb)						\
+    (is_rgb?								\
+     ((((c) >> 3) & 0x001f) |						\
+      (((c) >> 6) & 0x03e0) |						\
+      (((c) >> 9) & 0x7c00)) :						\
+     (((((c) >> 16) & 0xff) * 153 +					\
+       (((c) >>  8) & 0xff) * 301 +					\
+       (((c)      ) & 0xff) * 58) >> 2))
+
 static void
-initialize_palette (void)
+initialize_palette (pixman_indexed_t *palette, uint32_t mask, int is_rgb)
 {
     int i;
 
-    for (i = 0; i < PIXMAN_MAX_INDEXED; ++i)
-	palette.rgba[i] = lcg_rand ();
-
     for (i = 0; i < 32768; ++i)
-	palette.ent[i] = lcg_rand() & 0xff;
+	palette->ent[i] = lcg_rand() & mask;
+
+    for (i = 0; i < mask + 1; ++i)
+    {
+	uint32_t rgba24;
+ 	pixman_bool_t retry;
+	uint32_t i15;
+
+	/* We filled the rgb->index map with random numbers, but we
+	 * do need the ability to round trip, that is if some indexed
+	 * color expands to an argb24, then the 15 bit version of that
+	 * color must map back to the index. Anything else, we don't
+	 * care about too much.
+	 */
+	do
+	{
+	    uint32_t old_idx;
+	    
+	    rgba24 = lcg_rand();
+	    i15 = CONVERT_15 (rgba24, is_rgb);
+
+	    old_idx = palette->ent[i15];
+	    if (CONVERT_15 (palette->rgba[old_idx], is_rgb) == i15)
+		retry = 1;
+	    else
+		retry = 0;
+	} while (retry);
+	
+	palette->rgba[i] = rgba24;
+	palette->ent[i15] = i;
+    }
+
+    for (i = 0; i < mask + 1; ++i)
+    {
+	assert (palette->ent[CONVERT_15 (palette->rgba[i], is_rgb)] == i);
+    }
 }
 
 int
 main (int argc, const char *argv[])
 {
-    initialize_palette();
+    int i;
 
-    return fuzzer_test_main("blitters", 2000000, 0xD09B1C03,
+    for (i = 1; i <= 8; i++)
+    {
+	initialize_palette (&(rgb_palette[i]), (1 << i) - 1, TRUE);
+	initialize_palette (&(y_palette[i]), (1 << i) - 1, FALSE);
+    }
+
+    return fuzzer_test_main("blitters", 2000000,
+			    0xD0B050B1,
 			    test_composite, argc, argv);
 }
