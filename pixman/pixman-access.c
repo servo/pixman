@@ -2683,12 +2683,26 @@ fetch_scanline_generic_64 (pixman_image_t *image,
                            uint32_t *      buffer,
                            const uint32_t *mask)
 {
+    pixman_format_code_t format;
+    
     /* Fetch the pixels into the first half of buffer and then expand them in
      * place.
      */
     image->bits.fetch_scanline_raw_32 (image, x, y, width, buffer, NULL);
+
+    format = image->bits.format;
+    if (PIXMAN_FORMAT_TYPE (format) == PIXMAN_TYPE_COLOR	||
+	PIXMAN_FORMAT_TYPE (format) == PIXMAN_TYPE_GRAY)
+    {
+	/* Indexed formats are mapped to a8r8g8b8 with full
+	 * precision, so when expanding we shouldn't correct
+	 * for the width of the channels
+	 */
+	
+	format = PIXMAN_a8r8g8b8;
+    }
     
-    pixman_expand ((uint64_t *)buffer, buffer, image->bits.format, width);
+    pixman_expand ((uint64_t *)buffer, buffer, format, width);
 }
 
 /* Despite the type, this function expects a uint64_t *buffer */
@@ -2699,8 +2713,21 @@ fetch_pixel_generic_64 (bits_image_t *image,
 {
     uint32_t pixel32 = image->fetch_pixel_raw_32 (image, offset, line);
     uint64_t result;
+    pixman_format_code_t format;
+
+    format = image->format;
+    if (PIXMAN_FORMAT_TYPE (format) == PIXMAN_TYPE_COLOR	||
+	PIXMAN_FORMAT_TYPE (format) == PIXMAN_TYPE_GRAY)
+    {
+	/* Indexed formats are mapped to a8r8g8b8 with full
+	 * precision, so when expanding we shouldn't correct
+	 * for the width of the channels
+	 */
+	
+	format = PIXMAN_a8r8g8b8;
+    }
     
-    pixman_expand ((uint64_t *)&result, &pixel32, image->format, 1);
+    pixman_expand ((uint64_t *)&result, &pixel32, format, 1);
 
     return result;
 }
