@@ -34,7 +34,7 @@ libpixman_1_la_SOURCES =			\
 	pixman-timer.c				\
 	pixman-matrix.c
 
-libpixmanincludedir = $(includedir)/pixman-1/
+libpixmanincludedir = $(includedir)/pixman-1
 libpixmaninclude_HEADERS = pixman.h pixman-version.h
 noinst_LTLIBRARIES = 
 
