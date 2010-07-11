@@ -1399,7 +1399,7 @@ repeat (pixman_repeat_t repeat, int *c, int size)
 #define GET_0565_ALPHA(s) 0xff
 
 #define FAST_NEAREST(scale_func_name, SRC_FORMAT, DST_FORMAT,					\
-		     src_type_t, dst_type_t, OP, do_repeat)					\
+		     src_type_t, dst_type_t, OP, repeat_mode)					\
 static void											\
 fast_composite_scaled_nearest_ ## scale_func_name ## _ ## OP (pixman_implementation_t *imp,	\
 							      pixman_op_t              op,      \
@@ -1435,6 +1435,12 @@ fast_composite_scaled_nearest_ ## scale_func_name ## _ ## OP (pixman_implementat
     if (PIXMAN_OP_ ## OP != PIXMAN_OP_SRC && PIXMAN_OP_ ## OP != PIXMAN_OP_OVER)		\
 	abort();										\
 												\
+    if (PIXMAN_REPEAT_ ## repeat_mode != PIXMAN_REPEAT_NORMAL		&&			\
+	PIXMAN_REPEAT_ ## repeat_mode != PIXMAN_REPEAT_NONE)					\
+    {												\
+	abort();										\
+    }												\
+												\
     PIXMAN_IMAGE_GET_LINE (dst_image, dst_x, dst_y, dst_type_t, dst_stride, dst_line, 1);	\
     /* pass in 0 instead of src_x and src_y because src_x and src_y need to be			\
      * transformed from destination space to source space */					\
@@ -1458,7 +1464,7 @@ fast_composite_scaled_nearest_ ## scale_func_name ## _ ## OP (pixman_implementat
     vx = v.vector[0];										\
     vy = v.vector[1];										\
 												\
-    if (do_repeat)										\
+    if (PIXMAN_REPEAT_ ## repeat_mode == PIXMAN_REPEAT_NORMAL)					\
     {												\
 	/* Clamp repeating positions inside the actual samples */				\
 	max_vx = src_image->bits.width << 16;							\
@@ -1477,7 +1483,7 @@ fast_composite_scaled_nearest_ ## scale_func_name ## _ ## OP (pixman_implementat
 												\
 	y = vy >> 16;										\
 	vy += unit_y;										\
-	if (do_repeat)										\
+	if (PIXMAN_REPEAT_ ## repeat_mode == PIXMAN_REPEAT_NORMAL)				\
 	    repeat (PIXMAN_REPEAT_NORMAL, &vy, max_vy);						\
 												\
 	src = src_first_line + src_stride * y;							\
@@ -1488,7 +1494,7 @@ fast_composite_scaled_nearest_ ## scale_func_name ## _ ## OP (pixman_implementat
 	{											\
 	    x1 = vx >> 16;									\
 	    vx += unit_x;									\
-	    if (do_repeat)									\
+	    if (PIXMAN_REPEAT_ ## repeat_mode == PIXMAN_REPEAT_NORMAL)				\
 	    {											\
 		/* This works because we know that unit_x is positive */			\
 		while (vx >= max_vx)								\
@@ -1498,7 +1504,7 @@ fast_composite_scaled_nearest_ ## scale_func_name ## _ ## OP (pixman_implementat
 												\
 	    x2 = vx >> 16;									\
 	    vx += unit_x;									\
-	    if (do_repeat)									\
+	    if (PIXMAN_REPEAT_ ## repeat_mode == PIXMAN_REPEAT_NORMAL)				\
 	    {											\
 		/* This works because we know that unit_x is positive */			\
 		while (vx >= max_vx)								\
@@ -1517,7 +1523,8 @@ fast_composite_scaled_nearest_ ## scale_func_name ## _ ## OP (pixman_implementat
 		}										\
 		else if (s1)									\
 		{										\
-		    d = CONVERT_## DST_FORMAT ## _TO_8888 (*dst);				\
+		    d = CONVERT_ ## DST_FORMAT ## _TO_8888 (*dst);				\
+		    s1 = CONVERT_ ## SRC_FORMAT ## _TO_8888 (s1);				\
 		    a1 ^= 0xff;									\
 		    UN8x4_MUL_UN8_ADD_UN8x4 (d, a1, s1);					\
 		    *dst = CONVERT_8888_TO_ ## DST_FORMAT (d);					\
@@ -1531,6 +1538,7 @@ fast_composite_scaled_nearest_ ## scale_func_name ## _ ## OP (pixman_implementat
 		else if (s2)									\
 		{										\
 		    d = CONVERT_## DST_FORMAT ## _TO_8888 (*dst);				\
+		    s2 = CONVERT_## SRC_FORMAT ## _TO_8888 (s2);				\
 		    a2 ^= 0xff;									\
 		    UN8x4_MUL_UN8_ADD_UN8x4 (d, a2, s2);					\
 		    *dst = CONVERT_8888_TO_ ## DST_FORMAT (d);					\
@@ -1548,7 +1556,7 @@ fast_composite_scaled_nearest_ ## scale_func_name ## _ ## OP (pixman_implementat
 	{											\
 	    x1 = vx >> 16;									\
 	    vx += unit_x;									\
-	    if (do_repeat)									\
+	    if (PIXMAN_REPEAT_ ## repeat_mode == PIXMAN_REPEAT_NORMAL)				\
 	    {											\
 		/* This works because we know that unit_x is positive */			\
 		while (vx >= max_vx)								\
@@ -1567,6 +1575,7 @@ fast_composite_scaled_nearest_ ## scale_func_name ## _ ## OP (pixman_implementat
 		else if (s1)									\
 		{										\
 		    d = CONVERT_## DST_FORMAT ## _TO_8888 (*dst);				\
+		    s1 = CONVERT_ ## SRC_FORMAT ## _TO_8888 (s1);				\
 		    a1 ^= 0xff;									\
 		    UN8x4_MUL_UN8_ADD_UN8x4 (d, a1, s1);					\
 		    *dst = CONVERT_8888_TO_ ## DST_FORMAT (d);					\
@@ -1581,16 +1590,16 @@ fast_composite_scaled_nearest_ ## scale_func_name ## _ ## OP (pixman_implementat
     }												\
 }
 
-FAST_NEAREST(x888_x888_none, 8888, 8888, uint32_t, uint32_t, SRC, /*repeat: */ 0);
-FAST_NEAREST(x888_x888_normal, 8888, 8888, uint32_t, uint32_t, SRC, /*repeat: */ 1);
-FAST_NEAREST(x888_x888_none, 8888, 8888, uint32_t, uint32_t, OVER, /*repeat: */ 0);
-FAST_NEAREST(x888_x888_normal, 8888, 8888, uint32_t, uint32_t, OVER, /*repeat: */ 1);
-FAST_NEAREST(x888_565_none, 8888, 0565, uint32_t, uint16_t, SRC, /*repeat: */ 0);
-FAST_NEAREST(x888_565_normal, 8888, 0565, uint32_t, uint16_t, SRC, /*repeat: */ 1);
-FAST_NEAREST(565_565_none, 0565, 0565, uint16_t, uint16_t, SRC, /*repeat: */ 0);
-FAST_NEAREST(565_565_normal, 0565, 0565, uint16_t, uint16_t, SRC, /*repeat: */ 1);
-FAST_NEAREST(8888_565_none, 8888, 0565, uint32_t, uint16_t, OVER, /*repeat: */ 0);
-FAST_NEAREST(8888_565_normal, 8888, 0565, uint32_t, uint16_t, OVER, /*repeat: */ 1);
+FAST_NEAREST(x888_x888_none, 8888, 8888, uint32_t, uint32_t, SRC, NONE);
+FAST_NEAREST(x888_x888_normal, 8888, 8888, uint32_t, uint32_t, SRC, NORMAL);
+FAST_NEAREST(x888_x888_none, 8888, 8888, uint32_t, uint32_t, OVER, NONE);
+FAST_NEAREST(x888_x888_normal, 8888, 8888, uint32_t, uint32_t, OVER, NORMAL);
+FAST_NEAREST(x888_565_none, 8888, 0565, uint32_t, uint16_t, SRC, NONE);
+FAST_NEAREST(x888_565_normal, 8888, 0565, uint32_t, uint16_t, SRC, NORMAL);
+FAST_NEAREST(565_565_none, 0565, 0565, uint16_t, uint16_t, SRC, NONE);
+FAST_NEAREST(565_565_normal, 0565, 0565, uint16_t, uint16_t, SRC, NORMAL);
+FAST_NEAREST(8888_565_none, 8888, 0565, uint32_t, uint16_t, OVER, NONE);
+FAST_NEAREST(8888_565_normal, 8888, 0565, uint32_t, uint16_t, OVER, NORMAL);
 
 static force_inline uint32_t
 fetch_nearest (pixman_repeat_t src_repeat,
