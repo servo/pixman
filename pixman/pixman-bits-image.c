@@ -909,6 +909,7 @@ bits_image_property_changed (pixman_image_t *image)
 	     bits->common.transform->matrix[2][2] == pixman_fixed_1	&&
 	     bits->common.transform->matrix[0][0] > 0			&&
 	     bits->common.transform->matrix[1][0] == 0			&&
+	     !bits->read_func						&&
 	     (bits->common.filter == PIXMAN_FILTER_BILINEAR ||
 	      bits->common.filter == PIXMAN_FILTER_GOOD	    ||
 	      bits->common.filter == PIXMAN_FILTER_BEST)		&&
