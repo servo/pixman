@@ -724,6 +724,42 @@ fast_composite_over_8888_8888 (pixman_implementation_t *imp,
     }
 }
 
+static void
+fast_composite_src_x888_8888 (pixman_implementation_t *imp,
+			      pixman_op_t              op,
+			      pixman_image_t *         src_image,
+			      pixman_image_t *         mask_image,
+			      pixman_image_t *         dst_image,
+			      int32_t                  src_x,
+			      int32_t                  src_y,
+			      int32_t                  mask_x,
+			      int32_t                  mask_y,
+			      int32_t                  dest_x,
+			      int32_t                  dest_y,
+			      int32_t                  width,
+			      int32_t                  height)
+{
+    uint32_t    *dst_line, *dst;
+    uint32_t    *src_line, *src;
+    int dst_stride, src_stride;
+    int32_t w;
+
+    PIXMAN_IMAGE_GET_LINE (dst_image, dest_x, dest_y, uint32_t, dst_stride, dst_line, 1);
+    PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint32_t, src_stride, src_line, 1);
+
+    while (height--)
+    {
+	dst = dst_line;
+	dst_line += dst_stride;
+	src = src_line;
+	src_line += src_stride;
+	w = width;
+
+	while (w--)
+	    *dst++ = (*src++) | 0xff000000;
+    }
+}
+
 #if 0
 static void
 fast_composite_over_8888_0888 (pixman_implementation_t *imp,
@@ -1805,6 +1841,8 @@ static const pixman_fast_path_t c_fast_paths[] =
     PIXMAN_STD_FAST_PATH (SRC, solid, null, x8b8g8r8, fast_composite_solid_fill),
     PIXMAN_STD_FAST_PATH (SRC, solid, null, a8, fast_composite_solid_fill),
     PIXMAN_STD_FAST_PATH (SRC, solid, null, r5g6b5, fast_composite_solid_fill),
+    PIXMAN_STD_FAST_PATH (SRC, x8r8g8b8, null, a8r8g8b8, fast_composite_src_x888_8888),
+    PIXMAN_STD_FAST_PATH (SRC, x8b8g8r8, null, a8b8g8r8, fast_composite_src_x888_8888),
     PIXMAN_STD_FAST_PATH (SRC, a8r8g8b8, null, x8r8g8b8, fast_composite_src_memcpy),
     PIXMAN_STD_FAST_PATH (SRC, a8r8g8b8, null, a8r8g8b8, fast_composite_src_memcpy),
     PIXMAN_STD_FAST_PATH (SRC, x8r8g8b8, null, x8r8g8b8, fast_composite_src_memcpy),
