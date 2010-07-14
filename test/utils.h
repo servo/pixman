@@ -30,6 +30,13 @@ lcg_rand_n (int max)
     return lcg_rand () % max;
 }
 
+static inline uint32_t
+lcg_rand_N (int max)
+{
+    uint32_t lo = lcg_rand ();
+    uint32_t hi = lcg_rand () << 15;
+    return (lo | hi) % max;
+}
 
 /* CRC 32 computation
  */

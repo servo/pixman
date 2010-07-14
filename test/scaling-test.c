@@ -12,10 +12,10 @@
 #include <stdio.h>
 #include "utils.h"
 
-#define MAX_SRC_WIDTH  10
-#define MAX_SRC_HEIGHT 10
-#define MAX_DST_WIDTH  10
-#define MAX_DST_HEIGHT 10
+#define MAX_SRC_WIDTH  16
+#define MAX_SRC_HEIGHT 16
+#define MAX_DST_WIDTH  16
+#define MAX_DST_HEIGHT 16
 #define MAX_STRIDE     4
 
 /*
@@ -38,7 +38,8 @@ test_composite (int      testnum,
     int                src_bpp;
     int                dst_bpp;
     int                w, h;
-    int                scale_x = 32768, scale_y = 32768;
+    pixman_fixed_t     scale_x = 65536, scale_y = 65536;
+    pixman_fixed_t     translate_x = 0, translate_y = 0;
     int                op;
     int                repeat = 0;
     int                src_fmt, dst_fmt;
@@ -98,9 +99,12 @@ test_composite (int      testnum,
 
     if (lcg_rand_n (8) > 0)
     {
-	scale_x = 32768 + lcg_rand_n (65536);
-	scale_y = 32768 + lcg_rand_n (65536);
+	scale_x = -32768 * 3 + lcg_rand_N (65536 * 5);
+	scale_y = -32768 * 3 + lcg_rand_N (65536 * 5);
+	translate_x = lcg_rand_N (65536);
+	translate_y = lcg_rand_N (65536);
 	pixman_transform_init_scale (&transform, scale_x, scale_y);
+	pixman_transform_translate (&transform, NULL, translate_x, translate_y);
 	pixman_image_set_transform (src_img, &transform);
     }
 
@@ -137,6 +141,8 @@ test_composite (int      testnum,
 	printf ("src_fmt=%08X, dst_fmt=%08X\n", src_fmt, dst_fmt);
 	printf ("op=%d, scale_x=%d, scale_y=%d, repeat=%d\n",
 	        op, scale_x, scale_y, repeat);
+	printf ("translate_x=%d, translate_y=%d\n",
+	        translate_x, translate_y);
 	printf ("src_width=%d, src_height=%d, dst_width=%d, dst_height=%d\n",
 	        src_width, src_height, dst_width, dst_height);
 	printf ("src_x=%d, src_y=%d, dst_x=%d, dst_y=%d\n",
@@ -236,6 +242,6 @@ main (int argc, const char *argv[])
 {
     pixman_disable_out_of_bounds_workaround ();
 
-    return fuzzer_test_main("scaling", 3000000, 0x7833766A,
+    return fuzzer_test_main("scaling", 8000000, 0x7F1AB59F,
 			    test_composite, argc, argv);
 }
