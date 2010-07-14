@@ -18,6 +18,7 @@ TESTPROGRAMS =			\
 	alphamap		\
 	blitters-test		\
 	scaling-test		\
+	affine-test		\
 	composite
 
 a1_trap_test_LDADD = $(TEST_LDADD)
@@ -38,6 +39,9 @@ blitters_test_SOURCES = blitters-test.c utils.c utils.h
 
 scaling_test_LDADD = $(TEST_LDADD)
 scaling_test_SOURCES = scaling-test.c utils.c utils.h
+
+affine_test_LDADD = $(TEST_LDADD)
+affine_test_SOURCES = affine-test.c utils.c utils.h
 
 alphamap_LDADD = $(TEST_LDADD)
 alphamap_SOURCES = alphamap.c utils.c utils.h
