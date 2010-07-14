@@ -105,9 +105,9 @@ AC_DEFUN([PIXMAN_LINK_WITH_ENV],[dnl
 	else
 		ifelse([$4], , :, [$4])
 	fi
-	CFLAGS="$save_cflags"
-	LDFLAGS="$save_ldflags"
-	LIBS="$save_libs"
+	CFLAGS="$save_CFLAGS"
+	LDFLAGS="$save_LDFLAGS"
+	LIBS="$save_LIBS"
 ])
 
 dnl Find a -Werror for catching warnings.
