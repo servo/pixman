@@ -695,12 +695,20 @@ bits_image_fetch_transformed (pixman_image_t * image,
     {
 	for (i = 0; i < width; ++i)
 	{
-	    pixman_fixed_t x0, y0;
-
 	    if (!mask || mask[i])
 	    {
-		x0 = ((pixman_fixed_48_16_t)x << 16) / w;
-		y0 = ((pixman_fixed_48_16_t)y << 16) / w;
+		pixman_fixed_t x0, y0;
+
+		if (w != 0)
+		{
+		    x0 = ((pixman_fixed_48_16_t)x << 16) / w;
+		    y0 = ((pixman_fixed_48_16_t)y << 16) / w;
+		}
+		else
+		{
+		    x0 = 0;
+		    y0 = 0;
+		}
 
 		buffer[i] =
 		    bits_image_fetch_pixel_filtered (&image->bits, x0, y0);
