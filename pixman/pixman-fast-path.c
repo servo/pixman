@@ -1881,7 +1881,7 @@ static const pixman_fast_path_t c_fast_paths[] =
 #define SIMPLE_NEAREST_FAST_PATH(op,s,d,func)				\
     {   PIXMAN_OP_ ## op,						\
 	PIXMAN_ ## s,							\
-	SCALED_NEAREST_FLAGS | HAS_NORMAL_REPEAT_FLAGS | FAST_PATH_16BIT_SAFE | FAST_PATH_X_UNIT_POSITIVE, \
+	SCALED_NEAREST_FLAGS | HAS_NORMAL_REPEAT_FLAGS | FAST_PATH_X_UNIT_POSITIVE, \
 	PIXMAN_null, 0,							\
 	PIXMAN_ ## d, FAST_PATH_STD_DEST_FLAGS,				\
 	fast_composite_scaled_nearest_ ## func ## _normal ## _ ## op,	\

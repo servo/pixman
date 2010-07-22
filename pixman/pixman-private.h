@@ -577,8 +577,7 @@ _pixman_choose_implementation (void);
 #define FAST_PATH_NEEDS_WORKAROUND		(1 << 14)
 #define FAST_PATH_NO_NONE_REPEAT		(1 << 15)
 #define FAST_PATH_SAMPLES_COVER_CLIP		(1 << 16)
-#define FAST_PATH_16BIT_SAFE			(1 << 17)
-#define FAST_PATH_X_UNIT_POSITIVE		(1 << 18)
+#define FAST_PATH_X_UNIT_POSITIVE		(1 << 17)
 
 #define _FAST_PATH_STANDARD_FLAGS					\
     (FAST_PATH_ID_TRANSFORM		|				\
