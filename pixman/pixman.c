@@ -1142,6 +1142,7 @@ pixman_format_supported_source (pixman_format_code_t format)
     case PIXMAN_b8g8r8:
     case PIXMAN_r5g6b5:
     case PIXMAN_b5g6r5:
+    case PIXMAN_x14r6g6b6:
     /* 16 bpp formats */
     case PIXMAN_a1r5g5b5:
     case PIXMAN_x1r5g5b5:
