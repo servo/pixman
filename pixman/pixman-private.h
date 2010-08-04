@@ -80,6 +80,7 @@ struct image_common
     image_type_t                type;
     int32_t                     ref_count;
     pixman_region32_t           clip_region;
+    int32_t			alpha_count;	    /* How many times this image is being used as an alpha map */
     pixman_bool_t               have_clip_region;   /* FALSE if there is no clip */
     pixman_bool_t               client_clip;        /* Whether the source clip was
 						       set by a client */
