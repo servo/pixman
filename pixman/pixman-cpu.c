@@ -74,9 +74,9 @@ pixman_have_vmx (void)
 	int mib[2] = { CTL_MACHDEP, CPU_ALTIVEC };
 	size_t length = sizeof(have_vmx);
 	int error =
-	    sysctl (&mib, 2, &have_vmx, &length, NULL, 0);
+	    sysctl (mib, 2, &have_vmx, &length, NULL, 0);
 
-	if (error)
+	if (error != 0)
 	    have_vmx = FALSE;
 
 	initialized = TRUE;
