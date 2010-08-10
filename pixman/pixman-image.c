@@ -409,12 +409,14 @@ compute_image_info (pixman_image_t *image)
 	    }
 	}
 
-	if (image->common.repeat != PIXMAN_REPEAT_NONE				&&
-	    !PIXMAN_FORMAT_A (image->bits.format)				&&
+	if (!PIXMAN_FORMAT_A (image->bits.format)				&&
 	    PIXMAN_FORMAT_TYPE (image->bits.format) != PIXMAN_TYPE_GRAY		&&
 	    PIXMAN_FORMAT_TYPE (image->bits.format) != PIXMAN_TYPE_COLOR)
 	{
-	    flags |= FAST_PATH_IS_OPAQUE;
+	    flags |= FAST_PATH_SAMPLES_OPAQUE;
+
+	    if (image->common.repeat != PIXMAN_REPEAT_NONE)
+		flags |= FAST_PATH_IS_OPAQUE;
 	}
 
 	if (source_image_needs_out_of_bounds_workaround (&image->bits))
@@ -462,7 +464,7 @@ compute_image_info (pixman_image_t *image)
 	image->common.filter == PIXMAN_FILTER_CONVOLUTION	||
 	image->common.component_alpha)
     {
-	flags &= ~FAST_PATH_IS_OPAQUE;
+	flags &= ~(FAST_PATH_IS_OPAQUE | FAST_PATH_SAMPLES_OPAQUE);
     }
 
     image->common.flags = flags;
