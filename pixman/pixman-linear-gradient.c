@@ -1,3 +1,4 @@
+/* -*- Mode: c; c-basic-offset: 4; tab-width: 8; indent-tabs-mode: t; -*- */
 /*
  * Copyright © 2000 SuSE, Inc.
  * Copyright © 2007 Red Hat, Inc.
@@ -101,7 +102,7 @@ linear_gradient_get_scanline_32 (pixman_image_t *image,
 {
     pixman_vector_t v, unit;
     pixman_fixed_32_32_t l;
-    pixman_fixed_48_16_t dx, dy, a, b, off;
+    pixman_fixed_48_16_t dx, dy;
     gradient_t *gradient = (gradient_t *)image;
     source_image_t *source = (source_image_t *)image;
     linear_gradient_t *linear = (linear_gradient_t *)image;
@@ -136,31 +137,31 @@ linear_gradient_get_scanline_32 (pixman_image_t *image,
 
     l = dx * dx + dy * dy;
 
-    if (l != 0)
+    if (l == 0 || unit.vector[2] == 0)
     {
-	a = (dx << 32) / l;
-	b = (dy << 32) / l;
-	off = (-a * linear->p1.x
-	       -b * linear->p1.y) >> 16;
-    }
-
-    if (l == 0 || (unit.vector[2] == 0 && v.vector[2] == pixman_fixed_1))
-    {
-	pixman_fixed_48_16_t inc, t;
-
 	/* affine transformation only */
-	if (l == 0)
+        pixman_fixed_32_32_t t, next_inc;
+	double inc;
+
+	if (l == 0 || v.vector[2] == 0)
 	{
 	    t = 0;
 	    inc = 0;
 	}
 	else
 	{
-	    t = ((a * v.vector[0] + b * v.vector[1]) >> 16) + off;
-	    inc = (a * unit.vector[0] + b * unit.vector[1]) >> 16;
-	}
+	    double invden, v2;
 
-	if (source->class == SOURCE_IMAGE_CLASS_VERTICAL)
+	    invden = pixman_fixed_1 * (double) pixman_fixed_1 /
+		(l * (double) v.vector[2]);
+	    v2 = v.vector[2] * (1. / pixman_fixed_1);
+	    t = ((dx * v.vector[0] + dy * v.vector[1]) - 
+		 (dx * linear->p1.x + dy * linear->p1.y) * v2) * invden;
+	    inc = (dx * unit.vector[0] + dy * unit.vector[1]) * invden;
+	}
+	next_inc = 0;
+
+	if (((pixman_fixed_32_32_t )(inc * width)) == 0)
 	{
 	    register uint32_t color;
 
@@ -170,81 +171,52 @@ linear_gradient_get_scanline_32 (pixman_image_t *image,
 	}
 	else
 	{
-	    if (!mask)
-	    {
-		while (buffer < end)
-		{
-		    *buffer++ = _pixman_gradient_walker_pixel (&walker, t);
-		    
-		    t += inc;
-		}
-	    }
-	    else
-	    {
-		while (buffer < end)
-		{
-		    if (*mask++)
-			*buffer = _pixman_gradient_walker_pixel (&walker, t);
+	    int i;
 
-		    buffer++;
-		    t += inc;
+	    i = 0;
+	    while (buffer < end)
+	    {
+		if (!mask || *mask++)
+		{
+		    *buffer = _pixman_gradient_walker_pixel (&walker,
+							     t + next_inc);
 		}
+		i++;
+		next_inc = inc * i;
+		buffer++;
 	    }
 	}
     }
     else
     {
 	/* projective transformation */
-	pixman_fixed_48_16_t t;
+        double t;
 
-	if (source->class == SOURCE_IMAGE_CLASS_VERTICAL)
+	t = 0;
+
+	while (buffer < end)
 	{
-	    register uint32_t color;
-
-	    if (v.vector[2] == 0)
+	    if (!mask || *mask++)
 	    {
-		t = 0;
-	    }
-	    else
-	    {
-		pixman_fixed_48_16_t x, y;
-
-		x = ((pixman_fixed_48_16_t) v.vector[0] << 16) / v.vector[2];
-		y = ((pixman_fixed_48_16_t) v.vector[1] << 16) / v.vector[2];
-		t = ((a * x + b * y) >> 16) + off;
-	    }
-
-	    color = _pixman_gradient_walker_pixel (&walker, t);
-	    while (buffer < end)
-		*buffer++ = color;
-	}
-	else
-	{
-	    while (buffer < end)
-	    {
-		if (!mask || *mask++)
+	        if (v.vector[2] != 0)
 		{
-		    if (v.vector[2] == 0)
-		    {
-			t = 0;
-		    }
-		    else
-		    {
-			pixman_fixed_48_16_t x, y;
-			x = ((pixman_fixed_48_16_t)v.vector[0] << 16) / v.vector[2];
-			y = ((pixman_fixed_48_16_t)v.vector[1] << 16) / v.vector[2];
-			t = ((a * x + b * y) >> 16) + off;
-		    }
+		    double invden, v2;
 
-		    *buffer = _pixman_gradient_walker_pixel (&walker, t);
+		    invden = pixman_fixed_1 * (double) pixman_fixed_1 /
+			(l * (double) v.vector[2]);
+		    v2 = v.vector[2] * (1. / pixman_fixed_1);
+		    t = ((dx * v.vector[0] + dy * v.vector[1]) - 
+			 (dx * linear->p1.x + dy * linear->p1.y) * v2) * invden;
 		}
 
-		++buffer;
-
-		v.vector[0] += unit.vector[0];
-		v.vector[1] += unit.vector[1];
-		v.vector[2] += unit.vector[2];
+		*buffer = _pixman_gradient_walker_pixel (&walker, t);
 	    }
+
+	    ++buffer;
+
+	    v.vector[0] += unit.vector[0];
+	    v.vector[1] += unit.vector[1];
+	    v.vector[2] += unit.vector[2];
 	}
     }
 }
