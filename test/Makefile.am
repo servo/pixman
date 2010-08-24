@@ -15,6 +15,7 @@ TESTPROGRAMS =			\
 	scaling-crash-test	\
 	gradient-crash-test	\
 	alphamap		\
+	stress-test		\
 	blitters-test		\
 	scaling-test		\
 	affine-test		\
@@ -50,6 +51,9 @@ composite_SOURCES = composite.c utils.c utils.h
 
 gradient_crash_test_LDADD = $(TEST_LDADD)
 gradient_crash_test_SOURCES = gradient-crash-test.c utils.c utils.h
+
+stress_test_LDADD = $(TEST_LDADD)
+stress_test_SOURCES = stress-test.c utils.c utils.h
 
 # GTK using test programs
 
