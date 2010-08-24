@@ -123,3 +123,6 @@ void enable_fp_exceptions(void);
 /* Try to get an aligned memory chunk */
 void *
 aligned_malloc (size_t align, size_t size);
+
+void
+initialize_palette (pixman_indexed_t *palette, uint32_t depth, int is_rgb);
