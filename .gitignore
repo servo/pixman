@@ -42,6 +42,7 @@ test/fetch-test
 test/gradient-test
 test/oob-test
 test/region-test
+test/region-translate
 test/scaling-test
 test/screen-test
 test/trap-crasher
