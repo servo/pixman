@@ -3,6 +3,8 @@
 #include <assert.h>
 #include "pixman-private.h" /* For 'inline' definition */
 
+#define ARRAY_LENGTH(A) ((int) (sizeof (A) / sizeof ((A) [0])))
+
 /* A primitive pseudorandom number generator,
  * taken from POSIX.1-2001 example
  */
