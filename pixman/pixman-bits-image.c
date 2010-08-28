@@ -946,8 +946,8 @@ convert_r5g6b5 (const uint8_t *row, int x)
 					  repeat_mode);			\
     }
 
-#if 0
 MAKE_BILINEAR_FETCHER (pad_a8r8g8b8,     a8r8g8b8, PIXMAN_REPEAT_PAD);
+#if 0
 MAKE_BILINEAR_FETCHER (none_a8r8g8b8,    a8r8g8b8, PIXMAN_REPEAT_NONE);
 MAKE_BILINEAR_FETCHER (reflect_a8r8g8b8, a8r8g8b8, PIXMAN_REPEAT_REFLECT);
 MAKE_BILINEAR_FETCHER (normal_a8r8g8b8,  a8r8g8b8, PIXMAN_REPEAT_NORMAL);
@@ -1184,8 +1184,8 @@ static const fetcher_info_t fetcher_info[] =
       _pixman_image_get_scanline_generic_64				\
     },
 
-#if 0
     BILINEAR_AFFINE_FAST_PATH (pad_a8r8g8b8, a8r8g8b8, PAD)
+#if 0
     BILINEAR_AFFINE_FAST_PATH (none_a8r8g8b8, a8r8g8b8, NONE)
     BILINEAR_AFFINE_FAST_PATH (reflect_a8r8g8b8, a8r8g8b8, REFLECT)
     BILINEAR_AFFINE_FAST_PATH (normal_a8r8g8b8, a8r8g8b8, NORMAL)
