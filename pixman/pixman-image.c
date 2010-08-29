@@ -327,10 +327,6 @@ compute_image_info (pixman_image_t *image)
 	    flags |= FAST_PATH_Y_UNIT_ZERO;
     }
 
-    /* Alpha map */
-    if (!image->common.alpha_map)
-	flags |= FAST_PATH_NO_ALPHA_MAP;
-
     /* Filter */
     switch (image->common.filter)
     {
@@ -452,6 +448,17 @@ compute_image_info (pixman_image_t *image)
     default:
 	code = PIXMAN_unknown;
 	break;
+    }
+
+    /* Alpha map */
+    if (!image->common.alpha_map)
+    {
+	flags |= FAST_PATH_NO_ALPHA_MAP;
+    }
+    else
+    {
+	if (PIXMAN_FORMAT_IS_WIDE (image->common.alpha_map->format))
+	    flags &= ~FAST_PATH_NARROW_FORMAT;
     }
 
     /* Both alpha maps and convolution filters can introduce

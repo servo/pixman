@@ -57,17 +57,6 @@ general_composite_rect  (pixman_implementation_t *imp,
                          int32_t                  height)
 {
     uint8_t stack_scanline_buffer[SCANLINE_BUFFER_LENGTH * 3];
-    const pixman_format_code_t src_format =
-	src->type == BITS ? src->bits.format : 0;
-    const pixman_format_code_t mask_format =
-	mask && mask->type == BITS ? mask->bits.format : 0;
-    const pixman_format_code_t dest_format =
-	dest->type == BITS ? dest->bits.format : 0;
-    const int src_narrow = !PIXMAN_FORMAT_IS_WIDE (src_format);
-    const int mask_narrow = !mask || !PIXMAN_FORMAT_IS_WIDE (mask_format);
-    const int dest_narrow = !PIXMAN_FORMAT_IS_WIDE (dest_format);
-    const int narrow = src_narrow && mask_narrow && dest_narrow;
-    const int Bpp = narrow ? 4 : 8;
     uint8_t *scanline_buffer = stack_scanline_buffer;
     uint8_t *src_buffer, *mask_buffer, *dest_buffer;
     fetch_scanline_t fetch_src = NULL, fetch_mask = NULL, fetch_dest = NULL;
@@ -77,7 +66,14 @@ general_composite_rect  (pixman_implementation_t *imp,
     pixman_bool_t component_alpha;
     uint32_t *bits;
     int32_t stride;
+    int narrow, Bpp;
     int i;
+
+    narrow =
+	(src->common.flags & FAST_PATH_NARROW_FORMAT)		&&
+	(!mask || mask->common.flags & FAST_PATH_NARROW_FORMAT)	&&
+	(dest->common.flags & FAST_PATH_NARROW_FORMAT);
+    Bpp = narrow ? 4 : 8;
 
     if (width * Bpp > SCANLINE_BUFFER_LENGTH)
     {
