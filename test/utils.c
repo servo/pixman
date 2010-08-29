@@ -528,6 +528,8 @@ initialize_palette (pixman_indexed_t *palette, uint32_t depth, int is_rgb)
     for (i = 0; i < 32768; ++i)
 	palette->ent[i] = lcg_rand() & mask;
 
+    memset (palette->rgba, 0, sizeof (palette->rgba));
+
     for (i = 0; i < mask + 1; ++i)
     {
 	uint32_t rgba24;
