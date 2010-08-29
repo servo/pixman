@@ -379,7 +379,7 @@ compute_image_info (pixman_image_t *image)
     else
 	flags |= FAST_PATH_UNIFIED_ALPHA;
 
-    flags |= (FAST_PATH_NO_ACCESSORS | FAST_PATH_NO_WIDE_FORMAT);
+    flags |= (FAST_PATH_NO_ACCESSORS | FAST_PATH_NARROW_FORMAT);
 
     /* Type specific checks */
     switch (image->type)
@@ -426,7 +426,7 @@ compute_image_info (pixman_image_t *image)
 	    flags &= ~FAST_PATH_NO_ACCESSORS;
 
 	if (PIXMAN_FORMAT_IS_WIDE (image->bits.format))
-	    flags &= ~FAST_PATH_NO_WIDE_FORMAT;
+	    flags &= ~FAST_PATH_NARROW_FORMAT;
 	break;
 
     case LINEAR:

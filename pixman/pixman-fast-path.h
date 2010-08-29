@@ -389,7 +389,7 @@ fast_composite_scaled_nearest_ ## scale_func_name (pixman_implementation_t *imp,
      FAST_PATH_NO_ALPHA_MAP	|					\
      FAST_PATH_NEAREST_FILTER	|					\
      FAST_PATH_NO_ACCESSORS	|					\
-     FAST_PATH_NO_WIDE_FORMAT)
+     FAST_PATH_NARROW_FORMAT)
 
 #define SIMPLE_NEAREST_FAST_PATH_NORMAL(op,s,d,func)			\
     {   PIXMAN_OP_ ## op,						\
