@@ -13,9 +13,9 @@ TESTPROGRAMS =			\
 	window-test		\
 	gradient-crash-test	\
 	trap-crasher		\
-	alphamap		\
 	alpha-loop		\
 	scaling-crash-test	\
+	alphamap		\
 	blitters-test		\
 	scaling-test		\
 	composite
