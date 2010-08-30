@@ -315,13 +315,26 @@ pixman_compute_composite_region32 (pixman_region32_t * region,
 	    return FALSE;
     }
 
-    if (dst_image->common.alpha_map && dst_image->common.alpha_map->common.have_clip_region)
+    if (dst_image->common.alpha_map)
     {
-	if (!clip_general_image (region, &dst_image->common.alpha_map->common.clip_region,
-	                         -dst_image->common.alpha_origin_x,
-	                         -dst_image->common.alpha_origin_y))
+	if (!pixman_region32_intersect_rect (region, region,
+					     dst_image->common.alpha_origin_x,
+					     dst_image->common.alpha_origin_y,
+					     dst_image->common.alpha_map->width,
+					     dst_image->common.alpha_map->height))
 	{
 	    return FALSE;
+	}
+	if (!pixman_region32_not_empty (region))
+	    return FALSE;
+	if (dst_image->common.alpha_map->common.have_clip_region)
+	{
+	    if (!clip_general_image (region, &dst_image->common.alpha_map->common.clip_region,
+				     -dst_image->common.alpha_origin_x,
+				     -dst_image->common.alpha_origin_y))
+	    {
+		return FALSE;
+	    }
 	}
     }
 
