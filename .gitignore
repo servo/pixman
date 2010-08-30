@@ -53,3 +53,4 @@ test/window-test
 *.lib
 *.ilk
 *.obj
+*.exe
