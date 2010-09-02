@@ -613,6 +613,9 @@ compute_sample_extents (pixman_transform_t *transform,
     {
 	int i;
 
+	/* Silence GCC */
+	tx1 = ty1 = tx2 = ty2 = 0;
+    
 	for (i = 0; i < 4; ++i)
 	{
 	    pixman_fixed_48_16_t tx, ty;
