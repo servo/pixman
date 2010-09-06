@@ -899,8 +899,24 @@ fname:
     .endfunc
 .endm
 
+/* Default prologue/epilogue, nothing special needs to be done */
+
 .macro default_init
 .endm
 
 .macro default_cleanup
+.endm
+
+/*
+ * Prologue/epilogue variant which additionally saves/restores d8-d15
+ * registers (they need to be saved/restored by callee according to ABI).
+ * This is required if the code needs to use all the NEON registers.
+ */
+
+.macro default_init_need_all_regs
+    vpush       {d8-d15}
+.endm
+
+.macro default_cleanup_need_all_regs
+    vpop        {d8-d15}
 .endm

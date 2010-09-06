@@ -892,21 +892,13 @@ generate_composite_function \
     vst1.16     {d28, d29}, [DST_W, :128]!
 .endm
 
-.macro pixman_composite_over_8888_8_0565_init
-    vpush       {d8-d15}
-.endm
-
-.macro pixman_composite_over_8888_8_0565_cleanup
-    vpop        {d8-d15}
-.endm
-
 generate_composite_function \
     pixman_composite_over_8888_8_0565_asm_neon, 32, 8, 16, \
     FLAG_DST_READWRITE | FLAG_DEINTERLEAVE_32BPP, \
     8, /* number of pixels, processed in a single block */ \
     5, /* prefetch distance */ \
-    pixman_composite_over_8888_8_0565_init, \
-    pixman_composite_over_8888_8_0565_cleanup, \
+    default_init_need_all_regs, \
+    default_cleanup_need_all_regs, \
     pixman_composite_over_n_8_0565_process_pixblock_head, \
     pixman_composite_over_n_8_0565_process_pixblock_tail, \
     pixman_composite_over_8888_8_0565_process_pixblock_tail_head, \
@@ -1519,14 +1511,6 @@ generate_composite_function_single_scanline \
     vraddhn.u16 d31, q13, q11
 .endm
 
-.macro pixman_composite_out_reverse_8888_8888_8888_init
-    vpush       {d8-d15}
-.endm
-
-.macro pixman_composite_out_reverse_8888_8888_8888_cleanup
-    vpop        {d8-d15}
-.endm
-
 /* TODO: expand macros and do better instructions scheduling */
 .macro pixman_composite_out_reverse_8888_8888_8888_process_pixblock_tail_head
     vld4.8     {d4, d5, d6, d7}, [DST_R, :128]!
@@ -1542,8 +1526,8 @@ generate_composite_function_single_scanline \
     pixman_composite_scanline_out_reverse_mask_asm_neon, 32, 32, 32, \
     FLAG_DST_READWRITE | FLAG_DEINTERLEAVE_32BPP, \
     8, /* number of pixels, processed in a single block */ \
-    pixman_composite_out_reverse_8888_8888_8888_init, \
-    pixman_composite_out_reverse_8888_8888_8888_cleanup, \
+    default_init_need_all_regs, \
+    default_cleanup_need_all_regs, \
     pixman_composite_out_reverse_8888_n_8888_process_pixblock_head, \
     pixman_composite_out_reverse_8888_n_8888_process_pixblock_tail, \
     pixman_composite_out_reverse_8888_8888_8888_process_pixblock_tail_head \
@@ -1609,21 +1593,13 @@ generate_composite_function \
     vst4.8     {d28, d29, d30, d31}, [DST_W, :128]!
 .endm
 
-.macro pixman_composite_over_8888_8888_8888_init
-    vpush       {d8-d15}
-.endm
-
-.macro pixman_composite_over_8888_8888_8888_cleanup
-    vpop        {d8-d15}
-.endm
-
 generate_composite_function \
     pixman_composite_over_8888_8888_8888_asm_neon, 32, 32, 32, \
     FLAG_DST_READWRITE | FLAG_DEINTERLEAVE_32BPP, \
     8, /* number of pixels, processed in a single block */ \
     5, /* prefetch distance */ \
-    pixman_composite_over_8888_8888_8888_init, \
-    pixman_composite_over_8888_8888_8888_cleanup, \
+    default_init_need_all_regs, \
+    default_cleanup_need_all_regs, \
     pixman_composite_over_8888_n_8888_process_pixblock_head, \
     pixman_composite_over_8888_n_8888_process_pixblock_tail, \
     pixman_composite_over_8888_8888_8888_process_pixblock_tail_head \
@@ -1636,8 +1612,8 @@ generate_composite_function_single_scanline \
     pixman_composite_scanline_over_mask_asm_neon, 32, 32, 32, \
     FLAG_DST_READWRITE | FLAG_DEINTERLEAVE_32BPP, \
     8, /* number of pixels, processed in a single block */ \
-    pixman_composite_over_8888_8888_8888_init, \
-    pixman_composite_over_8888_8888_8888_cleanup, \
+    default_init_need_all_regs, \
+    default_cleanup_need_all_regs, \
     pixman_composite_over_8888_n_8888_process_pixblock_head, \
     pixman_composite_over_8888_n_8888_process_pixblock_tail, \
     pixman_composite_over_8888_8888_8888_process_pixblock_tail_head \
@@ -1659,21 +1635,13 @@ generate_composite_function_single_scanline \
     vst4.8     {d28, d29, d30, d31}, [DST_W, :128]!
 .endm
 
-.macro pixman_composite_over_8888_8_8888_init
-    vpush       {d8-d15}
-.endm
-
-.macro pixman_composite_over_8888_8_8888_cleanup
-    vpop        {d8-d15}
-.endm
-
 generate_composite_function \
     pixman_composite_over_8888_8_8888_asm_neon, 32, 8, 32, \
     FLAG_DST_READWRITE | FLAG_DEINTERLEAVE_32BPP, \
     8, /* number of pixels, processed in a single block */ \
     5, /* prefetch distance */ \
-    pixman_composite_over_8888_8_8888_init, \
-    pixman_composite_over_8888_8_8888_cleanup, \
+    default_init_need_all_regs, \
+    default_cleanup_need_all_regs, \
     pixman_composite_over_8888_n_8888_process_pixblock_head, \
     pixman_composite_over_8888_n_8888_process_pixblock_tail, \
     pixman_composite_over_8888_8_8888_process_pixblock_tail_head \
