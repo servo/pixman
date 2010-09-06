@@ -920,3 +920,46 @@ fname:
 .macro default_cleanup_need_all_regs
     vpop        {d8-d15}
 .endm
+
+/******************************************************************************/
+
+/*
+ * Conversion of 8 r5g6b6 pixels packed in 128-bit register (in)
+ * into a planar a8r8g8b8 format (with a, r, g, b color components
+ * stored into 64-bit registers out_a, out_r, out_g, out_b respectively).
+ *
+ * Warning: the conversion is destructive and the original
+ *          value (in) is lost.
+ */
+.macro convert_0565_to_8888 in, out_a, out_r, out_g, out_b
+    vshrn.u16   out_r, in,    #8
+    vshrn.u16   out_g, in,    #3
+    vsli.u16    in,    in,    #5
+    vmov.u8     out_a, #255
+    vsri.u8     out_r, out_r, #5
+    vsri.u8     out_g, out_g, #6
+    vshrn.u16   out_b, in,    #2
+.endm
+
+.macro convert_0565_to_x888 in, out_r, out_g, out_b
+    vshrn.u16   out_r, in,    #8
+    vshrn.u16   out_g, in,    #3
+    vsli.u16    in,    in,    #5
+    vsri.u8     out_r, out_r, #5
+    vsri.u8     out_g, out_g, #6
+    vshrn.u16   out_b, in,    #2
+.endm
+
+/*
+ * Conversion from planar a8r8g8b8 format (with a, r, g, b color components
+ * in 64-bit registers in_a, in_r, in_g, in_b respectively) into 8 r5g6b6
+ * pixels packed in 128-bit register (out). Requires two temporary 128-bit
+ * registers (tmp1, tmp2)
+ */
+.macro convert_8888_to_0565 in_r, in_g, in_b, out, tmp1, tmp2
+    vshll.u8    tmp1, in_g, #8
+    vshll.u8    out, in_r, #8
+    vshll.u8    tmp2, in_b, #8
+    vsri.u16    out, tmp1, #5
+    vsri.u16    out, tmp2, #11
+.endm
