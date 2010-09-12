@@ -724,6 +724,7 @@ analyze_extent (pixman_image_t *image, int x, int y,
 	return FALSE;
     }
 
+    transform = image->common.transform;
     if (image->common.type == BITS)
     {
 	/* During repeat mode calculations we might convert the
@@ -733,6 +734,18 @@ analyze_extent (pixman_image_t *image, int x, int y,
 	if (image->bits.width >= 0x7fff	|| image->bits.height >= 0x7fff)
 	    return FALSE;
 
+#define ID_AND_NEAREST (FAST_PATH_ID_TRANSFORM | FAST_PATH_NEAREST_FILTER)
+	
+	if ((image->common.flags & ID_AND_NEAREST) == ID_AND_NEAREST &&
+	    extents->x1 - x >= 0 &&
+	    extents->y1 - y >= 0 &&
+	    extents->x2 - x <= image->bits.width &&
+	    extents->y2 - y <= image->bits.height)
+	{
+	    *flags |= (FAST_PATH_SAMPLES_COVER_CLIP | FAST_PATH_COVERS_CLIP);
+	    return TRUE;
+	}
+    
 	switch (image->common.filter)
 	{
 	case PIXMAN_FILTER_CONVOLUTION:
@@ -763,6 +776,17 @@ analyze_extent (pixman_image_t *image, int x, int y,
 	default:
 	    return FALSE;
 	}
+
+	/* Check whether the non-expanded, transformed extent is entirely within
+	 * the source image, and set the FAST_PATH_SAMPLES_COVER_CLIP if it is.
+	 */
+	ex = *extents;
+	if (compute_sample_extents (transform, &ex, x, y, x_off, y_off, width, height) &&
+	    ex.x1 >= 0 && ex.y1 >= 0 &&
+	    ex.x2 <= image->bits.width && ex.y2 <= image->bits.height)
+	{
+	    *flags |= (FAST_PATH_SAMPLES_COVER_CLIP | FAST_PATH_COVERS_CLIP);
+	}
     }
     else
     {
@@ -781,23 +805,8 @@ analyze_extent (pixman_image_t *image, int x, int y,
     ex.x2 = extents->x2 + 1;
     ex.y2 = extents->y2 + 1;
 
-    transform = image->common.transform;
-
     if (!compute_sample_extents (transform, &ex, x, y, x_off, y_off, width, height))
 	return FALSE;
-
-    if (image->type == BITS)
-    {
-	/* Check whether the non-expanded, transformed extent is entirely within
-	 * the source image, and set the FAST_PATH_SAMPLES_COVER_CLIP if it is.
-	 */
-	ex = *extents;
-	if (compute_sample_extents (transform, &ex, x, y, x_off, y_off, width, height))
-	{
-	    if (ex.x1 >= 0 && ex.y1 >= 0 && ex.x2 <= image->bits.width && ex.y2 <= image->bits.height)
-		*flags |= (FAST_PATH_SAMPLES_COVER_CLIP | FAST_PATH_COVERS_CLIP);
-	}
-    }
 
     return TRUE;
 }
