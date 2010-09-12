@@ -744,6 +744,9 @@ pixman_region16_copy_from_region32 (pixman_region16_t *dst,
 
 #undef DEBUG
 
+#define COMPILE_TIME_ASSERT(x)						\
+    do { typedef int compile_time_assertion [(x)?1:-1]; } while (0)
+
 /* Turn on debugging depending on what type of release this is
  */
 #if (((PIXMAN_VERSION_MICRO % 2) == 0) && ((PIXMAN_VERSION_MINOR % 2) == 1))

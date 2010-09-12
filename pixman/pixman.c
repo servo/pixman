@@ -139,14 +139,18 @@ optimize_operator (pixman_op_t     op,
 		   uint32_t        dst_flags)
 {
     pixman_bool_t is_source_opaque, is_dest_opaque;
-    int opaqueness;
 
-    is_source_opaque = ((src_flags & mask_flags) & FAST_PATH_IS_OPAQUE) != 0;
-    is_dest_opaque = (dst_flags & FAST_PATH_IS_OPAQUE) != 0;
+#define OPAQUE_SHIFT 13
+    
+    COMPILE_TIME_ASSERT (FAST_PATH_IS_OPAQUE == (1 << OPAQUE_SHIFT));
+    
+    is_dest_opaque = (dst_flags & FAST_PATH_IS_OPAQUE);
+    is_source_opaque = ((src_flags & mask_flags) & FAST_PATH_IS_OPAQUE);
 
-    opaqueness = ((is_dest_opaque << 1) | is_source_opaque);
+    is_dest_opaque >>= OPAQUE_SHIFT - 1;
+    is_source_opaque >>= OPAQUE_SHIFT;
 
-    return operator_table[op].opaque_info[opaqueness];
+    return operator_table[op].opaque_info[is_dest_opaque | is_source_opaque];
 }
 
 static void
