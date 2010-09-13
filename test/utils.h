@@ -51,7 +51,16 @@ compute_crc32 (uint32_t    in_crc32,
 void
 image_endian_swap (pixman_image_t *img, int bpp);
 
-/* Generate n_bytes random bytes in malloced memory */
+/* Allocate memory that is bounded by protected pages,
+ * so that out-of-bounds access will cause segfaults
+ */
+void *
+fence_malloc (uint32_t len);
+
+void
+fence_free (void *data);
+
+/* Generate n_bytes random bytes in fence_malloced memory */
 uint8_t *
 make_random_bytes (int n_bytes);
 

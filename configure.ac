@@ -623,6 +623,19 @@ if test x$have_alarm = xyes; then
    AC_DEFINE(HAVE_ALARM, 1, [Whether we have alarm()])
 fi
 
+AC_CHECK_HEADER([sys/mman.h],
+   [AC_DEFINE(HAVE_SYS_MMAN_H, [1], [Define to 1 if we have <sys/mman.h>])])
+
+AC_CHECK_FUNC(mprotect, have_mprotect=yes, have_mprotect=no)
+if test x$have_mprotect = xyes; then
+   AC_DEFINE(HAVE_MPROTECT, 1, [Whether we have mprotect()])
+fi
+
+AC_CHECK_FUNC(getpagesize, have_getpagesize=yes, have_getpagesize=no)
+if test x$have_getpagesize = xyes; then
+   AC_DEFINE(HAVE_GETPAGESIZE, 1, [Whether we have getpagesize()])
+fi
+
 dnl =====================================
 dnl Thread local storage
 
