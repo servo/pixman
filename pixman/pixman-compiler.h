@@ -60,7 +60,7 @@
 #endif
 
 /* GCC visibility */
-#if defined(__GNUC__) && __GNUC__ >= 4
+#if defined(__GNUC__) && __GNUC__ >= 4 && !defined(_WIN32)
 #   define PIXMAN_EXPORT __attribute__ ((visibility("default")))
 /* Sun Studio 8 visibility */
 #elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)

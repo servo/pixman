@@ -248,6 +248,9 @@ dnl -fvisibility stuff
 
 PIXMAN_CHECK_CFLAG([-fvisibility=hidden], [dnl
 #if defined(__GNUC__) && (__GNUC__ >= 4)
+#ifdef _WIN32
+#error Have -fvisibility but it is ignored and generates a warning
+#endif
 #else
 error Need GCC 4.0 for visibility
 #endif
@@ -643,8 +646,9 @@ support_for__thread=no
 
 AC_MSG_CHECKING(for __thread)
 AC_LINK_IFELSE([
-#ifdef __MINGW32__
-#error MinGW has broken __thread support
+#ifdef defined __MINGW32__ && !(__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5))
+#error This MinGW version has broken __thread support
+#endif
 #endif
 #ifdef __OpenBSD__
 #error OpenBSD has broken __thread support
