@@ -960,8 +960,8 @@ MAKE_BILINEAR_FETCHER (reflect_a8,	 a8,       PIXMAN_REPEAT_REFLECT);
 MAKE_BILINEAR_FETCHER (normal_a8,	 a8,       PIXMAN_REPEAT_NORMAL);
 MAKE_BILINEAR_FETCHER (pad_r5g6b5,       r5g6b5,   PIXMAN_REPEAT_PAD);
 MAKE_BILINEAR_FETCHER (none_r5g6b5,      r5g6b5,   PIXMAN_REPEAT_NONE);
-#if 0
 MAKE_BILINEAR_FETCHER (reflect_r5g6b5,   r5g6b5,   PIXMAN_REPEAT_REFLECT);
+#if 0
 MAKE_BILINEAR_FETCHER (normal_r5g6b5,    r5g6b5,   PIXMAN_REPEAT_NORMAL);
 #endif
 
@@ -1198,8 +1198,8 @@ static const fetcher_info_t fetcher_info[] =
     BILINEAR_AFFINE_FAST_PATH (normal_a8, a8, NORMAL)
     BILINEAR_AFFINE_FAST_PATH (pad_r5g6b5, r5g6b5, PAD)
     BILINEAR_AFFINE_FAST_PATH (none_r5g6b5, r5g6b5, NONE)
-#if 0
     BILINEAR_AFFINE_FAST_PATH (reflect_r5g6b5, r5g6b5, REFLECT)
+#if 0
     BILINEAR_AFFINE_FAST_PATH (normal_r5g6b5, r5g6b5, NORMAL)
 #endif
 
