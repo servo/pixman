@@ -76,98 +76,24 @@ repeat (pixman_repeat_t repeat, int *c, int size)
     565 source, but it is needed to build. */
 #define GET_0565_ALPHA(s) 0xff
 
-#define FAST_NEAREST(scale_func_name, SRC_FORMAT, DST_FORMAT,					\
-		     src_type_t, dst_type_t, OP, repeat_mode)					\
-static void											\
-fast_composite_scaled_nearest_ ## scale_func_name ## _ ## OP (pixman_implementation_t *imp,	\
-							      pixman_op_t              op,      \
-							      pixman_image_t *         src_image, \
-							      pixman_image_t *         mask_image, \
-							      pixman_image_t *         dst_image, \
-							      int32_t                  src_x,   \
-							      int32_t                  src_y,   \
-							      int32_t                  mask_x,  \
-							      int32_t                  mask_y,  \
-							      int32_t                  dst_x,   \
-							      int32_t                  dst_y,   \
-							      int32_t                  width,   \
-							      int32_t                  height)  \
+#define FAST_NEAREST_SCANLINE(scanline_func_name, SRC_FORMAT, DST_FORMAT,			\
+			      src_type_t, dst_type_t, OP, repeat_mode)				\
+static force_inline void									\
+scanline_func_name (dst_type_t     *dst,							\
+		    src_type_t     *src,							\
+		    int32_t         w,								\
+		    pixman_fixed_t  vx,								\
+		    pixman_fixed_t  unit_x,							\
+		    pixman_fixed_t  max_vx)							\
 {												\
-    dst_type_t *dst_line;									\
-    src_type_t *src_first_line;									\
-    uint32_t   d;										\
-    src_type_t s1, s2;										\
-    uint8_t   a1, a2;										\
-    int       w;										\
-    int       x1, x2, y;									\
-    pixman_fixed_t orig_vx;									\
-    pixman_fixed_t max_vx, max_vy;								\
-    pixman_vector_t v;										\
-    pixman_fixed_t vx, vy;									\
-    pixman_fixed_t unit_x, unit_y;								\
+	uint32_t   d;										\
+	src_type_t s1, s2;									\
+	uint8_t    a1, a2;									\
+	int        x1, x2;									\
 												\
-    src_type_t *src;										\
-    dst_type_t *dst;										\
-    int       src_stride, dst_stride;								\
+	if (PIXMAN_OP_ ## OP != PIXMAN_OP_SRC && PIXMAN_OP_ ## OP != PIXMAN_OP_OVER)		\
+	    abort();										\
 												\
-    if (PIXMAN_OP_ ## OP != PIXMAN_OP_SRC && PIXMAN_OP_ ## OP != PIXMAN_OP_OVER)		\
-	abort();										\
-												\
-    if (PIXMAN_REPEAT_ ## repeat_mode != PIXMAN_REPEAT_NORMAL		&&			\
-	PIXMAN_REPEAT_ ## repeat_mode != PIXMAN_REPEAT_NONE)					\
-    {												\
-	abort();										\
-    }												\
-												\
-    PIXMAN_IMAGE_GET_LINE (dst_image, dst_x, dst_y, dst_type_t, dst_stride, dst_line, 1);	\
-    /* pass in 0 instead of src_x and src_y because src_x and src_y need to be			\
-     * transformed from destination space to source space */					\
-    PIXMAN_IMAGE_GET_LINE (src_image, 0, 0, src_type_t, src_stride, src_first_line, 1);		\
-												\
-    /* reference point is the center of the pixel */						\
-    v.vector[0] = pixman_int_to_fixed (src_x) + pixman_fixed_1 / 2;				\
-    v.vector[1] = pixman_int_to_fixed (src_y) + pixman_fixed_1 / 2;				\
-    v.vector[2] = pixman_fixed_1;								\
-												\
-    if (!pixman_transform_point_3d (src_image->common.transform, &v))				\
-	return;											\
-												\
-    unit_x = src_image->common.transform->matrix[0][0];						\
-    unit_y = src_image->common.transform->matrix[1][1];						\
-												\
-    /* Round down to closest integer, ensuring that 0.5 rounds to 0, not 1 */			\
-    v.vector[0] -= pixman_fixed_e;								\
-    v.vector[1] -= pixman_fixed_e;								\
-												\
-    vx = v.vector[0];										\
-    vy = v.vector[1];										\
-												\
-    if (PIXMAN_REPEAT_ ## repeat_mode == PIXMAN_REPEAT_NORMAL)					\
-    {												\
-	/* Clamp repeating positions inside the actual samples */				\
-	max_vx = src_image->bits.width << 16;							\
-	max_vy = src_image->bits.height << 16;							\
-												\
-	repeat (PIXMAN_REPEAT_NORMAL, &vx, max_vx);						\
-	repeat (PIXMAN_REPEAT_NORMAL, &vy, max_vy);						\
-    }												\
-												\
-    orig_vx = vx;										\
-												\
-    while (--height >= 0)									\
-    {												\
-	dst = dst_line;										\
-	dst_line += dst_stride;									\
-												\
-	y = vy >> 16;										\
-	vy += unit_y;										\
-	if (PIXMAN_REPEAT_ ## repeat_mode == PIXMAN_REPEAT_NORMAL)				\
-	    repeat (PIXMAN_REPEAT_NORMAL, &vy, max_vy);						\
-												\
-	src = src_first_line + src_stride * y;							\
-												\
-	w = width;										\
-	vx = orig_vx;										\
 	while ((w -= 2) >= 0)									\
 	{											\
 	    x1 = vx >> 16;									\
@@ -258,8 +184,102 @@ fast_composite_scaled_nearest_ ## scale_func_name ## _ ## OP (pixman_implementat
 		*dst++ = CONVERT_ ## SRC_FORMAT ## _TO_ ## DST_FORMAT (s1);			\
 	    }											\
 	}											\
+}
+
+#define FAST_NEAREST_MAINLOOP(scale_func_name, scanline_func, src_type_t, dst_type_t,		\
+			      repeat_mode)							\
+static void											\
+fast_composite_scaled_nearest_ ## scale_func_name (pixman_implementation_t *imp,		\
+						   pixman_op_t              op,			\
+						   pixman_image_t *         src_image,		\
+						   pixman_image_t *         mask_image,		\
+						   pixman_image_t *         dst_image,		\
+						   int32_t                  src_x,		\
+						   int32_t                  src_y,		\
+						   int32_t                  mask_x,		\
+						   int32_t                  mask_y,		\
+						   int32_t                  dst_x,		\
+						   int32_t                  dst_y,		\
+						   int32_t                  width,		\
+						   int32_t                  height)		\
+{												\
+    dst_type_t *dst_line;									\
+    src_type_t *src_first_line;									\
+    int       y;										\
+    pixman_fixed_t max_vx = max_vx; /* suppress uninitialized variable warning */		\
+    pixman_fixed_t max_vy;									\
+    pixman_vector_t v;										\
+    pixman_fixed_t vx, vy;									\
+    pixman_fixed_t unit_x, unit_y;								\
+												\
+    src_type_t *src;										\
+    dst_type_t *dst;										\
+    int       src_stride, dst_stride;								\
+												\
+    if (PIXMAN_REPEAT_ ## repeat_mode != PIXMAN_REPEAT_NORMAL		&&			\
+	PIXMAN_REPEAT_ ## repeat_mode != PIXMAN_REPEAT_NONE)					\
+    {												\
+	abort();										\
+    }												\
+												\
+    PIXMAN_IMAGE_GET_LINE (dst_image, dst_x, dst_y, dst_type_t, dst_stride, dst_line, 1);	\
+    /* pass in 0 instead of src_x and src_y because src_x and src_y need to be			\
+     * transformed from destination space to source space */					\
+    PIXMAN_IMAGE_GET_LINE (src_image, 0, 0, src_type_t, src_stride, src_first_line, 1);		\
+												\
+    /* reference point is the center of the pixel */						\
+    v.vector[0] = pixman_int_to_fixed (src_x) + pixman_fixed_1 / 2;				\
+    v.vector[1] = pixman_int_to_fixed (src_y) + pixman_fixed_1 / 2;				\
+    v.vector[2] = pixman_fixed_1;								\
+												\
+    if (!pixman_transform_point_3d (src_image->common.transform, &v))				\
+	return;											\
+												\
+    unit_x = src_image->common.transform->matrix[0][0];						\
+    unit_y = src_image->common.transform->matrix[1][1];						\
+												\
+    /* Round down to closest integer, ensuring that 0.5 rounds to 0, not 1 */			\
+    v.vector[0] -= pixman_fixed_e;								\
+    v.vector[1] -= pixman_fixed_e;								\
+												\
+    vx = v.vector[0];										\
+    vy = v.vector[1];										\
+												\
+    if (PIXMAN_REPEAT_ ## repeat_mode == PIXMAN_REPEAT_NORMAL)					\
+    {												\
+	/* Clamp repeating positions inside the actual samples */				\
+	max_vx = src_image->bits.width << 16;							\
+	max_vy = src_image->bits.height << 16;							\
+												\
+	repeat (PIXMAN_REPEAT_NORMAL, &vx, max_vx);						\
+	repeat (PIXMAN_REPEAT_NORMAL, &vy, max_vy);						\
+    }												\
+												\
+    while (--height >= 0)									\
+    {												\
+	dst = dst_line;										\
+	dst_line += dst_stride;									\
+												\
+	y = vy >> 16;										\
+	vy += unit_y;										\
+	if (PIXMAN_REPEAT_ ## repeat_mode == PIXMAN_REPEAT_NORMAL)				\
+	    repeat (PIXMAN_REPEAT_NORMAL, &vy, max_vy);						\
+												\
+	src = src_first_line + src_stride * y;							\
+												\
+	scanline_func (dst, src, width, vx, unit_x, max_vx);					\
     }												\
 }
+
+#define FAST_NEAREST(scale_func_name, SRC_FORMAT, DST_FORMAT,				\
+		     src_type_t, dst_type_t, OP, repeat_mode)				\
+    FAST_NEAREST_SCANLINE(scaled_nearest_scanline_ ## scale_func_name ## _ ## OP,	\
+			  SRC_FORMAT, DST_FORMAT, src_type_t, dst_type_t,		\
+			  OP, repeat_mode)						\
+    FAST_NEAREST_MAINLOOP(scale_func_name##_##OP,					\
+			  scaled_nearest_scanline_ ## scale_func_name ## _ ## OP,	\
+			  src_type_t, dst_type_t, repeat_mode)
+
 
 #define SCALED_NEAREST_FLAGS						\
     (FAST_PATH_SCALE_TRANSFORM	|					\
@@ -268,7 +288,7 @@ fast_composite_scaled_nearest_ ## scale_func_name ## _ ## OP (pixman_implementat
      FAST_PATH_NO_ACCESSORS	|					\
      FAST_PATH_NO_WIDE_FORMAT)
 
-#define SIMPLE_NEAREST_FAST_PATH(op,s,d,func)				\
+#define SIMPLE_NEAREST_FAST_PATH_NORMAL(op,s,d,func)			\
     {   PIXMAN_OP_ ## op,						\
 	PIXMAN_ ## s,							\
 	(SCALED_NEAREST_FLAGS		|				\
@@ -277,7 +297,9 @@ fast_composite_scaled_nearest_ ## scale_func_name ## _ ## OP (pixman_implementat
 	PIXMAN_null, 0,							\
 	PIXMAN_ ## d, FAST_PATH_STD_DEST_FLAGS,				\
 	fast_composite_scaled_nearest_ ## func ## _normal ## _ ## op,	\
-    },									\
+    }
+
+#define SIMPLE_NEAREST_FAST_PATH_COVER(op,s,d,func)			\
     {   PIXMAN_OP_ ## op,						\
 	PIXMAN_ ## s,							\
 	SCALED_NEAREST_FLAGS | FAST_PATH_SAMPLES_COVER_CLIP,		\
@@ -285,5 +307,10 @@ fast_composite_scaled_nearest_ ## scale_func_name ## _ ## OP (pixman_implementat
 	PIXMAN_ ## d, FAST_PATH_STD_DEST_FLAGS,				\
 	fast_composite_scaled_nearest_ ## func ## _none ## _ ## op,	\
     }
+
+/* Prefer the use of 'cover' variant, because it is faster */
+#define SIMPLE_NEAREST_FAST_PATH(op,s,d,func)				\
+    SIMPLE_NEAREST_FAST_PATH_COVER (op,s,d,func),			\
+    SIMPLE_NEAREST_FAST_PATH_NORMAL (op,s,d,func)
 
 #endif
