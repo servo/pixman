@@ -58,6 +58,63 @@ repeat (pixman_repeat_t repeat, int *c, int size)
     return TRUE;
 }
 
+/*
+ * For each scanline fetched from source image with PAD repeat:
+ * - calculate how many pixels need to be padded on the left side
+ * - calculate how many pixels need to be padded on the right side
+ * - update width to only count pixels which are fetched from the image
+ * All this information is returned via 'width', 'left_pad', 'right_pad'
+ * arguments. The code is assuming that 'unit_x' is positive.
+ *
+ * Note: 64-bit math is used in order to avoid potential overflows, which
+ *       is probably excessive in many cases. This particular function
+ *       may need its own correctness test and performance tuning.
+ */
+static force_inline void
+pad_repeat_get_scanline_bounds (int32_t         source_image_width,
+				pixman_fixed_t  vx,
+				pixman_fixed_t  unit_x,
+				int32_t *       width,
+				int32_t *       left_pad,
+				int32_t *       right_pad)
+{
+    int64_t max_vx = (int64_t) source_image_width << 16;
+    int64_t tmp;
+    if (vx < 0)
+    {
+	tmp = ((int64_t) unit_x - 1 - vx) / unit_x;
+	if (tmp > *width)
+	{
+	    *left_pad = *width;
+	    *width = 0;
+	}
+	else
+	{
+	    *left_pad = (int32_t) tmp;
+	    *width -= (int32_t) tmp;
+	}
+    }
+    else
+    {
+	*left_pad = 0;
+    }
+    tmp = ((int64_t) unit_x - 1 - vx + max_vx) / unit_x - *left_pad;
+    if (tmp < 0)
+    {
+	*right_pad = *width;
+	*width = 0;
+    }
+    else if (tmp >= *width)
+    {
+	*right_pad = 0;
+    }
+    else
+    {
+	*right_pad = *width - (int32_t) tmp;
+	*width = (int32_t) tmp;
+    }
+}
+
 /* A macroified version of specialized nearest scalers for some
  * common 8888 and 565 formats. It supports SRC and OVER ops.
  *
@@ -213,6 +270,7 @@ fast_composite_scaled_nearest_ ## scale_func_name (pixman_implementation_t *imp,
     pixman_vector_t v;										\
     pixman_fixed_t vx, vy;									\
     pixman_fixed_t unit_x, unit_y;								\
+    int32_t left_pad, right_pad;								\
 												\
     src_type_t *src;										\
     dst_type_t *dst;										\
@@ -251,6 +309,13 @@ fast_composite_scaled_nearest_ ## scale_func_name (pixman_implementation_t *imp,
 	repeat (PIXMAN_REPEAT_NORMAL, &vy, max_vy);						\
     }												\
 												\
+    if (PIXMAN_REPEAT_ ## repeat_mode == PIXMAN_REPEAT_PAD)					\
+    {												\
+	pad_repeat_get_scanline_bounds (src_image->bits.width, vx, unit_x,			\
+					&width, &left_pad, &right_pad);				\
+	vx += left_pad * unit_x;								\
+    }												\
+												\
     while (--height >= 0)									\
     {												\
 	dst = dst_line;										\
@@ -260,10 +325,29 @@ fast_composite_scaled_nearest_ ## scale_func_name (pixman_implementation_t *imp,
 	vy += unit_y;										\
 	if (PIXMAN_REPEAT_ ## repeat_mode == PIXMAN_REPEAT_NORMAL)				\
 	    repeat (PIXMAN_REPEAT_NORMAL, &vy, max_vy);						\
-												\
-	src = src_first_line + src_stride * y;							\
-												\
-	scanline_func (dst, src, width, vx, unit_x, max_vx);					\
+	if (PIXMAN_REPEAT_ ## repeat_mode == PIXMAN_REPEAT_PAD)					\
+	{											\
+	    repeat (PIXMAN_REPEAT_PAD, &y, src_image->bits.height);				\
+	    src = src_first_line + src_stride * y;						\
+	    if (left_pad > 0)									\
+	    {											\
+		scanline_func (dst, src, left_pad, 0, 0, 0);					\
+	    }											\
+	    if (width > 0)									\
+	    {											\
+		scanline_func (dst + left_pad, src, width, vx, unit_x, 0);			\
+	    }											\
+	    if (right_pad > 0)									\
+	    {											\
+		scanline_func (dst + left_pad + width, src + src_image->bits.width - 1,		\
+			        right_pad, 0, 0, 0);						\
+	    }											\
+	}											\
+	else											\
+	{											\
+	    src = src_first_line + src_stride * y;						\
+	    scanline_func (dst, src, width, vx, unit_x, max_vx);				\
+	}											\
     }												\
 }
 
@@ -295,6 +379,17 @@ fast_composite_scaled_nearest_ ## scale_func_name (pixman_implementation_t *imp,
 	fast_composite_scaled_nearest_ ## func ## _normal ## _ ## op,	\
     }
 
+#define SIMPLE_NEAREST_FAST_PATH_PAD(op,s,d,func)			\
+    {   PIXMAN_OP_ ## op,						\
+	PIXMAN_ ## s,							\
+	(SCALED_NEAREST_FLAGS		|				\
+	 FAST_PATH_PAD_REPEAT		|				\
+	 FAST_PATH_X_UNIT_POSITIVE),					\
+	PIXMAN_null, 0,							\
+	PIXMAN_ ## d, FAST_PATH_STD_DEST_FLAGS,				\
+	fast_composite_scaled_nearest_ ## func ## _pad ## _ ## op,	\
+    }
+
 #define SIMPLE_NEAREST_FAST_PATH_COVER(op,s,d,func)			\
     {   PIXMAN_OP_ ## op,						\
 	PIXMAN_ ## s,							\
@@ -307,6 +402,7 @@ fast_composite_scaled_nearest_ ## scale_func_name (pixman_implementation_t *imp,
 /* Prefer the use of 'cover' variant, because it is faster */
 #define SIMPLE_NEAREST_FAST_PATH(op,s,d,func)				\
     SIMPLE_NEAREST_FAST_PATH_COVER (op,s,d,func),			\
+    SIMPLE_NEAREST_FAST_PATH_PAD (op,s,d,func),				\
     SIMPLE_NEAREST_FAST_PATH_NORMAL (op,s,d,func)
 
 #endif
