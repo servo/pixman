@@ -708,28 +708,8 @@ analyze_extent (pixman_image_t *image, int x, int y,
     pixman_fixed_t width, height;
     pixman_box32_t ex;
 
-    *flags |= FAST_PATH_COVERS_CLIP;
     if (!image)
 	return TRUE;
-
-    transform = image->common.transform;
-    if (image->common.type == BITS)
-    {
-	/* During repeat mode calculations we might convert the
-	 * width/height of an image to fixed 16.16, so we need
-	 * them to be smaller than 16 bits.
-	 */
-	if (image->bits.width >= 0x7fff	|| image->bits.height >= 0x7fff)
-	    return FALSE;
-
-	if (image->common.repeat == PIXMAN_REPEAT_NONE &&
-	    (x > extents->x1 || y > extents->y1 ||
-	     x + image->bits.width < extents->x2 ||
-	     y + image->bits.height < extents->y2))
-	{
-	    (*flags) &= ~FAST_PATH_COVERS_CLIP;
-	}
-    }
 
     /* Some compositing functions walk one step
      * outside the destination rectangle, so we
@@ -746,6 +726,13 @@ analyze_extent (pixman_image_t *image, int x, int y,
 
     if (image->common.type == BITS)
     {
+	/* During repeat mode calculations we might convert the
+	 * width/height of an image to fixed 16.16, so we need
+	 * them to be smaller than 16 bits.
+	 */
+	if (image->bits.width >= 0x7fff	|| image->bits.height >= 0x7fff)
+	    return FALSE;
+
 	switch (image->common.filter)
 	{
 	case PIXMAN_FILTER_CONVOLUTION:
@@ -786,13 +773,15 @@ analyze_extent (pixman_image_t *image, int x, int y,
     }
 
     /* Check that the extents expanded by one don't overflow. This ensures that
-     * compositing functions can simply walk the source space using 16.16 variables
-     * without worrying about overflow.
+     * compositing functions can simply walk the source space using 16.16
+     * variables without worrying about overflow.
      */
     ex.x1 = extents->x1 - 1;
     ex.y1 = extents->y1 - 1;
     ex.x2 = extents->x2 + 1;
     ex.y2 = extents->y2 + 1;
+
+    transform = image->common.transform;
 
     if (!compute_sample_extents (transform, &ex, x, y, x_off, y_off, width, height))
 	return FALSE;
@@ -806,7 +795,7 @@ analyze_extent (pixman_image_t *image, int x, int y,
 	if (compute_sample_extents (transform, &ex, x, y, x_off, y_off, width, height))
 	{
 	    if (ex.x1 >= 0 && ex.y1 >= 0 && ex.x2 <= image->bits.width && ex.y2 <= image->bits.height)
-		*flags |= FAST_PATH_SAMPLES_COVER_CLIP;
+		*flags |= (FAST_PATH_SAMPLES_COVER_CLIP | FAST_PATH_COVERS_CLIP);
 	}
     }
 

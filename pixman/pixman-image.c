@@ -353,19 +353,34 @@ compute_image_info (pixman_image_t *image)
     switch (image->common.repeat)
     {
     case PIXMAN_REPEAT_NONE:
-	flags |= FAST_PATH_NO_REFLECT_REPEAT | FAST_PATH_NO_PAD_REPEAT | FAST_PATH_NO_NORMAL_REPEAT;
+	flags |=
+	    FAST_PATH_NO_REFLECT_REPEAT		|
+	    FAST_PATH_NO_PAD_REPEAT		|
+	    FAST_PATH_NO_NORMAL_REPEAT;
 	break;
 
     case PIXMAN_REPEAT_REFLECT:
-	flags |= FAST_PATH_NO_PAD_REPEAT | FAST_PATH_NO_NONE_REPEAT | FAST_PATH_NO_NORMAL_REPEAT;
+	flags |=
+	    FAST_PATH_NO_PAD_REPEAT		|
+	    FAST_PATH_NO_NONE_REPEAT		|
+	    FAST_PATH_NO_NORMAL_REPEAT		|
+	    FAST_PATH_COVERS_CLIP;
 	break;
 
     case PIXMAN_REPEAT_PAD:
-	flags |= FAST_PATH_NO_REFLECT_REPEAT | FAST_PATH_NO_NONE_REPEAT | FAST_PATH_NO_NORMAL_REPEAT;
+	flags |=
+	    FAST_PATH_NO_REFLECT_REPEAT		|
+	    FAST_PATH_NO_NONE_REPEAT		|
+	    FAST_PATH_NO_NORMAL_REPEAT		|
+	    FAST_PATH_COVERS_CLIP;
 	break;
 
     default:
-	flags |= FAST_PATH_NO_REFLECT_REPEAT | FAST_PATH_NO_PAD_REPEAT | FAST_PATH_NO_NONE_REPEAT;
+	flags |=
+	    FAST_PATH_NO_REFLECT_REPEAT		|
+	    FAST_PATH_NO_PAD_REPEAT		|
+	    FAST_PATH_NO_NONE_REPEAT		|
+	    FAST_PATH_COVERS_CLIP;
 	break;
     }
 
@@ -385,6 +400,8 @@ compute_image_info (pixman_image_t *image)
 
 	if (image->solid.color.alpha == 0xffff)
 	    flags |= FAST_PATH_IS_OPAQUE;
+
+	flags |= FAST_PATH_COVERS_CLIP;
 	break;
 
     case BITS:
