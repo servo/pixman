@@ -309,7 +309,8 @@ fast_composite_scaled_nearest_ ## scale_func_name (pixman_implementation_t *imp,
 	repeat (PIXMAN_REPEAT_NORMAL, &vy, max_vy);						\
     }												\
 												\
-    if (PIXMAN_REPEAT_ ## repeat_mode == PIXMAN_REPEAT_PAD)					\
+    if (PIXMAN_REPEAT_ ## repeat_mode == PIXMAN_REPEAT_PAD ||					\
+	PIXMAN_REPEAT_ ## repeat_mode == PIXMAN_REPEAT_NONE)					\
     {												\
 	pad_repeat_get_scanline_bounds (src_image->bits.width, vx, unit_x,			\
 					&width, &left_pad, &right_pad);				\
@@ -341,6 +342,28 @@ fast_composite_scaled_nearest_ ## scale_func_name (pixman_implementation_t *imp,
 	    {											\
 		scanline_func (dst + left_pad + width, src + src_image->bits.width - 1,		\
 			        right_pad, 0, 0, 0);						\
+	    }											\
+	}											\
+	else if (PIXMAN_REPEAT_ ## repeat_mode == PIXMAN_REPEAT_NONE)				\
+	{											\
+	    static src_type_t zero = 0;								\
+	    if (y < 0 || y >= src_image->bits.height)						\
+	    {											\
+		scanline_func (dst, &zero, left_pad + width + right_pad, 0, 0, 0);		\
+		continue;									\
+	    }											\
+	    src = src_first_line + src_stride * y;						\
+	    if (left_pad > 0)									\
+	    {											\
+		scanline_func (dst, &zero, left_pad, 0, 0, 0);					\
+	    }											\
+	    if (width > 0)									\
+	    {											\
+		scanline_func (dst + left_pad, src, width, vx, unit_x, 0);			\
+	    }											\
+	    if (right_pad > 0)									\
+	    {											\
+		scanline_func (dst + left_pad + width, &zero, right_pad, 0, 0, 0);		\
 	    }											\
 	}											\
 	else											\
@@ -390,6 +413,17 @@ fast_composite_scaled_nearest_ ## scale_func_name (pixman_implementation_t *imp,
 	fast_composite_scaled_nearest_ ## func ## _pad ## _ ## op,	\
     }
 
+#define SIMPLE_NEAREST_FAST_PATH_NONE(op,s,d,func)			\
+    {   PIXMAN_OP_ ## op,						\
+	PIXMAN_ ## s,							\
+	(SCALED_NEAREST_FLAGS		|				\
+	 FAST_PATH_NONE_REPEAT		|				\
+	 FAST_PATH_X_UNIT_POSITIVE),					\
+	PIXMAN_null, 0,							\
+	PIXMAN_ ## d, FAST_PATH_STD_DEST_FLAGS,				\
+	fast_composite_scaled_nearest_ ## func ## _none ## _ ## op,	\
+    }
+
 #define SIMPLE_NEAREST_FAST_PATH_COVER(op,s,d,func)			\
     {   PIXMAN_OP_ ## op,						\
 	PIXMAN_ ## s,							\
@@ -402,6 +436,7 @@ fast_composite_scaled_nearest_ ## scale_func_name (pixman_implementation_t *imp,
 /* Prefer the use of 'cover' variant, because it is faster */
 #define SIMPLE_NEAREST_FAST_PATH(op,s,d,func)				\
     SIMPLE_NEAREST_FAST_PATH_COVER (op,s,d,func),			\
+    SIMPLE_NEAREST_FAST_PATH_NONE (op,s,d,func),			\
     SIMPLE_NEAREST_FAST_PATH_PAD (op,s,d,func),				\
     SIMPLE_NEAREST_FAST_PATH_NORMAL (op,s,d,func)
 
