@@ -94,7 +94,14 @@ convolution_test_SOURCES = convolution-test.c $(GTK_UTILS)
 
 endif
 
-noinst_PROGRAMS = $(TESTPROGRAMS) $(TESTPROGRAMS_GTK)
+# Benchmarks
+
+BENCHMARKS =			\
+	lowlevel-blt-bench
+
+lowlevel_blt_bench_SOURCES = lowlevel-blt-bench.c utils.c utils.h
+lowlevel_blt_bench_LDADD = $(TEST_LDADD)
+
+noinst_PROGRAMS = $(TESTPROGRAMS) $(TESTPROGRAMS_GTK) $(BENCHMARKS)
 
 TESTS = $(TESTPROGRAMS)
-
