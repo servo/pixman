@@ -609,7 +609,7 @@ AC_SUBST(DEP_CFLAGS)
 AC_SUBST(DEP_LIBS)
 
 dnl =====================================
-dnl posix_memalign, sigaction, alarm
+dnl posix_memalign, sigaction, alarm, gettimeofday
 
 AC_CHECK_FUNC(posix_memalign, have_posix_memalign=yes, have_posix_memalign=no)
 if test x$have_posix_memalign = xyes; then
@@ -637,6 +637,12 @@ fi
 AC_CHECK_FUNC(getpagesize, have_getpagesize=yes, have_getpagesize=no)
 if test x$have_getpagesize = xyes; then
    AC_DEFINE(HAVE_GETPAGESIZE, 1, [Whether we have getpagesize()])
+fi
+
+AC_CHECK_FUNC(gettimeofday, have_gettimeofday=yes, have_gettimeofday=no)
+AC_CHECK_HEADER(sys/time.h, have_sys_time_h=yes, have_sys_time_h=no)
+if test x$have_gettimeofday = xyes && test x$have_sys_time_h = xyes; then
+   AC_DEFINE(HAVE_GETTIMEOFDAY, 1, [Whether we have gettimeofday()])
 fi
 
 dnl =====================================

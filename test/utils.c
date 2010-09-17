@@ -1,6 +1,12 @@
 #include "utils.h"
 #include <signal.h>
 
+#ifdef HAVE_GETTIMEOFDAY
+#include <sys/time.h>
+#else
+#include <time.h>
+#endif
+
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -429,6 +435,20 @@ fuzzer_test_main (const char *test_name,
     }
 
     return 0;
+}
+
+/* Try to obtain current time in seconds */
+double
+gettime (void)
+{
+#ifdef HAVE_GETTIMEOFDAY
+    struct timeval tv;
+
+    gettimeofday (&tv, NULL);
+    return (double)((int64_t)tv.tv_sec * 1000000 + tv.tv_usec) / 1000000.;
+#else
+    return (double)clock() / (double)CLOCKS_PER_SEC;
+#endif
 }
 
 static const char *global_msg;

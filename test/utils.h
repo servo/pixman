@@ -64,6 +64,10 @@ fence_free (void *data);
 uint8_t *
 make_random_bytes (int n_bytes);
 
+/* Return current time in seconds */
+double
+gettime (void);
+
 /* main body of the fuzzer test */
 int
 fuzzer_test_main (const char *test_name,
