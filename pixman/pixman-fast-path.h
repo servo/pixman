@@ -28,6 +28,8 @@
 
 #include "pixman-private.h"
 
+#define PIXMAN_REPEAT_COVER -1
+
 static force_inline pixman_bool_t
 repeat (pixman_repeat_t repeat, int *c, int size)
 {
@@ -216,12 +218,6 @@ fast_composite_scaled_nearest_ ## scale_func_name (pixman_implementation_t *imp,
     dst_type_t *dst;										\
     int       src_stride, dst_stride;								\
 												\
-    if (PIXMAN_REPEAT_ ## repeat_mode != PIXMAN_REPEAT_NORMAL		&&			\
-	PIXMAN_REPEAT_ ## repeat_mode != PIXMAN_REPEAT_NONE)					\
-    {												\
-	abort();										\
-    }												\
-												\
     PIXMAN_IMAGE_GET_LINE (dst_image, dst_x, dst_y, dst_type_t, dst_stride, dst_line, 1);	\
     /* pass in 0 instead of src_x and src_y because src_x and src_y need to be			\
      * transformed from destination space to source space */					\
@@ -305,7 +301,7 @@ fast_composite_scaled_nearest_ ## scale_func_name (pixman_implementation_t *imp,
 	SCALED_NEAREST_FLAGS | FAST_PATH_SAMPLES_COVER_CLIP,		\
 	PIXMAN_null, 0,							\
 	PIXMAN_ ## d, FAST_PATH_STD_DEST_FLAGS,				\
-	fast_composite_scaled_nearest_ ## func ## _none ## _ ## op,	\
+	fast_composite_scaled_nearest_ ## func ## _cover ## _ ## op,	\
     }
 
 /* Prefer the use of 'cover' variant, because it is faster */

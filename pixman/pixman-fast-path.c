@@ -1387,15 +1387,15 @@ fast_composite_src_memcpy (pixman_implementation_t *imp,
     }
 }
 
-FAST_NEAREST (8888_8888_none, 8888, 8888, uint32_t, uint32_t, SRC, NONE);
+FAST_NEAREST (8888_8888_cover, 8888, 8888, uint32_t, uint32_t, SRC, COVER);
 FAST_NEAREST (8888_8888_normal, 8888, 8888, uint32_t, uint32_t, SRC, NORMAL);
-FAST_NEAREST (8888_8888_none, 8888, 8888, uint32_t, uint32_t, OVER, NONE);
+FAST_NEAREST (8888_8888_cover, 8888, 8888, uint32_t, uint32_t, OVER, COVER);
 FAST_NEAREST (8888_8888_normal, 8888, 8888, uint32_t, uint32_t, OVER, NORMAL);
-FAST_NEAREST (8888_565_none, 8888, 0565, uint32_t, uint16_t, SRC, NONE);
+FAST_NEAREST (8888_565_cover, 8888, 0565, uint32_t, uint16_t, SRC, COVER);
 FAST_NEAREST (8888_565_normal, 8888, 0565, uint32_t, uint16_t, SRC, NORMAL);
-FAST_NEAREST (565_565_none, 0565, 0565, uint16_t, uint16_t, SRC, NONE);
+FAST_NEAREST (565_565_cover, 0565, 0565, uint16_t, uint16_t, SRC, COVER);
 FAST_NEAREST (565_565_normal, 0565, 0565, uint16_t, uint16_t, SRC, NORMAL);
-FAST_NEAREST (8888_565_none, 8888, 0565, uint32_t, uint16_t, OVER, NONE);
+FAST_NEAREST (8888_565_cover, 8888, 0565, uint32_t, uint16_t, OVER, COVER);
 FAST_NEAREST (8888_565_normal, 8888, 0565, uint32_t, uint16_t, OVER, NORMAL);
 
 static force_inline uint32_t
