@@ -458,3 +458,18 @@ fail_after (int seconds, const char *msg)
 #endif
 #endif
 }
+
+void *
+aligned_malloc (size_t align, size_t size)
+{
+    void *result;
+
+#ifdef HAVE_POSIX_MEMALIGN
+    if (posix_memalign (&result, align, size) != 0)
+      result = NULL;
+#else
+    result = malloc (size);
+#endif
+
+    return result;
+}

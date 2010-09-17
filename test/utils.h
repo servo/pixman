@@ -110,3 +110,7 @@ fail_after (int seconds, const char *msg);
     assert (frcd_canary_variable6 == frcd_volatile_constant6); \
     assert (frcd_canary_variable7 == frcd_volatile_constant7); \
     assert (frcd_canary_variable8 == frcd_volatile_constant8);
+
+/* Try to get an aligned memory chunk */
+void *
+aligned_malloc (size_t align, size_t size);
