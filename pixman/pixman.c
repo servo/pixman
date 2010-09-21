@@ -306,6 +306,10 @@ pixman_compute_composite_region32 (pixman_region32_t * region,
     if (region->extents.x1 >= region->extents.x2 ||
         region->extents.y1 >= region->extents.y2)
     {
+	region->extents.x1 = 0;
+	region->extents.x2 = 0;
+	region->extents.y1 = 0;
+	region->extents.y2 = 0;
 	return FALSE;
     }
 
