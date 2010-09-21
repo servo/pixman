@@ -220,6 +220,11 @@ typedef struct
 
 #if defined(HAVE_MPROTECT) && defined(HAVE_GETPAGESIZE)
 
+/* This is apparently necessary on at least OS X */
+#ifndef MAP_ANONYMOUS
+#define MAP_ANONYMOUS MAP_ANON
+#endif
+
 void *
 fence_malloc (uint32_t len)
 {
