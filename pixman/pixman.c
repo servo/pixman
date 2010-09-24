@@ -30,14 +30,23 @@
 
 #include <stdlib.h>
 
+static pixman_implementation_t *global_implementation;
+
+#ifdef TOOLCHAIN_SUPPORTS_ATTRIBUTE_CONSTRUCTOR
+static void __attribute__((constructor))
+pixman_constructor (void)
+{
+    global_implementation = _pixman_choose_implementation ();
+}
+#endif
+
 static force_inline pixman_implementation_t *
 get_implementation (void)
 {
-    static pixman_implementation_t *global_implementation;
-
+#ifndef TOOLCHAIN_SUPPORTS_ATTRIBUTE_CONSTRUCTOR
     if (!global_implementation)
 	global_implementation = _pixman_choose_implementation ();
-
+#endif
     return global_implementation;
 }
 
