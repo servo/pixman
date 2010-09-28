@@ -746,7 +746,7 @@ analyze_extent (pixman_image_t *image, int x, int y,
 	    extents->x2 - x <= image->bits.width &&
 	    extents->y2 - y <= image->bits.height)
 	{
-	    *flags |= (FAST_PATH_SAMPLES_COVER_CLIP | FAST_PATH_COVERS_CLIP);
+	    *flags |= FAST_PATH_SAMPLES_COVER_CLIP;
 	    return TRUE;
 	}
     
@@ -789,7 +789,7 @@ analyze_extent (pixman_image_t *image, int x, int y,
 	    ex.x1 >= 0 && ex.y1 >= 0 &&
 	    ex.x2 <= image->bits.width && ex.y2 <= image->bits.height)
 	{
-	    *flags |= (FAST_PATH_SAMPLES_COVER_CLIP | FAST_PATH_COVERS_CLIP);
+	    *flags |= FAST_PATH_SAMPLES_COVER_CLIP;
 	}
     }
     else
