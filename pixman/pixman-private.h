@@ -560,7 +560,7 @@ _pixman_choose_implementation (void);
 #define FAST_PATH_UNIFIED_ALPHA			(1 <<  9)
 #define FAST_PATH_SCALE_TRANSFORM		(1 << 10)
 #define FAST_PATH_NEAREST_FILTER		(1 << 11)
-#define FAST_PATH_SIMPLE_REPEAT			(1 << 12)
+#define FAST_PATH_HAS_TRANSFORM			(1 << 12)
 #define FAST_PATH_IS_OPAQUE			(1 << 13)
 #define FAST_PATH_NEEDS_WORKAROUND		(1 << 14)
 #define FAST_PATH_NO_NONE_REPEAT		(1 << 15)
@@ -570,7 +570,6 @@ _pixman_choose_implementation (void);
 #define FAST_PATH_Y_UNIT_ZERO			(1 << 19)
 #define FAST_PATH_BILINEAR_FILTER		(1 << 20)
 #define FAST_PATH_NO_NORMAL_REPEAT		(1 << 21)
-#define FAST_PATH_HAS_TRANSFORM			(1 << 22)
 
 #define FAST_PATH_PAD_REPEAT						\
     (FAST_PATH_NO_NONE_REPEAT		|				\

@@ -409,12 +409,6 @@ compute_image_info (pixman_image_t *image)
 	else
 	{
 	    code = image->bits.format;
-
-	    if (!image->common.transform &&
-		image->common.repeat == PIXMAN_REPEAT_NORMAL)
-	    {
-		flags |= FAST_PATH_SIMPLE_REPEAT;
-	    }
 	}
 
 	if (!PIXMAN_FORMAT_A (image->bits.format)				&&
