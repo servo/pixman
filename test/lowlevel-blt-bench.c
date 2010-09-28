@@ -544,7 +544,7 @@ struct
 tests_tbl[] =
 {
     { "add_8_8_8",             PIXMAN_a8,          0, PIXMAN_OP_ADD,     PIXMAN_a8,       0, PIXMAN_a8 },
-    { "add_n_8_",              PIXMAN_a8r8g8b8,    1, PIXMAN_OP_ADD,     PIXMAN_a8,       0, PIXMAN_a8 },
+    { "add_n_8_8",             PIXMAN_a8r8g8b8,    1, PIXMAN_OP_ADD,     PIXMAN_a8,       0, PIXMAN_a8 },
     { "add_n_8_8888",          PIXMAN_a8r8g8b8,    1, PIXMAN_OP_ADD,     PIXMAN_a8,       0, PIXMAN_a8r8g8b8 },
     { "add_n_8_x888",          PIXMAN_a8r8g8b8,    1, PIXMAN_OP_ADD,     PIXMAN_a8,       0, PIXMAN_x8r8g8b8 },
     { "add_n_8_0565",          PIXMAN_a8r8g8b8,    1, PIXMAN_OP_ADD,     PIXMAN_a8,       0, PIXMAN_r5g6b5 },
