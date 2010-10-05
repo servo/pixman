@@ -1296,17 +1296,13 @@ combine_disjoint_over_u (pixman_implementation_t *imp,
 	comp4_t s = combine_mask (src, mask, i);
 	comp2_t a = s >> A_SHIFT;
 
-	if (a != 0x00)
+	if (s != 0x00)
 	{
-	    if (a != MASK)
-	    {
-		comp4_t d = *(dest + i);
-		a = combine_disjoint_out_part (d >> A_SHIFT, a);
-		UNcx4_MUL_UNc_ADD_UNcx4 (d, a, s);
-		s = d;
-	    }
+	    comp4_t d = *(dest + i);
+	    a = combine_disjoint_out_part (d >> A_SHIFT, a);
+	    UNcx4_MUL_UNc_ADD_UNcx4 (d, a, s);
 
-	    *(dest + i) = s;
+	    *(dest + i) = d;
 	}
     }
 }
