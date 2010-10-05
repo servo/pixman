@@ -891,15 +891,17 @@ main (int argc, char **argv)
 	    return -1;
 	}
     }
-    
+
+#ifdef USE_OPENMP
+#   pragma omp parallel for default(none) shared(result) shared(argv) 
+#endif
     for (i = 1; i <= N_TESTS; ++i)
     {
-	if (!run_test (i))
+	if (!result && !run_test (i))
 	{
 	    printf ("Test %d failed.\n", i);
-	    
+
 	    result = i;
-	    break;
 	}
     }
     
