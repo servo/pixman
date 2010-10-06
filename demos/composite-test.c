@@ -4,8 +4,8 @@
 #include "pixman.h"
 #include "gtk-utils.h"
 
-#define WIDTH	60
-#define HEIGHT	60
+#define WIDTH	80
+#define HEIGHT	80
 
 typedef struct {
     const char *name;
@@ -94,19 +94,19 @@ main (int argc, char **argv)
     uint32_t *src = malloc (WIDTH * HEIGHT * 4);
     pixman_image_t *src_img;
     pixman_image_t *dest_img;
-    pixman_point_fixed_t p1 = { -10 << 0, 0 };
-    pixman_point_fixed_t p2 = { WIDTH << 16, (HEIGHT - 10) << 16 };
+    pixman_point_fixed_t p1 = { -10 << 16, 10 << 16 };
+    pixman_point_fixed_t p2 = { (WIDTH + 10) << 16, (HEIGHT - 10) << 16 };
     uint16_t full = 0xcfff;
     uint16_t low  = 0x5000;
     uint16_t alpha = 0xffff;
     pixman_gradient_stop_t stops[6] =
     {
-	{ d2f (0.0), { full, low, low, alpha } },
-	{ d2f (0.25), { full, full, low, alpha } },
-	{ d2f (0.4), { low, full, low, alpha } },
-	{ d2f (0.6), { low, full, full, alpha } },
-	{ d2f (0.8), { low, low, full, alpha } },
-	{ d2f (1.0), { full, low, full, alpha } },
+	{ d2f (0.0), { 0xf2f2, 0x8787, 0x7d7d, alpha } },
+	{ d2f (0.22), { 0xf3f3, 0xeaea, 0x8383, alpha } },
+	{ d2f (0.42), { 0x6b6b, 0xc0c0, 0x7777, alpha } },
+	{ d2f (0.57), { 0x4b4b, 0xc9c9, 0xf5f5, alpha } },
+	{ d2f (0.75), { 0x6a6a, 0x7f7f, 0xbebe, alpha } },
+	{ d2f (1.0), { 0xeded, 0x8282, 0xb0b0, alpha } },
     };
 
     int i;
