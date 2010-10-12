@@ -57,7 +57,7 @@ image_endian_swap (pixman_image_t *img, int bpp);
  * so that out-of-bounds access will cause segfaults
  */
 void *
-fence_malloc (uint32_t len);
+fence_malloc (int64_t len);
 
 void
 fence_free (void *data);

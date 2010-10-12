@@ -232,7 +232,7 @@ typedef struct
 #endif
 
 void *
-fence_malloc (uint32_t len)
+fence_malloc (int64_t len)
 {
     unsigned long page_size = getpagesize();
     unsigned long page_mask = page_size - 1;
@@ -246,12 +246,15 @@ fence_malloc (uint32_t len)
     uint8_t *payload;
     uint8_t *addr;
 
+    if (len < 0)
+	abort();
+    
     addr = mmap (NULL, n_bytes, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS,
 		 -1, 0);
 
     if (addr == MAP_FAILED)
     {
-	printf ("mmap failed on %u %u\n", len, n_bytes);
+	printf ("mmap failed on %lld %u\n", (long long int)len, n_bytes);
 	return NULL;
     }
 
