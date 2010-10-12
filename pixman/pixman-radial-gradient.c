@@ -42,6 +42,10 @@ dot (pixman_fixed_48_16_t x1,
      pixman_fixed_48_16_t y2,
      pixman_fixed_48_16_t z2)
 {
+    /*
+     * Exact computation, assuming that the input values can
+     * be represented as pixman_fixed_16_16_t
+     */
     return x1 * x2 + y1 * y2 + z1 * z2;
 }
 
@@ -53,6 +57,12 @@ fdot (double x1,
       double y2,
       double z2)
 {
+    /*
+     * Error can be unbound in some special cases.
+     * Using clever dot product algorithms (for example compensated
+     * dot product) would improve this but make the code much less
+     * obvious
+     */
     return x1 * x2 + y1 * y2 + z1 * z2;
 }
 
@@ -66,6 +76,22 @@ radial_compute_color (double                    a,
 		      pixman_gradient_walker_t *walker,
 		      pixman_repeat_t           repeat)
 {
+    /*
+     * In this function error propagation can lead to bad results:
+     *  - det can have an unbound error (if b*b-a*c is very small),
+     *    potentially making it the opposite sign of what it should have been
+     *    (thus clearing a pixel that would have been colored or vice-versa)
+     *    or propagating the error to sqrtdet;
+     *    if det has the wrong sign or b is very small, this can lead to bad
+     *    results
+     *
+     *  - the algorithm used to compute the solutions of the quadratic
+     *    equation is not numerically stable (but saves one division compared
+     *    to the numerically stable one);
+     *    this can be a problem if a*c is much smaller than b*b
+     *
+     *  - the above problems are worse if a is small (as inva becomes bigger)
+     */
     double det;
 
     if (a == 0)
@@ -246,9 +272,19 @@ radial_gradient_get_scanline_32 (pixman_image_t *image,
 	 */
 	pixman_fixed_32_32_t b, db, c, dc, ddc;
 
+	/* warning: this computation may overflow */
 	v.vector[0] -= radial->c1.x;
 	v.vector[1] -= radial->c1.y;
 
+	/*
+	 * B and C are computed and updated exactly.
+	 * If fdot was used instead of dot, in the worst case it would
+	 * lose 11 bits of precision in each of the multiplication and
+	 * summing up would zero out all the bit that were preserved,
+	 * thus making the result 0 instead of the correct one.
+	 * This would mean a worst case of unbound relative error or
+	 * about 2^10 absolute error
+	 */
 	b = dot (v.vector[0], v.vector[1], radial->c1.radius,
 		 radial->delta.x, radial->delta.y, radial->delta.radius);
 	db = dot (unit.vector[0], unit.vector[1], 0,
@@ -284,6 +320,9 @@ radial_gradient_get_scanline_32 (pixman_image_t *image,
     else
     {
 	/* projective */
+	/* Warning:
+	 * error propagation guarantees are much looser than in the affine case
+	 */
 	while (buffer < end)
 	{
 	    if (!mask || *mask++)
@@ -371,10 +410,13 @@ pixman_image_create_radial_gradient (pixman_point_fixed_t *        inner,
     radial->c2.y = outer->y;
     radial->c2.radius = outer_radius;
 
+    /* warning: this computations may overflow */
     radial->delta.x = radial->c2.x - radial->c1.x;
     radial->delta.y = radial->c2.y - radial->c1.y;
     radial->delta.radius = radial->c2.radius - radial->c1.radius;
 
+    /* computed exactly, then cast to double -> every bit of the double
+       representation is correct (53 bits) */
     radial->a = dot (radial->delta.x, radial->delta.y, -radial->delta.radius,
 		     radial->delta.x, radial->delta.y, radial->delta.radius);
     if (radial->a != 0)
