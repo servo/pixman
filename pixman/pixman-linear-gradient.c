@@ -38,58 +38,57 @@ linear_gradient_classify (pixman_image_t *image,
                           int             width,
                           int             height)
 {
+    source_image_t *source = (source_image_t *)image;
     linear_gradient_t *linear = (linear_gradient_t *)image;
     pixman_vector_t v;
     pixman_fixed_32_32_t l;
-    pixman_fixed_48_16_t dx, dy, a, b, off;
-    pixman_fixed_48_16_t factors[4];
-    int i;
+    pixman_fixed_48_16_t dx, dy;
+    double inc;
 
-    image->source.class = SOURCE_IMAGE_CLASS_UNKNOWN;
+    source->class = SOURCE_IMAGE_CLASS_UNKNOWN;
+
+    if (source->common.transform)
+    {
+	/* projective transformation */
+	if (source->common.transform->matrix[2][0] != 0 ||
+	    source->common.transform->matrix[2][1] != 0 ||
+	    source->common.transform->matrix[2][2] == 0)
+	{
+	    return source->class;
+	}
+
+	v.vector[0] = source->common.transform->matrix[0][1];
+	v.vector[1] = source->common.transform->matrix[1][1];
+	v.vector[2] = source->common.transform->matrix[2][2];
+    }
+    else
+    {
+	v.vector[0] = 0;
+	v.vector[1] = pixman_fixed_1;
+	v.vector[2] = pixman_fixed_1;
+    }
 
     dx = linear->p2.x - linear->p1.x;
     dy = linear->p2.y - linear->p1.y;
 
     l = dx * dx + dy * dy;
 
-    if (l)
-    {
-	a = (dx << 32) / l;
-	b = (dy << 32) / l;
-    }
-    else
-    {
-	a = b = 0;
-    }
+    if (l == 0)
+	return source->class;	
 
-    off = (-a * linear->p1.x
-           -b * linear->p1.y) >> 16;
+    /*
+     * compute how much the input of the gradient walked changes
+     * when moving vertically through the whole image
+     */
+    inc = height * (double) pixman_fixed_1 * pixman_fixed_1 *
+	(dx * v.vector[0] + dy * v.vector[1]) /
+	(v.vector[2] * (double) l);
 
-    for (i = 0; i < 3; i++)
-    {
-	v.vector[0] = pixman_int_to_fixed ((i % 2) * (width  - 1) + x);
-	v.vector[1] = pixman_int_to_fixed ((i / 2) * (height - 1) + y);
-	v.vector[2] = pixman_fixed_1;
+    /* check that casting to integer would result in 0 */
+    if (-1 < inc && inc < 1)
+	source->class = SOURCE_IMAGE_CLASS_HORIZONTAL;
 
-	if (image->common.transform)
-	{
-	    if (!pixman_transform_point_3d (image->common.transform, &v))
-	    {
-		image->source.class = SOURCE_IMAGE_CLASS_UNKNOWN;
-
-		return image->source.class;
-	    }
-	}
-
-	factors[i] = ((a * v.vector[0] + b * v.vector[1]) >> 16) + off;
-    }
-
-    if (factors[2] == factors[0])
-	image->source.class = SOURCE_IMAGE_CLASS_HORIZONTAL;
-    else if (factors[1] == factors[0])
-	image->source.class = SOURCE_IMAGE_CLASS_VERTICAL;
-
-    return image->source.class;
+    return source->class;
 }
 
 static void
