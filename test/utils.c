@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+
 #include "utils.h"
 #include <signal.h>
 
@@ -13,6 +15,10 @@
 
 #ifdef HAVE_SYS_MMAN_H
 #include <sys/mman.h>
+#endif
+
+#ifdef HAVE_FENV_H
+#include <fenv.h>
 #endif
 
 /* Random number seed
@@ -465,6 +471,26 @@ fail_after (int seconds, const char *msg)
     alarm (seconds);
 
     sigaction (SIGALRM, &action, NULL);
+#endif
+#endif
+}
+
+void
+enable_fp_exceptions (void)
+{
+#ifdef HAVE_FENV_H
+#ifdef HAVE_FEENABLEEXCEPT
+    /* Note: we don't enable the FE_INEXACT trap because
+     * that happens quite commonly. It is possible that
+     * over- and underflow should similarly be considered
+     * okay, but for now the test suite passes with them
+     * enabled, and it's useful to know if they start
+     * occuring.
+     */
+    feenableexcept (FE_DIVBYZERO	|
+		    FE_INVALID		|
+		    FE_OVERFLOW		|
+		    FE_UNDERFLOW);
 #endif
 #endif
 }
