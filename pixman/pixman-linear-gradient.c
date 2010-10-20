@@ -44,8 +44,9 @@ linear_gradient_classify (pixman_image_t *image,
     pixman_fixed_32_32_t l;
     pixman_fixed_48_16_t dx, dy;
     double inc;
+    source_image_class_t class;
 
-    source->class = SOURCE_IMAGE_CLASS_UNKNOWN;
+    class = SOURCE_IMAGE_CLASS_UNKNOWN;
 
     if (source->common.transform)
     {
@@ -54,7 +55,7 @@ linear_gradient_classify (pixman_image_t *image,
 	    source->common.transform->matrix[2][1] != 0 ||
 	    source->common.transform->matrix[2][2] == 0)
 	{
-	    return source->class;
+	    return class;
 	}
 
 	v.vector[0] = source->common.transform->matrix[0][1];
@@ -74,7 +75,7 @@ linear_gradient_classify (pixman_image_t *image,
     l = dx * dx + dy * dy;
 
     if (l == 0)
-	return source->class;	
+	return class;	
 
     /*
      * compute how much the input of the gradient walked changes
@@ -86,9 +87,9 @@ linear_gradient_classify (pixman_image_t *image,
 
     /* check that casting to integer would result in 0 */
     if (-1 < inc && inc < 1)
-	source->class = SOURCE_IMAGE_CLASS_HORIZONTAL;
+	class = SOURCE_IMAGE_CLASS_HORIZONTAL;
 
-    return source->class;
+    return class;
 }
 
 static void
@@ -253,7 +254,6 @@ pixman_image_create_linear_gradient (pixman_point_fixed_t *        p1,
     linear->p2 = *p2;
 
     image->type = LINEAR;
-    image->source.class = SOURCE_IMAGE_CLASS_UNKNOWN;
     image->common.classify = linear_gradient_classify;
     image->common.property_changed = linear_gradient_property_changed;
 

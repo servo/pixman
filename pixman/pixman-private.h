@@ -111,7 +111,6 @@ struct image_common
 struct source_image
 {
     image_common_t common;
-    source_image_class_t class;
 };
 
 struct solid_fill
