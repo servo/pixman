@@ -245,8 +245,8 @@ scanline_func_name (dst_type_t       *dst,							\
 	}											\
 }
 
-#define FAST_NEAREST_MAINLOOP_INT(scale_func_name, scanline_func, src_type_t, dst_type_t,	\
-				  repeat_mode)							\
+#define FAST_NEAREST_MAINLOOP_INT(scale_func_name, scanline_func, src_type_t, mask_type_t,	\
+				  dst_type_t, repeat_mode, have_mask, mask_is_solid)		\
 static void											\
 fast_composite_scaled_nearest  ## scale_func_name (pixman_implementation_t *imp,		\
 						   pixman_op_t              op,			\
@@ -263,6 +263,7 @@ fast_composite_scaled_nearest  ## scale_func_name (pixman_implementation_t *imp,
 						   int32_t                  height)		\
 {												\
     dst_type_t *dst_line;									\
+    mask_type_t *mask_line;									\
     src_type_t *src_first_line;									\
     int       y;										\
     pixman_fixed_t max_vx = INT32_MAX; /* suppress uninitialized variable warning */		\
@@ -274,9 +275,19 @@ fast_composite_scaled_nearest  ## scale_func_name (pixman_implementation_t *imp,
 												\
     src_type_t *src;										\
     dst_type_t *dst;										\
-    int       src_stride, dst_stride;								\
+    mask_type_t solid_mask;									\
+    const mask_type_t *mask = &solid_mask;							\
+    int src_stride, mask_stride, dst_stride;							\
 												\
     PIXMAN_IMAGE_GET_LINE (dst_image, dst_x, dst_y, dst_type_t, dst_stride, dst_line, 1);	\
+    if (have_mask)										\
+    {												\
+	if (mask_is_solid)									\
+	    solid_mask = _pixman_image_get_solid (imp, mask_image, dst_image->bits.format);	\
+	else											\
+	    PIXMAN_IMAGE_GET_LINE (mask_image, mask_x, mask_y, mask_type_t,			\
+				   mask_stride, mask_line, 1);					\
+    }												\
     /* pass in 0 instead of src_x and src_y because src_x and src_y need to be			\
      * transformed from destination space to source space */					\
     PIXMAN_IMAGE_GET_LINE (src_image, 0, 0, src_type_t, src_stride, src_first_line, 1);		\
@@ -321,6 +332,11 @@ fast_composite_scaled_nearest  ## scale_func_name (pixman_implementation_t *imp,
     {												\
 	dst = dst_line;										\
 	dst_line += dst_stride;									\
+	if (have_mask && !mask_is_solid)							\
+	{											\
+	    mask = mask_line;									\
+	    mask_line += mask_stride;								\
+	}											\
 												\
 	y = vy >> 16;										\
 	vy += unit_y;										\
@@ -332,16 +348,18 @@ fast_composite_scaled_nearest  ## scale_func_name (pixman_implementation_t *imp,
 	    src = src_first_line + src_stride * y;						\
 	    if (left_pad > 0)									\
 	    {											\
-		scanline_func (dst, src, left_pad, 0, 0, 0);					\
+		scanline_func (mask, dst, src, left_pad, 0, 0, 0);				\
 	    }											\
 	    if (width > 0)									\
 	    {											\
-		scanline_func (dst + left_pad, src, width, vx, unit_x, 0);			\
+		scanline_func (mask + (mask_is_solid ? 0 : left_pad),				\
+			       dst + left_pad, src, width, vx, unit_x, 0);			\
 	    }											\
 	    if (right_pad > 0)									\
 	    {											\
-		scanline_func (dst + left_pad + width, src + src_image->bits.width - 1,		\
-			        right_pad, 0, 0, 0);						\
+		scanline_func (mask + (mask_is_solid ? 0 : left_pad + width),			\
+			       dst + left_pad + width, src + src_image->bits.width - 1,		\
+			       right_pad, 0, 0, 0);						\
 	    }											\
 	}											\
 	else if (PIXMAN_REPEAT_ ## repeat_mode == PIXMAN_REPEAT_NONE)				\
@@ -349,43 +367,67 @@ fast_composite_scaled_nearest  ## scale_func_name (pixman_implementation_t *imp,
 	    static const src_type_t zero[1] = { 0 };						\
 	    if (y < 0 || y >= src_image->bits.height)						\
 	    {											\
-		scanline_func (dst, zero, left_pad + width + right_pad, 0, 0, 0);		\
+		scanline_func (mask, dst, zero, left_pad + width + right_pad, 0, 0, 0);		\
 		continue;									\
 	    }											\
 	    src = src_first_line + src_stride * y;						\
 	    if (left_pad > 0)									\
 	    {											\
-		scanline_func (dst, zero, left_pad, 0, 0, 0);					\
+		scanline_func (mask, dst, zero, left_pad, 0, 0, 0);				\
 	    }											\
 	    if (width > 0)									\
 	    {											\
-		scanline_func (dst + left_pad, src, width, vx, unit_x, 0);			\
+		scanline_func (mask + (mask_is_solid ? 0 : left_pad),				\
+			       dst + left_pad, src, width, vx, unit_x, 0);			\
 	    }											\
 	    if (right_pad > 0)									\
 	    {											\
-		scanline_func (dst + left_pad + width, zero, right_pad, 0, 0, 0);		\
+		scanline_func (mask + (mask_is_solid ? 0 : left_pad + width),			\
+			       dst + left_pad + width, zero, right_pad, 0, 0, 0);		\
 	    }											\
 	}											\
 	else											\
 	{											\
 	    src = src_first_line + src_stride * y;						\
-	    scanline_func (dst, src, width, vx, unit_x, max_vx);				\
+	    scanline_func (mask, dst, src, width, vx, unit_x, max_vx);				\
 	}											\
     }												\
 }
 
 /* A workaround for old sun studio, see: https://bugs.freedesktop.org/show_bug.cgi?id=32764 */
+#define FAST_NEAREST_MAINLOOP_COMMON(scale_func_name, scanline_func, src_type_t, mask_type_t,	\
+				  dst_type_t, repeat_mode, have_mask, mask_is_solid)		\
+	FAST_NEAREST_MAINLOOP_INT(_ ## scale_func_name, scanline_func, src_type_t, mask_type_t,	\
+				  dst_type_t, repeat_mode, have_mask, mask_is_solid)
+
+#define FAST_NEAREST_MAINLOOP_NOMASK(scale_func_name, scanline_func, src_type_t, dst_type_t,	\
+			      repeat_mode)							\
+    static force_inline void									\
+    scanline_func##scale_func_name##_wrapper (							\
+		    const uint8_t    *mask,							\
+		    dst_type_t       *dst,							\
+		    const src_type_t *src,							\
+		    int32_t          w,								\
+		    pixman_fixed_t   vx,							\
+		    pixman_fixed_t   unit_x,							\
+		    pixman_fixed_t   max_vx)							\
+    {												\
+	scanline_func (dst, src, w, vx, unit_x, max_vx);					\
+    }												\
+    FAST_NEAREST_MAINLOOP_INT (scale_func_name, scanline_func##scale_func_name##_wrapper,	\
+			       src_type_t, uint8_t, dst_type_t, repeat_mode, FALSE, FALSE)
+
 #define FAST_NEAREST_MAINLOOP(scale_func_name, scanline_func, src_type_t, dst_type_t,		\
 			      repeat_mode)							\
-	FAST_NEAREST_MAINLOOP_INT(_ ## scale_func_name, scanline_func, src_type_t, dst_type_t,	\
-			      repeat_mode)							\
+	FAST_NEAREST_MAINLOOP_NOMASK(_ ## scale_func_name, scanline_func, src_type_t,		\
+			      dst_type_t, repeat_mode)
 
 #define FAST_NEAREST(scale_func_name, SRC_FORMAT, DST_FORMAT,				\
 		     src_type_t, dst_type_t, OP, repeat_mode)				\
     FAST_NEAREST_SCANLINE(scaled_nearest_scanline_ ## scale_func_name ## _ ## OP,	\
 			  SRC_FORMAT, DST_FORMAT, src_type_t, dst_type_t,		\
 			  OP, repeat_mode)						\
-    FAST_NEAREST_MAINLOOP_INT(_ ## scale_func_name ## _ ## OP,				\
+    FAST_NEAREST_MAINLOOP_NOMASK(_ ## scale_func_name ## _ ## OP,			\
 			  scaled_nearest_scanline_ ## scale_func_name ## _ ## OP,	\
 			  src_type_t, dst_type_t, repeat_mode)
 
@@ -439,11 +481,105 @@ fast_composite_scaled_nearest  ## scale_func_name (pixman_implementation_t *imp,
 	fast_composite_scaled_nearest_ ## func ## _cover ## _ ## op,	\
     }
 
+#define SIMPLE_NEAREST_A8_MASK_FAST_PATH_NORMAL(op,s,d,func)		\
+    {   PIXMAN_OP_ ## op,						\
+	PIXMAN_ ## s,							\
+	(SCALED_NEAREST_FLAGS		|				\
+	 FAST_PATH_NORMAL_REPEAT	|				\
+	 FAST_PATH_X_UNIT_POSITIVE),					\
+	PIXMAN_a8, MASK_FLAGS (a8, FAST_PATH_UNIFIED_ALPHA),		\
+	PIXMAN_ ## d, FAST_PATH_STD_DEST_FLAGS,				\
+	fast_composite_scaled_nearest_ ## func ## _normal ## _ ## op,	\
+    }
+
+#define SIMPLE_NEAREST_A8_MASK_FAST_PATH_PAD(op,s,d,func)		\
+    {   PIXMAN_OP_ ## op,						\
+	PIXMAN_ ## s,							\
+	(SCALED_NEAREST_FLAGS		|				\
+	 FAST_PATH_PAD_REPEAT		|				\
+	 FAST_PATH_X_UNIT_POSITIVE),					\
+	PIXMAN_a8, MASK_FLAGS (a8, FAST_PATH_UNIFIED_ALPHA),		\
+	PIXMAN_ ## d, FAST_PATH_STD_DEST_FLAGS,				\
+	fast_composite_scaled_nearest_ ## func ## _pad ## _ ## op,	\
+    }
+
+#define SIMPLE_NEAREST_A8_MASK_FAST_PATH_NONE(op,s,d,func)		\
+    {   PIXMAN_OP_ ## op,						\
+	PIXMAN_ ## s,							\
+	(SCALED_NEAREST_FLAGS		|				\
+	 FAST_PATH_NONE_REPEAT		|				\
+	 FAST_PATH_X_UNIT_POSITIVE),					\
+	PIXMAN_a8, MASK_FLAGS (a8, FAST_PATH_UNIFIED_ALPHA),		\
+	PIXMAN_ ## d, FAST_PATH_STD_DEST_FLAGS,				\
+	fast_composite_scaled_nearest_ ## func ## _none ## _ ## op,	\
+    }
+
+#define SIMPLE_NEAREST_A8_MASK_FAST_PATH_COVER(op,s,d,func)		\
+    {   PIXMAN_OP_ ## op,						\
+	PIXMAN_ ## s,							\
+	SCALED_NEAREST_FLAGS | FAST_PATH_SAMPLES_COVER_CLIP,		\
+	PIXMAN_a8, MASK_FLAGS (a8, FAST_PATH_UNIFIED_ALPHA),		\
+	PIXMAN_ ## d, FAST_PATH_STD_DEST_FLAGS,				\
+	fast_composite_scaled_nearest_ ## func ## _cover ## _ ## op,	\
+    }
+
+#define SIMPLE_NEAREST_SOLID_MASK_FAST_PATH_NORMAL(op,s,d,func)		\
+    {   PIXMAN_OP_ ## op,						\
+	PIXMAN_ ## s,							\
+	(SCALED_NEAREST_FLAGS		|				\
+	 FAST_PATH_NORMAL_REPEAT	|				\
+	 FAST_PATH_X_UNIT_POSITIVE),					\
+	PIXMAN_solid, MASK_FLAGS (solid, FAST_PATH_UNIFIED_ALPHA),	\
+	PIXMAN_ ## d, FAST_PATH_STD_DEST_FLAGS,				\
+	fast_composite_scaled_nearest_ ## func ## _normal ## _ ## op,	\
+    }
+
+#define SIMPLE_NEAREST_SOLID_MASK_FAST_PATH_PAD(op,s,d,func)		\
+    {   PIXMAN_OP_ ## op,						\
+	PIXMAN_ ## s,							\
+	(SCALED_NEAREST_FLAGS		|				\
+	 FAST_PATH_PAD_REPEAT		|				\
+	 FAST_PATH_X_UNIT_POSITIVE),					\
+	PIXMAN_solid, MASK_FLAGS (solid, FAST_PATH_UNIFIED_ALPHA),	\
+	PIXMAN_ ## d, FAST_PATH_STD_DEST_FLAGS,				\
+	fast_composite_scaled_nearest_ ## func ## _pad ## _ ## op,	\
+    }
+
+#define SIMPLE_NEAREST_SOLID_MASK_FAST_PATH_NONE(op,s,d,func)		\
+    {   PIXMAN_OP_ ## op,						\
+	PIXMAN_ ## s,							\
+	(SCALED_NEAREST_FLAGS		|				\
+	 FAST_PATH_NONE_REPEAT		|				\
+	 FAST_PATH_X_UNIT_POSITIVE),					\
+	PIXMAN_solid, MASK_FLAGS (solid, FAST_PATH_UNIFIED_ALPHA),	\
+	PIXMAN_ ## d, FAST_PATH_STD_DEST_FLAGS,				\
+	fast_composite_scaled_nearest_ ## func ## _none ## _ ## op,	\
+    }
+
+#define SIMPLE_NEAREST_SOLID_MASK_FAST_PATH_COVER(op,s,d,func)		\
+    {   PIXMAN_OP_ ## op,						\
+	PIXMAN_ ## s,							\
+	SCALED_NEAREST_FLAGS | FAST_PATH_SAMPLES_COVER_CLIP,		\
+	PIXMAN_solid, MASK_FLAGS (solid, FAST_PATH_UNIFIED_ALPHA),	\
+	PIXMAN_ ## d, FAST_PATH_STD_DEST_FLAGS,				\
+	fast_composite_scaled_nearest_ ## func ## _cover ## _ ## op,	\
+    }
+
 /* Prefer the use of 'cover' variant, because it is faster */
 #define SIMPLE_NEAREST_FAST_PATH(op,s,d,func)				\
     SIMPLE_NEAREST_FAST_PATH_COVER (op,s,d,func),			\
     SIMPLE_NEAREST_FAST_PATH_NONE (op,s,d,func),			\
     SIMPLE_NEAREST_FAST_PATH_PAD (op,s,d,func),				\
     SIMPLE_NEAREST_FAST_PATH_NORMAL (op,s,d,func)
+
+#define SIMPLE_NEAREST_A8_MASK_FAST_PATH(op,s,d,func)			\
+    SIMPLE_NEAREST_A8_MASK_FAST_PATH_COVER (op,s,d,func),		\
+    SIMPLE_NEAREST_A8_MASK_FAST_PATH_NONE (op,s,d,func),		\
+    SIMPLE_NEAREST_A8_MASK_FAST_PATH_PAD (op,s,d,func)
+
+#define SIMPLE_NEAREST_SOLID_MASK_FAST_PATH(op,s,d,func)		\
+    SIMPLE_NEAREST_SOLID_MASK_FAST_PATH_COVER (op,s,d,func),		\
+    SIMPLE_NEAREST_SOLID_MASK_FAST_PATH_NONE (op,s,d,func),		\
+    SIMPLE_NEAREST_SOLID_MASK_FAST_PATH_PAD (op,s,d,func)
 
 #endif
