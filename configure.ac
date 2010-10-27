@@ -726,7 +726,8 @@ if test $support_for__thread = no; then
 
     PIXMAN_CHECK_PTHREAD([CFLAGS="-D_REENTRANT"; LIBS="-lpthread"])
     PIXMAN_CHECK_PTHREAD([CFLAGS="-pthread"; LDFLAGS="-pthread"])
-
+    PIXMAN_CHECK_PTHREAD([CFLAGS="-D_REENTRANT"; LDFLAGS="-lroot"])
+    
     if test $support_for_pthread_setspecific = yes; then
 	CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
 	AC_DEFINE([HAVE_PTHREAD_SETSPECIFIC], [], [Whether pthread_setspecific() is supported])
