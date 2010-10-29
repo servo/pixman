@@ -561,14 +561,13 @@ _pixman_choose_implementation (void);
 #define FAST_PATH_NEAREST_FILTER		(1 << 11)
 #define FAST_PATH_HAS_TRANSFORM			(1 << 12)
 #define FAST_PATH_IS_OPAQUE			(1 << 13)
-#define FAST_PATH_NEEDS_WORKAROUND		(1 << 14)
+#define FAST_PATH_NO_NORMAL_REPEAT		(1 << 14)
 #define FAST_PATH_NO_NONE_REPEAT		(1 << 15)
 #define FAST_PATH_SAMPLES_COVER_CLIP		(1 << 16)
 #define FAST_PATH_X_UNIT_POSITIVE		(1 << 17)
 #define FAST_PATH_AFFINE_TRANSFORM		(1 << 18)
 #define FAST_PATH_Y_UNIT_ZERO			(1 << 19)
 #define FAST_PATH_BILINEAR_FILTER		(1 << 20)
-#define FAST_PATH_NO_NORMAL_REPEAT		(1 << 21)
 
 #define FAST_PATH_PAD_REPEAT						\
     (FAST_PATH_NO_NONE_REPEAT		|				\
