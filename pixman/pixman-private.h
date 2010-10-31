@@ -121,7 +121,6 @@ struct gradient
     image_common_t	    common;
     int                     n_stops;
     pixman_gradient_stop_t *stops;
-    int                     stop_range;
 };
 
 struct linear_gradient
