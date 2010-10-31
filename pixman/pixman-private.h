@@ -20,7 +20,6 @@
  * Images
  */
 typedef struct image_common image_common_t;
-typedef struct source_image source_image_t;
 typedef struct solid_fill solid_fill_t;
 typedef struct gradient gradient_t;
 typedef struct linear_gradient linear_gradient_t;
@@ -108,14 +107,9 @@ struct image_common
     pixman_format_code_t	extended_format_code;
 };
 
-struct source_image
-{
-    image_common_t common;
-};
-
 struct solid_fill
 {
-    source_image_t common;
+    image_common_t common;
     pixman_color_t color;
     
     uint32_t	   color_32;
@@ -124,7 +118,7 @@ struct solid_fill
 
 struct gradient
 {
-    source_image_t          common;
+    image_common_t	    common;
     int                     n_stops;
     pixman_gradient_stop_t *stops;
     int                     stop_range;
@@ -193,7 +187,6 @@ union pixman_image
     image_type_t       type;
     image_common_t     common;
     bits_image_t       bits;
-    source_image_t     source;
     gradient_t         gradient;
     linear_gradient_t  linear;
     conical_gradient_t conical;
