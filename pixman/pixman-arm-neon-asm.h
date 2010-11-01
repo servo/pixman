@@ -335,7 +335,7 @@ local skip1
     tst         DST_R, #lowbit
     beq         1f
 .endif
-    pixld       (lowbit * 8 / dst_w_bpp), src_bpp, src_basereg, SRC
+    pixld_src   (lowbit * 8 / dst_w_bpp), src_bpp, src_basereg, SRC
     pixld       (lowbit * 8 / dst_w_bpp), mask_bpp, mask_basereg, MASK
 .if dst_r_bpp > 0
     pixld_a     (lowbit * 8 / dst_r_bpp), dst_r_bpp, dst_r_basereg, DST_R
@@ -397,7 +397,7 @@ local skip1
 .if pixblock_size > chunk_size
     tst         W, #chunk_size
     beq         1f
-    pixld       chunk_size, src_bpp, src_basereg, SRC
+    pixld_src   chunk_size, src_bpp, src_basereg, SRC
     pixld       chunk_size, mask_bpp, mask_basereg, MASK
 .if dst_aligned_flag != 0
     pixld_a     chunk_size, dst_r_bpp, dst_r_basereg, DST_R
@@ -531,6 +531,13 @@ fname:
     .set src_basereg, src_basereg_
     .set mask_basereg, mask_basereg_
 
+    .macro pixld_src x:vararg
+        pixld x
+    .endm
+    .macro fetch_src_pixblock
+        pixld_src   pixblock_size, src_bpp, \
+                    (src_basereg - pixblock_size * src_bpp / 64), SRC
+    .endm
 /*
  * Assign symbolic names to registers
  */
@@ -696,8 +703,7 @@ fname:
     /* Implement "head (tail_head) ... (tail_head) tail" loop pattern */
     pixld_a     pixblock_size, dst_r_bpp, \
                 (dst_r_basereg - pixblock_size * dst_r_bpp / 64), DST_R
-    pixld       pixblock_size, src_bpp, \
-                (src_basereg - pixblock_size * src_bpp / 64), SRC
+    fetch_src_pixblock
     pixld       pixblock_size, mask_bpp, \
                 (mask_basereg - pixblock_size * mask_bpp / 64), MASK
     PF add      PF_X, PF_X, #pixblock_size
@@ -739,8 +745,7 @@ fname:
     beq         1f
     pixld       pixblock_size, dst_r_bpp, \
                 (dst_r_basereg - pixblock_size * dst_r_bpp / 64), DST_R
-    pixld       pixblock_size, src_bpp, \
-                (src_basereg - pixblock_size * src_bpp / 64), SRC
+    fetch_src_pixblock
     pixld       pixblock_size, mask_bpp, \
                 (mask_basereg - pixblock_size * mask_bpp / 64), MASK
     process_pixblock_head
@@ -760,6 +765,9 @@ fname:
 .endif
     cleanup
     pop         {r4-r12, pc}  /* exit */
+
+    .purgem     fetch_src_pixblock
+    .purgem     pixld_src
 
     .unreq      SRC
     .unreq      MASK
@@ -821,6 +829,15 @@ fname:
     .set dst_r_basereg, dst_r_basereg_
     .set src_basereg, src_basereg_
     .set mask_basereg, mask_basereg_
+
+    .macro pixld_src x:vararg
+        pixld x
+    .endm
+    .macro fetch_src_pixblock
+        pixld_src   pixblock_size, src_bpp, \
+                    (src_basereg - pixblock_size * src_bpp / 64), SRC
+    .endm
+
 /*
  * Assign symbolic names to registers
  */
@@ -857,8 +874,7 @@ fname:
     /* Implement "head (tail_head) ... (tail_head) tail" loop pattern */
     pixld_a     pixblock_size, dst_r_bpp, \
                 (dst_r_basereg - pixblock_size * dst_r_bpp / 64), DST_R
-    pixld       pixblock_size, src_bpp, \
-                (src_basereg - pixblock_size * src_bpp / 64), SRC
+    fetch_src_pixblock
     pixld       pixblock_size, mask_bpp, \
                 (mask_basereg - pixblock_size * mask_bpp / 64), MASK
     process_pixblock_head
@@ -890,6 +906,9 @@ fname:
 
     cleanup
     bx          lr  /* exit */
+
+    .purgem     fetch_src_pixblock
+    .purgem     pixld_src
 
     .unreq      SRC
     .unreq      MASK
