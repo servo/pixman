@@ -1973,3 +1973,15 @@ generate_composite_function \
     10, /* dst_r_basereg */ \
     15, /* src_basereg   */ \
     0   /* mask_basereg  */
+
+/******************************************************************************/
+
+generate_composite_function_nearest_scanline \
+    pixman_scaled_nearest_scanline_8888_8888_OVER_asm_neon, 32, 0, 32, \
+    FLAG_DST_READWRITE | FLAG_DEINTERLEAVE_32BPP, \
+    8, /* number of pixels, processed in a single block */ \
+    default_init, \
+    default_cleanup, \
+    pixman_composite_over_8888_8888_process_pixblock_head, \
+    pixman_composite_over_8888_8888_process_pixblock_tail, \
+    pixman_composite_over_8888_8888_process_pixblock_tail_head
