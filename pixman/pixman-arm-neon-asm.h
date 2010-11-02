@@ -241,6 +241,30 @@
 .endif
 .endm
 
+.macro pixld2_s elem_size, reg1, reg2, mem_operand
+.if elem_size == 32
+    mov     TMP1, VX, asr #16
+    add     VX, VX, UNIT_X, asl #1
+    add     TMP1, mem_operand, TMP1, asl #2
+    mov     TMP2, VX, asr #16
+    sub     VX, VX, UNIT_X
+    add     TMP2, mem_operand, TMP2, asl #2
+    vld1.32 {d&reg1&[0]}, [TMP1, :32]
+    mov     TMP1, VX, asr #16
+    add     VX, VX, UNIT_X, asl #1
+    add     TMP1, mem_operand, TMP1, asl #2
+    vld1.32 {d&reg2&[0]}, [TMP2, :32]
+    mov     TMP2, VX, asr #16
+    add     VX, VX, UNIT_X
+    add     TMP2, mem_operand, TMP2, asl #2
+    vld1.32 {d&reg1&[1]}, [TMP1, :32]
+    vld1.32 {d&reg2&[1]}, [TMP2, :32]
+.else
+    pixld1_s elem_size, reg1, mem_operand
+    pixld1_s elem_size, reg2, mem_operand
+.endif
+.endm
+
 .macro pixld0_s elem_size, reg1, idx, mem_operand
 .if elem_size == 16
     mov     TMP1, VX, asr #16
@@ -257,14 +281,11 @@
 
 .macro pixld_s_internal numbytes, elem_size, basereg, mem_operand
 .if numbytes == 32
-    pixld1_s elem_size, %(basereg+4), mem_operand
-    pixld1_s elem_size, %(basereg+5), mem_operand
-    pixld1_s elem_size, %(basereg+6), mem_operand
-    pixld1_s elem_size, %(basereg+7), mem_operand
+    pixld2_s elem_size, %(basereg+4), %(basereg+5), mem_operand
+    pixld2_s elem_size, %(basereg+6), %(basereg+7), mem_operand
     pixdeinterleave elem_size, %(basereg+4)
 .elseif numbytes == 16
-    pixld1_s elem_size, %(basereg+2), mem_operand
-    pixld1_s elem_size, %(basereg+3), mem_operand
+    pixld2_s elem_size, %(basereg+2), %(basereg+3), mem_operand
 .elseif numbytes == 8
     pixld1_s elem_size, %(basereg+1), mem_operand
 .elseif numbytes == 4
