@@ -413,6 +413,7 @@ compute_image_info (pixman_image_t *image)
 
 	/* Fall through */
 
+    case CONICAL:
     case LINEAR:
 	code = PIXMAN_unknown;
 
