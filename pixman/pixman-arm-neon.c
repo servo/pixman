@@ -99,6 +99,8 @@ PIXMAN_ARM_BIND_FAST_PATH_SRC_MASK_DST (neon, over_0565_8_0565,
 
 PIXMAN_ARM_BIND_SCALED_NEAREST_SRC_DST (neon, 8888_8888, OVER,
                                         uint32_t, uint32_t)
+PIXMAN_ARM_BIND_SCALED_NEAREST_SRC_DST (neon, 8888_0565, OVER,
+                                        uint32_t, uint16_t)
 
 void
 pixman_composite_src_n_8_asm_neon (int32_t   w,
@@ -278,6 +280,9 @@ static const pixman_fast_path_t arm_neon_fast_paths[] =
     PIXMAN_ARM_SIMPLE_NEAREST_FAST_PATH (OVER, a8b8g8r8, a8b8g8r8, neon_8888_8888),
     PIXMAN_ARM_SIMPLE_NEAREST_FAST_PATH (OVER, a8r8g8b8, x8r8g8b8, neon_8888_8888),
     PIXMAN_ARM_SIMPLE_NEAREST_FAST_PATH (OVER, a8b8g8r8, x8b8g8r8, neon_8888_8888),
+
+    PIXMAN_ARM_SIMPLE_NEAREST_FAST_PATH (OVER, a8r8g8b8, r5g6b5, neon_8888_0565),
+    PIXMAN_ARM_SIMPLE_NEAREST_FAST_PATH (OVER, a8b8g8r8, b5g6r5, neon_8888_0565),
 
     { PIXMAN_OP_NONE },
 };
