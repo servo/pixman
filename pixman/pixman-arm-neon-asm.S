@@ -792,58 +792,92 @@ generate_composite_function \
 /******************************************************************************/
 
 .macro pixman_composite_over_n_8_0565_process_pixblock_head
-    /* in */
-    vmull.u8    q0, d24, d8
-    vmull.u8    q1, d24, d9
-    vmull.u8    q6, d24, d10
-    vmull.u8    q7, d24, d11
-    vrshr.u16   q10, q0, #8
-    vrshr.u16   q11, q1, #8
-    vrshr.u16   q12, q6, #8
-    vrshr.u16   q13, q7, #8
-    vraddhn.u16 d0, q0, q10
-    vraddhn.u16 d1, q1, q11
-    vraddhn.u16 d2, q6, q12
-    vraddhn.u16 d3, q7, q13
-
-    vshrn.u16   d6, q2, #8
-    vshrn.u16   d7, q2, #3
-    vsli.u16    q2, q2, #5
-    vsri.u8     d6, d6, #5
-    vmvn.8      d3, d3
-    vsri.u8     d7, d7, #6
-    vshrn.u16   d30, q2, #2
-    /* now do alpha blending */
-    vmull.u8    q10, d3, d6
-    vmull.u8    q11, d3, d7
-    vmull.u8    q12, d3, d30
-    vrshr.u16   q13, q10, #8
-    vrshr.u16   q3, q11, #8
-    vrshr.u16   q15, q12, #8
-    vraddhn.u16 d20, q10, q13
-    vraddhn.u16 d23, q11, q3
-    vraddhn.u16 d22, q12, q15
+    vmull.u8    q0,  d24, d8    /* IN for SRC pixels (part1) */
+    vmull.u8    q1,  d24, d9
+    vmull.u8    q6,  d24, d10
+    vmull.u8    q7,  d24, d11
+        vshrn.u16   d6,  q2, #8 /* convert DST_R data to 32-bpp (part1) */
+        vshrn.u16   d7,  q2, #3
+        vsli.u16    q2,  q2, #5
+    vrshr.u16   q8,  q0,  #8    /* IN for SRC pixels (part2) */
+    vrshr.u16   q9,  q1,  #8
+    vrshr.u16   q10, q6,  #8
+    vrshr.u16   q11, q7,  #8
+    vraddhn.u16 d0,  q0,  q8
+    vraddhn.u16 d1,  q1,  q9
+    vraddhn.u16 d2,  q6,  q10
+    vraddhn.u16 d3,  q7,  q11
+        vsri.u8     d6,  d6, #5 /* convert DST_R data to 32-bpp (part2) */
+        vsri.u8     d7,  d7, #6
+    vmvn.8      d3,  d3
+        vshrn.u16   d30, q2, #2
+    vmull.u8    q8,  d3, d6     /* now do alpha blending */
+    vmull.u8    q9,  d3, d7
+    vmull.u8    q10, d3, d30
 .endm
 
 .macro pixman_composite_over_n_8_0565_process_pixblock_tail
-    vqadd.u8    d16, d2, d20
-    vqadd.u8    q9, q0, q11
-    /* convert to r5g6b5 */
-    vshll.u8    q14, d16, #8
-    vshll.u8    q8, d19, #8
-    vshll.u8    q9, d18, #8
-    vsri.u16    q14, q8, #5
-    vsri.u16    q14, q9, #11
+    /* 3 cycle bubble (after vmull.u8) */
+    vrshr.u16   q13, q8,  #8
+    vrshr.u16   q11, q9,  #8
+    vrshr.u16   q15, q10, #8
+    vraddhn.u16 d16, q8,  q13
+    vraddhn.u16 d27, q9,  q11
+    vraddhn.u16 d26, q10, q15
+    vqadd.u8    d16, d2,  d16
+    /* 1 cycle bubble */
+    vqadd.u8    q9,  q0,  q13
+    vshll.u8    q14, d16, #8    /* convert to 16bpp */
+    vshll.u8    q8,  d19, #8
+    vshll.u8    q9,  d18, #8
+    vsri.u16    q14, q8,  #5
+    /* 1 cycle bubble */
+    vsri.u16    q14, q9,  #11
 .endm
 
-/* TODO: expand macros and do better instructions scheduling */
 .macro pixman_composite_over_n_8_0565_process_pixblock_tail_head
-    pixman_composite_over_n_8_0565_process_pixblock_tail
-    vst1.16     {d28, d29}, [DST_W, :128]!
     vld1.16     {d4, d5}, [DST_R, :128]!
+    vshrn.u16   d6,  q2,  #8
     fetch_mask_pixblock
+    vshrn.u16   d7,  q2,  #3
+    fetch_src_pixblock
+    vmull.u8    q6,  d24, d10
+        vrshr.u16   q13, q8,  #8
+        vrshr.u16   q11, q9,  #8
+        vrshr.u16   q15, q10, #8
+        vraddhn.u16 d16, q8,  q13
+        vraddhn.u16 d27, q9,  q11
+        vraddhn.u16 d26, q10, q15
+        vqadd.u8    d16, d2,  d16
+    vmull.u8    q1,  d24, d9
+        vqadd.u8    q9,  q0,  q13
+        vshll.u8    q14, d16, #8
+    vmull.u8    q0,  d24, d8
+        vshll.u8    q8,  d19, #8
+        vshll.u8    q9,  d18, #8
+        vsri.u16    q14, q8,  #5
+    vmull.u8    q7,  d24, d11
+        vsri.u16    q14, q9,  #11
+
     cache_preload 8, 8
-    pixman_composite_over_n_8_0565_process_pixblock_head
+
+    vsli.u16    q2,  q2,  #5
+    vrshr.u16   q8,  q0,  #8
+    vrshr.u16   q9,  q1,  #8
+    vrshr.u16   q10, q6,  #8
+    vrshr.u16   q11, q7,  #8
+    vraddhn.u16 d0,  q0,  q8
+    vraddhn.u16 d1,  q1,  q9
+    vraddhn.u16 d2,  q6,  q10
+    vraddhn.u16 d3,  q7,  q11
+    vsri.u8     d6,  d6,  #5
+    vsri.u8     d7,  d7,  #6
+    vmvn.8      d3,  d3
+    vshrn.u16   d30, q2,  #2
+    vst1.16     {d28, d29}, [DST_W, :128]!
+    vmull.u8    q8,  d3,  d6
+    vmull.u8    q9,  d3,  d7
+    vmull.u8    q10, d3,  d30
 .endm
 
 /*
