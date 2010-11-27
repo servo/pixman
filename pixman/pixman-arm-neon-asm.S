@@ -1994,6 +1994,34 @@ generate_composite_function \
 
 /******************************************************************************/
 
+.macro pixman_composite_over_0565_n_0565_init
+    add         DUMMY, sp, #(ARGS_STACK_OFFSET + 8)
+    vpush       {d8-d15}
+    vld1.32     {d15[0]}, [DUMMY]
+    vdup.8      d15, d15[3]
+.endm
+
+.macro pixman_composite_over_0565_n_0565_cleanup
+    vpop        {d8-d15}
+.endm
+
+generate_composite_function \
+    pixman_composite_over_0565_n_0565_asm_neon, 16, 0, 16, \
+    FLAG_DST_READWRITE, \
+    8, /* number of pixels, processed in a single block */ \
+    5, /* prefetch distance */ \
+    pixman_composite_over_0565_n_0565_init, \
+    pixman_composite_over_0565_n_0565_cleanup, \
+    pixman_composite_over_0565_8_0565_process_pixblock_head, \
+    pixman_composite_over_0565_8_0565_process_pixblock_tail, \
+    pixman_composite_over_0565_8_0565_process_pixblock_tail_head, \
+    28, /* dst_w_basereg */ \
+    10, /* dst_r_basereg */ \
+    8,  /* src_basereg   */ \
+    15  /* mask_basereg  */
+
+/******************************************************************************/
+
 .macro pixman_composite_add_0565_8_0565_process_pixblock_head
     /* mask is in d15 */
     convert_0565_to_x888 q4, d2, d1, d0
