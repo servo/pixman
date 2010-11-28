@@ -1595,6 +1595,23 @@ generate_composite_function_single_scanline \
 
 /******************************************************************************/
 
+generate_composite_function \
+    pixman_composite_add_8888_8_8888_asm_neon, 32, 8, 32, \
+    FLAG_DST_READWRITE | FLAG_DEINTERLEAVE_32BPP, \
+    8, /* number of pixels, processed in a single block */ \
+    5, /* prefetch distance */ \
+    default_init, \
+    default_cleanup, \
+    pixman_composite_add_8888_8888_8888_process_pixblock_head, \
+    pixman_composite_add_8888_8888_8888_process_pixblock_tail, \
+    pixman_composite_add_8888_8888_8888_process_pixblock_tail_head, \
+    28, /* dst_w_basereg */ \
+    4,  /* dst_r_basereg */ \
+    0,  /* src_basereg   */ \
+    27  /* mask_basereg  */
+
+/******************************************************************************/
+
 .macro pixman_composite_out_reverse_8888_n_8888_process_pixblock_head
     /* expecting source data in {d0, d1, d2, d3} */
     /* destination data in {d4, d5, d6, d7} */
