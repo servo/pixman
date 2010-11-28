@@ -841,7 +841,7 @@ generate_composite_function \
     pixman_composite_over_n_8_0565_process_pixblock_tail
     vst1.16     {d28, d29}, [DST_W, :128]!
     vld1.16     {d4, d5}, [DST_R, :128]!
-    vld1.8      {d24}, [MASK]!
+    fetch_mask_pixblock
     cache_preload 8, 8
     pixman_composite_over_n_8_0565_process_pixblock_head
 .endm
@@ -889,7 +889,7 @@ generate_composite_function \
     pixman_composite_over_n_8_0565_process_pixblock_tail
     fetch_src_pixblock
     cache_preload 8, 8
-    vld1.8      {d24}, [MASK]!
+    fetch_mask_pixblock
     pixman_composite_over_n_8_0565_process_pixblock_head
     vst1.16     {d28, d29}, [DST_W, :128]!
 .endm
@@ -1171,7 +1171,7 @@ generate_composite_function \
     pixman_composite_over_n_8_8888_process_pixblock_tail
     vst4.8      {d28, d29, d30, d31}, [DST_W, :128]!
     vld4.8      {d4, d5, d6, d7}, [DST_R, :128]!
-    vld1.8      {d24}, [MASK]!
+    fetch_mask_pixblock
     cache_preload 8, 8
     pixman_composite_over_n_8_8888_process_pixblock_head
 .endm
@@ -1241,7 +1241,7 @@ generate_composite_function \
 .macro pixman_composite_over_n_8_8_process_pixblock_tail_head
     vld1.8      {d4, d5, d6, d7}, [DST_R, :128]!
     pixman_composite_over_n_8_8_process_pixblock_tail
-    vld1.8      {d24, d25, d26, d27}, [MASK]!
+    fetch_mask_pixblock
     cache_preload 32, 32
     vst1.8      {d28, d29, d30, d31}, [DST_W, :128]!
     pixman_composite_over_n_8_8_process_pixblock_head
@@ -1341,7 +1341,7 @@ generate_composite_function \
         vraddhn.u16 d29, q15, q9
         vraddhn.u16 d30, q6, q10
         vraddhn.u16 d31, q7, q11
-    vld4.8      {d24, d25, d26, d27}, [MASK]!
+    fetch_mask_pixblock
         vqadd.u8    q14, q0, q14
         vqadd.u8    q15, q1, q15
     cache_preload 8, 8
@@ -1405,7 +1405,7 @@ generate_composite_function \
     pixman_composite_add_n_8_8_process_pixblock_tail
     vst1.8      {d28, d29, d30, d31}, [DST_W, :128]!
     vld1.8      {d4, d5, d6, d7}, [DST_R, :128]!
-    vld1.8      {d24, d25, d26, d27}, [MASK]!
+    fetch_mask_pixblock
     cache_preload 32, 32
     pixman_composite_add_n_8_8_process_pixblock_head
 .endm
@@ -1462,7 +1462,7 @@ generate_composite_function \
     pixman_composite_add_8_8_8_process_pixblock_tail
     vst1.8      {d28, d29, d30, d31}, [DST_W, :128]!
     vld1.8      {d4, d5, d6, d7}, [DST_R, :128]!
-    vld1.8      {d24, d25, d26, d27}, [MASK]!
+    fetch_mask_pixblock
     fetch_src_pixblock
     cache_preload 32, 32
     pixman_composite_add_8_8_8_process_pixblock_head
@@ -1515,7 +1515,7 @@ generate_composite_function \
     pixman_composite_add_8888_8888_8888_process_pixblock_tail
     vst4.8      {d28, d29, d30, d31}, [DST_W, :128]!
     vld4.8      {d4, d5, d6, d7}, [DST_R, :128]!
-    vld4.8      {d24, d25, d26, d27}, [MASK]!
+    fetch_mask_pixblock
     fetch_src_pixblock
     cache_preload 8, 8
     pixman_composite_add_8888_8888_8888_process_pixblock_head
@@ -1587,7 +1587,7 @@ generate_composite_function_single_scanline \
     pixman_composite_out_reverse_8888_n_8888_process_pixblock_tail
     fetch_src_pixblock
     cache_preload 8, 8
-    vld4.8     {d12, d13, d14, d15}, [MASK]!
+    fetch_mask_pixblock
     pixman_composite_out_reverse_8888_n_8888_process_pixblock_head
     vst4.8     {d28, d29, d30, d31}, [DST_W, :128]!
 .endm
@@ -1658,7 +1658,7 @@ generate_composite_function \
     pixman_composite_over_8888_n_8888_process_pixblock_tail
     fetch_src_pixblock
     cache_preload 8, 8
-    vld4.8     {d12, d13, d14, d15}, [MASK]!
+    fetch_mask_pixblock
     pixman_composite_over_8888_n_8888_process_pixblock_head
     vst4.8     {d28, d29, d30, d31}, [DST_W, :128]!
 .endm
@@ -1700,7 +1700,7 @@ generate_composite_function_single_scanline \
     pixman_composite_over_8888_n_8888_process_pixblock_tail
     fetch_src_pixblock
     cache_preload 8, 8
-    vld1.8     {d15}, [MASK]!
+    fetch_mask_pixblock
     pixman_composite_over_8888_n_8888_process_pixblock_head
     vst4.8     {d28, d29, d30, d31}, [DST_W, :128]!
 .endm
@@ -1917,7 +1917,7 @@ generate_composite_function \
 
 /* TODO: expand macros and do better instructions scheduling */
 .macro pixman_composite_over_0565_8_0565_process_pixblock_tail_head
-    vld1.8     {d15}, [MASK]!
+    fetch_mask_pixblock
     pixman_composite_over_0565_8_0565_process_pixblock_tail
     fetch_src_pixblock
     vld1.16    {d10, d11}, [DST_R, :128]!
@@ -1969,7 +1969,7 @@ generate_composite_function \
 
 /* TODO: expand macros and do better instructions scheduling */
 .macro pixman_composite_add_0565_8_0565_process_pixblock_tail_head
-    vld1.8     {d15}, [MASK]!
+    fetch_mask_pixblock
     pixman_composite_add_0565_8_0565_process_pixblock_tail
     fetch_src_pixblock
     vld1.16    {d10, d11}, [DST_R, :128]!
