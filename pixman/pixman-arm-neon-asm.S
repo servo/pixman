@@ -1427,6 +1427,58 @@ generate_composite_function \
 
 /******************************************************************************/
 
+.macro pixman_composite_in_n_8_process_pixblock_head
+    /* expecting source data in {d0, d1, d2, d3} */
+    /* and destination data in {d4, d5, d6, d7} */
+    vmull.u8    q8,  d4,  d3
+    vmull.u8    q9,  d5,  d3
+    vmull.u8    q10, d6,  d3
+    vmull.u8    q11, d7,  d3
+.endm
+
+.macro pixman_composite_in_n_8_process_pixblock_tail
+    vrshr.u16   q14, q8,  #8
+    vrshr.u16   q15, q9,  #8
+    vrshr.u16   q12, q10, #8
+    vrshr.u16   q13, q11, #8
+    vraddhn.u16 d28, q8,  q14
+    vraddhn.u16 d29, q9,  q15
+    vraddhn.u16 d30, q10, q12
+    vraddhn.u16 d31, q11, q13
+.endm
+
+.macro pixman_composite_in_n_8_process_pixblock_tail_head
+    pixman_composite_in_n_8_process_pixblock_tail
+    vld1.8      {d4, d5, d6, d7}, [DST_R, :128]!
+    cache_preload 32, 32
+    pixman_composite_in_n_8_process_pixblock_head
+    vst1.8      {d28, d29, d30, d31}, [DST_W, :128]!
+.endm
+
+.macro pixman_composite_in_n_8_init
+    add         DUMMY, sp, #ARGS_STACK_OFFSET
+    vld1.32     {d3[0]}, [DUMMY]
+    vdup.8      d3, d3[3]
+.endm
+
+.macro pixman_composite_in_n_8_cleanup
+.endm
+
+generate_composite_function \
+    pixman_composite_in_n_8_asm_neon, 0, 0, 8, \
+    FLAG_DST_READWRITE, \
+    32, /* number of pixels, processed in a single block */ \
+    5, /* prefetch distance */ \
+    pixman_composite_in_n_8_init, \
+    pixman_composite_in_n_8_cleanup, \
+    pixman_composite_in_n_8_process_pixblock_head, \
+    pixman_composite_in_n_8_process_pixblock_tail, \
+    pixman_composite_in_n_8_process_pixblock_tail_head, \
+    28, /* dst_w_basereg */ \
+    4,  /* dst_r_basereg */ \
+    0,  /* src_basereg   */ \
+    24  /* mask_basereg  */
+
 .macro pixman_composite_add_n_8_8_process_pixblock_head
     /* expecting source data in {d8, d9, d10, d11} */
     /* d8 - blue, d9 - green, d10 - red, d11 - alpha */
