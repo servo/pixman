@@ -63,33 +63,33 @@ PIXMAN_ARM_BIND_FAST_PATH_SRC_DST (neon, over_8888_8888,
 PIXMAN_ARM_BIND_FAST_PATH_SRC_DST (neon, out_reverse_8_0565,
                                    uint8_t, 1, uint16_t, 1)
 
-PIXMAN_ARM_BIND_FAST_PATH_N_DST (neon, over_n_0565,
+PIXMAN_ARM_BIND_FAST_PATH_N_DST (SKIP_ZERO_SRC, neon, over_n_0565,
                                  uint16_t, 1)
-PIXMAN_ARM_BIND_FAST_PATH_N_DST (neon, over_n_8888,
+PIXMAN_ARM_BIND_FAST_PATH_N_DST (SKIP_ZERO_SRC, neon, over_n_8888,
                                  uint32_t, 1)
-PIXMAN_ARM_BIND_FAST_PATH_N_DST (neon, over_reverse_n_8888,
+PIXMAN_ARM_BIND_FAST_PATH_N_DST (SKIP_ZERO_SRC, neon, over_reverse_n_8888,
                                  uint32_t, 1)
 
-PIXMAN_ARM_BIND_FAST_PATH_N_MASK_DST (neon, over_n_8_0565,
+PIXMAN_ARM_BIND_FAST_PATH_N_MASK_DST (SKIP_ZERO_SRC, neon, over_n_8_0565,
                                       uint8_t, 1, uint16_t, 1)
-PIXMAN_ARM_BIND_FAST_PATH_N_MASK_DST (neon, over_n_8_8888,
+PIXMAN_ARM_BIND_FAST_PATH_N_MASK_DST (SKIP_ZERO_SRC, neon, over_n_8_8888,
                                       uint8_t, 1, uint32_t, 1)
-PIXMAN_ARM_BIND_FAST_PATH_N_MASK_DST (neon, over_n_8888_8888_ca,
+PIXMAN_ARM_BIND_FAST_PATH_N_MASK_DST (SKIP_ZERO_SRC, neon, over_n_8888_8888_ca,
                                       uint32_t, 1, uint32_t, 1)
-PIXMAN_ARM_BIND_FAST_PATH_N_MASK_DST (neon, over_n_8_8,
+PIXMAN_ARM_BIND_FAST_PATH_N_MASK_DST (SKIP_ZERO_SRC, neon, over_n_8_8,
                                       uint8_t, 1, uint8_t, 1)
-PIXMAN_ARM_BIND_FAST_PATH_N_MASK_DST (neon, add_n_8_8,
+PIXMAN_ARM_BIND_FAST_PATH_N_MASK_DST (SKIP_ZERO_SRC, neon, add_n_8_8,
                                       uint8_t, 1, uint8_t, 1)
-PIXMAN_ARM_BIND_FAST_PATH_N_MASK_DST (neon, add_n_8_8888,
+PIXMAN_ARM_BIND_FAST_PATH_N_MASK_DST (SKIP_ZERO_SRC, neon, add_n_8_8888,
                                       uint8_t, 1, uint32_t, 1)
 
-PIXMAN_ARM_BIND_FAST_PATH_SRC_N_DST (neon, over_8888_n_8888,
+PIXMAN_ARM_BIND_FAST_PATH_SRC_N_DST (SKIP_ZERO_MASK, neon, over_8888_n_8888,
                                      uint32_t, 1, uint32_t, 1)
-PIXMAN_ARM_BIND_FAST_PATH_SRC_N_DST (neon, over_8888_n_0565,
+PIXMAN_ARM_BIND_FAST_PATH_SRC_N_DST (SKIP_ZERO_MASK, neon, over_8888_n_0565,
                                      uint32_t, 1, uint16_t, 1)
-PIXMAN_ARM_BIND_FAST_PATH_SRC_N_DST (neon, over_0565_n_0565,
+PIXMAN_ARM_BIND_FAST_PATH_SRC_N_DST (SKIP_ZERO_MASK, neon, over_0565_n_0565,
                                      uint16_t, 1, uint16_t, 1)
-PIXMAN_ARM_BIND_FAST_PATH_SRC_N_DST (neon, add_8888_n_8888,
+PIXMAN_ARM_BIND_FAST_PATH_SRC_N_DST (SKIP_ZERO_MASK, neon, add_8888_n_8888,
                                      uint32_t, 1, uint32_t, 1)
 
 PIXMAN_ARM_BIND_FAST_PATH_SRC_MASK_DST (neon, add_8_8_8,
