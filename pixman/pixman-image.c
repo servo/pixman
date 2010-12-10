@@ -795,12 +795,18 @@ pixman_image_get_format (pixman_image_t *image)
 }
 
 uint32_t
-_pixman_image_get_solid (pixman_image_t *     image,
-                         pixman_format_code_t format)
+_pixman_image_get_solid (pixman_implementation_t *imp,
+			 pixman_image_t *         image,
+                         pixman_format_code_t     format)
 {
     uint32_t result;
+    pixman_iter_t iter;
 
-    _pixman_image_get_scanline_32 (image, 0, 0, 1, &result, NULL);
+    _pixman_implementation_src_iter_init (
+	imp, &iter, image, 0, 0, 1, 1,
+	(uint8_t *)&result, ITER_NARROW);
+
+    result = *iter.get_scanline (&iter, NULL);
 
     /* If necessary, convert RGB <--> BGR. */
     if (PIXMAN_FORMAT_TYPE (format) != PIXMAN_TYPE_ARGB)

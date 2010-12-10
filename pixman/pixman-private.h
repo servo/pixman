@@ -295,10 +295,6 @@ _pixman_image_reset_clip_region (pixman_image_t *image);
 void
 _pixman_image_validate (pixman_image_t *image);
 
-uint32_t
-_pixman_image_get_solid (pixman_image_t *     image,
-                         pixman_format_code_t format);
-
 #define PIXMAN_IMAGE_GET_LINE(image, x, y, type, out_stride, line, mul)	\
     do									\
     {									\
@@ -472,6 +468,11 @@ struct pixman_implementation_t
     pixman_combine_64_func_t	combine_64[PIXMAN_N_OPERATORS];
     pixman_combine_64_func_t	combine_64_ca[PIXMAN_N_OPERATORS];
 };
+
+uint32_t
+_pixman_image_get_solid (pixman_implementation_t *imp,
+			 pixman_image_t *         image,
+                         pixman_format_code_t     format);
 
 pixman_implementation_t *
 _pixman_implementation_create (pixman_implementation_t *delegate,
