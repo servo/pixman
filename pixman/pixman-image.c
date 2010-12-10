@@ -50,43 +50,6 @@ _pixman_init_gradient (gradient_t *                  gradient,
     return TRUE;
 }
 
-/*
- * By default, just evaluate the image at 32bpp and expand.  Individual image
- * types can plug in a better scanline getter if they want to. For example
- * we  could produce smoother gradients by evaluating them at higher color
- * depth, but that's a project for the future.
- */
-void
-_pixman_image_get_scanline_generic_64 (pixman_image_t * image,
-                                       int              x,
-                                       int              y,
-                                       int              width,
-                                       uint32_t *       buffer,
-                                       const uint32_t * mask)
-{
-    uint32_t *mask8 = NULL;
-
-    /* Contract the mask image, if one exists, so that the 32-bit fetch
-     * function can use it.
-     */
-    if (mask)
-    {
-	mask8 = pixman_malloc_ab (width, sizeof(uint32_t));
-	if (!mask8)
-	    return;
-
-	pixman_contract (mask8, (uint64_t *)mask, width);
-    }
-
-    /* Fetch the source image into the first half of buffer. */
-    _pixman_image_get_scanline_32 (image, x, y, width, (uint32_t*)buffer, mask8);
-
-    /* Expand from 32bpp to 64bpp in place. */
-    pixman_expand ((uint64_t *)buffer, buffer, PIXMAN_a8r8g8b8, width);
-
-    free (mask8);
-}
-
 pixman_image_t *
 _pixman_image_allocate (void)
 {
@@ -130,31 +93,6 @@ _pixman_image_classify (pixman_image_t *image,
 	return image->common.classify (image, x, y, width, height);
     else
 	return SOURCE_IMAGE_CLASS_UNKNOWN;
-}
-
-void
-_pixman_image_get_scanline_32 (pixman_image_t *image,
-                               int             x,
-                               int             y,
-                               int             width,
-                               uint32_t *      buffer,
-                               const uint32_t *mask)
-{
-    image->common.get_scanline_32 (image, x, y, width, buffer, mask);
-}
-
-/* Even thought the type of buffer is uint32_t *, the function actually expects
- * a uint64_t *buffer.
- */
-void
-_pixman_image_get_scanline_64 (pixman_image_t *image,
-                               int             x,
-                               int             y,
-                               int             width,
-                               uint32_t *      buffer,
-                               const uint32_t *unused)
-{
-    image->common.get_scanline_64 (image, x, y, width, buffer, unused);
 }
 
 static void

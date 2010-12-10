@@ -72,8 +72,6 @@ solid_fill_classify (pixman_image_t *image,
 static void
 solid_fill_property_changed (pixman_image_t *image)
 {
-    image->common.get_scanline_32 = solid_fill_get_scanline_32;
-    image->common.get_scanline_64 = solid_fill_get_scanline_64;
 }
 
 void

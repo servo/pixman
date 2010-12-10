@@ -35,6 +35,43 @@
 #include "pixman-private.h"
 #include "pixman-combine32.h"
 
+/*
+ * By default, just evaluate the image at 32bpp and expand.  Individual image
+ * types can plug in a better scanline getter if they want to. For example
+ * we  could produce smoother gradients by evaluating them at higher color
+ * depth, but that's a project for the future.
+ */
+static void
+_pixman_image_get_scanline_generic_64 (pixman_image_t * image,
+                                       int              x,
+                                       int              y,
+                                       int              width,
+                                       uint32_t *       buffer,
+                                       const uint32_t * mask)
+{
+    uint32_t *mask8 = NULL;
+
+    /* Contract the mask image, if one exists, so that the 32-bit fetch
+     * function can use it.
+     */
+    if (mask)
+    {
+	mask8 = pixman_malloc_ab (width, sizeof(uint32_t));
+	if (!mask8)
+	    return;
+
+	pixman_contract (mask8, (uint64_t *)mask, width);
+    }
+
+    /* Fetch the source image into the first half of buffer. */
+    image->bits.get_scanline_32 (image, x, y, width, (uint32_t*)buffer, mask8);
+
+    /* Expand from 32bpp to 64bpp in place. */
+    pixman_expand ((uint64_t *)buffer, buffer, PIXMAN_a8r8g8b8, width);
+
+    free (mask8);
+}
+
 /* Fetch functions */
 
 static force_inline uint32_t
@@ -1298,8 +1335,8 @@ bits_image_property_changed (pixman_image_t *image)
 	if ((info->format == format || info->format == PIXMAN_any)	&&
 	    (info->flags & flags) == info->flags)
 	{
-	    image->common.get_scanline_32 = info->fetch_32;
-	    image->common.get_scanline_64 = info->fetch_64;
+	    image->bits.get_scanline_32 = info->fetch_32;
+	    image->bits.get_scanline_64 = info->fetch_64;
 	    break;
 	}
 
@@ -1310,7 +1347,7 @@ bits_image_property_changed (pixman_image_t *image)
 static uint32_t *
 src_get_scanline_narrow (pixman_iter_t *iter, const uint32_t *mask)
 {
-    iter->image->common.get_scanline_32 (
+    iter->image->bits.get_scanline_32 (
 	iter->image, iter->x, iter->y++, iter->width, iter->buffer, mask);
 
     return iter->buffer;
@@ -1319,7 +1356,7 @@ src_get_scanline_narrow (pixman_iter_t *iter, const uint32_t *mask)
 static uint32_t *
 src_get_scanline_wide (pixman_iter_t *iter, const uint32_t *mask)
 {
-    iter->image->common.get_scanline_64 (
+    iter->image->bits.get_scanline_64 (
 	iter->image, iter->x, iter->y++, iter->width, iter->buffer, mask);
 
     return iter->buffer;
@@ -1340,7 +1377,7 @@ _pixman_bits_image_src_iter_init (pixman_image_t *image,
 static uint32_t *
 dest_get_scanline_narrow (pixman_iter_t *iter, const uint32_t *mask)
 {
-    iter->image->common.get_scanline_32 (
+    iter->image->bits.get_scanline_32 (
 	iter->image, iter->x, iter->y, iter->width, iter->buffer, mask);
 
     return iter->buffer;
@@ -1349,7 +1386,7 @@ dest_get_scanline_narrow (pixman_iter_t *iter, const uint32_t *mask)
 static uint32_t *
 dest_get_scanline_wide (pixman_iter_t *iter, const uint32_t *mask)
 {
-    iter->image->common.get_scanline_64 (
+    iter->image->bits.get_scanline_64 (
 	iter->image, iter->x, iter->y, iter->width, iter->buffer, mask);
 
     return iter->buffer;

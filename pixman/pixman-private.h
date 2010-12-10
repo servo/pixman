@@ -97,8 +97,6 @@ struct image_common
     pixman_bool_t               component_alpha;
     classify_func_t             classify;
     property_changed_func_t     property_changed;
-    fetch_scanline_t            get_scanline_32;
-    fetch_scanline_t            get_scanline_64;
 
     pixman_image_destroy_func_t destroy_func;
     void *                      destroy_data;
@@ -167,6 +165,9 @@ struct bits_image
     uint32_t *                 bits;
     uint32_t *                 free_me;
     int                        rowstride;  /* in number of uint32_t's */
+
+    fetch_scanline_t           get_scanline_32;
+    fetch_scanline_t           get_scanline_64;
 
     fetch_scanline_t           fetch_scanline_32;
     fetch_pixel_32_t	       fetch_pixel_32;
@@ -248,39 +249,12 @@ _pixman_conical_gradient_iter_init (pixman_image_t *image,
 				    int x, int y, int width, int height,
 				    uint8_t *buffer, iter_flags_t flags);
 
-void
-_pixman_image_get_scanline_generic_64  (pixman_image_t *image,
-                                        int             x,
-                                        int             y,
-                                        int             width,
-                                        uint32_t *      buffer,
-                                        const uint32_t *mask);
-
 source_image_class_t
 _pixman_image_classify (pixman_image_t *image,
                         int             x,
                         int             y,
                         int             width,
                         int             height);
-
-void
-_pixman_image_get_scanline_32 (pixman_image_t *image,
-                               int             x,
-                               int             y,
-                               int             width,
-                               uint32_t *      buffer,
-                               const uint32_t *mask);
-
-/* Even thought the type of buffer is uint32_t *, the function actually expects
- * a uint64_t *buffer.
- */
-void
-_pixman_image_get_scanline_64 (pixman_image_t *image,
-                               int             x,
-                               int             y,
-                               int             width,
-                               uint32_t *      buffer,
-                               const uint32_t *unused);
 
 pixman_image_t *
 _pixman_image_allocate (void);
