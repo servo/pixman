@@ -386,11 +386,6 @@ radial_gradient_get_scanline_32 (pixman_image_t *image,
     }
 }
 
-static void
-radial_gradient_property_changed (pixman_image_t *image)
-{
-}
-
 static uint32_t *
 radial_get_scanline_narrow (pixman_iter_t *iter, const uint32_t *mask)
 {
@@ -470,8 +465,6 @@ pixman_image_create_radial_gradient (pixman_point_fixed_t *        inner,
 	radial->inva = 1. * pixman_fixed_1 / radial->a;
 
     radial->mindr = -1. * pixman_fixed_1 * radial->c1.radius;
-
-    image->common.property_changed = radial_gradient_property_changed;
 
     return image;
 }

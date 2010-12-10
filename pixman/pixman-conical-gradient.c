@@ -156,11 +156,6 @@ conical_gradient_get_scanline_32 (pixman_image_t *image,
     }
 }
 
-static void
-conical_gradient_property_changed (pixman_image_t *image)
-{
-}
-
 static uint32_t *
 conical_get_scanline_narrow (pixman_iter_t *iter, const uint32_t *mask)
 {
@@ -220,8 +215,6 @@ pixman_image_create_conical_gradient (pixman_point_fixed_t *        center,
 
     conical->center = *center;
     conical->angle = (pixman_fixed_to_double (angle) / 180.0) * M_PI;
-
-    image->common.property_changed = conical_gradient_property_changed;
 
     return image;
 }

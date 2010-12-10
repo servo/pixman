@@ -219,11 +219,6 @@ linear_get_scanline_32 (pixman_image_t *image,
     }
 }
 
-static void
-linear_gradient_property_changed (pixman_image_t *image)
-{
-}
-
 static uint32_t *
 linear_get_scanline_narrow (pixman_iter_t  *iter,
 			    const uint32_t *mask)
@@ -294,7 +289,6 @@ pixman_image_create_linear_gradient (pixman_point_fixed_t *        p1,
 
     image->type = LINEAR;
     image->common.classify = linear_gradient_classify;
-    image->common.property_changed = linear_gradient_property_changed;
 
     return image;
 }

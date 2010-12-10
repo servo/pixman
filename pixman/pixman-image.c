@@ -73,6 +73,7 @@ _pixman_image_allocate (void)
 	common->component_alpha = FALSE;
 	common->ref_count = 1;
 	common->classify = NULL;
+	common->property_changed = NULL;
 	common->client_clip = FALSE;
 	common->destroy_func = NULL;
 	common->destroy_data = NULL;
@@ -416,7 +417,8 @@ _pixman_image_validate (pixman_image_t *image)
 	 * property_changed() can make use of the flags
 	 * to set up accessors etc.
 	 */
-	image->common.property_changed (image);
+	if (image->common.property_changed)
+	    image->common.property_changed (image);
 
 	image->common.dirty = FALSE;
     }
