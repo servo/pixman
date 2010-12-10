@@ -258,23 +258,6 @@ _pixman_image_get_scanline_64 (pixman_image_t *image,
                                uint32_t *      buffer,
                                const uint32_t *unused);
 
-void
-_pixman_image_store_scanline_32 (bits_image_t *  image,
-                                 int             x,
-                                 int             y,
-                                 int             width,
-                                 const uint32_t *buffer);
-
-/* Even though the type of buffer is uint32_t *, the function
- * actually expects a uint64_t *buffer.
- */
-void
-_pixman_image_store_scanline_64 (bits_image_t *  image,
-                                 int             x,
-                                 int             y,
-                                 int             width,
-                                 const uint32_t *buffer);
-
 pixman_image_t *
 _pixman_image_allocate (void);
 

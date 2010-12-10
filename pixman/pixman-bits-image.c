@@ -35,45 +35,6 @@
 #include "pixman-private.h"
 #include "pixman-combine32.h"
 
-/* Store functions */
-void
-_pixman_image_store_scanline_32 (bits_image_t *  image,
-                                 int             x,
-                                 int             y,
-                                 int             width,
-                                 const uint32_t *buffer)
-{
-    image->store_scanline_32 (image, x, y, width, buffer);
-
-    if (image->common.alpha_map)
-    {
-	x -= image->common.alpha_origin_x;
-	y -= image->common.alpha_origin_y;
-
-	image->common.alpha_map->store_scanline_32 (
-	    image->common.alpha_map, x, y, width, buffer);
-    }
-}
-
-void
-_pixman_image_store_scanline_64 (bits_image_t *  image,
-                                 int             x,
-                                 int             y,
-                                 int             width,
-                                 const uint32_t *buffer)
-{
-    image->store_scanline_64 (image, x, y, width, buffer);
-
-    if (image->common.alpha_map)
-    {
-	x -= image->common.alpha_origin_x;
-	y -= image->common.alpha_origin_y;
-
-	image->common.alpha_map->store_scanline_64 (
-	    image->common.alpha_map, x, y, width, buffer);
-    }
-}
-
 /* Fetch functions */
 
 static force_inline uint32_t
@@ -1397,15 +1358,47 @@ dest_get_scanline_wide (pixman_iter_t *iter, const uint32_t *mask)
 static void
 dest_write_back_narrow (pixman_iter_t *iter)
 {
-    _pixman_image_store_scanline_32 (
-	&iter->image->bits, iter->x, iter->y++, iter->width, iter->buffer);
+    bits_image_t *  image  = &iter->image->bits;
+    int             x      = iter->x;
+    int             y      = iter->y;
+    int             width  = iter->width;
+    const uint32_t *buffer = iter->buffer;
+
+    image->store_scanline_32 (image, x, y, width, buffer);
+
+    if (image->common.alpha_map)
+    {
+	x -= image->common.alpha_origin_x;
+	y -= image->common.alpha_origin_y;
+
+	image->common.alpha_map->store_scanline_32 (
+	    image->common.alpha_map, x, y, width, buffer);
+    }
+
+    iter->y++;
 }
 
 static void
 dest_write_back_wide (pixman_iter_t *iter)
 {
-    _pixman_image_store_scanline_64 (
-	&iter->image->bits, iter->x, iter->y++, iter->width, iter->buffer);
+    bits_image_t *  image  = &iter->image->bits;
+    int             x      = iter->x;
+    int             y      = iter->y;
+    int             width  = iter->width;
+    const uint32_t *buffer = iter->buffer;
+
+    image->store_scanline_64 (image, x, y, width, buffer);
+
+    if (image->common.alpha_map)
+    {
+	x -= image->common.alpha_origin_x;
+	y -= image->common.alpha_origin_y;
+
+	image->common.alpha_map->store_scanline_64 (
+	    image->common.alpha_map, x, y, width, buffer);
+    }
+
+    iter->y++;
 }
 
 void
