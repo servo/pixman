@@ -31,21 +31,18 @@
 #include <stdlib.h>
 #include "pixman-private.h"
 
-static source_image_class_t
-linear_gradient_classify (pixman_image_t *image,
-                          int             x,
-                          int             y,
-                          int             width,
-                          int             height)
+static pixman_bool_t
+linear_gradient_is_horizontal (pixman_image_t *image,
+			       int             x,
+			       int             y,
+			       int             width,
+			       int             height)
 {
     linear_gradient_t *linear = (linear_gradient_t *)image;
     pixman_vector_t v;
     pixman_fixed_32_32_t l;
     pixman_fixed_48_16_t dx, dy;
     double inc;
-    source_image_class_t class;
-
-    class = SOURCE_IMAGE_CLASS_UNKNOWN;
 
     if (image->common.transform)
     {
@@ -54,7 +51,7 @@ linear_gradient_classify (pixman_image_t *image,
 	    image->common.transform->matrix[2][1] != 0 ||
 	    image->common.transform->matrix[2][2] == 0)
 	{
-	    return class;
+	    return FALSE;
 	}
 
 	v.vector[0] = image->common.transform->matrix[0][1];
@@ -74,7 +71,7 @@ linear_gradient_classify (pixman_image_t *image,
     l = dx * dx + dy * dy;
 
     if (l == 0)
-	return class;	
+	return FALSE;
 
     /*
      * compute how much the input of the gradient walked changes
@@ -86,9 +83,9 @@ linear_gradient_classify (pixman_image_t *image,
 
     /* check that casting to integer would result in 0 */
     if (-1 < inc && inc < 1)
-	class = SOURCE_IMAGE_CLASS_HORIZONTAL;
+	return TRUE;
 
-    return class;
+    return FALSE;
 }
 
 static uint32_t *
@@ -245,8 +242,7 @@ _pixman_linear_gradient_iter_init (pixman_image_t *image,
 				   uint8_t        *buffer,
 				   iter_flags_t    flags)
 {
-    if (linear_gradient_classify (image, x, y, width, height) ==
-	SOURCE_IMAGE_CLASS_HORIZONTAL)
+    if (linear_gradient_is_horizontal (image, x, y, width, height))
     {
 	if (flags & ITER_NARROW)
 	    linear_get_scanline_narrow (iter, NULL);
@@ -290,7 +286,6 @@ pixman_image_create_linear_gradient (pixman_point_fixed_t *        p1,
     linear->p2 = *p2;
 
     image->type = LINEAR;
-    image->common.classify = linear_gradient_classify;
 
     return image;
 }

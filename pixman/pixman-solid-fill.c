@@ -26,16 +26,6 @@
 #endif
 #include "pixman-private.h"
 
-static source_image_class_t
-solid_fill_classify (pixman_image_t *image,
-                     int             x,
-                     int             y,
-                     int             width,
-                     int             height)
-{
-    return SOURCE_IMAGE_CLASS_HORIZONTAL;
-}
-
 void
 _pixman_solid_fill_iter_init (pixman_image_t *image,
 			      pixman_iter_t  *iter,
@@ -96,8 +86,6 @@ pixman_image_create_solid_fill (pixman_color_t *color)
     img->solid.color = *color;
     img->solid.color_32 = color_to_uint32 (color);
     img->solid.color_64 = color_to_uint64 (color);
-
-    img->common.classify = solid_fill_classify;
 
     return img;
 }

@@ -60,17 +60,6 @@ typedef enum
     SOLID
 } image_type_t;
 
-typedef enum
-{
-    SOURCE_IMAGE_CLASS_UNKNOWN,
-    SOURCE_IMAGE_CLASS_HORIZONTAL,
-} source_image_class_t;
-
-typedef source_image_class_t (*classify_func_t) (pixman_image_t *image,
-						int             x,
-						int             y,
-						int             width,
-						int             height);
 typedef void (*property_changed_func_t) (pixman_image_t *image);
 
 struct image_common
@@ -95,7 +84,6 @@ struct image_common
     int                         alpha_origin_x;
     int                         alpha_origin_y;
     pixman_bool_t               component_alpha;
-    classify_func_t             classify;
     property_changed_func_t     property_changed;
 
     pixman_image_destroy_func_t destroy_func;
@@ -248,13 +236,6 @@ _pixman_conical_gradient_iter_init (pixman_image_t *image,
 				    pixman_iter_t *iter,
 				    int x, int y, int width, int height,
 				    uint8_t *buffer, iter_flags_t flags);
-
-source_image_class_t
-_pixman_image_classify (pixman_image_t *image,
-                        int             x,
-                        int             y,
-                        int             width,
-                        int             height);
 
 pixman_image_t *
 _pixman_image_allocate (void);

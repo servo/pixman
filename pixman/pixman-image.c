@@ -72,7 +72,6 @@ _pixman_image_allocate (void)
 	common->alpha_map = NULL;
 	common->component_alpha = FALSE;
 	common->ref_count = 1;
-	common->classify = NULL;
 	common->property_changed = NULL;
 	common->client_clip = FALSE;
 	common->destroy_func = NULL;
@@ -81,19 +80,6 @@ _pixman_image_allocate (void)
     }
 
     return image;
-}
-
-source_image_class_t
-_pixman_image_classify (pixman_image_t *image,
-                        int             x,
-                        int             y,
-                        int             width,
-                        int             height)
-{
-    if (image->common.classify)
-	return image->common.classify (image, x, y, width, height);
-    else
-	return SOURCE_IMAGE_CLASS_UNKNOWN;
 }
 
 static void
