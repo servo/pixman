@@ -245,10 +245,23 @@ _pixman_linear_gradient_iter_init (pixman_image_t *image,
 				   uint8_t        *buffer,
 				   iter_flags_t    flags)
 {
-    if (flags & ITER_NARROW)
-	iter->get_scanline = linear_get_scanline_narrow;
+    if (linear_gradient_classify (image, x, y, width, height) ==
+	SOURCE_IMAGE_CLASS_HORIZONTAL)
+    {
+	if (flags & ITER_NARROW)
+	    linear_get_scanline_narrow (iter, NULL);
+	else
+	    linear_get_scanline_wide (iter, NULL);
+
+	iter->get_scanline = _pixman_iter_get_scanline_noop;
+    }
     else
-	iter->get_scanline = linear_get_scanline_wide;
+    {
+	if (flags & ITER_NARROW)
+	    iter->get_scanline = linear_get_scanline_narrow;
+	else
+	    iter->get_scanline = linear_get_scanline_wide;
+    }
 }
 
 PIXMAN_EXPORT pixman_image_t *
