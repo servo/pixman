@@ -39,6 +39,125 @@
 #include "pixman-combine32.h"
 #include "pixman-private.h"
 
+typedef struct pixman_iter_t pixman_iter_t;
+typedef enum
+{
+    ITER_NARROW	= (1 << 0)
+} iter_flags_t;
+
+struct pixman_iter_t
+{
+    uint32_t *(* get_scanline) (pixman_iter_t *iter, const uint32_t *mask);
+    void      (* write_back)   (pixman_iter_t *iter);
+
+    pixman_image_t *    image;
+    uint32_t *          buffer;
+    int                 x, y;
+    int                 width;
+};
+
+static uint32_t *
+src_get_scanline_null (pixman_iter_t *iter, const uint32_t *mask)
+{
+    return NULL;
+}
+
+static uint32_t *
+src_get_scanline_narrow (pixman_iter_t *iter, const uint32_t *mask)
+{
+    _pixman_image_get_scanline_32 (
+	iter->image, iter->x, iter->y++, iter->width, iter->buffer, mask);
+
+    return iter->buffer;
+}
+
+static uint32_t *
+src_get_scanline_wide (pixman_iter_t *iter, const uint32_t *mask)
+{
+    _pixman_image_get_scanline_64 (
+	iter->image, iter->x, iter->y++, iter->width, iter->buffer, mask);
+
+    return iter->buffer;
+}
+
+static void
+src_iter_init (pixman_implementation_t *imp,
+	       pixman_iter_t *iter,
+	       pixman_image_t *image,
+	       int x, int y, int width, int height,
+	       uint8_t *buffer, iter_flags_t flags)
+{
+    iter->image = image;
+    iter->x = x;
+    iter->y = y;
+    iter->width = width;
+    iter->buffer = (uint32_t *)buffer;
+
+    if (!image)
+	iter->get_scanline = src_get_scanline_null;
+    else if (flags & ITER_NARROW)
+	iter->get_scanline = src_get_scanline_narrow;
+    else
+	iter->get_scanline = src_get_scanline_wide;
+}
+
+static uint32_t *
+dest_get_scanline_narrow (pixman_iter_t *iter, const uint32_t *mask)
+{
+    _pixman_image_get_scanline_32 (
+	iter->image, iter->x, iter->y, iter->width, iter->buffer, mask);
+
+    return iter->buffer;
+}
+
+static uint32_t *
+dest_get_scanline_wide (pixman_iter_t *iter, const uint32_t *mask)
+{
+    _pixman_image_get_scanline_64 (
+	iter->image, iter->x, iter->y, iter->width, iter->buffer, mask);
+
+    return iter->buffer;
+}
+
+static void
+write_back_narrow (pixman_iter_t *iter)
+{
+    _pixman_image_store_scanline_32 (
+	&iter->image->bits, iter->x, iter->y++, iter->width, iter->buffer);
+}
+
+static void
+write_back_wide (pixman_iter_t *iter)
+{
+    _pixman_image_store_scanline_64 (
+	&iter->image->bits, iter->x, iter->y++, iter->width, iter->buffer);
+}
+
+static void
+dest_iter_init (pixman_implementation_t *imp,
+		pixman_iter_t *iter,
+		pixman_image_t *image,
+		int x, int y, int width, int height,
+		uint8_t *buffer, iter_flags_t flags)
+{
+    iter->image = image;
+    iter->x = x;
+    iter->y = y;
+    iter->width = width;
+    iter->buffer = (uint32_t *)buffer;
+
+    if (flags & ITER_NARROW)
+    {
+	iter->get_scanline = dest_get_scanline_narrow;
+	iter->write_back = write_back_narrow;
+    }
+    else
+    {
+	iter->get_scanline = dest_get_scanline_wide;
+	iter->write_back = write_back_wide;
+    }
+}
+
 #define SCANLINE_BUFFER_LENGTH 8192
 
 static void
@@ -59,21 +178,25 @@ general_composite_rect  (pixman_implementation_t *imp,
     uint64_t stack_scanline_buffer[(SCANLINE_BUFFER_LENGTH * 3 + 7) / 8];
     uint8_t *scanline_buffer = (uint8_t *) stack_scanline_buffer;
     uint8_t *src_buffer, *mask_buffer, *dest_buffer;
-    fetch_scanline_t fetch_src = NULL, fetch_mask = NULL, fetch_dest = NULL;
+    pixman_iter_t src_iter, mask_iter, dest_iter;
     pixman_combine_32_func_t compose;
-    store_scanline_t store;
-    source_image_class_t src_class, mask_class;
     pixman_bool_t component_alpha;
-    uint32_t *bits;
-    int32_t stride;
-    int narrow, Bpp;
+    iter_flags_t narrow;
+    int Bpp;
     int i;
 
-    narrow =
-	(src->common.flags & FAST_PATH_NARROW_FORMAT)		&&
+    if ((src->common.flags & FAST_PATH_NARROW_FORMAT)		&&
 	(!mask || mask->common.flags & FAST_PATH_NARROW_FORMAT)	&&
-	(dest->common.flags & FAST_PATH_NARROW_FORMAT);
-    Bpp = narrow ? 4 : 8;
+	(dest->common.flags & FAST_PATH_NARROW_FORMAT))
+    {
+	narrow = ITER_NARROW;
+	Bpp = 4;
+    }
+    else
+    {
+	narrow = 0;
+	Bpp = 8;
+    }
 
     if (width * Bpp > SCANLINE_BUFFER_LENGTH)
     {
@@ -87,85 +210,19 @@ general_composite_rect  (pixman_implementation_t *imp,
     mask_buffer = src_buffer + width * Bpp;
     dest_buffer = mask_buffer + width * Bpp;
 
-    src_class = _pixman_image_classify (src,
-                                        src_x, src_y,
-                                        width, height);
+    src_iter_init (imp->toplevel, &src_iter, src,
+		   src_x, src_y, width, height,
+		   src_buffer, narrow);
 
-    mask_class = SOURCE_IMAGE_CLASS_UNKNOWN;
+    src_iter_init (imp->toplevel, &mask_iter, mask,
+		   mask_x, mask_y, width, height,
+		   mask_buffer, narrow);
 
-    if (mask)
-    {
-	mask_class = _pixman_image_classify (mask,
-	                                     src_x, src_y,
-	                                     width, height);
-    }
-
-    if (op == PIXMAN_OP_CLEAR)
-	fetch_src = NULL;
-    else if (narrow)
-	fetch_src = _pixman_image_get_scanline_32;
-    else
-	fetch_src = _pixman_image_get_scanline_64;
-
-    if (!mask || op == PIXMAN_OP_CLEAR)
-	fetch_mask = NULL;
-    else if (narrow)
-	fetch_mask = _pixman_image_get_scanline_32;
-    else
-	fetch_mask = _pixman_image_get_scanline_64;
-
-    if (op == PIXMAN_OP_CLEAR || op == PIXMAN_OP_SRC)
-	fetch_dest = NULL;
-    else if (narrow)
-	fetch_dest = _pixman_image_get_scanline_32;
-    else
-	fetch_dest = _pixman_image_get_scanline_64;
-
-    if (narrow)
-	store = _pixman_image_store_scanline_32;
-    else
-	store = _pixman_image_store_scanline_64;
-
-    /* Skip the store step and composite directly into the
-     * destination if the output format of the compose func matches
-     * the destination format.
-     *
-     * If the destination format is a8r8g8b8 then we can always do
-     * this. If it is x8r8g8b8, then we can only do it if the
-     * operator doesn't make use of destination alpha.
-     */
-    if ((dest->bits.format == PIXMAN_a8r8g8b8)	||
-	(dest->bits.format == PIXMAN_x8r8g8b8	&&
-	 (op == PIXMAN_OP_OVER		||
-	  op == PIXMAN_OP_ADD		||
-	  op == PIXMAN_OP_SRC		||
-	  op == PIXMAN_OP_CLEAR		||
-	  op == PIXMAN_OP_IN_REVERSE	||
-	  op == PIXMAN_OP_OUT_REVERSE	||
-	  op == PIXMAN_OP_DST)))
-    {
-	if (narrow &&
-	    !dest->common.alpha_map &&
-	    !dest->bits.write_func)
-	{
-	    store = NULL;
-	}
-    }
-
-    if (!store)
-    {
-	bits = dest->bits.bits;
-	stride = dest->bits.rowstride;
-    }
-    else
-    {
-	bits = NULL;
-	stride = 0;
-    }
+    dest_iter_init (imp->toplevel, &dest_iter, dest,
+		    dest_x, dest_y, width, height,
+		    dest_buffer, narrow);
 
     component_alpha =
-        fetch_src                       &&
-        fetch_mask                      &&
         mask                            &&
         mask->common.type == BITS       &&
         mask->common.component_alpha    &&
@@ -189,70 +246,17 @@ general_composite_rect  (pixman_implementation_t *imp,
     if (!compose)
 	return;
 
-    if (!fetch_mask)
-	mask_buffer = NULL;
-
     for (i = 0; i < height; ++i)
     {
-	/* fill first half of scanline with source */
-	if (fetch_src)
-	{
-	    if (fetch_mask)
-	    {
-		/* fetch mask before source so that fetching of
-		   source can be optimized */
-		fetch_mask (mask, mask_x, mask_y + i,
-		            width, (void *)mask_buffer, 0);
+	uint32_t *s, *m, *d;
 
-		if (mask_class == SOURCE_IMAGE_CLASS_HORIZONTAL)
-		    fetch_mask = NULL;
-	    }
+	m = mask_iter.get_scanline (&mask_iter, NULL);
+	s = src_iter.get_scanline (&src_iter, m);
+	d = dest_iter.get_scanline (&dest_iter, NULL);
 
-	    if (src_class == SOURCE_IMAGE_CLASS_HORIZONTAL)
-	    {
-		fetch_src (src, src_x, src_y + i,
-		           width, (void *)src_buffer, 0);
-		fetch_src = NULL;
-	    }
-	    else
-	    {
-		fetch_src (src, src_x, src_y + i,
-		           width, (void *)src_buffer, (void *)mask_buffer);
-	    }
-	}
-	else if (fetch_mask)
-	{
-	    fetch_mask (mask, mask_x, mask_y + i,
-	                width, (void *)mask_buffer, 0);
-	}
+	compose (imp->toplevel, op, d, s, m, width);
 
-	if (store)
-	{
-	    /* fill dest into second half of scanline */
-	    if (fetch_dest)
-	    {
-		fetch_dest (dest, dest_x, dest_y + i,
-		            width, (void *)dest_buffer, 0);
-	    }
-
-	    /* blend */
-	    compose (imp->toplevel, op,
-		     (void *)dest_buffer,
-		     (void *)src_buffer,
-		     (void *)mask_buffer,
-		     width);
-
-	    /* write back */
-	    store (&(dest->bits), dest_x, dest_y + i, width,
-	           (void *)dest_buffer);
-	}
-	else
-	{
-	    /* blend */
-	    compose (imp->toplevel, op,
-		     bits + (dest_y + i) * stride + dest_x,
-	             (void *)src_buffer, (void *)mask_buffer, width);
-	}
+	dest_iter.write_back (&dest_iter);
     }
 
     if (scanline_buffer != (uint8_t *) stack_scanline_buffer)
