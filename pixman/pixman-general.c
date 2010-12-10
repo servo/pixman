@@ -39,18 +39,12 @@
 #include "pixman-combine32.h"
 #include "pixman-private.h"
 
-static uint32_t *
-src_get_scanline_null (pixman_iter_t *iter, const uint32_t *mask)
-{
-    return NULL;
-}
-
 static void
-src_iter_init (pixman_implementation_t *imp,
-	       pixman_iter_t *iter,
-	       pixman_image_t *image,
-	       int x, int y, int width, int height,
-	       uint8_t *buffer, iter_flags_t flags)
+general_src_iter_init (pixman_implementation_t *imp,
+		       pixman_iter_t *iter,
+		       pixman_image_t *image,
+		       int x, int y, int width, int height,
+		       uint8_t *buffer, iter_flags_t flags)
 {
     iter->image = image;
     iter->x = x;
@@ -58,11 +52,7 @@ src_iter_init (pixman_implementation_t *imp,
     iter->width = width;
     iter->buffer = (uint32_t *)buffer;
 
-    if (!image)
-    {
-	iter->get_scanline = src_get_scanline_null;
-    }
-    else if (image->type == SOLID)
+    if (image->type == SOLID)
     {
 	_pixman_solid_fill_iter_init (
 	    image, iter, x, y, width, height, buffer, flags);
@@ -94,11 +84,11 @@ src_iter_init (pixman_implementation_t *imp,
 }
 
 static void
-dest_iter_init (pixman_implementation_t *imp,
-		pixman_iter_t *iter,
-		pixman_image_t *image,
-		int x, int y, int width, int height,
-		uint8_t *buffer, iter_flags_t flags)
+general_dest_iter_init (pixman_implementation_t *imp,
+			pixman_iter_t *iter,
+			pixman_image_t *image,
+			int x, int y, int width, int height,
+			uint8_t *buffer, iter_flags_t flags)
 {
     iter->image = image;
     iter->x = x;
@@ -169,17 +159,17 @@ general_composite_rect  (pixman_implementation_t *imp,
     mask_buffer = src_buffer + width * Bpp;
     dest_buffer = mask_buffer + width * Bpp;
 
-    src_iter_init (imp->toplevel, &src_iter, src,
-		   src_x, src_y, width, height,
-		   src_buffer, narrow);
+    _pixman_implementation_src_iter_init (imp->toplevel, &src_iter, src,
+					  src_x, src_y, width, height,
+					  src_buffer, narrow);
 
-    src_iter_init (imp->toplevel, &mask_iter, mask,
-		   mask_x, mask_y, width, height,
-		   mask_buffer, narrow);
+    _pixman_implementation_src_iter_init (imp->toplevel, &mask_iter, mask,
+					  mask_x, mask_y, width, height,
+					  mask_buffer, narrow);
 
-    dest_iter_init (imp->toplevel, &dest_iter, dest,
-		    dest_x, dest_y, width, height,
-		    dest_buffer, narrow);
+    _pixman_implementation_dest_iter_init (imp->toplevel, &dest_iter, dest,
+					   dest_x, dest_y, width, height,
+					   dest_buffer, narrow);
 
     component_alpha =
         mask                            &&
@@ -272,6 +262,8 @@ _pixman_implementation_create_general (void)
 
     imp->blt = general_blt;
     imp->fill = general_fill;
+    imp->src_iter_init = general_src_iter_init;
+    imp->dest_iter_init = general_dest_iter_init;
 
     return imp;
 }
