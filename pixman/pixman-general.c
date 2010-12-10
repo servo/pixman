@@ -130,7 +130,7 @@ general_composite_rect  (pixman_implementation_t *imp,
     pixman_iter_t src_iter, mask_iter, dest_iter;
     pixman_combine_32_func_t compose;
     pixman_bool_t component_alpha;
-    iter_flags_t narrow;
+    iter_flags_t narrow, dest_flags;
     int Bpp;
     int i;
 
@@ -167,9 +167,24 @@ general_composite_rect  (pixman_implementation_t *imp,
 					  mask_x, mask_y, width, height,
 					  mask_buffer, narrow);
 
+    if (op == PIXMAN_OP_CLEAR		||
+	op == PIXMAN_OP_SRC		||
+	op == PIXMAN_OP_DST		||
+	op == PIXMAN_OP_OVER		||
+	op == PIXMAN_OP_IN_REVERSE	||
+	op == PIXMAN_OP_OUT_REVERSE	||
+	op == PIXMAN_OP_ADD)
+    {
+	dest_flags = narrow | ITER_LOCALIZED_ALPHA;
+    }
+    else
+    {
+	dest_flags = narrow;
+    }
+
     _pixman_implementation_dest_iter_init (imp->toplevel, &dest_iter, dest,
 					   dest_x, dest_y, width, height,
-					   dest_buffer, narrow);
+					   dest_buffer, dest_flags);
 
     component_alpha =
         mask                            &&

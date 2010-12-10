@@ -185,7 +185,24 @@ union pixman_image
 typedef struct pixman_iter_t pixman_iter_t;
 typedef enum
 {
-    ITER_NARROW	= (1 << 0),
+    ITER_NARROW =		(1 << 0),
+
+    /* "Localized alpha" is when the alpha channel is used only to compute
+     * the alpha value of the destination. This means that the computation
+     * of the RGB values of the result is independent of the alpha value.
+     *
+     * For example, the OVER operator has localized alpha for the
+     * destination, because the RGB values of the result can be computed
+     * without knowing the destination alpha. Similarly, ADD has localized
+     * alpha for both source and destination because the RGB values of the
+     * result can be computed without knowing the alpha value of source or
+     * destination.
+     *
+     * When he destination is xRGB, this is useful knowledge, because then
+     * we can treat it as if it were ARGB, which means in some cases we can
+     * avoid copying it to a temporary buffer.
+     */
+    ITER_LOCALIZED_ALPHA =	(1 << 1)
 } iter_flags_t;
 
 struct pixman_iter_t
