@@ -144,13 +144,8 @@ radial_compute_color (double                    a,
     return 0;
 }
 
-static void
-radial_gradient_get_scanline_32 (pixman_image_t *image,
-                                 int             x,
-                                 int             y,
-                                 int             width,
-                                 uint32_t *      buffer,
-                                 const uint32_t *mask)
+static uint32_t *
+radial_get_scanline_narrow (pixman_iter_t *iter, const uint32_t *mask)
 {
     /*
      * Implementation of radial gradients following the PDF specification.
@@ -233,6 +228,11 @@ radial_gradient_get_scanline_32 (pixman_image_t *image,
      *   <=> for every p, the radiuses associated with the two t solutions
      *       have opposite sign
      */
+    pixman_image_t *image = iter->image;
+    int x = iter->x;
+    int y = iter->y;
+    int width = iter->width;
+    uint32_t *buffer = iter->buffer;
 
     gradient_t *gradient = (gradient_t *)image;
     radial_gradient_t *radial = (radial_gradient_t *)image;
@@ -250,7 +250,7 @@ radial_gradient_get_scanline_32 (pixman_image_t *image,
     if (image->common.transform)
     {
 	if (!pixman_transform_point_3d (image->common.transform, &v))
-	    return;
+	    return iter->buffer;
 	
 	unit.vector[0] = image->common.transform->matrix[0][0];
 	unit.vector[1] = image->common.transform->matrix[1][0];
@@ -384,14 +384,6 @@ radial_gradient_get_scanline_32 (pixman_image_t *image,
 	    v.vector[2] += unit.vector[2];
 	}
     }
-}
-
-static uint32_t *
-radial_get_scanline_narrow (pixman_iter_t *iter, const uint32_t *mask)
-{
-    radial_gradient_get_scanline_32 (
-	iter->image, iter->x, iter->y, iter->width,
-	iter->buffer, mask);
 
     iter->y++;
     return iter->buffer;

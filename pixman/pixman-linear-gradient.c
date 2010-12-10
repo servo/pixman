@@ -91,14 +91,16 @@ linear_gradient_classify (pixman_image_t *image,
     return class;
 }
 
-static void
-linear_get_scanline_32 (pixman_image_t *image,
-			int             x,
-			int             y,
-			int             width,
-			uint32_t *      buffer,
-			const uint32_t *mask)
+static uint32_t *
+linear_get_scanline_narrow (pixman_iter_t  *iter,
+			    const uint32_t *mask)
 {
+    pixman_image_t *image  = iter->image;
+    int             x      = iter->x;
+    int             y      = iter->y;
+    int             width  = iter->width;
+    uint32_t *      buffer = iter->buffer;
+
     pixman_vector_t v, unit;
     pixman_fixed_32_32_t l;
     pixman_fixed_48_16_t dx, dy;
@@ -117,7 +119,7 @@ linear_get_scanline_32 (pixman_image_t *image,
     if (image->common.transform)
     {
 	if (!pixman_transform_point_3d (image->common.transform, &v))
-	    return;
+	    return iter->buffer;
 
 	unit.vector[0] = image->common.transform->matrix[0][0];
 	unit.vector[1] = image->common.transform->matrix[1][0];
@@ -217,19 +219,6 @@ linear_get_scanline_32 (pixman_image_t *image,
 	    v.vector[2] += unit.vector[2];
 	}
     }
-}
-
-static uint32_t *
-linear_get_scanline_narrow (pixman_iter_t  *iter,
-			    const uint32_t *mask)
-{
-    pixman_image_t *image  = iter->image;
-    int             x      = iter->x;
-    int             y      = iter->y;
-    int             width  = iter->width;
-    uint32_t *      buffer = iter->buffer;
-
-    linear_get_scanline_32 (image, x, y, width, buffer, mask);
 
     iter->y++;
 

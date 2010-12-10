@@ -50,14 +50,15 @@ coordinates_to_parameter (double x, double y, double angle)
 				      */
 }
 
-static void
-conical_gradient_get_scanline_32 (pixman_image_t *image,
-                                  int             x,
-                                  int             y,
-                                  int             width,
-                                  uint32_t *      buffer,
-                                  const uint32_t *mask)
+static uint32_t *
+conical_get_scanline_narrow (pixman_iter_t *iter, const uint32_t *mask)
 {
+    pixman_image_t *image = iter->image;
+    int x = iter->x;
+    int y = iter->y;
+    int width = iter->width;
+    uint32_t *buffer = iter->buffer;
+
     gradient_t *gradient = (gradient_t *)image;
     conical_gradient_t *conical = (conical_gradient_t *)image;
     uint32_t       *end = buffer + width;
@@ -82,7 +83,7 @@ conical_gradient_get_scanline_32 (pixman_image_t *image,
 	v.vector[2] = pixman_fixed_1;
 
 	if (!pixman_transform_point_3d (image->common.transform, &v))
-	    return;
+	    return iter->buffer;
 
 	cx = image->common.transform->matrix[0][0] / 65536.;
 	cy = image->common.transform->matrix[1][0] / 65536.;
@@ -154,14 +155,6 @@ conical_gradient_get_scanline_32 (pixman_image_t *image,
 	    rz += cz;
 	}
     }
-}
-
-static uint32_t *
-conical_get_scanline_narrow (pixman_iter_t *iter, const uint32_t *mask)
-{
-    conical_gradient_get_scanline_32 (iter->image, iter->x, iter->y,
-				      iter->width, iter->buffer,
-				      mask);
 
     iter->y++;
     return iter->buffer;
