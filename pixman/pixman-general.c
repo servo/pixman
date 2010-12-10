@@ -45,24 +45,6 @@ src_get_scanline_null (pixman_iter_t *iter, const uint32_t *mask)
     return NULL;
 }
 
-static uint32_t *
-src_get_scanline_narrow (pixman_iter_t *iter, const uint32_t *mask)
-{
-    _pixman_image_get_scanline_32 (
-	iter->image, iter->x, iter->y++, iter->width, iter->buffer, mask);
-
-    return iter->buffer;
-}
-
-static uint32_t *
-src_get_scanline_wide (pixman_iter_t *iter, const uint32_t *mask)
-{
-    _pixman_image_get_scanline_64 (
-	iter->image, iter->x, iter->y++, iter->width, iter->buffer, mask);
-
-    return iter->buffer;
-}
-
 static void
 src_iter_init (pixman_implementation_t *imp,
 	       pixman_iter_t *iter,
@@ -80,18 +62,34 @@ src_iter_init (pixman_implementation_t *imp,
     {
 	iter->get_scanline = src_get_scanline_null;
     }
+    else if (image->type == SOLID)
+    {
+	_pixman_solid_fill_iter_init (
+	    image, iter, x, y, width, height, buffer, flags);
+    }
+    else if (image->type == LINEAR)
+    {
+	_pixman_linear_gradient_iter_init (
+	    image, iter, x, y, width, height, buffer, flags);
+    }
+    else if (image->type == RADIAL)
+    {
+	_pixman_radial_gradient_iter_init (
+	    image, iter, x, y, width, height, buffer, flags);
+    }
+    else if (image->type == CONICAL)
+    {
+	_pixman_conical_gradient_iter_init (
+	    image, iter, x, y, width, height, buffer, flags);
+    }
     else if (image->type == BITS)
     {
 	_pixman_bits_image_src_iter_init (
 	    image, iter, x, y, width, height, buffer, flags);
     }
-    else if (flags & ITER_NARROW)
-    {
-	iter->get_scanline = src_get_scanline_narrow;
-    }
     else
     {
-	iter->get_scanline = src_get_scanline_wide;
+	_pixman_log_error (FUNC, "Pixman bug: unknown image type\n");
     }
 }
 

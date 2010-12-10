@@ -225,6 +225,30 @@ _pixman_bits_image_dest_iter_init (pixman_image_t *image,
 				   uint8_t *buffer, iter_flags_t flags);
 
 void
+_pixman_solid_fill_iter_init (pixman_image_t *image,
+			      pixman_iter_t  *iter,
+			      int x, int y, int width, int height,
+			      uint8_t *buffer, iter_flags_t flags);
+
+void
+_pixman_linear_gradient_iter_init (pixman_image_t *image,
+				   pixman_iter_t  *iter,
+				   int x, int y, int width, int height,
+				   uint8_t *buffer, iter_flags_t flags);
+
+void
+_pixman_radial_gradient_iter_init (pixman_image_t *image,
+				   pixman_iter_t *iter,
+				   int x, int y, int width, int height,
+				   uint8_t *buffer, iter_flags_t flags);
+
+void
+_pixman_conical_gradient_iter_init (pixman_image_t *image,
+				    pixman_iter_t *iter,
+				    int x, int y, int width, int height,
+				    uint8_t *buffer, iter_flags_t flags);
+
+void
 _pixman_image_get_scanline_generic_64  (pixman_image_t *image,
                                         int             x,
                                         int             y,
@@ -537,6 +561,8 @@ _pixman_choose_implementation (void);
 /*
  * Utilities
  */
+uint32_t *
+_pixman_iter_get_scanline_noop (pixman_iter_t *iter, const uint32_t *mask);
 
 /* These "formats" all have depth 0, so they
  * will never clash with any real ones

@@ -163,6 +163,39 @@ conical_gradient_property_changed (pixman_image_t *image)
     image->common.get_scanline_64 = _pixman_image_get_scanline_generic_64;
 }
 
+static uint32_t *
+conical_get_scanline_narrow (pixman_iter_t *iter, const uint32_t *mask)
+{
+    conical_gradient_get_scanline_32 (iter->image, iter->x, iter->y,
+				      iter->width, iter->buffer,
+				      mask);
+
+    iter->y++;
+    return iter->buffer;
+}
+
+static uint32_t *
+conical_get_scanline_wide (pixman_iter_t *iter, const uint32_t *mask)
+{
+    uint32_t *buffer = conical_get_scanline_narrow (iter, NULL);
+
+    pixman_expand ((uint64_t *)buffer, buffer, PIXMAN_a8r8g8b8, iter->width);
+
+    return buffer;
+}
+
+void
+_pixman_conical_gradient_iter_init (pixman_image_t *image,
+				    pixman_iter_t *iter,
+				    int x, int y, int width, int height,
+				    uint8_t *buffer, iter_flags_t flags)
+{
+    if (flags & ITER_NARROW)
+	iter->get_scanline = conical_get_scanline_narrow;
+    else
+	iter->get_scanline = conical_get_scanline_wide;
+}
+
 PIXMAN_EXPORT pixman_image_t *
 pixman_image_create_conical_gradient (pixman_point_fixed_t *        center,
                                       pixman_fixed_t                angle,

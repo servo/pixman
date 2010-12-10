@@ -92,12 +92,12 @@ linear_gradient_classify (pixman_image_t *image,
 }
 
 static void
-linear_gradient_get_scanline_32 (pixman_image_t *image,
-                                 int             x,
-                                 int             y,
-                                 int             width,
-                                 uint32_t *      buffer,
-                                 const uint32_t *mask)
+linear_get_scanline_32 (pixman_image_t *image,
+			int             x,
+			int             y,
+			int             width,
+			uint32_t *      buffer,
+			const uint32_t *mask)
 {
     pixman_vector_t v, unit;
     pixman_fixed_32_32_t l;
@@ -222,8 +222,51 @@ linear_gradient_get_scanline_32 (pixman_image_t *image,
 static void
 linear_gradient_property_changed (pixman_image_t *image)
 {
-    image->common.get_scanline_32 = linear_gradient_get_scanline_32;
+    image->common.get_scanline_32 = linear_get_scanline_32;
     image->common.get_scanline_64 = _pixman_image_get_scanline_generic_64;
+}
+
+static uint32_t *
+linear_get_scanline_narrow (pixman_iter_t  *iter,
+			    const uint32_t *mask)
+{
+    pixman_image_t *image  = iter->image;
+    int             x      = iter->x;
+    int             y      = iter->y;
+    int             width  = iter->width;
+    uint32_t *      buffer = iter->buffer;
+
+    linear_get_scanline_32 (image, x, y, width, buffer, mask);
+
+    iter->y++;
+
+    return iter->buffer;
+}
+
+static uint32_t *
+linear_get_scanline_wide (pixman_iter_t *iter, const uint32_t *mask)
+{
+    uint32_t *buffer = linear_get_scanline_narrow (iter, NULL);
+
+    pixman_expand ((uint64_t *)buffer, buffer, PIXMAN_a8r8g8b8, iter->width);
+
+    return buffer;
+}
+
+void
+_pixman_linear_gradient_iter_init (pixman_image_t *image,
+				   pixman_iter_t  *iter,
+				   int             x,
+				   int             y,
+				   int             width,
+				   int             height,
+				   uint8_t        *buffer,
+				   iter_flags_t    flags)
+{
+    if (flags & ITER_NARROW)
+	iter->get_scanline = linear_get_scanline_narrow;
+    else
+	iter->get_scanline = linear_get_scanline_wide;
 }
 
 PIXMAN_EXPORT pixman_image_t *

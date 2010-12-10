@@ -76,6 +76,26 @@ solid_fill_property_changed (pixman_image_t *image)
     image->common.get_scanline_64 = solid_fill_get_scanline_64;
 }
 
+void
+_pixman_solid_fill_iter_init (pixman_image_t *image,
+			      pixman_iter_t  *iter,
+			      int x, int y, int width, int height,
+			      uint8_t *buffer, iter_flags_t flags)
+{
+    if (flags & ITER_NARROW)
+    {
+	solid_fill_get_scanline_32 (
+	    image, x, y, width, (uint32_t *)buffer, NULL);
+    }
+    else
+    {
+	solid_fill_get_scanline_64 (
+	    image, x, y, width, (uint32_t *)buffer, NULL);
+    }
+
+    iter->get_scanline = _pixman_iter_get_scanline_noop;
+}
+
 static uint32_t
 color_to_uint32 (const pixman_color_t *color)
 {
