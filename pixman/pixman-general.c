@@ -39,23 +39,6 @@
 #include "pixman-combine32.h"
 #include "pixman-private.h"
 
-typedef struct pixman_iter_t pixman_iter_t;
-typedef enum
-{
-    ITER_NARROW	= (1 << 0)
-} iter_flags_t;
-
-struct pixman_iter_t
-{
-    uint32_t *(* get_scanline) (pixman_iter_t *iter, const uint32_t *mask);
-    void      (* write_back)   (pixman_iter_t *iter);
-
-    pixman_image_t *    image;
-    uint32_t *          buffer;
-    int                 x, y;
-    int                 width;
-};
-
 static uint32_t *
 src_get_scanline_null (pixman_iter_t *iter, const uint32_t *mask)
 {
@@ -94,43 +77,22 @@ src_iter_init (pixman_implementation_t *imp,
     iter->buffer = (uint32_t *)buffer;
 
     if (!image)
+    {
 	iter->get_scanline = src_get_scanline_null;
+    }
+    else if (image->type == BITS)
+    {
+	_pixman_bits_image_src_iter_init (
+	    image, iter, x, y, width, height, buffer, flags);
+    }
     else if (flags & ITER_NARROW)
+    {
 	iter->get_scanline = src_get_scanline_narrow;
+    }
     else
+    {
 	iter->get_scanline = src_get_scanline_wide;
-}
-
-static uint32_t *
-dest_get_scanline_narrow (pixman_iter_t *iter, const uint32_t *mask)
-{
-    _pixman_image_get_scanline_32 (
-	iter->image, iter->x, iter->y, iter->width, iter->buffer, mask);
-
-    return iter->buffer;
-}
-
-static uint32_t *
-dest_get_scanline_wide (pixman_iter_t *iter, const uint32_t *mask)
-{
-    _pixman_image_get_scanline_64 (
-	iter->image, iter->x, iter->y, iter->width, iter->buffer, mask);
-
-    return iter->buffer;
-}
-
-static void
-write_back_narrow (pixman_iter_t *iter)
-{
-    _pixman_image_store_scanline_32 (
-	&iter->image->bits, iter->x, iter->y++, iter->width, iter->buffer);
-}
-
-static void
-write_back_wide (pixman_iter_t *iter)
-{
-    _pixman_image_store_scanline_64 (
-	&iter->image->bits, iter->x, iter->y++, iter->width, iter->buffer);
+    }
 }
 
 static void
@@ -146,15 +108,14 @@ dest_iter_init (pixman_implementation_t *imp,
     iter->width = width;
     iter->buffer = (uint32_t *)buffer;
 
-    if (flags & ITER_NARROW)
+    if (image->type == BITS)
     {
-	iter->get_scanline = dest_get_scanline_narrow;
-	iter->write_back = write_back_narrow;
+	_pixman_bits_image_dest_iter_init (
+	    image, iter, x, y, width, height, buffer, flags);
     }
     else
     {
-	iter->get_scanline = dest_get_scanline_wide;
-	iter->write_back = write_back_wide;
+	_pixman_log_error (FUNC, "Trying to write to a non-writable image");
     }
 }
 

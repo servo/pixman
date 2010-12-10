@@ -193,8 +193,36 @@ union pixman_image
     solid_fill_t       solid;
 };
 
+typedef struct pixman_iter_t pixman_iter_t;
+typedef enum
+{
+    ITER_NARROW	= (1 << 0),
+} iter_flags_t;
+
+struct pixman_iter_t
+{
+    uint32_t *(* get_scanline) (pixman_iter_t *iter, const uint32_t *mask);
+    void      (* write_back)   (pixman_iter_t *iter);
+
+    pixman_image_t *    image;
+    uint32_t *          buffer;
+    int                 x, y;
+    int                 width;
+};
+
 void
 _pixman_bits_image_setup_accessors (bits_image_t *image);
+
+void
+_pixman_bits_image_src_iter_init (pixman_image_t *image,
+				  pixman_iter_t *iter,
+				  int x, int y, int width, int height,
+				  uint8_t *buffer, iter_flags_t flags);
+void
+_pixman_bits_image_dest_iter_init (pixman_image_t *image,
+				   pixman_iter_t *iter,
+				   int x, int y, int width, int height,
+				   uint8_t *buffer, iter_flags_t flags);
 
 void
 _pixman_image_get_scanline_generic_64  (pixman_image_t *image,

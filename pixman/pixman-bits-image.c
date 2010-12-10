@@ -1347,6 +1347,86 @@ bits_image_property_changed (pixman_image_t *image)
 }
 
 static uint32_t *
+src_get_scanline_narrow (pixman_iter_t *iter, const uint32_t *mask)
+{
+    iter->image->common.get_scanline_32 (
+	iter->image, iter->x, iter->y++, iter->width, iter->buffer, mask);
+
+    return iter->buffer;
+}
+
+static uint32_t *
+src_get_scanline_wide (pixman_iter_t *iter, const uint32_t *mask)
+{
+    iter->image->common.get_scanline_64 (
+	iter->image, iter->x, iter->y++, iter->width, iter->buffer, mask);
+
+    return iter->buffer;
+}
+
+void
+_pixman_bits_image_src_iter_init (pixman_image_t *image,
+				  pixman_iter_t *iter,
+				  int x, int y, int width, int height,
+				  uint8_t *buffer, iter_flags_t flags)
+{
+    if (flags & ITER_NARROW)
+	iter->get_scanline = src_get_scanline_narrow;
+    else
+	iter->get_scanline = src_get_scanline_wide;
+}
+
+static uint32_t *
+dest_get_scanline_narrow (pixman_iter_t *iter, const uint32_t *mask)
+{
+    iter->image->common.get_scanline_32 (
+	iter->image, iter->x, iter->y, iter->width, iter->buffer, mask);
+
+    return iter->buffer;
+}
+
+static uint32_t *
+dest_get_scanline_wide (pixman_iter_t *iter, const uint32_t *mask)
+{
+    iter->image->common.get_scanline_64 (
+	iter->image, iter->x, iter->y, iter->width, iter->buffer, mask);
+
+    return iter->buffer;
+}
+
+static void
+dest_write_back_narrow (pixman_iter_t *iter)
+{
+    _pixman_image_store_scanline_32 (
+	&iter->image->bits, iter->x, iter->y++, iter->width, iter->buffer);
+}
+
+static void
+dest_write_back_wide (pixman_iter_t *iter)
+{
+    _pixman_image_store_scanline_64 (
+	&iter->image->bits, iter->x, iter->y++, iter->width, iter->buffer);
+}
+
+void
+_pixman_bits_image_dest_iter_init (pixman_image_t *image,
+				   pixman_iter_t *iter,
+				   int x, int y, int width, int height,
+				   uint8_t *buffer, iter_flags_t flags)
+{
+    if (flags & ITER_NARROW)
+    {
+	iter->get_scanline = dest_get_scanline_narrow;
+	iter->write_back = dest_write_back_narrow;
+    }
+    else
+    {
+	iter->get_scanline = dest_get_scanline_wide;
+	iter->write_back = dest_write_back_wide;
+    }
+}
+
+static uint32_t *
 create_bits (pixman_format_code_t format,
              int                  width,
              int                  height,
