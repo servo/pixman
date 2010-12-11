@@ -107,6 +107,34 @@ general_dest_iter_init (pixman_implementation_t *imp,
     }
 }
 
+typedef struct op_info_t op_info_t;
+struct op_info_t
+{
+    uint8_t src, dst;
+};
+
+#define ITER_IGNORE_BOTH						\
+    (ITER_IGNORE_ALPHA | ITER_IGNORE_RGB | ITER_LOCALIZED_ALPHA)
+
+static const op_info_t op_flags[PIXMAN_N_OPERATORS] =
+{
+    /* Src                   Dst                   */
+    { ITER_IGNORE_BOTH,      ITER_IGNORE_BOTH      }, /* CLEAR */
+    { ITER_LOCALIZED_ALPHA,  ITER_IGNORE_BOTH      }, /* SRC */
+    { ITER_IGNORE_BOTH,      ITER_LOCALIZED_ALPHA  }, /* DST */
+    { 0,                     ITER_LOCALIZED_ALPHA  }, /* OVER */
+    { ITER_LOCALIZED_ALPHA,  0                     }, /* OVER_REVERSE */
+    { ITER_LOCALIZED_ALPHA,  ITER_IGNORE_RGB       }, /* IN */
+    { ITER_IGNORE_RGB,       ITER_LOCALIZED_ALPHA  }, /* IN_REVERSE */
+    { ITER_LOCALIZED_ALPHA,  ITER_IGNORE_RGB       }, /* OUT */
+    { ITER_IGNORE_RGB,       ITER_LOCALIZED_ALPHA  }, /* OUT_REVERSE */
+    { 0,                     0                     }, /* ATOP */
+    { 0,                     0                     }, /* ATOP_REVERSE */
+    { 0,                     0                     }, /* XOR */
+    { ITER_LOCALIZED_ALPHA,  ITER_LOCALIZED_ALPHA  }, /* ADD */
+    { 0,                     0                     }, /* SATURATE */
+};
+
 #define SCANLINE_BUFFER_LENGTH 8192
 
 static void
@@ -130,7 +158,7 @@ general_composite_rect  (pixman_implementation_t *imp,
     pixman_iter_t src_iter, mask_iter, dest_iter;
     pixman_combine_32_func_t compose;
     pixman_bool_t component_alpha;
-    iter_flags_t narrow, dest_flags;
+    iter_flags_t narrow, src_flags;
     int Bpp;
     int i;
 
@@ -159,38 +187,38 @@ general_composite_rect  (pixman_implementation_t *imp,
     mask_buffer = src_buffer + width * Bpp;
     dest_buffer = mask_buffer + width * Bpp;
 
+    /* src iter */
+    src_flags = narrow | op_flags[op].src;
+
     _pixman_implementation_src_iter_init (imp->toplevel, &src_iter, src,
 					  src_x, src_y, width, height,
-					  src_buffer, narrow);
+					  src_buffer, src_flags);
 
-    _pixman_implementation_src_iter_init (imp->toplevel, &mask_iter, mask,
-					  mask_x, mask_y, width, height,
-					  mask_buffer, narrow);
-
-    if (op == PIXMAN_OP_CLEAR		||
-	op == PIXMAN_OP_SRC		||
-	op == PIXMAN_OP_DST		||
-	op == PIXMAN_OP_OVER		||
-	op == PIXMAN_OP_IN_REVERSE	||
-	op == PIXMAN_OP_OUT_REVERSE	||
-	op == PIXMAN_OP_ADD)
+    /* mask iter */
+    if ((src_flags & (ITER_IGNORE_ALPHA | ITER_IGNORE_RGB)) ==
+	(ITER_IGNORE_ALPHA | ITER_IGNORE_RGB))
     {
-	dest_flags = narrow | ITER_LOCALIZED_ALPHA;
+	/* If it doesn't matter what the source is, then it doesn't matter
+	 * what the mask is
+	 */
+	mask = NULL;
     }
-    else
-    {
-	dest_flags = narrow;
-    }
-
-    _pixman_implementation_dest_iter_init (imp->toplevel, &dest_iter, dest,
-					   dest_x, dest_y, width, height,
-					   dest_buffer, dest_flags);
 
     component_alpha =
         mask                            &&
         mask->common.type == BITS       &&
         mask->common.component_alpha    &&
         PIXMAN_FORMAT_RGB (mask->bits.format);
+
+    _pixman_implementation_src_iter_init (
+	imp->toplevel, &mask_iter, mask, mask_x, mask_y, width, height,
+	mask_buffer, narrow | (component_alpha? 0 : ITER_IGNORE_RGB));
+
+    /* dest iter */
+    _pixman_implementation_dest_iter_init (imp->toplevel, &dest_iter, dest,
+					   dest_x, dest_y, width, height,
+					   dest_buffer,
+					   narrow | op_flags[op].dst);
 
     if (narrow)
     {

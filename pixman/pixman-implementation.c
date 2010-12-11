@@ -278,6 +278,11 @@ _pixman_implementation_src_iter_init (pixman_implementation_t	*imp,
     {
 	iter->get_scanline = get_scanline_null;
     }
+    else if ((flags & (ITER_IGNORE_ALPHA | ITER_IGNORE_RGB)) ==
+	     (ITER_IGNORE_ALPHA | ITER_IGNORE_RGB))
+    {
+	iter->get_scanline = _pixman_iter_get_scanline_noop;
+    }
     else
     {
 	(*imp->src_iter_init) (

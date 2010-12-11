@@ -202,7 +202,9 @@ typedef enum
      * we can treat it as if it were ARGB, which means in some cases we can
      * avoid copying it to a temporary buffer.
      */
-    ITER_LOCALIZED_ALPHA =	(1 << 1)
+    ITER_LOCALIZED_ALPHA =	(1 << 1),
+    ITER_IGNORE_ALPHA =		(1 << 2),
+    ITER_IGNORE_RGB =		(1 << 3)
 } iter_flags_t;
 
 struct pixman_iter_t
