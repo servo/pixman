@@ -610,16 +610,12 @@ combine4 (const __m128i *ps, const __m128i *pm)
 }
 
 static force_inline void
-core_combine_over_u_sse2 (uint32_t*       pd,
-                          const uint32_t* ps,
-                          const uint32_t* pm,
-                          int             w)
+core_combine_over_u_sse2_mask (uint32_t *	  pd,
+			       const uint32_t*    ps,
+			       const uint32_t*    pm,
+			       int                w)
 {
     uint32_t s, d;
-
-    __m128i xmm_dst_lo, xmm_dst_hi;
-    __m128i xmm_src_lo, xmm_src_hi;
-    __m128i xmm_alpha_lo, xmm_alpha_hi;
 
     /* Align dst on a 16-byte boundary */
     while (w && ((unsigned long)pd & 15))
@@ -627,62 +623,158 @@ core_combine_over_u_sse2 (uint32_t*       pd,
 	d = *pd;
 	s = combine1 (ps, pm);
 
-	*pd++ = core_combine_over_u_pixel_sse2 (s, d);
+	if (s)
+	    *pd = core_combine_over_u_pixel_sse2 (s, d);
+	pd++;
 	ps++;
-	if (pm)
-	    pm++;
+	pm++;
 	w--;
     }
 
     while (w >= 4)
     {
-	/* I'm loading unaligned because I'm not sure about
-	 * the address alignment.
-	 */
-	xmm_src_hi = combine4 ((__m128i*)ps, (__m128i*)pm);
+	__m128i mask = load_128_unaligned ((__m128i *)pm);
 
-	if (is_opaque (xmm_src_hi))
+	if (!is_zero (mask))
 	{
-	    save_128_aligned ((__m128i*)pd, xmm_src_hi);
+	    __m128i src;
+	    __m128i src_hi, src_lo;
+	    __m128i mask_hi, mask_lo;
+	    __m128i alpha_hi, alpha_lo;
+
+	    src = load_128_unaligned ((__m128i *)ps);
+
+	    if (is_opaque (_mm_and_si128 (src, mask)))
+	    {
+		save_128_aligned ((__m128i *)pd, src);
+	    }
+	    else
+	    {
+		__m128i dst = load_128_aligned ((__m128i *)pd);
+		__m128i dst_hi, dst_lo;
+
+		unpack_128_2x128 (mask, &mask_lo, &mask_hi);
+		unpack_128_2x128 (src, &src_lo, &src_hi);
+
+		expand_alpha_2x128 (mask_lo, mask_hi, &mask_lo, &mask_hi);
+		pix_multiply_2x128 (&src_lo, &src_hi,
+				    &mask_lo, &mask_hi,
+				    &src_lo, &src_hi);
+
+		unpack_128_2x128 (dst, &dst_lo, &dst_hi);
+
+		expand_alpha_2x128 (src_lo, src_hi,
+				    &alpha_lo, &alpha_hi);
+
+		over_2x128 (&src_lo, &src_hi, &alpha_lo, &alpha_hi,
+			    &dst_lo, &dst_hi);
+
+		save_128_aligned (
+		    (__m128i *)pd,
+		    pack_2x128_128 (dst_lo, dst_hi));
+	    }
 	}
-	else if (!is_zero (xmm_src_hi))
-	{
-	    xmm_dst_hi = load_128_aligned ((__m128i*) pd);
 
-	    unpack_128_2x128 (xmm_src_hi, &xmm_src_lo, &xmm_src_hi);
-	    unpack_128_2x128 (xmm_dst_hi, &xmm_dst_lo, &xmm_dst_hi);
-
-	    expand_alpha_2x128 (
-		xmm_src_lo, xmm_src_hi, &xmm_alpha_lo, &xmm_alpha_hi);
-
-	    over_2x128 (&xmm_src_lo, &xmm_src_hi,
-			&xmm_alpha_lo, &xmm_alpha_hi,
-			&xmm_dst_lo, &xmm_dst_hi);
-
-	    /* rebuid the 4 pixel data and save*/
-	    save_128_aligned ((__m128i*)pd,
-			      pack_2x128_128 (xmm_dst_lo, xmm_dst_hi));
-	}
-
-	w -= 4;
+	pm += 4;
 	ps += 4;
 	pd += 4;
-	if (pm)
-	    pm += 4;
+	w -= 4;
     }
-
     while (w)
     {
 	d = *pd;
 	s = combine1 (ps, pm);
 
-	*pd++ = core_combine_over_u_pixel_sse2 (s, d);
+	if (s)
+	    *pd = core_combine_over_u_pixel_sse2 (s, d);
+	pd++;
 	ps++;
-	if (pm)
-	    pm++;
+	pm++;
 
 	w--;
     }
+}
+
+static force_inline void
+core_combine_over_u_sse2_no_mask (uint32_t *	  pd,
+				  const uint32_t*    ps,
+				  int                w)
+{
+    uint32_t s, d;
+
+    /* Align dst on a 16-byte boundary */
+    while (w && ((unsigned long)pd & 15))
+    {
+	d = *pd;
+	s = *ps;
+
+	if (s)
+	    *pd = core_combine_over_u_pixel_sse2 (s, d);
+	pd++;
+	ps++;
+	w--;
+    }
+
+    while (w >= 4)
+    {
+	__m128i src;
+	__m128i src_hi, src_lo, dst_hi, dst_lo;
+	__m128i alpha_hi, alpha_lo;
+
+	src = load_128_unaligned ((__m128i *)ps);
+
+	if (!is_zero (src))
+	{
+	    if (is_opaque (src))
+	    {
+		save_128_aligned ((__m128i *)pd, src);
+	    }
+	    else
+	    {
+		__m128i dst = load_128_aligned ((__m128i *)pd);
+
+		unpack_128_2x128 (src, &src_lo, &src_hi);
+		unpack_128_2x128 (dst, &dst_lo, &dst_hi);
+
+		expand_alpha_2x128 (src_lo, src_hi,
+				    &alpha_lo, &alpha_hi);
+		over_2x128 (&src_lo, &src_hi, &alpha_lo, &alpha_hi,
+			    &dst_lo, &dst_hi);
+
+		save_128_aligned (
+		    (__m128i *)pd,
+		    pack_2x128_128 (dst_lo, dst_hi));
+	    }
+	}
+
+	ps += 4;
+	pd += 4;
+	w -= 4;
+    }
+    while (w)
+    {
+	d = *pd;
+	s = *ps;
+
+	if (s)
+	    *pd = core_combine_over_u_pixel_sse2 (s, d);
+	pd++;
+	ps++;
+
+	w--;
+    }
+}
+
+static force_inline void
+core_combine_over_u_sse2 (uint32_t*       pd,
+                          const uint32_t* ps,
+                          const uint32_t* pm,
+                          int             w)
+{
+    if (pm)
+	core_combine_over_u_sse2_mask (pd, ps, pm, w);
+    else
+	core_combine_over_u_sse2_no_mask (pd, ps, w);
 }
 
 static force_inline void
