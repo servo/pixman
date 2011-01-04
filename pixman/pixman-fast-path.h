@@ -381,9 +381,7 @@ fast_composite_scaled_nearest_ ## scale_func_name (pixman_implementation_t *imp,
 			  OP, repeat_mode)						\
     FAST_NEAREST_MAINLOOP(scale_func_name##_##OP,					\
 			  scaled_nearest_scanline_ ## scale_func_name ## _ ## OP,	\
-			  src_type_t, dst_type_t, repeat_mode)				\
-											\
-    extern int no_such_variable
+			  src_type_t, dst_type_t, repeat_mode)
 
 
 #define SCALED_NEAREST_FLAGS						\

@@ -1016,8 +1016,7 @@ convert_r5g6b5 (const uint8_t *row, int x)
 					  convert_ ## format,		\
 					  PIXMAN_ ## format,		\
 					  repeat_mode);			\
-    }									\
-    extern int no_such_variable
+    }
 
 #define MAKE_NEAREST_FETCHER(name, format, repeat_mode)			\
     static void								\
@@ -1033,8 +1032,7 @@ convert_r5g6b5 (const uint8_t *row, int x)
 					 convert_ ## format,		\
 					 PIXMAN_ ## format,		\
 					 repeat_mode);			\
-    }									\
-    extern int no_such_variable
+    }
 
 #define MAKE_FETCHERS(name, format, repeat_mode)			\
     MAKE_NEAREST_FETCHER (name, format, repeat_mode);			\
