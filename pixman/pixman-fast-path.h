@@ -346,16 +346,16 @@ fast_composite_scaled_nearest  ## scale_func_name (pixman_implementation_t *imp,
 	}											\
 	else if (PIXMAN_REPEAT_ ## repeat_mode == PIXMAN_REPEAT_NONE)				\
 	{											\
-	    static src_type_t zero = 0;								\
+	    static src_type_t zero[1] = { 0 };							\
 	    if (y < 0 || y >= src_image->bits.height)						\
 	    {											\
-		scanline_func (dst, &zero, left_pad + width + right_pad, 0, 0, 0);		\
+		scanline_func (dst, zero, left_pad + width + right_pad, 0, 0, 0);		\
 		continue;									\
 	    }											\
 	    src = src_first_line + src_stride * y;						\
 	    if (left_pad > 0)									\
 	    {											\
-		scanline_func (dst, &zero, left_pad, 0, 0, 0);					\
+		scanline_func (dst, zero, left_pad, 0, 0, 0);					\
 	    }											\
 	    if (width > 0)									\
 	    {											\
@@ -363,7 +363,7 @@ fast_composite_scaled_nearest  ## scale_func_name (pixman_implementation_t *imp,
 	    }											\
 	    if (right_pad > 0)									\
 	    {											\
-		scanline_func (dst + left_pad + width, &zero, right_pad, 0, 0, 0);		\
+		scanline_func (dst + left_pad + width, zero, right_pad, 0, 0, 0);		\
 	    }											\
 	}											\
 	else											\
