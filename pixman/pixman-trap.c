@@ -384,3 +384,90 @@ pixman_rasterize_trapezoid (pixman_image_t *          image,
 	pixman_rasterize_edges (image, &l, &r, t, b);
     }
 }
+
+PIXMAN_EXPORT void
+pixman_composite_trapezoids (pixman_op_t		op,
+			     pixman_image_t *		src,
+			     pixman_image_t *		dst,
+			     pixman_format_code_t	mask_format,
+			     int			x_src,
+			     int			y_src,
+			     int			x_dst,
+			     int			y_dst,
+			     int			n_traps,
+			     const pixman_trapezoid_t *	traps)
+{
+    pixman_image_t *tmp;
+    pixman_box32_t box;
+    int i;
+    int x_rel, y_rel;
+
+    if (n_traps <= 0)
+	return;
+
+    _pixman_image_validate (src);
+    _pixman_image_validate (dst);
+
+    box.x1 = INT32_MAX;
+    box.y1 = INT32_MAX;
+    box.x2 = INT32_MIN;
+    box.y2 = INT32_MIN;
+    
+    for (i = 0; i < n_traps; ++i)
+    {
+	const pixman_trapezoid_t *trap = &(traps[i]);
+	int y1, y2;
+
+	if (!pixman_trapezoid_valid (trap))
+	    continue;
+	
+	y1 = pixman_fixed_to_int (trap->top);
+	if (y1 < box.y1)
+	    box.y1 = y1;
+	
+	y2 = pixman_fixed_to_int (pixman_fixed_ceil (trap->bottom));
+	if (y2 > box.y2)
+	    box.y2 = y2;
+
+#define EXTEND_MIN(x)							\
+	if (pixman_fixed_to_int ((x)) < box.x1)				\
+	    box.x1 = pixman_fixed_to_int ((x));
+#define EXTEND_MAX(x)							\
+	if (pixman_fixed_to_int (pixman_fixed_ceil ((x))) > box.x2)	\
+	    box.x2 = pixman_fixed_to_int (pixman_fixed_ceil ((x)));
+
+#define EXTEND(x)							\
+	EXTEND_MIN(x);							\
+	EXTEND_MAX(x);
+
+	EXTEND(trap->left.p1.x);
+	EXTEND(trap->left.p2.x);
+	EXTEND(trap->right.p1.x);
+	EXTEND(trap->right.p2.x);
+    }
+
+    if (box.x1 >= box.x2 || box.y1 >= box.y2)
+	return;
+    
+    tmp = pixman_image_create_bits (
+	mask_format, box.x2 - box.x1, box.y2 - box.y1, NULL, -1);
+	
+    for (i = 0; i < n_traps; ++i)
+    {
+	const pixman_trapezoid_t *trap = &(traps[i]);
+
+	if (!pixman_trapezoid_valid (trap))
+	    continue;
+
+	pixman_rasterize_trapezoid (tmp, trap, - box.x1, - box.y1);
+    }
+
+    x_rel = box.x1 + x_src - x_dst;
+    y_rel = box.y1 + y_src - y_dst;
+
+    pixman_image_composite (op, src, tmp, dst,
+			    x_rel, y_rel, 0, 0, box.x1, box.y1,
+			    box.x2 - box.x1, box.y2 - box.y1);
+
+    pixman_image_unref (tmp);
+}
