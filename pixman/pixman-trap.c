@@ -1,4 +1,5 @@
 /*
+ * Copyright © 2002 Keith Packard, member of The XFree86 Project, Inc.
  * Copyright © 2004 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -25,6 +26,7 @@
 #endif
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "pixman-private.h"
 
 /*
@@ -470,4 +472,138 @@ pixman_composite_trapezoids (pixman_op_t		op,
 			    box.x2 - box.x1, box.y2 - box.y1);
 
     pixman_image_unref (tmp);
+}
+
+static int
+greater_y (const pixman_point_fixed_t *a, const pixman_point_fixed_t *b)
+{
+    if (a->y == b->y)
+	return a->x > b->x;
+    return a->y > b->y;
+}
+
+/*
+ * Note that the definition of this function is a bit odd because
+ * of the X coordinate space (y increasing downwards).
+ */
+static int
+clockwise (const pixman_point_fixed_t *ref,
+	   const pixman_point_fixed_t *a,
+	   const pixman_point_fixed_t *b)
+{
+    pixman_point_fixed_t	ad, bd;
+
+    ad.x = a->x - ref->x;
+    ad.y = a->y - ref->y;
+    bd.x = b->x - ref->x;
+    bd.y = b->y - ref->y;
+
+    return ((pixman_fixed_32_32_t) bd.y * ad.x -
+	    (pixman_fixed_32_32_t) ad.y * bd.x) < 0;
+}
+
+static void
+triangle_to_trapezoids (const pixman_triangle_t *tri, pixman_trapezoid_t *traps)
+{
+    const pixman_point_fixed_t *top, *left, *right, *tmp;
+
+    top = &tri->p1;
+    left = &tri->p2;
+    right = &tri->p3;
+
+    if (greater_y (top, left))
+    {
+	tmp = left;
+	left = top;
+	top = tmp;
+    }
+
+    if (greater_y (top, right))
+    {
+	tmp = right;
+	right = top;
+	top = tmp;
+    }
+
+    if (clockwise (top, right, left))
+    {
+	tmp = right;
+	right = left;
+	left = tmp;
+    }
+    
+    /*
+     * Two cases:
+     *
+     *		+		+
+     *	       / \             / \
+     *	      /   \           /	  \
+     *	     /     +         +	   \
+     *      /    --           --    \
+     *     /   --               --   \
+     *    / ---                   --- \
+     *	 +--                         --+
+     */
+
+    traps->top = top->y;
+    traps->left.p1 = *top;
+    traps->left.p2 = *left;
+    traps->right.p1 = *top;
+    traps->right.p2 = *right;
+
+    if (right->y < left->y)
+	traps->bottom = right->y;
+    else
+	traps->bottom = left->y;
+
+    traps++;
+
+    *traps = *(traps - 1);
+    
+    if (right->y < left->y)
+    {
+	traps->top = right->y;
+	traps->bottom = left->y;
+	traps->right.p1 = *right;
+	traps->right.p2 = *left;
+    }
+    else
+    {
+	traps->top = left->y;
+	traps->bottom = right->y;
+	traps->left.p1 = *left;
+	traps->left.p2 = *right;
+    }
+}
+
+PIXMAN_EXPORT void
+pixman_composite_triangles (pixman_op_t			op,
+			    pixman_image_t *		src,
+			    pixman_image_t *		dst,
+			    pixman_format_code_t	mask_format,
+			    int				x_src,
+			    int				y_src,
+			    int				x_dst,
+			    int				y_dst,
+			    int				n_tris,
+			    const pixman_triangle_t *	tris)
+{
+    pixman_trapezoid_t *trapezoids;
+    int i;
+
+    if (n_tris <= 0)
+	return;
+    
+    trapezoids = malloc (2 * n_tris * sizeof (pixman_trapezoid_t));
+    if (!trapezoids)
+	return;
+
+    for (i = 0; i < n_tris; ++i)
+	triangle_to_trapezoids (&(tris[i]), trapezoids + 2 * i);
+    
+    pixman_composite_trapezoids (op, src, dst, mask_format,
+				 x_src, y_src, x_dst, y_dst,
+				 n_tris * 2, trapezoids);
+	    
+    free (trapezoids);
 }
