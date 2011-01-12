@@ -5953,6 +5953,94 @@ sse2_fill (pixman_implementation_t *imp,
     return TRUE;
 }
 
+static uint32_t *
+sse2_fetch_x8r8g8b8 (pixman_iter_t *iter, const uint32_t *mask)
+{
+    int w = iter->width;
+    __m128i ff000000 = mask_ff000000;
+    uint32_t *dst = iter->buffer;
+    uint32_t *src = (uint32_t *)iter->bits;
+
+    iter->bits += iter->stride;
+
+    while (w && ((unsigned long)dst) & 0x0f)
+    {
+	*dst++ = (*src++) | 0xff000000;
+	w--;
+    }
+
+    while (w >= 4)
+    {
+	save_128_aligned (
+	    (__m128i *)dst, _mm_or_si128 (
+		load_128_unaligned ((__m128i *)src), ff000000));
+
+	dst += 4;
+	src += 4;
+	w -= 4;
+    }
+
+    while (w)
+    {
+	*dst++ = (*src++) | 0xff000000;
+	w--;
+    }
+
+    return iter->buffer;
+}
+
+typedef struct
+{
+    pixman_format_code_t	format;
+    pixman_iter_get_scanline_t	get_scanline;
+} fetcher_info_t;
+
+static const fetcher_info_t fetchers[] =
+{
+    { PIXMAN_x8r8g8b8, sse2_fetch_x8r8g8b8 },
+    { PIXMAN_null }
+};
+
+static void
+sse2_src_iter_init (pixman_implementation_t *imp,
+		    pixman_iter_t *iter,
+		    pixman_image_t *image,
+		    int x, int y, int width, int height,
+		    uint8_t *buffer, iter_flags_t flags)
+{
+#define FLAGS								\
+    (FAST_PATH_STANDARD_FLAGS | FAST_PATH_ID_TRANSFORM)
+
+    if ((flags & ITER_NARROW)				&&
+	(image->common.flags & FLAGS) == FLAGS		&&
+	x >= 0 && y >= 0				&&
+	x + width <= image->bits.width			&&
+	y + height <= image->bits.height)
+    {
+	const fetcher_info_t *f;
+
+	for (f = &fetchers[0]; f->format != PIXMAN_null; f++)
+	{
+	    if (image->common.extended_format_code == f->format)
+	    {
+		uint8_t *b = (uint8_t *)image->bits.bits;
+		int s = image->bits.rowstride * 4;
+
+		iter->bits = b + s * y + x * PIXMAN_FORMAT_BPP (f->format) / 8;
+		iter->stride = s;
+		iter->width = width;
+		iter->buffer = (uint32_t *)buffer;
+
+		iter->get_scanline = f->get_scanline;
+		return;
+	    }
+	}
+    }
+
+    _pixman_implementation_src_iter_init (
+	imp->delegate, iter, image, x, y, width, height, buffer, flags);
+}
+
 #if defined(__GNUC__) && !defined(__x86_64__) && !defined(__amd64__)
 __attribute__((__force_align_arg_pointer__))
 #endif
@@ -6019,6 +6107,8 @@ _pixman_implementation_create_sse2 (pixman_implementation_t *fallback)
 
     imp->blt = sse2_blt;
     imp->fill = sse2_fill;
+
+    imp->src_iter_init = sse2_src_iter_init;
 
     return imp;
 }
