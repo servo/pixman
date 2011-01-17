@@ -282,15 +282,15 @@ cputype##_composite_##name (pixman_implementation_t *imp,               \
                                                src_type, dst_type)            \
 void                                                                          \
 pixman_scaled_nearest_scanline_##name##_##op##_asm_##cputype (                \
-                                                       int32_t        w,      \
-                                                       dst_type *     dst,    \
-                                                       src_type *     src,    \
-                                                       pixman_fixed_t vx,     \
-                                                       pixman_fixed_t unit_x);\
+                                                   int32_t          w,        \
+                                                   dst_type *       dst,      \
+                                                   const src_type * src,      \
+                                                   pixman_fixed_t   vx,       \
+                                                   pixman_fixed_t   unit_x);  \
                                                                               \
 static force_inline void                                                      \
 scaled_nearest_scanline_##cputype##_##name##_##op (dst_type *       pd,       \
-                                                   src_type *       ps,       \
+                                                   const src_type * ps,       \
                                                    int32_t          w,        \
                                                    pixman_fixed_t   vx,       \
                                                    pixman_fixed_t   unit_x,   \

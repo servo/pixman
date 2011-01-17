@@ -138,12 +138,12 @@ pad_repeat_get_scanline_bounds (int32_t         source_image_width,
 #define FAST_NEAREST_SCANLINE(scanline_func_name, SRC_FORMAT, DST_FORMAT,			\
 			      src_type_t, dst_type_t, OP, repeat_mode)				\
 static force_inline void									\
-scanline_func_name (dst_type_t     *dst,							\
-		    src_type_t     *src,							\
-		    int32_t         w,								\
-		    pixman_fixed_t  vx,								\
-		    pixman_fixed_t  unit_x,							\
-		    pixman_fixed_t  max_vx)							\
+scanline_func_name (dst_type_t       *dst,							\
+		    const src_type_t *src,							\
+		    int32_t           w,							\
+		    pixman_fixed_t    vx,							\
+		    pixman_fixed_t    unit_x,							\
+		    pixman_fixed_t    max_vx)							\
 {												\
 	uint32_t   d;										\
 	src_type_t s1, s2;									\
@@ -346,7 +346,7 @@ fast_composite_scaled_nearest  ## scale_func_name (pixman_implementation_t *imp,
 	}											\
 	else if (PIXMAN_REPEAT_ ## repeat_mode == PIXMAN_REPEAT_NONE)				\
 	{											\
-	    static src_type_t zero[1] = { 0 };							\
+	    static const src_type_t zero[1] = { 0 };						\
 	    if (y < 0 || y >= src_image->bits.height)						\
 	    {											\
 		scanline_func (dst, zero, left_pad + width + right_pad, 0, 0, 0);		\
