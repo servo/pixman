@@ -80,55 +80,6 @@ stress_test_LDADD = $(TEST_LDADD)
 stress_test_LDFLAGS = @TESTPROGS_EXTRA_LDFLAGS@
 stress_test_SOURCES = stress-test.c utils.c utils.h
 
-# GTK using test programs
-
-if HAVE_GTK
-
-GTK_LDADD = $(TEST_LDADD) $(GTK_LIBS)
-GTK_UTILS = gtk-utils.c gtk-utils.h
-
-TESTPROGRAMS_GTK =		\
-	clip-test		\
-	clip-in			\
-	composite-test		\
-	gradient-test		\
-	radial-test		\
-	alpha-test		\
-	screen-test		\
-	convolution-test	\
-	trap-test
-
-INCLUDES += $(GTK_CFLAGS)
-
-gradient_test_LDADD = $(GTK_LDADD)
-gradient_test_SOURCES = gradient-test.c $(GTK_UTILS)
-
-radial_test_LDADD = $(GTK_LDADD)
-radial_test_SOURCES = radial-test.c utils.c utils.h $(GTK_UTILS)
-
-alpha_test_LDADD = $(GTK_LDADD)
-alpha_test_SOURCES = alpha-test.c $(GTK_UTILS)
-
-composite_test_LDADD = $(GTK_LDADD)
-composite_test_SOURCES = composite-test.c $(GTK_UTILS)
-
-clip_test_LDADD = $(GTK_LDADD)
-clip_test_SOURCES = clip-test.c $(GTK_UTILS)
-
-clip_in_LDADD = $(GTK_LDADD)
-clip_in_SOURCES = clip-in.c $(GTK_UTILS)
-
-trap_test_LDADD = $(GTK_LDADD)
-trap_test_SOURCES = trap-test.c $(GTK_UTILS)
-
-screen_test_LDADD = $(GTK_LDADD)
-screen_test_SOURCES = screen-test.c $(GTK_UTILS)
-
-convolution_test_LDADD = $(GTK_LDADD)
-convolution_test_SOURCES = convolution-test.c $(GTK_UTILS)
-
-endif
-
 # Benchmarks
 
 BENCHMARKS =			\
@@ -137,6 +88,6 @@ BENCHMARKS =			\
 lowlevel_blt_bench_SOURCES = lowlevel-blt-bench.c utils.c utils.h
 lowlevel_blt_bench_LDADD = $(TEST_LDADD)
 
-noinst_PROGRAMS = $(TESTPROGRAMS) $(TESTPROGRAMS_GTK) $(BENCHMARKS)
+noinst_PROGRAMS = $(TESTPROGRAMS) $(BENCHMARKS)
 
 TESTS = $(TESTPROGRAMS)
