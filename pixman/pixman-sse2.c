@@ -6082,6 +6082,52 @@ sse2_fetch_x8r8g8b8 (pixman_iter_t *iter, const uint32_t *mask)
 }
 
 static uint32_t *
+sse2_fetch_r5g6b5 (pixman_iter_t *iter, const uint32_t *mask)
+{
+    int w = iter->width;
+    uint32_t *dst = iter->buffer;
+    uint16_t *src = (uint16_t *)iter->bits;
+    __m128i ff000000 = mask_ff000000;
+
+    iter->bits += iter->stride;
+
+    while (w && ((unsigned long)dst) & 0x0f)
+    {
+	uint16_t s = *src++;
+
+	*dst++ = CONVERT_0565_TO_8888 (s);
+	w--;
+    }
+
+    while (w >= 8)
+    {
+	__m128i lo, hi, s;
+
+	s = _mm_loadu_si128 ((__m128i *)src);
+
+	lo = unpack_565_to_8888 (_mm_unpacklo_epi16 (s, _mm_setzero_si128 ()));
+	hi = unpack_565_to_8888 (_mm_unpackhi_epi16 (s, _mm_setzero_si128 ()));
+
+	save_128_aligned ((__m128i *)(dst + 0), _mm_or_si128 (lo, ff000000));
+	save_128_aligned ((__m128i *)(dst + 4), _mm_or_si128 (hi, ff000000));
+
+	dst += 8;
+	src += 8;
+	w -= 8;
+    }
+
+    while (w)
+    {
+	uint16_t s = *src++;
+
+	*dst++ = CONVERT_0565_TO_8888 (s);
+	w--;
+    }
+
+    return iter->buffer;
+}
+
+static uint32_t *
 sse2_fetch_a8 (pixman_iter_t *iter, const uint32_t *mask)
 {
     int w = iter->width;
@@ -6136,6 +6182,7 @@ typedef struct
 static const fetcher_info_t fetchers[] =
 {
     { PIXMAN_x8r8g8b8,		sse2_fetch_x8r8g8b8 },
+    { PIXMAN_r5g6b5,		sse2_fetch_r5g6b5 },
     { PIXMAN_a8,		sse2_fetch_a8 },
     { PIXMAN_null }
 };
