@@ -5989,6 +5989,52 @@ sse2_fetch_x8r8g8b8 (pixman_iter_t *iter, const uint32_t *mask)
     return iter->buffer;
 }
 
+static uint32_t *
+sse2_fetch_a8 (pixman_iter_t *iter, const uint32_t *mask)
+{
+    int w = iter->width;
+    uint32_t *dst = iter->buffer;
+    uint8_t *src = iter->bits;
+    __m128i xmm0, xmm1, xmm2, xmm3, xmm4, xmm5, xmm6;
+
+    iter->bits += iter->stride;
+
+    while (w && (((unsigned long)dst) & 15))
+    {
+        *dst++ = *(src++) << 24;
+        w--;
+    }
+
+    while (w >= 16)
+    {
+	xmm0 = _mm_loadu_si128((__m128i *)src);
+
+	xmm1 = _mm_unpacklo_epi8  (_mm_setzero_si128(), xmm0);
+	xmm2 = _mm_unpackhi_epi8  (_mm_setzero_si128(), xmm0);
+	xmm3 = _mm_unpacklo_epi16 (_mm_setzero_si128(), xmm1);
+	xmm4 = _mm_unpackhi_epi16 (_mm_setzero_si128(), xmm1);
+	xmm5 = _mm_unpacklo_epi16 (_mm_setzero_si128(), xmm2);
+	xmm6 = _mm_unpackhi_epi16 (_mm_setzero_si128(), xmm2);
+
+	_mm_store_si128(((__m128i *)(dst +  0)), xmm3);
+	_mm_store_si128(((__m128i *)(dst +  4)), xmm4);
+	_mm_store_si128(((__m128i *)(dst +  8)), xmm5);
+	_mm_store_si128(((__m128i *)(dst + 12)), xmm6);
+
+	dst += 16;
+	src += 16;
+	w -= 16;
+    }
+
+    while (w)
+    {
+	*dst++ = *(src++) << 24;
+	w--;
+    }
+
+    return iter->buffer;
+}
+
 typedef struct
 {
     pixman_format_code_t	format;
@@ -5997,7 +6043,8 @@ typedef struct
 
 static const fetcher_info_t fetchers[] =
 {
-    { PIXMAN_x8r8g8b8, sse2_fetch_x8r8g8b8 },
+    { PIXMAN_x8r8g8b8,		sse2_fetch_x8r8g8b8 },
+    { PIXMAN_a8,		sse2_fetch_a8 },
     { PIXMAN_null }
 };
 
