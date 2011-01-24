@@ -48,6 +48,36 @@ noop_composite (pixman_implementation_t *imp,
     return;
 }
 
+static void
+dest_write_back_direct (pixman_iter_t *iter)
+{
+    iter->buffer += iter->image->bits.rowstride;
+}
+
+static void
+noop_dest_iter_init (pixman_implementation_t *imp, pixman_iter_t *iter)
+{
+    pixman_image_t *image = iter->image;
+    uint32_t image_flags = image->common.flags;
+    uint32_t iter_flags = iter->flags;
+
+    if ((image_flags & FAST_PATH_STD_DEST_FLAGS) == FAST_PATH_STD_DEST_FLAGS	&&
+	(iter_flags & ITER_NARROW) == ITER_NARROW				&&
+	((image->common.extended_format_code == PIXMAN_a8r8g8b8)	||
+	 (image->common.extended_format_code == PIXMAN_x8r8g8b8 &&
+	  (iter_flags & (ITER_LOCALIZED_ALPHA)))))
+    {
+	iter->buffer = image->bits.bits + iter->y * image->bits.rowstride + iter->x;
+
+	iter->get_scanline = _pixman_iter_get_scanline_noop;
+	iter->write_back = dest_write_back_direct;
+    }
+    else
+    {
+	(* imp->delegate->dest_iter_init) (imp->delegate, iter);
+    }
+}
+
 static const pixman_fast_path_t noop_fast_paths[] =
 {
     { PIXMAN_OP_DST, PIXMAN_any, 0, PIXMAN_any, 0, PIXMAN_any, 0, noop_composite },
@@ -59,6 +89,8 @@ _pixman_implementation_create_noop (pixman_implementation_t *fallback)
 {
     pixman_implementation_t *imp =
 	_pixman_implementation_create (fallback, noop_fast_paths);
+
+    imp->dest_iter_init = noop_dest_iter_init;
 
     return imp;
 }
