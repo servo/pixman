@@ -30,8 +30,27 @@
 #include "pixman-combine32.h"
 #include "pixman-fast-path.h"
 
+static void
+noop_composite (pixman_implementation_t *imp,
+		pixman_op_t              op,
+		pixman_image_t *         src,
+		pixman_image_t *         mask,
+		pixman_image_t *         dest,
+		int32_t                  src_x,
+		int32_t                  src_y,
+		int32_t                  mask_x,
+		int32_t                  mask_y,
+		int32_t                  dest_x,
+		int32_t                  dest_y,
+		int32_t                  width,
+		int32_t                  height)
+{
+    return;
+}
+
 static const pixman_fast_path_t noop_fast_paths[] =
 {
+    { PIXMAN_OP_DST, PIXMAN_any, 0, PIXMAN_any, 0, PIXMAN_any, 0, noop_composite },
     { PIXMAN_OP_NONE },
 };
 
