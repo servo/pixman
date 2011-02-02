@@ -1415,7 +1415,8 @@ scaled_nearest_scanline_565_565_SRC (uint16_t *       dst,
 				     int32_t          w,
 				     pixman_fixed_t   vx,
 				     pixman_fixed_t   unit_x,
-				     pixman_fixed_t   max_vx)
+				     pixman_fixed_t   max_vx,
+				     pixman_bool_t    fully_transparent_src)
 {
     uint16_t tmp1, tmp2, tmp3, tmp4;
     while ((w -= 4) >= 0)

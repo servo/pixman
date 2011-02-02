@@ -294,7 +294,8 @@ scaled_nearest_scanline_##cputype##_##name##_##op (dst_type *       pd,       \
                                                    int32_t          w,        \
                                                    pixman_fixed_t   vx,       \
                                                    pixman_fixed_t   unit_x,   \
-                                                   pixman_fixed_t   max_vx)   \
+                                                   pixman_fixed_t   max_vx,   \
+                                                   pixman_bool_t    zero_src) \
 {                                                                             \
     pixman_scaled_nearest_scanline_##name##_##op##_asm_##cputype (w, pd, ps,  \
                                                                   vx, unit_x);\

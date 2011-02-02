@@ -5800,7 +5800,8 @@ scaled_nearest_scanline_sse2_8888_8888_OVER (uint32_t*       pd,
                                              int32_t         w,
                                              pixman_fixed_t  vx,
                                              pixman_fixed_t  unit_x,
-                                             pixman_fixed_t  max_vx)
+                                             pixman_fixed_t  max_vx,
+                                             pixman_bool_t   fully_transparent_src)
 {
     uint32_t s, d;
     const uint32_t* pm = NULL;
@@ -5808,6 +5809,9 @@ scaled_nearest_scanline_sse2_8888_8888_OVER (uint32_t*       pd,
     __m128i xmm_dst_lo, xmm_dst_hi;
     __m128i xmm_src_lo, xmm_src_hi;
     __m128i xmm_alpha_lo, xmm_alpha_hi;
+
+    if (fully_transparent_src)
+	return;
 
     /* Align dst on a 16-byte boundary */
     while (w && ((unsigned long)pd & 15))

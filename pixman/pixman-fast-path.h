@@ -143,12 +143,16 @@ scanline_func_name (dst_type_t       *dst,							\
 		    int32_t           w,							\
 		    pixman_fixed_t    vx,							\
 		    pixman_fixed_t    unit_x,							\
-		    pixman_fixed_t    max_vx)							\
+		    pixman_fixed_t    max_vx,							\
+		    pixman_bool_t     fully_transparent_src)					\
 {												\
 	uint32_t   d;										\
 	src_type_t s1, s2;									\
 	uint8_t    a1, a2;									\
 	int        x1, x2;									\
+												\
+	if (PIXMAN_OP_ ## OP == PIXMAN_OP_OVER && fully_transparent_src)			\
+	    return;										\
 												\
 	if (PIXMAN_OP_ ## OP != PIXMAN_OP_SRC && PIXMAN_OP_ ## OP != PIXMAN_OP_OVER)		\
 	    abort();										\
@@ -348,18 +352,18 @@ fast_composite_scaled_nearest  ## scale_func_name (pixman_implementation_t *imp,
 	    src = src_first_line + src_stride * y;						\
 	    if (left_pad > 0)									\
 	    {											\
-		scanline_func (mask, dst, src, left_pad, 0, 0, 0);				\
+		scanline_func (mask, dst, src, left_pad, 0, 0, 0, FALSE);			\
 	    }											\
 	    if (width > 0)									\
 	    {											\
 		scanline_func (mask + (mask_is_solid ? 0 : left_pad),				\
-			       dst + left_pad, src, width, vx, unit_x, 0);			\
+			       dst + left_pad, src, width, vx, unit_x, 0, FALSE);		\
 	    }											\
 	    if (right_pad > 0)									\
 	    {											\
 		scanline_func (mask + (mask_is_solid ? 0 : left_pad + width),			\
 			       dst + left_pad + width, src + src_image->bits.width - 1,		\
-			       right_pad, 0, 0, 0);						\
+			       right_pad, 0, 0, 0, FALSE);					\
 	    }											\
 	}											\
 	else if (PIXMAN_REPEAT_ ## repeat_mode == PIXMAN_REPEAT_NONE)				\
@@ -367,29 +371,29 @@ fast_composite_scaled_nearest  ## scale_func_name (pixman_implementation_t *imp,
 	    static const src_type_t zero[1] = { 0 };						\
 	    if (y < 0 || y >= src_image->bits.height)						\
 	    {											\
-		scanline_func (mask, dst, zero, left_pad + width + right_pad, 0, 0, 0);		\
+		scanline_func (mask, dst, zero, left_pad + width + right_pad, 0, 0, 0, TRUE);	\
 		continue;									\
 	    }											\
 	    src = src_first_line + src_stride * y;						\
 	    if (left_pad > 0)									\
 	    {											\
-		scanline_func (mask, dst, zero, left_pad, 0, 0, 0);				\
+		scanline_func (mask, dst, zero, left_pad, 0, 0, 0, TRUE);			\
 	    }											\
 	    if (width > 0)									\
 	    {											\
 		scanline_func (mask + (mask_is_solid ? 0 : left_pad),				\
-			       dst + left_pad, src, width, vx, unit_x, 0);			\
+			       dst + left_pad, src, width, vx, unit_x, 0, FALSE);		\
 	    }											\
 	    if (right_pad > 0)									\
 	    {											\
 		scanline_func (mask + (mask_is_solid ? 0 : left_pad + width),			\
-			       dst + left_pad + width, zero, right_pad, 0, 0, 0);		\
+			       dst + left_pad + width, zero, right_pad, 0, 0, 0, TRUE);		\
 	    }											\
 	}											\
 	else											\
 	{											\
 	    src = src_first_line + src_stride * y;						\
-	    scanline_func (mask, dst, src, width, vx, unit_x, max_vx);				\
+	    scanline_func (mask, dst, src, width, vx, unit_x, max_vx, FALSE);			\
 	}											\
     }												\
 }
@@ -410,9 +414,10 @@ fast_composite_scaled_nearest  ## scale_func_name (pixman_implementation_t *imp,
 		    int32_t          w,								\
 		    pixman_fixed_t   vx,							\
 		    pixman_fixed_t   unit_x,							\
-		    pixman_fixed_t   max_vx)							\
+		    pixman_fixed_t   max_vx,							\
+		    pixman_bool_t    fully_transparent_src)					\
     {												\
-	scanline_func (dst, src, w, vx, unit_x, max_vx);					\
+	scanline_func (dst, src, w, vx, unit_x, max_vx, fully_transparent_src);			\
     }												\
     FAST_NEAREST_MAINLOOP_INT (scale_func_name, scanline_func##scale_func_name##_wrapper,	\
 			       src_type_t, uint8_t, dst_type_t, repeat_mode, FALSE, FALSE)
