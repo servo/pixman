@@ -975,7 +975,12 @@ void          pixman_composite_triangles (pixman_op_t		       op,
 					  int			       y_dst,
 					  int			       n_tris,
 					  const pixman_triangle_t *    tris);
-    
+void	      pixman_add_triangles       (pixman_image_t              *image,
+					  int32_t	               x_off,
+					  int32_t	               y_off,
+					  int	                       n_tris,
+					  const pixman_triangle_t     *tris);
+
 PIXMAN_END_DECLS
 
 #endif /* PIXMAN_H__ */

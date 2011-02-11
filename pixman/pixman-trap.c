@@ -595,6 +595,25 @@ triangle_to_trapezoids (const pixman_triangle_t *tri, pixman_trapezoid_t *traps)
     }
 }
 
+static pixman_trapezoid_t *
+convert_triangles (int n_tris, const pixman_triangle_t *tris)
+{
+    pixman_trapezoid_t *traps;
+    int i;
+
+    if (n_tris <= 0)
+	return NULL;
+    
+    traps = pixman_malloc_ab (n_tris, 2 * sizeof (pixman_trapezoid_t));
+    if (!traps)
+	return NULL;
+
+    for (i = 0; i < n_tris; ++i)
+	triangle_to_trapezoids (&(tris[i]), traps + 2 * i);
+
+    return traps;
+}
+
 PIXMAN_EXPORT void
 pixman_composite_triangles (pixman_op_t			op,
 			    pixman_image_t *		src,
@@ -607,22 +626,32 @@ pixman_composite_triangles (pixman_op_t			op,
 			    int				n_tris,
 			    const pixman_triangle_t *	tris)
 {
-    pixman_trapezoid_t *trapezoids;
-    int i;
+    pixman_trapezoid_t *traps;
 
-    if (n_tris <= 0)
-	return;
-    
-    trapezoids = malloc (2 * n_tris * sizeof (pixman_trapezoid_t));
-    if (!trapezoids)
-	return;
+    if ((traps = convert_triangles (n_tris, tris)))
+    {
+	pixman_composite_trapezoids (op, src, dst, mask_format,
+				     x_src, y_src, x_dst, y_dst,
+				     n_tris * 2, traps);
+	
+	free (traps);
+    }
+}
 
-    for (i = 0; i < n_tris; ++i)
-	triangle_to_trapezoids (&(tris[i]), trapezoids + 2 * i);
-    
-    pixman_composite_trapezoids (op, src, dst, mask_format,
-				 x_src, y_src, x_dst, y_dst,
-				 n_tris * 2, trapezoids);
-	    
-    free (trapezoids);
+PIXMAN_EXPORT void
+pixman_add_triangles (pixman_image_t          *image,
+		      int32_t	               x_off,
+		      int32_t	               y_off,
+		      int	               n_tris,
+		      const pixman_triangle_t *tris)
+{
+    pixman_trapezoid_t *traps;
+
+    if ((traps = convert_triangles (n_tris, tris)))
+    {
+	pixman_add_trapezoids (image, x_off, y_off,
+			       n_tris * 2, traps);
+
+	free (traps);
+    }
 }
