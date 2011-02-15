@@ -502,7 +502,7 @@ pixman_image_set_transform (pixman_image_t *          image,
     if (common->transform == transform)
 	return TRUE;
 
-    if (memcmp (&id, transform, sizeof (pixman_transform_t)) == 0)
+    if (!transform || memcmp (&id, transform, sizeof (pixman_transform_t)) == 0)
     {
 	free (common->transform);
 	common->transform = NULL;
