@@ -847,7 +847,7 @@ core_combine_over_reverse_u_sse2 (uint32_t*       pd,
 }
 
 static force_inline uint32_t
-core_combine_in_u_pixelsse2 (uint32_t src, uint32_t dst)
+core_combine_in_u_pixel_sse2 (uint32_t src, uint32_t dst)
 {
     uint32_t maska = src >> 24;
 
@@ -881,7 +881,7 @@ core_combine_in_u_sse2 (uint32_t*       pd,
 	s = combine1 (ps, pm);
 	d = *pd;
 
-	*pd++ = core_combine_in_u_pixelsse2 (d, s);
+	*pd++ = core_combine_in_u_pixel_sse2 (d, s);
 	w--;
 	ps++;
 	if (pm)
@@ -916,7 +916,7 @@ core_combine_in_u_sse2 (uint32_t*       pd,
 	s = combine1 (ps, pm);
 	d = *pd;
 
-	*pd++ = core_combine_in_u_pixelsse2 (d, s);
+	*pd++ = core_combine_in_u_pixel_sse2 (d, s);
 	w--;
 	ps++;
 	if (pm)
@@ -940,7 +940,7 @@ core_combine_reverse_in_u_sse2 (uint32_t*       pd,
 	s = combine1 (ps, pm);
 	d = *pd;
 
-	*pd++ = core_combine_in_u_pixelsse2 (s, d);
+	*pd++ = core_combine_in_u_pixel_sse2 (s, d);
 	ps++;
 	w--;
 	if (pm)
@@ -975,7 +975,7 @@ core_combine_reverse_in_u_sse2 (uint32_t*       pd,
 	s = combine1 (ps, pm);
 	d = *pd;
 
-	*pd++ = core_combine_in_u_pixelsse2 (s, d);
+	*pd++ = core_combine_in_u_pixel_sse2 (s, d);
 	w--;
 	ps++;
 	if (pm)
