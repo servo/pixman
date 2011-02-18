@@ -2587,7 +2587,8 @@ sse2_composite_add_n_8888_8888_ca (pixman_implementation_t *imp,
 		mmx_dest = unpack_32_1x128 (d);
 
 		*pd = pack_1x128_32 (
-		    _mm_adds_epu8 (pix_multiply_1x128 (mmx_mask, mmx_src), mmx_dest));
+		    _mm_adds_epu8 (pix_multiply_1x128 (mmx_mask, mmx_src),
+				   mmx_dest));
 	    }
 
 	    pd++;
@@ -2635,7 +2636,8 @@ sse2_composite_add_n_8888_8888_ca (pixman_implementation_t *imp,
 		mmx_dest = unpack_32_1x128 (d);
 
 		*pd = pack_1x128_32 (
-		    _mm_adds_epu8 (pix_multiply_1x128 (mmx_mask, mmx_src), mmx_dest));
+		    _mm_adds_epu8 (pix_multiply_1x128 (mmx_mask, mmx_src),
+				   mmx_dest));
 	    }
 
 	    pd++;
@@ -3333,7 +3335,7 @@ sse2_composite_over_n_8_8888 (pixman_implementation_t *imp,
 
 }
 
-pixman_bool_t
+static pixman_bool_t
 pixman_fill_sse2 (uint32_t *bits,
                   int       stride,
                   int       bpp,
@@ -4886,7 +4888,8 @@ sse2_composite_over_x888_8_8888 (pixman_implementation_t *imp,
         while (w >= 4)
         {
             m = *(uint32_t*) mask;
-            xmm_src = _mm_or_si128 (load_128_unaligned ((__m128i*)src), mask_ff000000);
+            xmm_src = _mm_or_si128 (
+		load_128_unaligned ((__m128i*)src), mask_ff000000);
 
             if (m == 0xffffffff)
             {
@@ -4902,9 +4905,12 @@ sse2_composite_over_x888_8_8888 (pixman_implementation_t *imp,
                 unpack_128_2x128 (xmm_mask, &xmm_mask_lo, &xmm_mask_hi);
                 unpack_128_2x128 (xmm_dst, &xmm_dst_lo, &xmm_dst_hi);
 
-                expand_alpha_rev_2x128 (xmm_mask_lo, xmm_mask_hi, &xmm_mask_lo, &xmm_mask_hi);
+                expand_alpha_rev_2x128 (
+		    xmm_mask_lo, xmm_mask_hi, &xmm_mask_lo, &xmm_mask_hi);
 
-                in_over_2x128 (&xmm_src_lo, &xmm_src_hi, &mask_00ff, &mask_00ff, &xmm_mask_lo, &xmm_mask_hi, &xmm_dst_lo, &xmm_dst_hi);
+                in_over_2x128 (&xmm_src_lo, &xmm_src_hi,
+			       &mask_00ff, &mask_00ff, &xmm_mask_lo, &xmm_mask_hi,
+			       &xmm_dst_lo, &xmm_dst_hi);
 
                 save_128_aligned ((__m128i*)dst, pack_2x128_128 (xmm_dst_lo, xmm_dst_hi));
             }
