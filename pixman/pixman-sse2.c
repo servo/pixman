@@ -52,14 +52,6 @@
  * Locals
  */
 
-static __m64 mask_x0080;
-static __m64 mask_x00ff;
-static __m64 mask_x0101;
-static __m64 mask_x_alpha;
-
-static __m64 mask_x565_rgb;
-static __m64 mask_x565_unpack;
-
 static __m128i mask_0080;
 static __m128i mask_00ff;
 static __m128i mask_0101;
@@ -401,47 +393,16 @@ save_128_unaligned (__m128i* dst,
  * MMX inlines
  */
 
-static force_inline __m64
-load_32_1x64 (uint32_t data)
-{
-    return _mm_cvtsi32_si64 (data);
-}
-
 static force_inline __m128i
 load_32_1x128 (uint32_t data)
 {
     return _mm_cvtsi32_si128 (data);
 }
 
-static force_inline __m64
-unpack_32_1x64 (uint32_t data)
-{
-    return _mm_unpacklo_pi8 (load_32_1x64 (data), _mm_setzero_si64 ());
-}
-
-static force_inline __m64
-expand_alpha_1x64 (__m64 data)
-{
-    return _mm_shuffle_pi16 (data, _MM_SHUFFLE (3, 3, 3, 3));
-}
-
-static force_inline __m64
-expand_alpha_rev_1x64 (__m64 data)
-{
-    return _mm_shuffle_pi16 (data, _MM_SHUFFLE (0, 0, 0, 0));
-}
-
 static force_inline __m128i
 expand_alpha_rev_1x128 (__m128i data)
 {
     return _mm_shufflelo_epi16 (data, _MM_SHUFFLE (0, 0, 0, 0));
-}
-
-static force_inline __m64
-expand_pixel_8_1x64 (uint8_t data)
-{
-    return _mm_shuffle_pi16 (
-	unpack_32_1x64 ((uint32_t)data), _MM_SHUFFLE (0, 0, 0, 0));
 }
 
 static force_inline __m128i
@@ -451,15 +412,6 @@ expand_pixel_8_1x128 (uint8_t data)
 	unpack_32_1x128 ((uint32_t)data), _MM_SHUFFLE (0, 0, 0, 0));
 }
 
-static force_inline __m64
-pix_multiply_1x64 (__m64 data,
-                   __m64 alpha)
-{
-    return _mm_mulhi_pu16 (_mm_adds_pu16 (_mm_mullo_pi16 (data, alpha),
-                                          mask_x0080),
-                           mask_x0101);
-}
-
 static force_inline __m128i
 pix_multiply_1x128 (__m128i data,
 		    __m128i alpha)
@@ -467,18 +419,6 @@ pix_multiply_1x128 (__m128i data,
     return _mm_mulhi_epu16 (_mm_adds_epu16 (_mm_mullo_epi16 (data, alpha),
 					    mask_0080),
 			    mask_0101);
-}
-
-static force_inline __m64
-pix_add_multiply_1x64 (__m64* src,
-                       __m64* alpha_dst,
-                       __m64* dst,
-                       __m64* alpha_src)
-{
-    __m64 t1 = pix_multiply_1x64 (*src, *alpha_dst);
-    __m64 t2 = pix_multiply_1x64 (*dst, *alpha_src);
-
-    return _mm_adds_pu8 (t1, t2);
 }
 
 static force_inline __m128i
@@ -493,22 +433,10 @@ pix_add_multiply_1x128 (__m128i* src,
     return _mm_adds_epu8 (t1, t2);
 }
 
-static force_inline __m64
-negate_1x64 (__m64 data)
-{
-    return _mm_xor_si64 (data, mask_x00ff);
-}
-
 static force_inline __m128i
 negate_1x128 (__m128i data)
 {
     return _mm_xor_si128 (data, mask_00ff);
-}
-
-static force_inline __m64
-invert_colors_1x64 (__m64 data)
-{
-    return _mm_shuffle_pi16 (data, _MM_SHUFFLE (3, 0, 1, 2));
 }
 
 static force_inline __m128i
@@ -517,24 +445,10 @@ invert_colors_1x128 (__m128i data)
     return _mm_shufflelo_epi16 (data, _MM_SHUFFLE (3, 0, 1, 2));
 }
 
-static force_inline __m64
-over_1x64 (__m64 src, __m64 alpha, __m64 dst)
-{
-    return _mm_adds_pu8 (src, pix_multiply_1x64 (dst, negate_1x64 (alpha)));
-}
-
 static force_inline __m128i
 over_1x128 (__m128i src, __m128i alpha, __m128i dst)
 {
     return _mm_adds_epu8 (src, pix_multiply_1x128 (dst, negate_1x128 (alpha)));
-}
-
-static force_inline __m64
-in_over_1x64 (__m64* src, __m64* alpha, __m64* mask, __m64* dst)
-{
-    return over_1x64 (pix_multiply_1x64 (*src, *mask),
-                      pix_multiply_1x64 (*alpha, *mask),
-                      *dst);
 }
 
 static force_inline __m128i
@@ -543,17 +457,6 @@ in_over_1x128 (__m128i* src, __m128i* alpha, __m128i* mask, __m128i* dst)
     return over_1x128 (pix_multiply_1x128 (*src, *mask),
 		       pix_multiply_1x128 (*alpha, *mask),
 		       *dst);
-}
-
-static force_inline __m64
-over_rev_non_pre_1x64 (__m64 src, __m64 dst)
-{
-    __m64 alpha = expand_alpha_1x64 (src);
-
-    return over_1x64 (pix_multiply_1x64 (invert_colors_1x64 (src),
-                                         _mm_or_si64 (alpha, mask_x_alpha)),
-                      alpha,
-                      dst);
 }
 
 static force_inline __m128i
@@ -568,48 +471,9 @@ over_rev_non_pre_1x128 (__m128i src, __m128i dst)
 }
 
 static force_inline uint32_t
-pack_1x64_32 (__m64 data)
-{
-    return _mm_cvtsi64_si32 (_mm_packs_pu16 (data, _mm_setzero_si64 ()));
-}
-
-static force_inline uint32_t
 pack_1x128_32 (__m128i data)
 {
     return _mm_cvtsi128_si32 (_mm_packus_epi16 (data, _mm_setzero_si128 ()));
-}
-
-/* Expand 16 bits positioned at @pos (0-3) of a mmx register into
- *
- *    00RR00GG00BB
- *
- * --- Expanding 565 in the low word ---
- *
- * m = (m << (32 - 3)) | (m << (16 - 5)) | m;
- * m = m & (01f0003f001f);
- * m = m * (008404100840);
- * m = m >> 8;
- *
- * Note the trick here - the top word is shifted by another nibble to
- * avoid it bumping into the middle word
- */
-static force_inline __m64
-expand565_16_1x64 (uint16_t pixel)
-{
-    __m64 p;
-    __m64 t1, t2;
-
-    p = _mm_cvtsi32_si64 ((uint32_t) pixel);
-
-    t1 = _mm_slli_si64 (p, 36 - 11);
-    t2 = _mm_slli_si64 (p, 16 - 5);
-
-    p = _mm_or_si64 (t1, p);
-    p = _mm_or_si64 (t2, p);
-    p = _mm_and_si64 (p, mask_x565_rgb);
-    p = _mm_mullo_pi16 (p, mask_x565_unpack);
-
-    return _mm_srli_pi16 (p, 8);
 }
 
 static force_inline __m128i
@@ -2460,23 +2324,10 @@ core_combine_add_ca_sse2 (uint32_t *      pd,
 /* ---------------------------------------------------
  * fb_compose_setup_sSE2
  */
-static force_inline __m64
-create_mask_16_64 (uint16_t mask)
-{
-    return _mm_set1_pi16 (mask);
-}
-
 static force_inline __m128i
 create_mask_16_128 (uint16_t mask)
 {
     return _mm_set1_epi16 (mask);
-}
-
-static force_inline __m64
-create_mask_2x32_64 (uint32_t mask0,
-                     uint32_t mask1)
-{
-    return _mm_set_pi32 (mask0, mask1);
 }
 
 /* Work around a code generation bug in Sun Studio 12. */
@@ -2503,7 +2354,6 @@ sse2_combine_over_u (pixman_implementation_t *imp,
                      int                      width)
 {
     core_combine_over_u_sse2 (dst, src, mask, width);
-    _mm_empty ();
 }
 
 static void
@@ -2515,7 +2365,6 @@ sse2_combine_over_reverse_u (pixman_implementation_t *imp,
                              int                      width)
 {
     core_combine_over_reverse_u_sse2 (dst, src, mask, width);
-    _mm_empty ();
 }
 
 static void
@@ -2527,7 +2376,6 @@ sse2_combine_in_u (pixman_implementation_t *imp,
                    int                      width)
 {
     core_combine_in_u_sse2 (dst, src, mask, width);
-    _mm_empty ();
 }
 
 static void
@@ -2539,7 +2387,6 @@ sse2_combine_in_reverse_u (pixman_implementation_t *imp,
                            int                      width)
 {
     core_combine_reverse_in_u_sse2 (dst, src, mask, width);
-    _mm_empty ();
 }
 
 static void
@@ -2551,7 +2398,6 @@ sse2_combine_out_u (pixman_implementation_t *imp,
                     int                      width)
 {
     core_combine_out_u_sse2 (dst, src, mask, width);
-    _mm_empty ();
 }
 
 static void
@@ -2563,7 +2409,6 @@ sse2_combine_out_reverse_u (pixman_implementation_t *imp,
                             int                      width)
 {
     core_combine_reverse_out_u_sse2 (dst, src, mask, width);
-    _mm_empty ();
 }
 
 static void
@@ -2575,7 +2420,6 @@ sse2_combine_atop_u (pixman_implementation_t *imp,
                      int                      width)
 {
     core_combine_atop_u_sse2 (dst, src, mask, width);
-    _mm_empty ();
 }
 
 static void
@@ -2587,7 +2431,6 @@ sse2_combine_atop_reverse_u (pixman_implementation_t *imp,
                              int                      width)
 {
     core_combine_reverse_atop_u_sse2 (dst, src, mask, width);
-    _mm_empty ();
 }
 
 static void
@@ -2599,7 +2442,6 @@ sse2_combine_xor_u (pixman_implementation_t *imp,
                     int                      width)
 {
     core_combine_xor_u_sse2 (dst, src, mask, width);
-    _mm_empty ();
 }
 
 static void
@@ -2611,7 +2453,6 @@ sse2_combine_add_u (pixman_implementation_t *imp,
                     int                      width)
 {
     core_combine_add_u_sse2 (dst, src, mask, width);
-    _mm_empty ();
 }
 
 static void
@@ -2623,7 +2464,6 @@ sse2_combine_saturate_u (pixman_implementation_t *imp,
                          int                      width)
 {
     core_combine_saturate_u_sse2 (dst, src, mask, width);
-    _mm_empty ();
 }
 
 static void
@@ -2635,7 +2475,6 @@ sse2_combine_src_ca (pixman_implementation_t *imp,
                      int                      width)
 {
     core_combine_src_ca_sse2 (dst, src, mask, width);
-    _mm_empty ();
 }
 
 static void
@@ -2647,7 +2486,6 @@ sse2_combine_over_ca (pixman_implementation_t *imp,
                       int                      width)
 {
     core_combine_over_ca_sse2 (dst, src, mask, width);
-    _mm_empty ();
 }
 
 static void
@@ -2659,7 +2497,6 @@ sse2_combine_over_reverse_ca (pixman_implementation_t *imp,
                               int                      width)
 {
     core_combine_over_reverse_ca_sse2 (dst, src, mask, width);
-    _mm_empty ();
 }
 
 static void
@@ -2671,7 +2508,6 @@ sse2_combine_in_ca (pixman_implementation_t *imp,
                     int                      width)
 {
     core_combine_in_ca_sse2 (dst, src, mask, width);
-    _mm_empty ();
 }
 
 static void
@@ -2683,7 +2519,6 @@ sse2_combine_in_reverse_ca (pixman_implementation_t *imp,
                             int                      width)
 {
     core_combine_in_reverse_ca_sse2 (dst, src, mask, width);
-    _mm_empty ();
 }
 
 static void
@@ -2695,7 +2530,6 @@ sse2_combine_out_ca (pixman_implementation_t *imp,
                      int                      width)
 {
     core_combine_out_ca_sse2 (dst, src, mask, width);
-    _mm_empty ();
 }
 
 static void
@@ -2707,7 +2541,6 @@ sse2_combine_out_reverse_ca (pixman_implementation_t *imp,
                              int                      width)
 {
     core_combine_out_reverse_ca_sse2 (dst, src, mask, width);
-    _mm_empty ();
 }
 
 static void
@@ -2719,7 +2552,6 @@ sse2_combine_atop_ca (pixman_implementation_t *imp,
                       int                      width)
 {
     core_combine_atop_ca_sse2 (dst, src, mask, width);
-    _mm_empty ();
 }
 
 static void
@@ -2731,7 +2563,6 @@ sse2_combine_atop_reverse_ca (pixman_implementation_t *imp,
                               int                      width)
 {
     core_combine_reverse_atop_ca_sse2 (dst, src, mask, width);
-    _mm_empty ();
 }
 
 static void
@@ -2743,7 +2574,6 @@ sse2_combine_xor_ca (pixman_implementation_t *imp,
                      int                      width)
 {
     core_combine_xor_ca_sse2 (dst, src, mask, width);
-    _mm_empty ();
 }
 
 static void
@@ -2755,7 +2585,6 @@ sse2_combine_add_ca (pixman_implementation_t *imp,
                      int                      width)
 {
     core_combine_add_ca_sse2 (dst, src, mask, width);
-    _mm_empty ();
 }
 
 /* -------------------------------------------------------------------
@@ -2839,7 +2668,6 @@ sse2_composite_over_n_8888 (pixman_implementation_t *imp,
 	}
 
     }
-    _mm_empty ();
 }
 
 /* ---------------------------------------------------------------------
@@ -2928,7 +2756,6 @@ sse2_composite_over_n_0565 (pixman_implementation_t *imp,
 	}
     }
 
-    _mm_empty ();
 }
 
 /* ------------------------------
@@ -3055,7 +2882,6 @@ sse2_composite_add_n_8888_8888_ca (pixman_implementation_t *imp,
 	}
     }
 
-    _mm_empty ();
 }
 
 /* ---------------------------------------------------------------------------
@@ -3183,7 +3009,6 @@ sse2_composite_over_n_8888_8888_ca (pixman_implementation_t *imp,
 	}
     }
 
-    _mm_empty ();
 }
 
 /*---------------------------------------------------------------------
@@ -3302,7 +3127,6 @@ sse2_composite_over_8888_n_8888 (pixman_implementation_t *imp,
 	}
     }
 
-    _mm_empty ();
 }
 
 /*---------------------------------------------------------------------
@@ -3375,7 +3199,6 @@ sse2_composite_src_x888_8888 (pixman_implementation_t *imp,
 	}
     }
 
-    _mm_empty ();
 }
 
 /* ---------------------------------------------------------------------
@@ -3480,7 +3303,6 @@ sse2_composite_over_x888_n_8888 (pixman_implementation_t *imp,
 	}
     }
 
-    _mm_empty ();
 }
 
 /* --------------------------------------------------------------------
@@ -3520,7 +3342,6 @@ sse2_composite_over_8888_8888 (pixman_implementation_t *imp,
 	dst += dst_stride;
 	src += src_stride;
     }
-    _mm_empty ();
 }
 
 /* ------------------------------------------------------------------
@@ -3648,7 +3469,6 @@ sse2_composite_over_8888_0565 (pixman_implementation_t *imp,
 	}
     }
 
-    _mm_empty ();
 }
 
 /* -----------------------------------------------------------------
@@ -3784,7 +3604,6 @@ sse2_composite_over_n_8_8888 (pixman_implementation_t *imp,
 	}
     }
 
-    _mm_empty ();
 }
 
 /* ----------------------------------------------------------------
@@ -3938,7 +3757,6 @@ pixman_fill_sse2 (uint32_t *bits,
 	}
     }
 
-    _mm_empty ();
     return TRUE;
 }
 
@@ -4068,7 +3886,6 @@ sse2_composite_src_n_8_8888 (pixman_implementation_t *imp,
 	}
     }
 
-    _mm_empty ();
 }
 
 /*-----------------------------------------------------------------------
@@ -4220,7 +4037,6 @@ sse2_composite_over_n_8_0565 (pixman_implementation_t *imp,
 	}
     }
 
-    _mm_empty ();
 }
 
 /* -----------------------------------------------------------------------
@@ -4354,7 +4170,6 @@ sse2_composite_over_pixbuf_0565 (pixman_implementation_t *imp,
 	}
     }
 
-    _mm_empty ();
 }
 
 /* -------------------------------------------------------------------------
@@ -4467,7 +4282,6 @@ sse2_composite_over_pixbuf_8888 (pixman_implementation_t *imp,
 	}
     }
 
-    _mm_empty ();
 }
 
 /* -------------------------------------------------------------------------------------------------
@@ -4616,7 +4430,6 @@ sse2_composite_over_n_8888_0565_ca (pixman_implementation_t *imp,
 	}
     }
 
-    _mm_empty ();
 }
 
 /* -----------------------------------------------------------------------
@@ -4720,7 +4533,6 @@ sse2_composite_in_n_8_8 (pixman_implementation_t *imp,
 	}
     }
 
-    _mm_empty ();
 }
 
 /* -----------------------------------------------------------------------
@@ -4817,7 +4629,6 @@ sse2_composite_in_n_8 (pixman_implementation_t *imp,
 	}
     }
 
-    _mm_empty ();
 }
 
 /* ---------------------------------------------------------------------------
@@ -4903,7 +4714,6 @@ sse2_composite_in_8_8 (pixman_implementation_t *imp,
 	}
     }
 
-    _mm_empty ();
 }
 
 /* -------------------------------------------------------------------------
@@ -5007,7 +4817,6 @@ sse2_composite_add_n_8_8 (pixman_implementation_t *imp,
 	}
     }
 
-    _mm_empty ();
 }
 
 /* -------------------------------------------------------------------------
@@ -5095,7 +4904,6 @@ sse2_composite_add_n_8 (pixman_implementation_t *imp,
 	}
     }
 
-    _mm_empty ();
 }
 
 /* ----------------------------------------------------------------------
@@ -5161,7 +4969,6 @@ sse2_composite_add_8_8 (pixman_implementation_t *imp,
 	}
     }
 
-    _mm_empty ();
 }
 
 /* ---------------------------------------------------------------------
@@ -5201,7 +5008,6 @@ sse2_composite_add_8888_8888 (pixman_implementation_t *imp,
 	core_combine_add_u_sse2 (dst, src, NULL, width);
     }
 
-    _mm_empty ();
 }
 
 /* -------------------------------------------------------------------------------------------------
@@ -5326,7 +5132,6 @@ pixman_blt_sse2 (uint32_t *src_bits,
 	}
     }
 
-    _mm_empty ();
 
     return TRUE;
 }
@@ -5484,7 +5289,6 @@ sse2_composite_over_x888_8_8888 (pixman_implementation_t *imp,
         }
     }
 
-    _mm_empty ();
 }
 
 static void
@@ -5638,7 +5442,6 @@ sse2_composite_over_8888_8_8888 (pixman_implementation_t *imp,
         }
     }
 
-    _mm_empty ();
 }
 
 static void
@@ -5730,7 +5533,6 @@ sse2_composite_over_reverse_n_8888 (pixman_implementation_t *imp,
 
     }
 
-    _mm_empty ();
 }
 
 static void
@@ -5882,7 +5684,6 @@ sse2_composite_over_8888_8888_8888 (pixman_implementation_t *imp,
         }
     }
 
-    _mm_empty ();
 }
 
 /* A variant of 'core_combine_over_u_sse2' with minor tweaks */
@@ -5977,7 +5778,6 @@ scaled_nearest_scanline_sse2_8888_8888_OVER (uint32_t*       pd,
 
 	w--;
     }
-    _mm_empty ();
 }
 
 FAST_NEAREST_MAINLOOP (sse2_8888_8888_cover_OVER,
@@ -6090,7 +5890,6 @@ scaled_nearest_scanline_sse2_8888_n_8888_OVER (const uint32_t * mask,
 	w--;
     }
 
-    _mm_empty ();
 }
 
 FAST_NEAREST_MAINLOOP_COMMON (sse2_8888_n_8888_cover_OVER,
@@ -6466,16 +6265,6 @@ _pixman_implementation_create_sse2 (pixman_implementation_t *fallback)
     mask_ff000000 = create_mask_2x32_128 (0xff000000, 0xff000000);
     mask_alpha = create_mask_2x32_128 (0x00ff0000, 0x00000000);
 
-    /* MMX constants */
-    mask_x565_rgb = create_mask_2x32_64 (0x000001f0, 0x003f001f);
-    mask_x565_unpack = create_mask_2x32_64 (0x00000084, 0x04100840);
-
-    mask_x0080 = create_mask_16_64 (0x0080);
-    mask_x00ff = create_mask_16_64 (0x00ff);
-    mask_x0101 = create_mask_16_64 (0x0101);
-    mask_x_alpha = create_mask_2x32_64 (0x00ff0000, 0x00000000);
-
-    _mm_empty ();
 
     /* Set up function pointers */
 
