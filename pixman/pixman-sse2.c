@@ -724,10 +724,12 @@ core_combine_over_u_sse2_no_mask (uint32_t *	  pd,
 }
 
 static force_inline void
-core_combine_over_u_sse2 (uint32_t*       pd,
-                          const uint32_t* ps,
-                          const uint32_t* pm,
-                          int             w)
+sse2_combine_over_u (pixman_implementation_t *imp,
+                     pixman_op_t              op,
+                     uint32_t *               pd,
+                     const uint32_t *         ps,
+                     const uint32_t *         pm,
+                     int                      w)
 {
     if (pm)
 	core_combine_over_u_sse2_mask (pd, ps, pm, w);
@@ -735,11 +737,13 @@ core_combine_over_u_sse2 (uint32_t*       pd,
 	core_combine_over_u_sse2_no_mask (pd, ps, w);
 }
 
-static force_inline void
-core_combine_over_reverse_u_sse2 (uint32_t*       pd,
-                                  const uint32_t* ps,
-                                  const uint32_t* pm,
-                                  int             w)
+static void
+sse2_combine_over_reverse_u (pixman_implementation_t *imp,
+                             pixman_op_t              op,
+                             uint32_t *               pd,
+                             const uint32_t *         ps,
+                             const uint32_t *         pm,
+                             int                      w)
 {
     uint32_t s, d;
 
@@ -823,11 +827,13 @@ core_combine_in_u_pixel_sse2 (uint32_t src, uint32_t dst)
     return dst;
 }
 
-static force_inline void
-core_combine_in_u_sse2 (uint32_t*       pd,
-                        const uint32_t* ps,
-                        const uint32_t* pm,
-                        int             w)
+static void
+sse2_combine_in_u (pixman_implementation_t *imp,
+                   pixman_op_t              op,
+                   uint32_t *               pd,
+                   const uint32_t *         ps,
+                   const uint32_t *         pm,
+                   int                      w)
 {
     uint32_t s, d;
 
@@ -882,11 +888,13 @@ core_combine_in_u_sse2 (uint32_t*       pd,
     }
 }
 
-static force_inline void
-core_combine_reverse_in_u_sse2 (uint32_t*       pd,
-                                const uint32_t* ps,
-                                const uint32_t *pm,
-                                int             w)
+static void
+sse2_combine_in_reverse_u (pixman_implementation_t *imp,
+                           pixman_op_t              op,
+                           uint32_t *               pd,
+                           const uint32_t *         ps,
+                           const uint32_t *         pm,
+                           int                      w)
 {
     uint32_t s, d;
 
@@ -941,11 +949,13 @@ core_combine_reverse_in_u_sse2 (uint32_t*       pd,
     }
 }
 
-static force_inline void
-core_combine_reverse_out_u_sse2 (uint32_t*       pd,
-                                 const uint32_t* ps,
-                                 const uint32_t* pm,
-                                 int             w)
+static void
+sse2_combine_out_reverse_u (pixman_implementation_t *imp,
+                            pixman_op_t              op,
+                            uint32_t *               pd,
+                            const uint32_t *         ps,
+                            const uint32_t *         pm,
+                            int                      w)
 {
     while (w && ((unsigned long) pd & 15))
     {
@@ -1008,11 +1018,13 @@ core_combine_reverse_out_u_sse2 (uint32_t*       pd,
     }
 }
 
-static force_inline void
-core_combine_out_u_sse2 (uint32_t*       pd,
-                         const uint32_t* ps,
-                         const uint32_t* pm,
-                         int             w)
+static void
+sse2_combine_out_u (pixman_implementation_t *imp,
+                    pixman_op_t              op,
+                    uint32_t *               pd,
+                    const uint32_t *         ps,
+                    const uint32_t *         pm,
+                    int                      w)
 {
     while (w && ((unsigned long) pd & 15))
     {
@@ -1086,11 +1098,13 @@ core_combine_atop_u_pixel_sse2 (uint32_t src,
     return pack_1x128_32 (pix_add_multiply_1x128 (&s, &da, &d, &sa));
 }
 
-static force_inline void
-core_combine_atop_u_sse2 (uint32_t*       pd,
-                          const uint32_t* ps,
-                          const uint32_t* pm,
-                          int             w)
+static void
+sse2_combine_atop_u (pixman_implementation_t *imp,
+                     pixman_op_t              op,
+                     uint32_t *               pd,
+                     const uint32_t *         ps,
+                     const uint32_t *         pm,
+                     int                      w)
 {
     uint32_t s, d;
 
@@ -1168,11 +1182,13 @@ core_combine_reverse_atop_u_pixel_sse2 (uint32_t src,
     return pack_1x128_32 (pix_add_multiply_1x128 (&s, &da, &d, &sa));
 }
 
-static force_inline void
-core_combine_reverse_atop_u_sse2 (uint32_t*       pd,
-                                  const uint32_t* ps,
-                                  const uint32_t* pm,
-                                  int             w)
+static void
+sse2_combine_atop_reverse_u (pixman_implementation_t *imp,
+                             pixman_op_t              op,
+                             uint32_t *               pd,
+                             const uint32_t *         ps,
+                             const uint32_t *         pm,
+                             int                      w)
 {
     uint32_t s, d;
 
@@ -1250,11 +1266,13 @@ core_combine_xor_u_pixel_sse2 (uint32_t src,
     return pack_1x128_32 (pix_add_multiply_1x128 (&s, &neg_d, &d, &neg_s));
 }
 
-static force_inline void
-core_combine_xor_u_sse2 (uint32_t*       dst,
-                         const uint32_t* src,
-                         const uint32_t *mask,
-                         int             width)
+static void
+sse2_combine_xor_u (pixman_implementation_t *imp,
+                    pixman_op_t              op,
+                    uint32_t *               dst,
+                    const uint32_t *         src,
+                    const uint32_t *         mask,
+                    int                      width)
 {
     int w = width;
     uint32_t s, d;
@@ -1326,10 +1344,12 @@ core_combine_xor_u_sse2 (uint32_t*       dst,
 }
 
 static force_inline void
-core_combine_add_u_sse2 (uint32_t*       dst,
-                         const uint32_t* src,
-                         const uint32_t* mask,
-                         int             width)
+sse2_combine_add_u (pixman_implementation_t *imp,
+                    pixman_op_t              op,
+                    uint32_t *               dst,
+                    const uint32_t *         src,
+                    const uint32_t *         mask,
+                    int                      width)
 {
     int w = width;
     uint32_t s, d;
@@ -1397,11 +1417,13 @@ core_combine_saturate_u_pixel_sse2 (uint32_t src,
     return pack_1x128_32 (_mm_adds_epu16 (md, ms));
 }
 
-static force_inline void
-core_combine_saturate_u_sse2 (uint32_t *      pd,
-                              const uint32_t *ps,
-                              const uint32_t *pm,
-                              int             w)
+static void
+sse2_combine_saturate_u (pixman_implementation_t *imp,
+                         pixman_op_t              op,
+                         uint32_t *               pd,
+                         const uint32_t *         ps,
+                         const uint32_t *         pm,
+                         int                      w)
 {
     uint32_t s, d;
 
@@ -1482,11 +1504,13 @@ core_combine_saturate_u_sse2 (uint32_t *      pd,
     }
 }
 
-static force_inline void
-core_combine_src_ca_sse2 (uint32_t*       pd,
-                          const uint32_t* ps,
-                          const uint32_t *pm,
-                          int             w)
+static void
+sse2_combine_src_ca (pixman_implementation_t *imp,
+                     pixman_op_t              op,
+                     uint32_t *               pd,
+                     const uint32_t *         ps,
+                     const uint32_t *         pm,
+                     int                      w)
 {
     uint32_t s, m;
 
@@ -1547,11 +1571,13 @@ core_combine_over_ca_pixel_sse2 (uint32_t src,
     return pack_1x128_32 (in_over_1x128 (&s, &expAlpha, &unpk_mask, &unpk_dst));
 }
 
-static force_inline void
-core_combine_over_ca_sse2 (uint32_t*       pd,
-                           const uint32_t* ps,
-                           const uint32_t *pm,
-                           int             w)
+static void
+sse2_combine_over_ca (pixman_implementation_t *imp,
+                      pixman_op_t              op,
+                      uint32_t *               pd,
+                      const uint32_t *         ps,
+                      const uint32_t *         pm,
+                      int                      w)
 {
     uint32_t s, m, d;
 
@@ -1621,11 +1647,13 @@ core_combine_over_reverse_ca_pixel_sse2 (uint32_t src,
 					unpack_32_1x128 (mask))));
 }
 
-static force_inline void
-core_combine_over_reverse_ca_sse2 (uint32_t*       pd,
-                                   const uint32_t* ps,
-                                   const uint32_t *pm,
-                                   int             w)
+static void
+sse2_combine_over_reverse_ca (pixman_implementation_t *imp,
+                              pixman_op_t              op,
+                              uint32_t *               pd,
+                              const uint32_t *         ps,
+                              const uint32_t *         pm,
+                              int                      w)
 {
     uint32_t s, m, d;
 
@@ -1684,11 +1712,13 @@ core_combine_over_reverse_ca_sse2 (uint32_t*       pd,
     }
 }
 
-static force_inline void
-core_combine_in_ca_sse2 (uint32_t *      pd,
-                         const uint32_t *ps,
-                         const uint32_t *pm,
-                         int             w)
+static void
+sse2_combine_in_ca (pixman_implementation_t *imp,
+                    pixman_op_t              op,
+                    uint32_t *               pd,
+                    const uint32_t *         ps,
+                    const uint32_t *         pm,
+                    int                      w)
 {
     uint32_t s, m, d;
 
@@ -1757,11 +1787,13 @@ core_combine_in_ca_sse2 (uint32_t *      pd,
     }
 }
 
-static force_inline void
-core_combine_in_reverse_ca_sse2 (uint32_t *      pd,
-                                 const uint32_t *ps,
-                                 const uint32_t *pm,
-                                 int             w)
+static void
+sse2_combine_in_reverse_ca (pixman_implementation_t *imp,
+                            pixman_op_t              op,
+                            uint32_t *               pd,
+                            const uint32_t *         ps,
+                            const uint32_t *         pm,
+                            int                      w)
 {
     uint32_t s, m, d;
 
@@ -1828,11 +1860,13 @@ core_combine_in_reverse_ca_sse2 (uint32_t *      pd,
     }
 }
 
-static force_inline void
-core_combine_out_ca_sse2 (uint32_t *      pd,
-                          const uint32_t *ps,
-                          const uint32_t *pm,
-                          int             w)
+static void
+sse2_combine_out_ca (pixman_implementation_t *imp,
+                     pixman_op_t              op,
+                     uint32_t *               pd,
+                     const uint32_t *         ps,
+                     const uint32_t *         pm,
+                     int                      w)
 {
     uint32_t s, m, d;
 
@@ -1902,11 +1936,13 @@ core_combine_out_ca_sse2 (uint32_t *      pd,
     }
 }
 
-static force_inline void
-core_combine_out_reverse_ca_sse2 (uint32_t *      pd,
-                                  const uint32_t *ps,
-                                  const uint32_t *pm,
-                                  int             w)
+static void
+sse2_combine_out_reverse_ca (pixman_implementation_t *imp,
+                             pixman_op_t              op,
+                             uint32_t *               pd,
+                             const uint32_t *         ps,
+                             const uint32_t *         pm,
+                             int                      w)
 {
     uint32_t s, m, d;
 
@@ -1996,11 +2032,13 @@ core_combine_atop_ca_pixel_sse2 (uint32_t src,
     return pack_1x128_32 (pix_add_multiply_1x128 (&d, &m, &s, &da));
 }
 
-static force_inline void
-core_combine_atop_ca_sse2 (uint32_t *      pd,
-                           const uint32_t *ps,
-                           const uint32_t *pm,
-                           int             w)
+static void
+sse2_combine_atop_ca (pixman_implementation_t *imp,
+                      pixman_op_t              op,
+                      uint32_t *               pd,
+                      const uint32_t *         ps,
+                      const uint32_t *         pm,
+                      int                      w)
 {
     uint32_t s, m, d;
 
@@ -2087,11 +2125,13 @@ core_combine_reverse_atop_ca_pixel_sse2 (uint32_t src,
     return pack_1x128_32 (pix_add_multiply_1x128 (&d, &m, &s, &da));
 }
 
-static force_inline void
-core_combine_reverse_atop_ca_sse2 (uint32_t *      pd,
-                                   const uint32_t *ps,
-                                   const uint32_t *pm,
-                                   int             w)
+static void
+sse2_combine_atop_reverse_ca (pixman_implementation_t *imp,
+                              pixman_op_t              op,
+                              uint32_t *               pd,
+                              const uint32_t *         ps,
+                              const uint32_t *         pm,
+                              int                      w)
 {
     uint32_t s, m, d;
 
@@ -2181,11 +2221,13 @@ core_combine_xor_ca_pixel_sse2 (uint32_t src,
                                                 &alpha_src));
 }
 
-static force_inline void
-core_combine_xor_ca_sse2 (uint32_t *      pd,
-                          const uint32_t *ps,
-                          const uint32_t *pm,
-                          int             w)
+static void
+sse2_combine_xor_ca (pixman_implementation_t *imp,
+                     pixman_op_t              op,
+                     uint32_t *               pd,
+                     const uint32_t *         ps,
+                     const uint32_t *         pm,
+                     int                      w)
 {
     uint32_t s, m, d;
 
@@ -2257,11 +2299,13 @@ core_combine_xor_ca_sse2 (uint32_t *      pd,
     }
 }
 
-static force_inline void
-core_combine_add_ca_sse2 (uint32_t *      pd,
-                          const uint32_t *ps,
-                          const uint32_t *pm,
-                          int             w)
+static void
+sse2_combine_add_ca (pixman_implementation_t *imp,
+                     pixman_op_t              op,
+                     uint32_t *               pd,
+                     const uint32_t *         ps,
+                     const uint32_t *         pm,
+                     int                      w)
 {
     uint32_t s, m, d;
 
@@ -2342,250 +2386,6 @@ create_mask_2x32_128 (uint32_t mask0,
     return _mm_set_epi32 (mask0, mask1, mask0, mask1);
 }
 #endif
-
-/* SSE2 code patch for fbcompose.c */
-
-static void
-sse2_combine_over_u (pixman_implementation_t *imp,
-                     pixman_op_t              op,
-                     uint32_t *               dst,
-                     const uint32_t *         src,
-                     const uint32_t *         mask,
-                     int                      width)
-{
-    core_combine_over_u_sse2 (dst, src, mask, width);
-}
-
-static void
-sse2_combine_over_reverse_u (pixman_implementation_t *imp,
-                             pixman_op_t              op,
-                             uint32_t *               dst,
-                             const uint32_t *         src,
-                             const uint32_t *         mask,
-                             int                      width)
-{
-    core_combine_over_reverse_u_sse2 (dst, src, mask, width);
-}
-
-static void
-sse2_combine_in_u (pixman_implementation_t *imp,
-                   pixman_op_t              op,
-                   uint32_t *               dst,
-                   const uint32_t *         src,
-                   const uint32_t *         mask,
-                   int                      width)
-{
-    core_combine_in_u_sse2 (dst, src, mask, width);
-}
-
-static void
-sse2_combine_in_reverse_u (pixman_implementation_t *imp,
-                           pixman_op_t              op,
-                           uint32_t *               dst,
-                           const uint32_t *         src,
-                           const uint32_t *         mask,
-                           int                      width)
-{
-    core_combine_reverse_in_u_sse2 (dst, src, mask, width);
-}
-
-static void
-sse2_combine_out_u (pixman_implementation_t *imp,
-                    pixman_op_t              op,
-                    uint32_t *               dst,
-                    const uint32_t *         src,
-                    const uint32_t *         mask,
-                    int                      width)
-{
-    core_combine_out_u_sse2 (dst, src, mask, width);
-}
-
-static void
-sse2_combine_out_reverse_u (pixman_implementation_t *imp,
-                            pixman_op_t              op,
-                            uint32_t *               dst,
-                            const uint32_t *         src,
-                            const uint32_t *         mask,
-                            int                      width)
-{
-    core_combine_reverse_out_u_sse2 (dst, src, mask, width);
-}
-
-static void
-sse2_combine_atop_u (pixman_implementation_t *imp,
-                     pixman_op_t              op,
-                     uint32_t *               dst,
-                     const uint32_t *         src,
-                     const uint32_t *         mask,
-                     int                      width)
-{
-    core_combine_atop_u_sse2 (dst, src, mask, width);
-}
-
-static void
-sse2_combine_atop_reverse_u (pixman_implementation_t *imp,
-                             pixman_op_t              op,
-                             uint32_t *               dst,
-                             const uint32_t *         src,
-                             const uint32_t *         mask,
-                             int                      width)
-{
-    core_combine_reverse_atop_u_sse2 (dst, src, mask, width);
-}
-
-static void
-sse2_combine_xor_u (pixman_implementation_t *imp,
-                    pixman_op_t              op,
-                    uint32_t *               dst,
-                    const uint32_t *         src,
-                    const uint32_t *         mask,
-                    int                      width)
-{
-    core_combine_xor_u_sse2 (dst, src, mask, width);
-}
-
-static void
-sse2_combine_add_u (pixman_implementation_t *imp,
-                    pixman_op_t              op,
-                    uint32_t *               dst,
-                    const uint32_t *         src,
-                    const uint32_t *         mask,
-                    int                      width)
-{
-    core_combine_add_u_sse2 (dst, src, mask, width);
-}
-
-static void
-sse2_combine_saturate_u (pixman_implementation_t *imp,
-                         pixman_op_t              op,
-                         uint32_t *               dst,
-                         const uint32_t *         src,
-                         const uint32_t *         mask,
-                         int                      width)
-{
-    core_combine_saturate_u_sse2 (dst, src, mask, width);
-}
-
-static void
-sse2_combine_src_ca (pixman_implementation_t *imp,
-                     pixman_op_t              op,
-                     uint32_t *               dst,
-                     const uint32_t *         src,
-                     const uint32_t *         mask,
-                     int                      width)
-{
-    core_combine_src_ca_sse2 (dst, src, mask, width);
-}
-
-static void
-sse2_combine_over_ca (pixman_implementation_t *imp,
-                      pixman_op_t              op,
-                      uint32_t *               dst,
-                      const uint32_t *         src,
-                      const uint32_t *         mask,
-                      int                      width)
-{
-    core_combine_over_ca_sse2 (dst, src, mask, width);
-}
-
-static void
-sse2_combine_over_reverse_ca (pixman_implementation_t *imp,
-                              pixman_op_t              op,
-                              uint32_t *               dst,
-                              const uint32_t *         src,
-                              const uint32_t *         mask,
-                              int                      width)
-{
-    core_combine_over_reverse_ca_sse2 (dst, src, mask, width);
-}
-
-static void
-sse2_combine_in_ca (pixman_implementation_t *imp,
-                    pixman_op_t              op,
-                    uint32_t *               dst,
-                    const uint32_t *         src,
-                    const uint32_t *         mask,
-                    int                      width)
-{
-    core_combine_in_ca_sse2 (dst, src, mask, width);
-}
-
-static void
-sse2_combine_in_reverse_ca (pixman_implementation_t *imp,
-                            pixman_op_t              op,
-                            uint32_t *               dst,
-                            const uint32_t *         src,
-                            const uint32_t *         mask,
-                            int                      width)
-{
-    core_combine_in_reverse_ca_sse2 (dst, src, mask, width);
-}
-
-static void
-sse2_combine_out_ca (pixman_implementation_t *imp,
-                     pixman_op_t              op,
-                     uint32_t *               dst,
-                     const uint32_t *         src,
-                     const uint32_t *         mask,
-                     int                      width)
-{
-    core_combine_out_ca_sse2 (dst, src, mask, width);
-}
-
-static void
-sse2_combine_out_reverse_ca (pixman_implementation_t *imp,
-                             pixman_op_t              op,
-                             uint32_t *               dst,
-                             const uint32_t *         src,
-                             const uint32_t *         mask,
-                             int                      width)
-{
-    core_combine_out_reverse_ca_sse2 (dst, src, mask, width);
-}
-
-static void
-sse2_combine_atop_ca (pixman_implementation_t *imp,
-                      pixman_op_t              op,
-                      uint32_t *               dst,
-                      const uint32_t *         src,
-                      const uint32_t *         mask,
-                      int                      width)
-{
-    core_combine_atop_ca_sse2 (dst, src, mask, width);
-}
-
-static void
-sse2_combine_atop_reverse_ca (pixman_implementation_t *imp,
-                              pixman_op_t              op,
-                              uint32_t *               dst,
-                              const uint32_t *         src,
-                              const uint32_t *         mask,
-                              int                      width)
-{
-    core_combine_reverse_atop_ca_sse2 (dst, src, mask, width);
-}
-
-static void
-sse2_combine_xor_ca (pixman_implementation_t *imp,
-                     pixman_op_t              op,
-                     uint32_t *               dst,
-                     const uint32_t *         src,
-                     const uint32_t *         mask,
-                     int                      width)
-{
-    core_combine_xor_ca_sse2 (dst, src, mask, width);
-}
-
-static void
-sse2_combine_add_ca (pixman_implementation_t *imp,
-                     pixman_op_t              op,
-                     uint32_t *               dst,
-                     const uint32_t *         src,
-                     const uint32_t *         mask,
-                     int                      width)
-{
-    core_combine_add_ca_sse2 (dst, src, mask, width);
-}
 
 /* -------------------------------------------------------------------
  * composite_over_n_8888
@@ -3337,7 +3137,7 @@ sse2_composite_over_8888_8888 (pixman_implementation_t *imp,
 
     while (height--)
     {
-	core_combine_over_u_sse2 (dst, src, NULL, width);
+	sse2_combine_over_u (imp, op, dst, src, NULL, width);
 
 	dst += dst_stride;
 	src += src_stride;
@@ -4953,7 +4753,8 @@ sse2_composite_add_8_8 (pixman_implementation_t *imp,
 	    w--;
 	}
 
-	core_combine_add_u_sse2 ((uint32_t*)dst, (uint32_t*)src, NULL, w >> 2);
+	sse2_combine_add_u (imp, op,
+			    (uint32_t*)dst, (uint32_t*)src, NULL, w >> 2);
 
 	/* Small tail */
 	dst += w & 0xfffc;
@@ -5005,7 +4806,7 @@ sse2_composite_add_8888_8888 (pixman_implementation_t *imp,
 	src = src_line;
 	src_line += src_stride;
 
-	core_combine_add_u_sse2 (dst, src, NULL, width);
+	sse2_combine_add_u (imp, op, dst, src, NULL, width);
     }
 
 }
@@ -5686,7 +5487,7 @@ sse2_composite_over_8888_8888_8888 (pixman_implementation_t *imp,
 
 }
 
-/* A variant of 'core_combine_over_u_sse2' with minor tweaks */
+/* A variant of 'sse2_combine_over_u' with minor tweaks */
 static force_inline void
 scaled_nearest_scanline_sse2_8888_8888_OVER (uint32_t*       pd,
                                              const uint32_t* ps,
