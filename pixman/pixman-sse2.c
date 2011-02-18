@@ -30,21 +30,11 @@
 #include <config.h>
 #endif
 
-#include <mmintrin.h>
 #include <xmmintrin.h> /* for _mm_shuffle_pi16 and _MM_SHUFFLE */
 #include <emmintrin.h> /* for SSE2 intrinsics */
 #include "pixman-private.h"
 #include "pixman-combine32.h"
 #include "pixman-fast-path.h"
-
-#if defined(_MSC_VER) && defined(_M_AMD64)
-/* Windows 64 doesn't allow MMX to be used, so
- * the pixman-x64-mmx-emulation.h file contains
- * implementations of those MMX intrinsics that
- * are used in the SSE2 implementation.
- */
-#   include "pixman-x64-mmx-emulation.h"
-#endif
 
 static __m128i mask_0080;
 static __m128i mask_00ff;
