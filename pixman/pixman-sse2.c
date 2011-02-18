@@ -46,12 +46,6 @@
 #   include "pixman-x64-mmx-emulation.h"
 #endif
 
-#ifdef USE_SSE2
-
-/* --------------------------------------------------------------------
- * Locals
- */
-
 static __m128i mask_0080;
 static __m128i mask_00ff;
 static __m128i mask_0101;
@@ -69,9 +63,6 @@ static __m128i mask_blue;
 static __m128i mask_565_fix_rb;
 static __m128i mask_565_fix_g;
 
-/* ----------------------------------------------------------------------
- * SSE2 Inlines
- */
 static force_inline __m128i
 unpack_32_1x128 (uint32_t data)
 {
@@ -389,10 +380,6 @@ save_128_unaligned (__m128i* dst,
     _mm_storeu_si128 (dst, data);
 }
 
-/* ------------------------------------------------------------------
- * MMX inlines
- */
-
 static force_inline __m128i
 load_32_1x128 (uint32_t data)
 {
@@ -486,9 +473,6 @@ expand565_16_1x128 (uint16_t pixel)
     return _mm_unpacklo_epi8 (m, _mm_setzero_si128 ());
 }
 
-/* ----------------------------------------------------------------------------
- * Compose Core transformations
- */
 static force_inline uint32_t
 core_combine_over_u_pixel_sse2 (uint32_t src, uint32_t dst)
 {
@@ -2365,9 +2349,6 @@ sse2_combine_add_ca (pixman_implementation_t *imp,
     }
 }
 
-/* ---------------------------------------------------
- * fb_compose_setup_sSE2
- */
 static force_inline __m128i
 create_mask_16_128 (uint16_t mask)
 {
@@ -2386,10 +2367,6 @@ create_mask_2x32_128 (uint32_t mask0,
     return _mm_set_epi32 (mask0, mask1, mask0, mask1);
 }
 #endif
-
-/* -------------------------------------------------------------------
- * composite_over_n_8888
- */
 
 static void
 sse2_composite_over_n_8888 (pixman_implementation_t *imp,
@@ -2470,9 +2447,6 @@ sse2_composite_over_n_8888 (pixman_implementation_t *imp,
     }
 }
 
-/* ---------------------------------------------------------------------
- * composite_over_n_0565
- */
 static void
 sse2_composite_over_n_0565 (pixman_implementation_t *imp,
                             pixman_op_t              op,
@@ -2558,9 +2532,6 @@ sse2_composite_over_n_0565 (pixman_implementation_t *imp,
 
 }
 
-/* ------------------------------
- * composite_add_n_8888_8888_ca
- */
 static void
 sse2_composite_add_n_8888_8888_ca (pixman_implementation_t *imp,
 				   pixman_op_t              op,
@@ -2683,10 +2654,6 @@ sse2_composite_add_n_8888_8888_ca (pixman_implementation_t *imp,
     }
 
 }
-
-/* ---------------------------------------------------------------------------
- * composite_over_n_8888_8888_ca
- */
 
 static void
 sse2_composite_over_n_8888_8888_ca (pixman_implementation_t *imp,
@@ -2811,10 +2778,6 @@ sse2_composite_over_n_8888_8888_ca (pixman_implementation_t *imp,
 
 }
 
-/*---------------------------------------------------------------------
- * composite_over_8888_n_8888
- */
-
 static void
 sse2_composite_over_8888_n_8888 (pixman_implementation_t *imp,
                                  pixman_op_t              op,
@@ -2929,10 +2892,6 @@ sse2_composite_over_8888_n_8888 (pixman_implementation_t *imp,
 
 }
 
-/*---------------------------------------------------------------------
- * composite_over_8888_n_8888
- */
-
 static void
 sse2_composite_src_x888_8888 (pixman_implementation_t *imp,
 			      pixman_op_t              op,
@@ -3001,9 +2960,6 @@ sse2_composite_src_x888_8888 (pixman_implementation_t *imp,
 
 }
 
-/* ---------------------------------------------------------------------
- * composite_over_x888_n_8888
- */
 static void
 sse2_composite_over_x888_n_8888 (pixman_implementation_t *imp,
                                  pixman_op_t              op,
@@ -3105,9 +3061,6 @@ sse2_composite_over_x888_n_8888 (pixman_implementation_t *imp,
 
 }
 
-/* --------------------------------------------------------------------
- * composite_over_8888_8888
- */
 static void
 sse2_composite_over_8888_8888 (pixman_implementation_t *imp,
                                pixman_op_t              op,
@@ -3144,9 +3097,6 @@ sse2_composite_over_8888_8888 (pixman_implementation_t *imp,
     }
 }
 
-/* ------------------------------------------------------------------
- * composite_over_8888_0565
- */
 static force_inline uint16_t
 composite_over_8888_0565pixel (uint32_t src, uint16_t dst)
 {
@@ -3187,15 +3137,6 @@ sse2_composite_over_8888_0565 (pixman_implementation_t *imp,
 	dst_image, dest_x, dest_y, uint16_t, dst_stride, dst_line, 1);
     PIXMAN_IMAGE_GET_LINE (
 	src_image, src_x, src_y, uint32_t, src_stride, src_line, 1);
-
-#if 0
-    /* FIXME
-     *
-     * I copy the code from MMX one and keep the fixme.
-     * If it's a problem there, probably is a problem here.
-     */
-    assert (src_image->drawable == mask_image->drawable);
-#endif
 
     while (height--)
     {
@@ -3270,10 +3211,6 @@ sse2_composite_over_8888_0565 (pixman_implementation_t *imp,
     }
 
 }
-
-/* -----------------------------------------------------------------
- * composite_over_n_8_8888
- */
 
 static void
 sse2_composite_over_n_8_8888 (pixman_implementation_t *imp,
@@ -3405,10 +3342,6 @@ sse2_composite_over_n_8_8888 (pixman_implementation_t *imp,
     }
 
 }
-
-/* ----------------------------------------------------------------
- * composite_over_n_8_8888
- */
 
 pixman_bool_t
 pixman_fill_sse2 (uint32_t *bits,
@@ -3688,10 +3621,6 @@ sse2_composite_src_n_8_8888 (pixman_implementation_t *imp,
 
 }
 
-/*-----------------------------------------------------------------------
- * composite_over_n_8_0565
- */
-
 static void
 sse2_composite_over_n_8_0565 (pixman_implementation_t *imp,
                               pixman_op_t              op,
@@ -3839,10 +3768,6 @@ sse2_composite_over_n_8_0565 (pixman_implementation_t *imp,
 
 }
 
-/* -----------------------------------------------------------------------
- * composite_over_pixbuf_0565
- */
-
 static void
 sse2_composite_over_pixbuf_0565 (pixman_implementation_t *imp,
                                  pixman_op_t              op,
@@ -3872,15 +3797,6 @@ sse2_composite_over_pixbuf_0565 (pixman_implementation_t *imp,
 	dst_image, dest_x, dest_y, uint16_t, dst_stride, dst_line, 1);
     PIXMAN_IMAGE_GET_LINE (
 	src_image, src_x, src_y, uint32_t, src_stride, src_line, 1);
-
-#if 0
-    /* FIXME
-     *
-     * I copy the code from MMX one and keep the fixme.
-     * If it's a problem there, probably is a problem here.
-     */
-    assert (src_image->drawable == mask_image->drawable);
-#endif
 
     while (height--)
     {
@@ -3972,10 +3888,6 @@ sse2_composite_over_pixbuf_0565 (pixman_implementation_t *imp,
 
 }
 
-/* -------------------------------------------------------------------------
- * composite_over_pixbuf_8888
- */
-
 static void
 sse2_composite_over_pixbuf_8888 (pixman_implementation_t *imp,
                                  pixman_op_t              op,
@@ -4004,15 +3916,6 @@ sse2_composite_over_pixbuf_8888 (pixman_implementation_t *imp,
 	dst_image, dest_x, dest_y, uint32_t, dst_stride, dst_line, 1);
     PIXMAN_IMAGE_GET_LINE (
 	src_image, src_x, src_y, uint32_t, src_stride, src_line, 1);
-
-#if 0
-    /* FIXME
-     *
-     * I copy the code from MMX one and keep the fixme.
-     * If it's a problem there, probably is a problem here.
-     */
-    assert (src_image->drawable == mask_image->drawable);
-#endif
 
     while (height--)
     {
@@ -4083,10 +3986,6 @@ sse2_composite_over_pixbuf_8888 (pixman_implementation_t *imp,
     }
 
 }
-
-/* -------------------------------------------------------------------------------------------------
- * composite_over_n_8888_0565_ca
- */
 
 static void
 sse2_composite_over_n_8888_0565_ca (pixman_implementation_t *imp,
@@ -4232,10 +4131,6 @@ sse2_composite_over_n_8888_0565_ca (pixman_implementation_t *imp,
 
 }
 
-/* -----------------------------------------------------------------------
- * composite_in_n_8_8
- */
-
 static void
 sse2_composite_in_n_8_8 (pixman_implementation_t *imp,
                          pixman_op_t              op,
@@ -4335,10 +4230,6 @@ sse2_composite_in_n_8_8 (pixman_implementation_t *imp,
 
 }
 
-/* -----------------------------------------------------------------------
- * composite_in_n_8
- */
-
 static void
 sse2_composite_in_n_8 (pixman_implementation_t *imp,
 		       pixman_op_t              op,
@@ -4431,10 +4322,6 @@ sse2_composite_in_n_8 (pixman_implementation_t *imp,
 
 }
 
-/* ---------------------------------------------------------------------------
- * composite_in_8_8
- */
-
 static void
 sse2_composite_in_8_8 (pixman_implementation_t *imp,
                        pixman_op_t              op,
@@ -4515,10 +4402,6 @@ sse2_composite_in_8_8 (pixman_implementation_t *imp,
     }
 
 }
-
-/* -------------------------------------------------------------------------
- * composite_add_n_8_8
- */
 
 static void
 sse2_composite_add_n_8_8 (pixman_implementation_t *imp,
@@ -4619,10 +4502,6 @@ sse2_composite_add_n_8_8 (pixman_implementation_t *imp,
 
 }
 
-/* -------------------------------------------------------------------------
- * composite_add_n_8_8
- */
-
 static void
 sse2_composite_add_n_8 (pixman_implementation_t *imp,
 			pixman_op_t              op,
@@ -4706,10 +4585,6 @@ sse2_composite_add_n_8 (pixman_implementation_t *imp,
 
 }
 
-/* ----------------------------------------------------------------------
- * composite_add_8_8
- */
-
 static void
 sse2_composite_add_8_8 (pixman_implementation_t *imp,
 			pixman_op_t              op,
@@ -4772,9 +4647,6 @@ sse2_composite_add_8_8 (pixman_implementation_t *imp,
 
 }
 
-/* ---------------------------------------------------------------------
- * composite_add_8888_8888
- */
 static void
 sse2_composite_add_8888_8888 (pixman_implementation_t *imp,
                               pixman_op_t              op,
@@ -4810,10 +4682,6 @@ sse2_composite_add_8888_8888 (pixman_implementation_t *imp,
     }
 
 }
-
-/* -------------------------------------------------------------------------------------------------
- * sse2_composite_copy_area
- */
 
 static pixman_bool_t
 pixman_blt_sse2 (uint32_t *src_bits,
@@ -6066,10 +5934,7 @@ _pixman_implementation_create_sse2 (pixman_implementation_t *fallback)
     mask_ff000000 = create_mask_2x32_128 (0xff000000, 0xff000000);
     mask_alpha = create_mask_2x32_128 (0x00ff0000, 0x00000000);
 
-
     /* Set up function pointers */
-
-    /* SSE code patch for fbcompose.c */
     imp->combine_32[PIXMAN_OP_OVER] = sse2_combine_over_u;
     imp->combine_32[PIXMAN_OP_OVER_REVERSE] = sse2_combine_over_reverse_u;
     imp->combine_32[PIXMAN_OP_IN] = sse2_combine_in_u;
@@ -6102,5 +5967,3 @@ _pixman_implementation_create_sse2 (pixman_implementation_t *fallback)
 
     return imp;
 }
-
-#endif /* USE_SSE2 */
