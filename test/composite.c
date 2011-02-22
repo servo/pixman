@@ -617,18 +617,18 @@ eval_diff (color_t *expected, color_t *test, pixman_format_code_t format)
 }
 
 static char *
-describe_image (image_t *info, char *buf, int buflen)
+describe_image (image_t *info, char *buf)
 {
     if (info->size)
     {
-	snprintf (buf, buflen, "%s %dx%d%s",
-		  info->format->name,
-		  info->size, info->size,
-		  info->repeat ? "R" :"");
+	sprintf (buf, "%s %dx%d%s",
+		 info->format->name,
+		 info->size, info->size,
+		 info->repeat ? "R" :"");
     }
     else
     {
-	snprintf (buf, buflen, "solid");
+	sprintf (buf, "solid");
     }
 
     return buf;
@@ -710,10 +710,9 @@ composite_test (image_t *dst,
     {
 	char buf[40];
 
-	snprintf (buf, sizeof (buf),
-		  "%s %scomposite",
-		  op->name,
-		  component_alpha ? "CA " : "");
+	sprintf (buf, "%s %scomposite",
+		 op->name,
+		 component_alpha ? "CA " : "");
 
 	printf ("%s test error of %.4f --\n"
 		"           R    G    B    A\n"
@@ -735,9 +734,9 @@ composite_test (image_t *dst,
 		    mask->color->b, mask->color->a,
 		    dst->color->r, dst->color->g,
 		    dst->color->b, dst->color->a);
-	    printf ("src: %s, ", describe_image (src, buf, sizeof (buf)));
-	    printf ("mask: %s, ", describe_image (mask, buf, sizeof (buf)));
-	    printf ("dst: %s\n\n", describe_image (dst, buf, sizeof (buf)));
+	    printf ("src: %s, ", describe_image (src, buf));
+	    printf ("mask: %s, ", describe_image (mask, buf));
+	    printf ("dst: %s\n\n", describe_image (dst, buf));
 	}
 	else
 	{
@@ -747,8 +746,8 @@ composite_test (image_t *dst,
 		    src->color->b, src->color->a,
 		    dst->color->r, dst->color->g,
 		    dst->color->b, dst->color->a);
-	    printf ("src: %s, ", describe_image (src, buf, sizeof (buf)));
-	    printf ("dst: %s\n\n", describe_image (dst, buf, sizeof (buf)));
+	    printf ("src: %s, ", describe_image (src, buf));
+	    printf ("dst: %s\n\n", describe_image (dst, buf));
 	}
 
 	success = FALSE;
