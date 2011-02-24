@@ -110,6 +110,7 @@ reader (const void *src, int size)
 	return *(uint32_t *)src;
     default:
 	assert(0);
+	return 0; /* silence MSVC */
     }
 }
 

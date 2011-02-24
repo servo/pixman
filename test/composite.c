@@ -426,6 +426,7 @@ calc_op (pixman_op_t op, double src, double dst, double srca, double dsta)
     case PIXMAN_OP_HSL_LUMINOSITY:
     default:
 	abort();
+	return 0; /* silence MSVC */
     }
 #undef mult_chan
 }
