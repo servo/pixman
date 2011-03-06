@@ -433,3 +433,6 @@ pixman_asm_function fname
 
 generate_nearest_scanline_func \
     pixman_scaled_nearest_scanline_0565_0565_SRC_asm_armv6, 1, h, 80, 32
+
+generate_nearest_scanline_func \
+    pixman_scaled_nearest_scanline_8888_8888_SRC_asm_armv6, 2,  , 48, 32
