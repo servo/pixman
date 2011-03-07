@@ -218,7 +218,7 @@ test_composite (int      testnum,
 	    dst_bits[i] &= 0xFFFFFF;
     }
 
-    image_endian_swap (dst_img, dst_bpp * 8);
+    image_endian_swap (dst_img);
 
     if (verbose)
     {
