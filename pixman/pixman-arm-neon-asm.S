@@ -2631,3 +2631,6 @@ generate_bilinear_scanline_func \
 
 generate_bilinear_scanline_func \
     pixman_scaled_bilinear_scanline_0565_x888_SRC_asm_neon, 0565, 8888, 1, 28
+
+generate_bilinear_scanline_func \
+    pixman_scaled_bilinear_scanline_0565_0565_SRC_asm_neon, 0565, 0565, 1, 28

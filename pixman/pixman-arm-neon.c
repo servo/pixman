@@ -133,6 +133,8 @@ PIXMAN_ARM_BIND_SCALED_BILINEAR_SRC_DST (0, neon, 8888_0565, SRC,
                                          uint32_t, uint16_t)
 PIXMAN_ARM_BIND_SCALED_BILINEAR_SRC_DST (0, neon, 0565_x888, SRC,
                                          uint16_t, uint32_t)
+PIXMAN_ARM_BIND_SCALED_BILINEAR_SRC_DST (0, neon, 0565_0565, SRC,
+                                         uint16_t, uint16_t)
 
 void
 pixman_composite_src_n_8_asm_neon (int32_t   w,
@@ -358,6 +360,7 @@ static const pixman_fast_path_t arm_neon_fast_paths[] =
     SIMPLE_BILINEAR_FAST_PATH (SRC, x8r8g8b8, r5g6b5, neon_8888_0565),
 
     SIMPLE_BILINEAR_FAST_PATH (SRC, r5g6b5, x8r8g8b8, neon_0565_x888),
+    SIMPLE_BILINEAR_FAST_PATH (SRC, r5g6b5, r5g6b5, neon_0565_0565),
 
     { PIXMAN_OP_NONE },
 };
