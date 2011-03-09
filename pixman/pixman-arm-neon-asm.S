@@ -2588,3 +2588,225 @@ pixman_asm_function pixman_scaled_bilinear_scanline_8888_8888_SRC_asm_neon
     .unreq    TMP1
     .unreq    TMP2
 .endfunc
+
+.purgem bilinear_interpolate_last_pixel
+.purgem bilinear_interpolate_two_pixels
+.purgem bilinear_interpolate_four_pixels
+
+/*
+ * Bilinear scaling support code which tries to provide pixel fetching, color
+ * format conversion, and interpolation as separate macros which can be used
+ * as the basic building blocks for constructing bilinear scanline functions.
+ */
+
+.macro bilinear_load_8888 reg1, reg2, tmp
+    mov       TMP2, X, asr #16
+    add       X, X, UX
+    add       TMP1, TOP, TMP2, asl #2
+    add       TMP2, BOTTOM, TMP2, asl #2
+    vld1.32   {reg1}, [TMP1]
+    vld1.32   {reg2}, [TMP2]
+.endm
+
+.macro bilinear_load_0565 reg1, reg2, tmp
+    mov       TMP2, X, asr #16
+    add       X, X, UX
+    add       TMP1, TOP, TMP2, asl #1
+    add       TMP2, BOTTOM, TMP2, asl #1
+    vld1.32   {reg2[0]}, [TMP1]
+    vld1.32   {reg2[1]}, [TMP2]
+    convert_four_0565_to_x888_packed reg2, reg1, reg2, tmp
+.endm
+
+.macro bilinear_store_8888 numpix, tmp1, tmp2
+.if numpix == 4
+    vst1.32   {d0, d1}, [OUT]!
+.elseif numpix == 2
+    vst1.32   {d0}, [OUT]!
+.elseif numpix == 1
+    vst1.32   {d0[0]}, [OUT, :32]!
+.else
+    .error bilinear_store_8888 numpix is unsupported
+.endif
+.endm
+
+.macro bilinear_store_0565 numpix, tmp1, tmp2
+    vuzp.u8 d0, d1
+    vuzp.u8 d2, d3
+    vuzp.u8 d1, d3
+    vuzp.u8 d0, d2
+    convert_8888_to_0565 d2, d1, d0, q1, tmp1, tmp2
+.if numpix == 4
+    vst1.16   {d2}, [OUT]!
+.elseif numpix == 2
+    vst1.32   {d2[0]}, [OUT]!
+.elseif numpix == 1
+    vst1.16   {d2[0]}, [OUT]!
+.else
+    .error bilinear_store_0565 numpix is unsupported
+.endif
+.endm
+
+.macro bilinear_interpolate_last_pixel src_fmt, dst_fmt
+    bilinear_load_&src_fmt d0, d1, d2
+    vmull.u8  q1, d0, d28
+    vmlal.u8  q1, d1, d29
+    vshr.u16  d30, d24, #8
+    /* 4 cycles bubble */
+    vshll.u16 q0, d2, #8
+    vmlsl.u16 q0, d2, d30
+    vmlal.u16 q0, d3, d30
+    /* 5 cycles bubble */
+    vshrn.u32 d0, q0, #16
+    /* 3 cycles bubble */
+    vmovn.u16 d0, q0
+    /* 1 cycle bubble */
+    bilinear_store_&dst_fmt 1, q2, q3
+.endm
+
+.macro bilinear_interpolate_two_pixels src_fmt, dst_fmt
+    bilinear_load_&src_fmt d0, d1, d2
+    vmull.u8  q1, d0, d28
+    vmlal.u8  q1, d1, d29
+    bilinear_load_&src_fmt d20, d21, d22
+    vmull.u8  q11, d20, d28
+    vmlal.u8  q11, d21, d29
+    vshr.u16  q15, q12, #8
+    vadd.u16  q12, q12, q13
+    vshll.u16 q0, d2, #8
+    vmlsl.u16 q0, d2, d30
+    vmlal.u16 q0, d3, d30
+    vshll.u16 q10, d22, #8
+    vmlsl.u16 q10, d22, d31
+    vmlal.u16 q10, d23, d31
+    vshrn.u32 d30, q0, #16
+    vshrn.u32 d31, q10, #16
+    vmovn.u16 d0, q15
+    bilinear_store_&dst_fmt 2, q2, q3
+.endm
+
+.macro bilinear_interpolate_four_pixels src_fmt, dst_fmt
+    bilinear_load_&src_fmt d0, d1, d2
+    vmull.u8  q1, d0, d28
+    vmlal.u8  q1, d1, d29
+    bilinear_load_&src_fmt d20, d21, d22
+    vmull.u8  q11, d20, d28
+    vmlal.u8  q11, d21, d29
+    bilinear_load_&src_fmt d4, d5, d6
+    vmull.u8  q3, d4, d28
+    vmlal.u8  q3, d5, d29
+    bilinear_load_&src_fmt d16, d17, d18
+    vmull.u8  q9, d16, d28
+    vmlal.u8  q9, d17, d29
+    pld       [TMP1, PF_OFFS]
+    vshr.u16  q15, q12, #8
+    vadd.u16  q12, q12, q13
+    vshll.u16 q0, d2, #8
+    vmlsl.u16 q0, d2, d30
+    vmlal.u16 q0, d3, d30
+    vshll.u16 q10, d22, #8
+    vmlsl.u16 q10, d22, d31
+    vmlal.u16 q10, d23, d31
+    vshr.u16  q15, q12, #8
+    vshll.u16 q2, d6, #8
+    vmlsl.u16 q2, d6, d30
+    vmlal.u16 q2, d7, d30
+    vshll.u16 q8, d18, #8
+    pld       [TMP2, PF_OFFS]
+    vmlsl.u16 q8, d18, d31
+    vmlal.u16 q8, d19, d31
+    vadd.u16  q12, q12, q13
+    vshrn.u32 d0, q0, #16
+    vshrn.u32 d1, q10, #16
+    vshrn.u32 d4, q2, #16
+    vshrn.u32 d5, q8, #16
+    vmovn.u16 d0, q0
+    vmovn.u16 d1, q2
+    bilinear_store_&dst_fmt 4, q2, q3
+.endm
+
+/*
+ * Main template macro for generating NEON optimized bilinear scanline
+ * functions.
+ *
+ * TODO: use software pipelining and aligned writes to the destination buffer
+ *       in order to improve performance
+ *
+ * Bilinear scanline scaler macro template uses the following arguments:
+ *  fname             - name of the function to generate
+ *  src_fmt           - source color format (8888 or 0565)
+ *  dst_fmt           - destination color format (8888 or 0565)
+ *  bpp_shift         - (1 << bpp_shift) is the size of source pixel in bytes
+ *  prefetch_distance - prefetch in the source image by that many
+ *                      pixels ahead
+ */
+
+.macro generate_bilinear_scanline_func fname, src_fmt, dst_fmt, \
+                                       bpp_shift, prefetch_distance
+
+pixman_asm_function fname
+    OUT       .req      r0
+    TOP       .req      r1
+    BOTTOM    .req      r2
+    WT        .req      r3
+    WB        .req      r4
+    X         .req      r5
+    UX        .req      r6
+    WIDTH     .req      ip
+    TMP1      .req      r3
+    TMP2      .req      r4
+    PF_OFFS   .req      r7
+    TMP3      .req      r8
+    TMP4      .req      r9
+
+    mov       ip, sp
+    push      {r4, r5, r6, r7, r8, r9}
+    mov       PF_OFFS, #prefetch_distance
+    ldmia     ip, {WB, X, UX, WIDTH}
+    mul       PF_OFFS, PF_OFFS, UX
+
+    cmp       WIDTH, #0
+    ble       3f
+
+    vdup.u16  q12, X
+    vdup.u16  q13, UX
+    vdup.u8   d28, WT
+    vdup.u8   d29, WB
+    vadd.u16  d25, d25, d26
+    vadd.u16  q13, q13, q13
+
+    subs      WIDTH, WIDTH, #4
+    blt       1f
+    mov       PF_OFFS, PF_OFFS, asr #(16 - bpp_shift)
+0:
+    bilinear_interpolate_four_pixels src_fmt, dst_fmt
+    subs      WIDTH, WIDTH, #4
+    bge       0b
+1:
+    tst       WIDTH, #2
+    beq       2f
+    bilinear_interpolate_two_pixels src_fmt, dst_fmt
+2:
+    tst       WIDTH, #1
+    beq       3f
+    bilinear_interpolate_last_pixel src_fmt, dst_fmt
+3:
+    pop       {r4, r5, r6, r7, r8, r9}
+    bx        lr
+
+    .unreq    OUT
+    .unreq    TOP
+    .unreq    BOTTOM
+    .unreq    WT
+    .unreq    WB
+    .unreq    X
+    .unreq    UX
+    .unreq    WIDTH
+    .unreq    TMP1
+    .unreq    TMP2
+    .unreq    PF_OFFS
+    .unreq    TMP3
+    .unreq    TMP4
+.endfunc
+
+.endm
