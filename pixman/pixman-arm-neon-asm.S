@@ -2557,8 +2557,7 @@ fname:
     bilinear_load_&src_fmt d0, d1, d2
     vmull.u8  q1, d0, d28
     vmlal.u8  q1, d1, d29
-    vshr.u16  d30, d24, #8
-    /* 4 cycles bubble */
+    /* 5 cycles bubble */
     vshll.u16 q0, d2, #8
     vmlsl.u16 q0, d2, d30
     vmlal.u16 q0, d3, d30
@@ -2573,17 +2572,17 @@ fname:
 .macro bilinear_interpolate_two_pixels src_fmt, dst_fmt
     bilinear_load_and_vertical_interpolate_two_&src_fmt \
                 q1, q11, d0, d1, d20, d21, d22, d23
-    vshr.u16  q15, q12, #8
-    vadd.u16  q12, q12, q13
     vshll.u16 q0, d2, #8
     vmlsl.u16 q0, d2, d30
     vmlal.u16 q0, d3, d30
     vshll.u16 q10, d22, #8
     vmlsl.u16 q10, d22, d31
     vmlal.u16 q10, d23, d31
-    vshrn.u32 d30, q0, #16
-    vshrn.u32 d31, q10, #16
-    vmovn.u16 d0, q15
+    vshrn.u32 d0, q0, #16
+    vshrn.u32 d1, q10, #16
+    vshr.u16  q15, q12, #8
+    vadd.u16  q12, q12, q13
+    vmovn.u16 d0, q0
     bilinear_store_&dst_fmt 2, q2, q3
 .endm
 
@@ -2592,8 +2591,6 @@ fname:
                 q1, q11, d0, d1, d20, d21, d22, d23 \
                 q3, q9,  d4, d5, d16, d17, d18, d19
     pld       [TMP1, PF_OFFS]
-    vshr.u16  q15, q12, #8
-    vadd.u16  q12, q12, q13
     vshll.u16 q0, d2, #8
     vmlsl.u16 q0, d2, d30
     vmlal.u16 q0, d3, d30
@@ -2613,8 +2610,10 @@ fname:
     vshrn.u32 d1, q10, #16
     vshrn.u32 d4, q2, #16
     vshrn.u32 d5, q8, #16
+    vshr.u16  q15, q12, #8
     vmovn.u16 d0, q0
     vmovn.u16 d1, q2
+    vadd.u16  q12, q12, q13
     bilinear_store_&dst_fmt 4, q2, q3
 .endm
 
@@ -2667,6 +2666,9 @@ pixman_asm_function fname
     vdup.u8   d29, WB
     vadd.u16  d25, d25, d26
     vadd.u16  q13, q13, q13
+
+    vshr.u16  q15, q12, #8
+    vadd.u16  q12, q12, q13
 
     subs      WIDTH, WIDTH, #4
     blt       1f
