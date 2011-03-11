@@ -81,6 +81,97 @@ repeat (pixman_repeat_t repeat, int *c, int size)
     return TRUE;
 }
 
+#if SIZEOF_LONG > 4
+
+static force_inline uint32_t
+bilinear_interpolation (uint32_t tl, uint32_t tr,
+			uint32_t bl, uint32_t br,
+			int distx, int disty)
+{
+    uint64_t distxy, distxiy, distixy, distixiy;
+    uint64_t tl64, tr64, bl64, br64;
+    uint64_t f, r;
+
+    distxy = distx * disty;
+    distxiy = distx * (256 - disty);
+    distixy = (256 - distx) * disty;
+    distixiy = (256 - distx) * (256 - disty);
+
+    /* Alpha and Blue */
+    tl64 = tl & 0xff0000ff;
+    tr64 = tr & 0xff0000ff;
+    bl64 = bl & 0xff0000ff;
+    br64 = br & 0xff0000ff;
+
+    f = tl64 * distixiy + tr64 * distxiy + bl64 * distixy + br64 * distxy;
+    r = f & 0x0000ff0000ff0000ull;
+
+    /* Red and Green */
+    tl64 = tl;
+    tl64 = ((tl64 << 16) & 0x000000ff00000000ull) | (tl64 & 0x0000ff00ull);
+
+    tr64 = tr;
+    tr64 = ((tr64 << 16) & 0x000000ff00000000ull) | (tr64 & 0x0000ff00ull);
+
+    bl64 = bl;
+    bl64 = ((bl64 << 16) & 0x000000ff00000000ull) | (bl64 & 0x0000ff00ull);
+
+    br64 = br;
+    br64 = ((br64 << 16) & 0x000000ff00000000ull) | (br64 & 0x0000ff00ull);
+
+    f = tl64 * distixiy + tr64 * distxiy + bl64 * distixy + br64 * distxy;
+    r |= ((f >> 16) & 0x000000ff00000000ull) | (f & 0xff000000ull);
+
+    return (uint32_t)(r >> 16);
+}
+
+#else
+
+static force_inline uint32_t
+bilinear_interpolation (uint32_t tl, uint32_t tr,
+			uint32_t bl, uint32_t br,
+			int distx, int disty)
+{
+    int distxy, distxiy, distixy, distixiy;
+    uint32_t f, r;
+
+    distxy = distx * disty;
+    distxiy = (distx << 8) - distxy;	/* distx * (256 - disty) */
+    distixy = (disty << 8) - distxy;	/* disty * (256 - distx) */
+    distixiy =
+	256 * 256 - (disty << 8) -
+	(distx << 8) + distxy;		/* (256 - distx) * (256 - disty) */
+
+    /* Blue */
+    r = (tl & 0x000000ff) * distixiy + (tr & 0x000000ff) * distxiy
+      + (bl & 0x000000ff) * distixy  + (br & 0x000000ff) * distxy;
+
+    /* Green */
+    f = (tl & 0x0000ff00) * distixiy + (tr & 0x0000ff00) * distxiy
+      + (bl & 0x0000ff00) * distixy  + (br & 0x0000ff00) * distxy;
+    r |= f & 0xff000000;
+
+    tl >>= 16;
+    tr >>= 16;
+    bl >>= 16;
+    br >>= 16;
+    r >>= 16;
+
+    /* Red */
+    f = (tl & 0x000000ff) * distixiy + (tr & 0x000000ff) * distxiy
+      + (bl & 0x000000ff) * distixy  + (br & 0x000000ff) * distxy;
+    r |= f & 0x00ff0000;
+
+    /* Alpha */
+    f = (tl & 0x0000ff00) * distixiy + (tr & 0x0000ff00) * distxiy
+      + (bl & 0x0000ff00) * distixy  + (br & 0x0000ff00) * distxy;
+    r |= f & 0xff000000;
+
+    return r;
+}
+
+#endif
+
 /*
  * For each scanline fetched from source image with PAD repeat:
  * - calculate how many pixels need to be padded on the left side
