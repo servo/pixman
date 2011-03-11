@@ -34,6 +34,7 @@
 #include <string.h>
 #include "pixman-private.h"
 #include "pixman-combine32.h"
+#include "pixman-inlines.h"
 
 /*
  * By default, just evaluate the image at 32bpp and expand.  Individual image
@@ -90,34 +91,6 @@ fetch_pixel_no_alpha (bits_image_t *image,
 typedef uint32_t (* get_pixel_t) (bits_image_t *image,
 				  int x, int y, pixman_bool_t check_bounds);
 
-static force_inline void
-repeat (pixman_repeat_t repeat, int size, int *coord)
-{
-    switch (repeat)
-    {
-    case PIXMAN_REPEAT_NORMAL:
-	*coord = MOD (*coord, size);
-	break;
-
-    case PIXMAN_REPEAT_PAD:
-	*coord = CLIP (*coord, 0, size - 1);
-	break;
-
-    case PIXMAN_REPEAT_REFLECT:
-	*coord = MOD (*coord, size * 2);
-
-	if (*coord >= size)
-	    *coord = size * 2 - *coord - 1;
-	break;
-
-    case PIXMAN_REPEAT_NONE:
-	break;
-
-    default:
-        break;
-    }
-}
-
 static force_inline uint32_t
 bits_image_fetch_pixel_nearest (bits_image_t   *image,
 				pixman_fixed_t  x,
@@ -129,8 +102,8 @@ bits_image_fetch_pixel_nearest (bits_image_t   *image,
 
     if (image->common.repeat != PIXMAN_REPEAT_NONE)
     {
-	repeat (image->common.repeat, image->width, &x0);
-	repeat (image->common.repeat, image->height, &y0);
+	repeat (image->common.repeat, &x0, image->width);
+	repeat (image->common.repeat, &y0, image->height);
 
 	return get_pixel (image, x0, y0, FALSE);
     }
@@ -257,10 +230,10 @@ bits_image_fetch_pixel_bilinear (bits_image_t   *image,
 
     if (repeat_mode != PIXMAN_REPEAT_NONE)
     {
-	repeat (repeat_mode, width, &x1);
-	repeat (repeat_mode, height, &y1);
-	repeat (repeat_mode, width, &x2);
-	repeat (repeat_mode, height, &y2);
+	repeat (repeat_mode, &x1, width);
+	repeat (repeat_mode, &y1, height);
+	repeat (repeat_mode, &x2, width);
+	repeat (repeat_mode, &y2, height);
 
 	tl = get_pixel (image, x1, y1, FALSE);
 	bl = get_pixel (image, x1, y2, FALSE);
@@ -529,8 +502,8 @@ bits_image_fetch_pixel_convolution (bits_image_t   *image,
 
 		if (repeat_mode != PIXMAN_REPEAT_NONE)
 		{
-		    repeat (repeat_mode, width, &rx);
-		    repeat (repeat_mode, height, &ry);
+		    repeat (repeat_mode, &rx, width);
+		    repeat (repeat_mode, &ry, height);
 
 		    pixel = get_pixel (image, rx, ry, FALSE);
 		}
@@ -812,10 +785,10 @@ bits_image_fetch_bilinear_affine (pixman_image_t * image,
 
 	    mask = PIXMAN_FORMAT_A (format)? 0 : 0xff000000;
 
-	    repeat (repeat_mode, width, &x1);
-	    repeat (repeat_mode, height, &y1);
-	    repeat (repeat_mode, width, &x2);
-	    repeat (repeat_mode, height, &y2);
+	    repeat (repeat_mode, &x1, width);
+	    repeat (repeat_mode, &y1, height);
+	    repeat (repeat_mode, &x2, width);
+	    repeat (repeat_mode, &y2, height);
 
 	    row1 = (uint8_t *)bits->bits + bits->rowstride * 4 * y1;
 	    row2 = (uint8_t *)bits->bits + bits->rowstride * 4 * y2;
@@ -960,8 +933,8 @@ bits_image_fetch_nearest_affine (pixman_image_t * image,
 
 	    if (repeat_mode != PIXMAN_REPEAT_NONE)
 	    {
-		repeat (repeat_mode, width, &x0);
-		repeat (repeat_mode, height, &y0);
+		repeat (repeat_mode, &x0, width);
+		repeat (repeat_mode, &y0, height);
 	    }
 
 	    row = (uint8_t *)bits->bits + bits->rowstride * 4 * y0;
