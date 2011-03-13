@@ -233,39 +233,22 @@ void
 _pixman_bits_image_setup_accessors (bits_image_t *image);
 
 void
-_pixman_bits_image_src_iter_init (pixman_image_t *image,
-				  pixman_iter_t *iter,
-				  int x, int y, int width, int height,
-				  uint8_t *buffer, iter_flags_t flags);
-void
-_pixman_bits_image_dest_iter_init (pixman_image_t *image,
-				   pixman_iter_t *iter,
-				   int x, int y, int width, int height,
-				   uint8_t *buffer, iter_flags_t flags);
+_pixman_bits_image_src_iter_init (pixman_image_t *image, pixman_iter_t *iter);
 
 void
-_pixman_solid_fill_iter_init (pixman_image_t *image,
-			      pixman_iter_t  *iter,
-			      int x, int y, int width, int height,
-			      uint8_t *buffer, iter_flags_t flags);
+_pixman_bits_image_dest_iter_init (pixman_image_t *image, pixman_iter_t *iter);
 
 void
-_pixman_linear_gradient_iter_init (pixman_image_t *image,
-				   pixman_iter_t  *iter,
-				   int x, int y, int width, int height,
-				   uint8_t *buffer, iter_flags_t flags);
+_pixman_solid_fill_iter_init (pixman_image_t *image, pixman_iter_t  *iter);
 
 void
-_pixman_radial_gradient_iter_init (pixman_image_t *image,
-				   pixman_iter_t *iter,
-				   int x, int y, int width, int height,
-				   uint8_t *buffer, iter_flags_t flags);
+_pixman_linear_gradient_iter_init (pixman_image_t *image, pixman_iter_t  *iter);
 
 void
-_pixman_conical_gradient_iter_init (pixman_image_t *image,
-				    pixman_iter_t *iter,
-				    int x, int y, int width, int height,
-				    uint8_t *buffer, iter_flags_t flags);
+_pixman_radial_gradient_iter_init (pixman_image_t *image, pixman_iter_t *iter);
+
+void
+_pixman_conical_gradient_iter_init (pixman_image_t *image, pixman_iter_t *iter);
 
 pixman_image_t *
 _pixman_image_allocate (void);
@@ -413,14 +396,7 @@ typedef pixman_bool_t (*pixman_fill_func_t) (pixman_implementation_t *imp,
 					     int                      height,
 					     uint32_t                 xor);
 typedef void (*pixman_iter_init_func_t) (pixman_implementation_t *imp,
-                                         pixman_iter_t           *iter,
-                                         pixman_image_t          *image,
-                                         int                      x,
-                                         int                      y,
-                                         int                      width,
-                                         int                      height,
-                                         uint8_t                 *buffer,
-                                         iter_flags_t             flags);
+                                         pixman_iter_t           *iter);
 
 void _pixman_setup_combiner_functions_32 (pixman_implementation_t *imp);
 void _pixman_setup_combiner_functions_64 (pixman_implementation_t *imp);

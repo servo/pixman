@@ -113,32 +113,16 @@ delegate_fill (pixman_implementation_t *imp,
 
 static void
 delegate_src_iter_init (pixman_implementation_t *imp,
-			pixman_iter_t *	         iter,
-			pixman_image_t *         image,
-			int                      x,
-			int                      y,
-			int                      width,
-			int                      height,
-			uint8_t *		 buffer,
-			iter_flags_t             flags)
+			pixman_iter_t *	         iter)
 {
-    imp->delegate->src_iter_init (
-	imp->delegate, iter, image, x, y, width, height, buffer, flags);
+    imp->delegate->src_iter_init (imp->delegate, iter);
 }
 
 static void
 delegate_dest_iter_init (pixman_implementation_t *imp,
-			 pixman_iter_t *	  iter,
-			 pixman_image_t *         image,
-			 int                      x,
-			 int                      y,
-			 int                      width,
-			 int                      height,
-			 uint8_t *		  buffer,
-			 iter_flags_t             flags)
+			 pixman_iter_t *	  iter)
 {
-    imp->delegate->dest_iter_init (
-	imp->delegate, iter, image, x, y, width, height, buffer, flags);
+    imp->delegate->dest_iter_init (imp->delegate, iter);
 }
 
 pixman_implementation_t *
@@ -293,8 +277,7 @@ _pixman_implementation_src_iter_init (pixman_implementation_t	*imp,
     }
     else
     {
-	(*imp->src_iter_init) (
-	    imp, iter, image, x, y, width, height, buffer, flags);
+	(*imp->src_iter_init) (imp, iter);
     }
 }
 
@@ -317,6 +300,5 @@ _pixman_implementation_dest_iter_init (pixman_implementation_t	*imp,
     iter->height = height;
     iter->flags = flags;
 
-    (*imp->dest_iter_init) (
-	imp, iter, image, x, y, width, height, buffer, flags);
+    (*imp->dest_iter_init) (imp, iter);
 }
