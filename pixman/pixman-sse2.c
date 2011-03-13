@@ -6004,8 +6004,6 @@ sse2_src_iter_init (pixman_implementation_t *imp,
 
 		iter->bits = b + s * y + x * PIXMAN_FORMAT_BPP (f->format) / 8;
 		iter->stride = s;
-		iter->width = width;
-		iter->buffer = (uint32_t *)buffer;
 
 		iter->get_scanline = f->get_scanline;
 		return;

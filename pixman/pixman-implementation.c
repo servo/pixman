@@ -274,6 +274,14 @@ _pixman_implementation_src_iter_init (pixman_implementation_t	*imp,
 				      uint8_t			*buffer,
 				      iter_flags_t		 flags)
 {
+    iter->image = image;
+    iter->buffer = (uint32_t *)buffer;
+    iter->x = x;
+    iter->y = y;
+    iter->width = width;
+    iter->height = height;
+    iter->flags = flags;
+
     if (!image)
     {
 	iter->get_scanline = get_scanline_null;
@@ -301,6 +309,14 @@ _pixman_implementation_dest_iter_init (pixman_implementation_t	*imp,
 				       uint8_t			*buffer,
 				       iter_flags_t		 flags)
 {
+    iter->image = image;
+    iter->buffer = (uint32_t *)buffer;
+    iter->x = x;
+    iter->y = y;
+    iter->width = width;
+    iter->height = height;
+    iter->flags = flags;
+
     (*imp->dest_iter_init) (
 	imp, iter, image, x, y, width, height, buffer, flags);
 }

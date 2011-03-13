@@ -44,12 +44,6 @@ general_src_iter_init (pixman_implementation_t *imp,
 		       int x, int y, int width, int height,
 		       uint8_t *buffer, iter_flags_t flags)
 {
-    iter->image = image;
-    iter->x = x;
-    iter->y = y;
-    iter->width = width;
-    iter->buffer = (uint32_t *)buffer;
-
     if (image->type == SOLID)
     {
 	_pixman_solid_fill_iter_init (

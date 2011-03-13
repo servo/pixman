@@ -212,14 +212,19 @@ typedef enum
 
 struct pixman_iter_t
 {
-    pixman_iter_get_scanline_t	get_scanline;
-    pixman_iter_write_back_t	write_back;
-
+    /* These are initialized by _pixman_implementation_{src,dest}_init */
     pixman_image_t *		image;
     uint32_t *			buffer;
     int				x, y;
     int				width;
+    int				height;
+    iter_flags_t		flags;
 
+    /* These function pointers are initialized by the implementation */
+    pixman_iter_get_scanline_t	get_scanline;
+    pixman_iter_write_back_t	write_back;
+
+    /* These fields are scratch data that implementations can use */
     uint8_t *			bits;
     int				stride;
 };
