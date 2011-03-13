@@ -122,7 +122,7 @@ delegate_src_iter_init (pixman_implementation_t *imp,
 			uint8_t *		 buffer,
 			iter_flags_t             flags)
 {
-    _pixman_implementation_src_iter_init (
+    imp->delegate->src_iter_init (
 	imp->delegate, iter, image, x, y, width, height, buffer, flags);
 }
 
@@ -137,7 +137,7 @@ delegate_dest_iter_init (pixman_implementation_t *imp,
 			 uint8_t *		  buffer,
 			 iter_flags_t             flags)
 {
-    _pixman_implementation_dest_iter_init (
+    imp->delegate->dest_iter_init (
 	imp->delegate, iter, image, x, y, width, height, buffer, flags);
 }
 

@@ -6013,7 +6013,7 @@ sse2_src_iter_init (pixman_implementation_t *imp,
 	}
     }
 
-    _pixman_implementation_src_iter_init (
+    imp->delegate->src_iter_init (
 	imp->delegate, iter, image, x, y, width, height, buffer, flags);
 }
 
