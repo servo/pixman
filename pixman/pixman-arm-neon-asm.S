@@ -2617,11 +2617,31 @@ fname:
     bilinear_store_&dst_fmt 4, q2, q3
 .endm
 
+.macro bilinear_interpolate_four_pixels_head src_fmt, dst_fmt
+.ifdef have_bilinear_interpolate_four_pixels_&src_fmt&_&dst_fmt
+    bilinear_interpolate_four_pixels_&src_fmt&_&dst_fmt&_head
+.else
+    bilinear_interpolate_four_pixels src_fmt, dst_fmt
+.endif
+.endm
+
+.macro bilinear_interpolate_four_pixels_tail src_fmt, dst_fmt
+.ifdef have_bilinear_interpolate_four_pixels_&src_fmt&_&dst_fmt
+    bilinear_interpolate_four_pixels_&src_fmt&_&dst_fmt&_tail
+.endif
+.endm
+
+.macro bilinear_interpolate_four_pixels_tail_head src_fmt, dst_fmt
+.ifdef have_bilinear_interpolate_four_pixels_&src_fmt&_&dst_fmt
+    bilinear_interpolate_four_pixels_&src_fmt&_&dst_fmt&_tail_head
+.else
+    bilinear_interpolate_four_pixels src_fmt, dst_fmt
+.endif
+.endm
+
 /*
  * Main template macro for generating NEON optimized bilinear scanline
  * functions.
- *
- * TODO: use software pipelining in order to improve performance
  *
  * Bilinear scanline scaler macro template uses the following arguments:
  *  fname             - name of the function to generate
@@ -2692,10 +2712,15 @@ pixman_asm_function fname
     subs      WIDTH, WIDTH, #4
     blt       1f
     mov       PF_OFFS, PF_OFFS, asr #(16 - src_bpp_shift)
+    bilinear_interpolate_four_pixels_head src_fmt, dst_fmt
+    subs      WIDTH, WIDTH, #4
+    blt       5f
 0:
-    bilinear_interpolate_four_pixels src_fmt, dst_fmt
+    bilinear_interpolate_four_pixels_tail_head src_fmt, dst_fmt
     subs      WIDTH, WIDTH, #4
     bge       0b
+5:
+    bilinear_interpolate_four_pixels_tail src_fmt, dst_fmt
 1:
 
     /* handle the remaining trailing pixels */
