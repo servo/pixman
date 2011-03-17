@@ -2632,6 +2632,36 @@ fname:
 .endif
 .endm
 
+.macro bilinear_interpolate_eight_pixels_head src_fmt, dst_fmt
+.ifdef have_bilinear_interpolate_eight_pixels_&src_fmt&_&dst_fmt
+    bilinear_interpolate_eight_pixels_&src_fmt&_&dst_fmt&_head
+.else
+    bilinear_interpolate_four_pixels_head src_fmt, dst_fmt
+    bilinear_interpolate_four_pixels_tail_head src_fmt, dst_fmt
+.endif
+.endm
+
+.macro bilinear_interpolate_eight_pixels_tail src_fmt, dst_fmt
+.ifdef have_bilinear_interpolate_eight_pixels_&src_fmt&_&dst_fmt
+    bilinear_interpolate_eight_pixels_&src_fmt&_&dst_fmt&_tail
+.else
+    bilinear_interpolate_four_pixels_tail src_fmt, dst_fmt
+.endif
+.endm
+
+.macro bilinear_interpolate_eight_pixels_tail_head src_fmt, dst_fmt
+.ifdef have_bilinear_interpolate_eight_pixels_&src_fmt&_&dst_fmt
+    bilinear_interpolate_eight_pixels_&src_fmt&_&dst_fmt&_tail_head
+.else
+    bilinear_interpolate_four_pixels_tail_head src_fmt, dst_fmt
+    bilinear_interpolate_four_pixels_tail_head src_fmt, dst_fmt
+.endif
+.endm
+
+.set BILINEAR_FLAG_UNROLL_4,          0
+.set BILINEAR_FLAG_UNROLL_8,          1
+.set BILINEAR_FLAG_USE_ALL_NEON_REGS, 2
+
 /*
  * Main template macro for generating NEON optimized bilinear scanline
  * functions.
@@ -2647,7 +2677,7 @@ fname:
 
 .macro generate_bilinear_scanline_func fname, src_fmt, dst_fmt, \
                                        src_bpp_shift, dst_bpp_shift, \
-                                       prefetch_distance
+                                       prefetch_distance, flags
 
 pixman_asm_function fname
     OUT       .req      r0
@@ -2670,6 +2700,10 @@ pixman_asm_function fname
     mov       PF_OFFS, #prefetch_distance
     ldmia     ip, {WB, X, UX, WIDTH}
     mul       PF_OFFS, PF_OFFS, UX
+
+.if ((flags) & BILINEAR_FLAG_USE_ALL_NEON_REGS) != 0
+    vpush     {d8-d15}
+.endif
 
     sub       STRIDE, BOTTOM, TOP
     .unreq    BOTTOM
@@ -2704,8 +2738,34 @@ pixman_asm_function fname
     bilinear_interpolate_two_pixels src_fmt, dst_fmt
     sub       WIDTH, WIDTH, #2
 0:
-
-    /* start the main loop */
+.if ((flags) & BILINEAR_FLAG_UNROLL_8) != 0
+/*********** 8 pixels per iteration *****************/
+    cmp       WIDTH, #4
+    blt       0f
+    tst       OUT, #(1 << (dst_bpp_shift + 2))
+    beq       0f
+    bilinear_interpolate_four_pixels src_fmt, dst_fmt
+    sub       WIDTH, WIDTH, #4
+0:
+    subs      WIDTH, WIDTH, #8
+    blt       1f
+    mov       PF_OFFS, PF_OFFS, asr #(16 - src_bpp_shift)
+    bilinear_interpolate_eight_pixels_head src_fmt, dst_fmt
+    subs      WIDTH, WIDTH, #8
+    blt       5f
+0:
+    bilinear_interpolate_eight_pixels_tail_head src_fmt, dst_fmt
+    subs      WIDTH, WIDTH, #8
+    bge       0b
+5:
+    bilinear_interpolate_eight_pixels_tail src_fmt, dst_fmt
+1:
+    tst       WIDTH, #4
+    beq       2f
+    bilinear_interpolate_four_pixels src_fmt, dst_fmt
+2:
+.else
+/*********** 4 pixels per iteration *****************/
     subs      WIDTH, WIDTH, #4
     blt       1f
     mov       PF_OFFS, PF_OFFS, asr #(16 - src_bpp_shift)
@@ -2719,7 +2779,8 @@ pixman_asm_function fname
 5:
     bilinear_interpolate_four_pixels_tail src_fmt, dst_fmt
 1:
-
+/****************************************************/
+.endif
     /* handle the remaining trailing pixels */
     tst       WIDTH, #2
     beq       2f
@@ -2729,6 +2790,9 @@ pixman_asm_function fname
     beq       3f
     bilinear_interpolate_last_pixel src_fmt, dst_fmt
 3:
+.if ((flags) & BILINEAR_FLAG_USE_ALL_NEON_REGS) != 0
+    vpop      {d8-d15}
+.endif
     pop       {r4, r5, r6, r7, r8, r9}
     bx        lr
 
@@ -2750,13 +2814,17 @@ pixman_asm_function fname
 .endm
 
 generate_bilinear_scanline_func \
-    pixman_scaled_bilinear_scanline_8888_8888_SRC_asm_neon, 8888, 8888, 2, 2, 28
+    pixman_scaled_bilinear_scanline_8888_8888_SRC_asm_neon, 8888, 8888, \
+    2, 2, 28, BILINEAR_FLAG_UNROLL_4
 
 generate_bilinear_scanline_func \
-    pixman_scaled_bilinear_scanline_8888_0565_SRC_asm_neon, 8888, 0565, 2, 1, 28
+    pixman_scaled_bilinear_scanline_8888_0565_SRC_asm_neon, 8888, 0565, \
+    2, 1, 28, BILINEAR_FLAG_UNROLL_4
 
 generate_bilinear_scanline_func \
-    pixman_scaled_bilinear_scanline_0565_x888_SRC_asm_neon, 0565, 8888, 1, 2, 28
+    pixman_scaled_bilinear_scanline_0565_x888_SRC_asm_neon, 0565, 8888, \
+    1, 2, 28, BILINEAR_FLAG_UNROLL_4
 
 generate_bilinear_scanline_func \
-    pixman_scaled_bilinear_scanline_0565_0565_SRC_asm_neon, 0565, 0565, 1, 1, 28
+    pixman_scaled_bilinear_scanline_0565_0565_SRC_asm_neon, 0565, 0565, \
+    1, 1, 28, BILINEAR_FLAG_UNROLL_4
