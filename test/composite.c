@@ -102,6 +102,8 @@ static const format_t formats[] =
     P(x8b8g8r8),
     P(b8g8r8a8),
     P(b8g8r8x8),
+    P(r8g8b8a8),
+    P(r8g8b8x8),
     P(x2r10g10b10),
     P(x2b10g10r10),
     P(a2r10g10b10),
@@ -554,6 +556,13 @@ get_pixel (pixman_image_t *image,
 	rs = PIXMAN_FORMAT_BPP (format) - (b + g + r);
         gs = r + rs;
         bs = g + gs;
+	break;
+
+    case PIXMAN_TYPE_RGBA:
+	as = 0;
+	bs = PIXMAN_FORMAT_BPP (format) - (b + g + r);
+	gs = b + bs;
+	rs = g + gs;
 	break;
 
     case PIXMAN_TYPE_A:
