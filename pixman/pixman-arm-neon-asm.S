@@ -2411,21 +2411,19 @@ fname:
  */
 
 .macro bilinear_load_8888 reg1, reg2, tmp
-    mov       TMP2, X, asr #16
+    mov       TMP1, X, asr #16
     add       X, X, UX
-    add       TMP1, TOP, TMP2, asl #2
-    add       TMP2, BOTTOM, TMP2, asl #2
-    vld1.32   {reg1}, [TMP1]
-    vld1.32   {reg2}, [TMP2]
+    add       TMP1, TOP, TMP1, asl #2
+    vld1.32   {reg1}, [TMP1], STRIDE
+    vld1.32   {reg2}, [TMP1]
 .endm
 
 .macro bilinear_load_0565 reg1, reg2, tmp
-    mov       TMP2, X, asr #16
+    mov       TMP1, X, asr #16
     add       X, X, UX
-    add       TMP1, TOP, TMP2, asl #1
-    add       TMP2, BOTTOM, TMP2, asl #1
-    vld1.32   {reg2[0]}, [TMP1]
-    vld1.32   {reg2[1]}, [TMP2]
+    add       TMP1, TOP, TMP1, asl #1
+    vld1.32   {reg2[0]}, [TMP1], STRIDE
+    vld1.32   {reg2[1]}, [TMP1]
     convert_four_0565_to_x888_packed reg2, reg1, reg2, tmp
 .endm
 
@@ -2453,18 +2451,16 @@ fname:
 .macro bilinear_load_and_vertical_interpolate_two_0565 \
                 acc1, acc2, reg1, reg2, reg3, reg4, acc2lo, acc2hi
 
+    mov       TMP1, X, asr #16
+    add       X, X, UX
+    add       TMP1, TOP, TMP1, asl #1
     mov       TMP2, X, asr #16
     add       X, X, UX
-    mov       TMP4, X, asr #16
-    add       X, X, UX
-    add       TMP1, TOP, TMP2, asl #1
-    add       TMP2, BOTTOM, TMP2, asl #1
-    add       TMP3, TOP, TMP4, asl #1
-    add       TMP4, BOTTOM, TMP4, asl #1
-    vld1.32   {acc2lo[0]}, [TMP1]
-    vld1.32   {acc2hi[0]}, [TMP3]
-    vld1.32   {acc2lo[1]}, [TMP2]
-    vld1.32   {acc2hi[1]}, [TMP4]
+    add       TMP2, TOP, TMP2, asl #1
+    vld1.32   {acc2lo[0]}, [TMP1], STRIDE
+    vld1.32   {acc2hi[0]}, [TMP2], STRIDE
+    vld1.32   {acc2lo[1]}, [TMP1]
+    vld1.32   {acc2hi[1]}, [TMP2]
     convert_0565_to_x888 acc2, reg3, reg2, reg1
     vzip.u8   reg1, reg3
     vzip.u8   reg2, reg4
@@ -2480,34 +2476,30 @@ fname:
                 xacc1, xacc2, xreg1, xreg2, xreg3, xreg4, xacc2lo, xacc2hi \
                 yacc1, yacc2, yreg1, yreg2, yreg3, yreg4, yacc2lo, yacc2hi
 
+    mov       TMP1, X, asr #16
+    add       X, X, UX
+    add       TMP1, TOP, TMP1, asl #1
     mov       TMP2, X, asr #16
     add       X, X, UX
-    mov       TMP4, X, asr #16
-    add       X, X, UX
-    add       TMP1, TOP, TMP2, asl #1
-    add       TMP2, BOTTOM, TMP2, asl #1
-    add       TMP3, TOP, TMP4, asl #1
-    add       TMP4, BOTTOM, TMP4, asl #1
-    vld1.32   {xacc2lo[0]}, [TMP1]
-    vld1.32   {xacc2hi[0]}, [TMP3]
-    vld1.32   {xacc2lo[1]}, [TMP2]
-    vld1.32   {xacc2hi[1]}, [TMP4]
+    add       TMP2, TOP, TMP2, asl #1
+    vld1.32   {xacc2lo[0]}, [TMP1], STRIDE
+    vld1.32   {xacc2hi[0]}, [TMP2], STRIDE
+    vld1.32   {xacc2lo[1]}, [TMP1]
+    vld1.32   {xacc2hi[1]}, [TMP2]
     convert_0565_to_x888 xacc2, xreg3, xreg2, xreg1
+    mov       TMP1, X, asr #16
+    add       X, X, UX
+    add       TMP1, TOP, TMP1, asl #1
     mov       TMP2, X, asr #16
     add       X, X, UX
-    mov       TMP4, X, asr #16
-    add       X, X, UX
-    add       TMP1, TOP, TMP2, asl #1
-    add       TMP2, BOTTOM, TMP2, asl #1
-    add       TMP3, TOP, TMP4, asl #1
-    add       TMP4, BOTTOM, TMP4, asl #1
-    vld1.32   {yacc2lo[0]}, [TMP1]
+    add       TMP2, TOP, TMP2, asl #1
+    vld1.32   {yacc2lo[0]}, [TMP1], STRIDE
     vzip.u8   xreg1, xreg3
-    vld1.32   {yacc2hi[0]}, [TMP3]
+    vld1.32   {yacc2hi[0]}, [TMP2], STRIDE
     vzip.u8   xreg2, xreg4
-    vld1.32   {yacc2lo[1]}, [TMP2]
+    vld1.32   {yacc2lo[1]}, [TMP1]
     vzip.u8   xreg3, xreg4
-    vld1.32   {yacc2hi[1]}, [TMP4]
+    vld1.32   {yacc2hi[1]}, [TMP2]
     vzip.u8   xreg1, xreg2
     convert_0565_to_x888 yacc2, yreg3, yreg2, yreg1
     vmull.u8  xacc1, xreg1, d28
@@ -2591,6 +2583,7 @@ fname:
                 q1, q11, d0, d1, d20, d21, d22, d23 \
                 q3, q9,  d4, d5, d16, d17, d18, d19
     pld       [TMP1, PF_OFFS]
+    sub       TMP1, TMP1, STRIDE
     vshll.u16 q0, d2, #8
     vmlsl.u16 q0, d2, d30
     vmlal.u16 q0, d3, d30
@@ -2670,12 +2663,16 @@ pixman_asm_function fname
     PF_OFFS   .req      r7
     TMP3      .req      r8
     TMP4      .req      r9
+    STRIDE    .req      r2
 
     mov       ip, sp
     push      {r4, r5, r6, r7, r8, r9}
     mov       PF_OFFS, #prefetch_distance
     ldmia     ip, {WB, X, UX, WIDTH}
     mul       PF_OFFS, PF_OFFS, UX
+
+    sub       STRIDE, BOTTOM, TOP
+    .unreq    BOTTOM
 
     cmp       WIDTH, #0
     ble       3f
@@ -2737,7 +2734,6 @@ pixman_asm_function fname
 
     .unreq    OUT
     .unreq    TOP
-    .unreq    BOTTOM
     .unreq    WT
     .unreq    WB
     .unreq    X
@@ -2748,6 +2744,7 @@ pixman_asm_function fname
     .unreq    PF_OFFS
     .unreq    TMP3
     .unreq    TMP4
+    .unreq    STRIDE
 .endfunc
 
 .endm
