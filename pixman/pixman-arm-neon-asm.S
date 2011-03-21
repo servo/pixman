@@ -2940,13 +2940,256 @@ pixman_asm_function fname
 
 /*****************************************************************************/
 
+.set have_bilinear_interpolate_eight_pixels_8888_0565, 1
+
+.macro bilinear_interpolate_eight_pixels_8888_0565_head
+    mov       TMP1, X, asr #16
+    add       X, X, UX
+    add       TMP1, TOP, TMP1, asl #2
+    mov       TMP2, X, asr #16
+    add       X, X, UX
+    add       TMP2, TOP, TMP2, asl #2
+    vld1.32   {d20}, [TMP1], STRIDE
+    vld1.32   {d21}, [TMP1]
+    vmull.u8  q8, d20, d28
+    vmlal.u8  q8, d21, d29
+    vld1.32   {d22}, [TMP2], STRIDE
+    vld1.32   {d23}, [TMP2]
+    vmull.u8  q9, d22, d28
+    mov       TMP3, X, asr #16
+    add       X, X, UX
+    add       TMP3, TOP, TMP3, asl #2
+    mov       TMP4, X, asr #16
+    add       X, X, UX
+    add       TMP4, TOP, TMP4, asl #2
+    vmlal.u8  q9, d23, d29
+    vld1.32   {d22}, [TMP3], STRIDE
+    vld1.32   {d23}, [TMP3]
+    vmull.u8  q10, d22, d28
+    vmlal.u8  q10, d23, d29
+    vshll.u16 q0, d16, #8
+    vmlsl.u16 q0, d16, d30
+    vmlal.u16 q0, d17, d30
+    pld       [TMP4, PF_OFFS]
+    vld1.32   {d16}, [TMP4], STRIDE
+    vld1.32   {d17}, [TMP4]
+    pld       [TMP4, PF_OFFS]
+    vmull.u8  q11, d16, d28
+    vmlal.u8  q11, d17, d29
+    vshll.u16 q1, d18, #8
+    vmlsl.u16 q1, d18, d31
+
+    mov       TMP1, X, asr #16
+    add       X, X, UX
+    add       TMP1, TOP, TMP1, asl #2
+    mov       TMP2, X, asr #16
+    add       X, X, UX
+    add       TMP2, TOP, TMP2, asl #2
+        vmlal.u16 q1, d19, d31
+        vshr.u16  q15, q12, #8
+        vshll.u16 q2, d20, #8
+        vmlsl.u16 q2, d20, d30
+        vmlal.u16 q2, d21, d30
+        vshll.u16 q3, d22, #8
+    vld1.32   {d20}, [TMP1], STRIDE
+        vmlsl.u16 q3, d22, d31
+        vmlal.u16 q3, d23, d31
+    vld1.32   {d21}, [TMP1]
+    vmull.u8  q8, d20, d28
+    vmlal.u8  q8, d21, d29
+        vshrn.u32 d0, q0, #16
+        vshrn.u32 d1, q1, #16
+        vshrn.u32 d4, q2, #16
+    vld1.32   {d22}, [TMP2], STRIDE
+        vshrn.u32 d5, q3, #16
+        vadd.u16  q12, q12, q13
+    vld1.32   {d23}, [TMP2]
+    vmull.u8  q9, d22, d28
+    mov       TMP3, X, asr #16
+    add       X, X, UX
+    add       TMP3, TOP, TMP3, asl #2
+    mov       TMP4, X, asr #16
+    add       X, X, UX
+    add       TMP4, TOP, TMP4, asl #2
+    vmlal.u8  q9, d23, d29
+    vld1.32   {d22}, [TMP3], STRIDE
+        vshr.u16  q15, q12, #8
+    vld1.32   {d23}, [TMP3]
+    vmull.u8  q10, d22, d28
+    vmlal.u8  q10, d23, d29
+        vmovn.u16 d8, q0
+    vshll.u16 q0, d16, #8
+        vmovn.u16 d9, q2
+    vmlsl.u16 q0, d16, d30
+    vmlal.u16 q0, d17, d30
+    pld       [TMP4, PF_OFFS]
+    vld1.32   {d16}, [TMP4], STRIDE
+        vadd.u16  q12, q12, q13
+    vld1.32   {d17}, [TMP4]
+    pld       [TMP4, PF_OFFS]
+    vmull.u8  q11, d16, d28
+    vmlal.u8  q11, d17, d29
+    vshll.u16 q1, d18, #8
+    vmlsl.u16 q1, d18, d31
+.endm
+
+.macro bilinear_interpolate_eight_pixels_8888_0565_tail
+    vmlal.u16 q1, d19, d31
+    vshr.u16  q15, q12, #8
+    vshll.u16 q2, d20, #8
+    vmlsl.u16 q2, d20, d30
+    vmlal.u16 q2, d21, d30
+    vshll.u16 q3, d22, #8
+    vmlsl.u16 q3, d22, d31
+    vmlal.u16 q3, d23, d31
+    vadd.u16  q12, q12, q13
+    vshrn.u32 d0, q0, #16
+    vshrn.u32 d1, q1, #16
+    vshrn.u32 d4, q2, #16
+    vshr.u16  q15, q12, #8
+    vshrn.u32 d5, q3, #16
+    vmovn.u16 d10, q0
+    vmovn.u16 d11, q2
+    vadd.u16  q12, q12, q13
+
+    vuzp.u8   d8, d9
+    vuzp.u8   d10, d11
+    vuzp.u8   d9, d11
+    vuzp.u8   d8, d10
+    vshll.u8  q6, d9, #8
+    vshll.u8  q5, d10, #8
+    vshll.u8  q7, d8, #8
+    vsri.u16  q5, q6, #5
+    vsri.u16  q5, q7, #11
+    vst1.32   {d10, d11}, [OUT, :128]!
+.endm
+
+.macro bilinear_interpolate_eight_pixels_8888_0565_tail_head
+    mov       TMP1, X, asr #16
+    add       X, X, UX
+    add       TMP1, TOP, TMP1, asl #2
+    mov       TMP2, X, asr #16
+    add       X, X, UX
+    add       TMP2, TOP, TMP2, asl #2
+        vmlal.u16 q1, d19, d31
+        vshr.u16  q15, q12, #8
+            vuzp.u8 d8, d9
+        vshll.u16 q2, d20, #8
+        vmlsl.u16 q2, d20, d30
+        vmlal.u16 q2, d21, d30
+        vshll.u16 q3, d22, #8
+    vld1.32   {d20}, [TMP1], STRIDE
+        vmlsl.u16 q3, d22, d31
+        vmlal.u16 q3, d23, d31
+    vld1.32   {d21}, [TMP1]
+    vmull.u8  q8, d20, d28
+    vmlal.u8  q8, d21, d29
+        vshrn.u32 d0, q0, #16
+        vshrn.u32 d1, q1, #16
+        vshrn.u32 d4, q2, #16
+    vld1.32   {d22}, [TMP2], STRIDE
+        vshrn.u32 d5, q3, #16
+        vadd.u16  q12, q12, q13
+    vld1.32   {d23}, [TMP2]
+    vmull.u8  q9, d22, d28
+    mov       TMP3, X, asr #16
+    add       X, X, UX
+    add       TMP3, TOP, TMP3, asl #2
+    mov       TMP4, X, asr #16
+    add       X, X, UX
+    add       TMP4, TOP, TMP4, asl #2
+    vmlal.u8  q9, d23, d29
+    vld1.32   {d22}, [TMP3], STRIDE
+        vshr.u16  q15, q12, #8
+    vld1.32   {d23}, [TMP3]
+    vmull.u8  q10, d22, d28
+    vmlal.u8  q10, d23, d29
+        vmovn.u16 d10, q0
+    vshll.u16 q0, d16, #8
+        vmovn.u16 d11, q2
+    vmlsl.u16 q0, d16, d30
+    vmlal.u16 q0, d17, d30
+    pld       [TMP4, PF_OFFS]
+    vld1.32   {d16}, [TMP4], STRIDE
+        vadd.u16  q12, q12, q13
+    vld1.32   {d17}, [TMP4]
+    pld       [TMP4, PF_OFFS]
+    vmull.u8  q11, d16, d28
+    vmlal.u8  q11, d17, d29
+            vuzp.u8 d10, d11
+    vshll.u16 q1, d18, #8
+    vmlsl.u16 q1, d18, d31
+
+    mov       TMP1, X, asr #16
+    add       X, X, UX
+    add       TMP1, TOP, TMP1, asl #2
+    mov       TMP2, X, asr #16
+    add       X, X, UX
+    add       TMP2, TOP, TMP2, asl #2
+        vmlal.u16 q1, d19, d31
+            vuzp.u8 d9, d11
+        vshr.u16  q15, q12, #8
+        vshll.u16 q2, d20, #8
+            vuzp.u8 d8, d10
+        vmlsl.u16 q2, d20, d30
+        vmlal.u16 q2, d21, d30
+        vshll.u16 q3, d22, #8
+    vld1.32   {d20}, [TMP1], STRIDE
+        vmlsl.u16 q3, d22, d31
+        vmlal.u16 q3, d23, d31
+    vld1.32   {d21}, [TMP1]
+    vmull.u8  q8, d20, d28
+    vmlal.u8  q8, d21, d29
+            vshll.u8  q6, d9, #8
+            vshll.u8  q5, d10, #8
+            vshll.u8  q7, d8, #8
+        vshrn.u32 d0, q0, #16
+            vsri.u16  q5, q6, #5
+        vshrn.u32 d1, q1, #16
+            vsri.u16  q5, q7, #11
+        vshrn.u32 d4, q2, #16
+    vld1.32   {d22}, [TMP2], STRIDE
+        vshrn.u32 d5, q3, #16
+        vadd.u16  q12, q12, q13
+    vld1.32   {d23}, [TMP2]
+    vmull.u8  q9, d22, d28
+    mov       TMP3, X, asr #16
+    add       X, X, UX
+    add       TMP3, TOP, TMP3, asl #2
+    mov       TMP4, X, asr #16
+    add       X, X, UX
+    add       TMP4, TOP, TMP4, asl #2
+    vmlal.u8  q9, d23, d29
+    vld1.32   {d22}, [TMP3], STRIDE
+        vshr.u16  q15, q12, #8
+    vld1.32   {d23}, [TMP3]
+    vmull.u8  q10, d22, d28
+    vmlal.u8  q10, d23, d29
+        vmovn.u16 d8, q0
+    vshll.u16 q0, d16, #8
+        vmovn.u16 d9, q2
+    vmlsl.u16 q0, d16, d30
+    vmlal.u16 q0, d17, d30
+    pld       [TMP4, PF_OFFS]
+    vld1.32   {d16}, [TMP4], STRIDE
+        vadd.u16  q12, q12, q13
+    vld1.32   {d17}, [TMP4]
+    pld       [TMP4, PF_OFFS]
+    vmull.u8  q11, d16, d28
+    vmlal.u8  q11, d17, d29
+    vshll.u16 q1, d18, #8
+            vst1.32   {d10, d11}, [OUT, :128]!
+    vmlsl.u16 q1, d18, d31
+.endm
+/*****************************************************************************/
+
 generate_bilinear_scanline_func \
     pixman_scaled_bilinear_scanline_8888_8888_SRC_asm_neon, 8888, 8888, \
     2, 2, 28, BILINEAR_FLAG_UNROLL_4
 
 generate_bilinear_scanline_func \
     pixman_scaled_bilinear_scanline_8888_0565_SRC_asm_neon, 8888, 0565, \
-    2, 1, 28, BILINEAR_FLAG_UNROLL_4
+    2, 1, 28, BILINEAR_FLAG_UNROLL_8 | BILINEAR_FLAG_USE_ALL_NEON_REGS
 
 generate_bilinear_scanline_func \
     pixman_scaled_bilinear_scanline_0565_x888_SRC_asm_neon, 0565, 8888, \
