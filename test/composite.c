@@ -909,13 +909,13 @@ main (int argc, char **argv)
 #ifdef USE_OPENMP
 #   pragma omp parallel for default(none) shared(result, argv, seed)
 #endif
-    for (i = seed; i <= N_TESTS; ++i)
+    for (i = 0; i <= N_TESTS; ++i)
     {
-	if (!result && !run_test (i))
+	if (!result && !run_test (i + seed))
 	{
-	    printf ("Test 0x%08X failed.\n", i);
+	    printf ("Test 0x%08X failed.\n", seed + i);
 	    
-	    result = i;
+	    result = seed + i;
 	}
     }
     
