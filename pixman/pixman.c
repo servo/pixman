@@ -768,24 +768,30 @@ pixman_image_composite32 (pixman_op_t      op,
 				   dest_format, dest_flags,
 				   &imp, &func))
     {
+	pixman_composite_info_t info;
 	const pixman_box32_t *pbox;
 	int n;
 
+	info.op = op;
+	info.src_image = src;
+	info.mask_image = mask;
+	info.dest_image = dest;
+
 	pbox = pixman_region32_rectangles (&region, &n);
-	
+
 	while (n--)
 	{
-	    func (imp, op,
-		  src, mask, dest,
-		  pbox->x1 + src_x - dest_x,
-		  pbox->y1 + src_y - dest_y,
-		  pbox->x1 + mask_x - dest_x,
-		  pbox->y1 + mask_y - dest_y,
-		  pbox->x1,
-		  pbox->y1,
-		  pbox->x2 - pbox->x1,
-		  pbox->y2 - pbox->y1);
-	    
+	    info.src_x = pbox->x1 + src_x - dest_x;
+	    info.src_y = pbox->y1 + src_y - dest_y;
+	    info.mask_x = pbox->x1 + mask_x - dest_x;
+	    info.mask_y = pbox->y1 + mask_y - dest_y;
+	    info.dest_x = pbox->x1;
+	    info.dest_y = pbox->y1;
+	    info.width = pbox->x2 - pbox->x1;
+	    info.height = pbox->y2 - pbox->y1;
+
+	    func (imp, &info);
+
 	    pbox++;
 	}
     }

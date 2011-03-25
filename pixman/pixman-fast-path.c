@@ -108,19 +108,9 @@ in (uint32_t x,
  */
 static void
 fast_composite_over_x888_8_8888 (pixman_implementation_t *imp,
-                                 pixman_op_t              op,
-                                 pixman_image_t *         src_image,
-                                 pixman_image_t *         mask_image,
-                                 pixman_image_t *         dest_image,
-                                 int32_t                  src_x,
-                                 int32_t                  src_y,
-                                 int32_t                  mask_x,
-                                 int32_t                  mask_y,
-                                 int32_t                  dest_x,
-                                 int32_t                  dest_y,
-                                 int32_t                  width,
-                                 int32_t                  height)
+                                 pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t    *src, *src_line;
     uint32_t    *dst, *dst_line;
     uint8_t     *mask, *mask_line;
@@ -168,19 +158,9 @@ fast_composite_over_x888_8_8888 (pixman_implementation_t *imp,
 
 static void
 fast_composite_in_n_8_8 (pixman_implementation_t *imp,
-                         pixman_op_t              op,
-                         pixman_image_t *         src_image,
-                         pixman_image_t *         mask_image,
-                         pixman_image_t *         dest_image,
-                         int32_t                  src_x,
-                         int32_t                  src_y,
-                         int32_t                  mask_x,
-                         int32_t                  mask_y,
-                         int32_t                  dest_x,
-                         int32_t                  dest_y,
-                         int32_t                  width,
-                         int32_t                  height)
+                         pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t src, srca;
     uint8_t     *dst_line, *dst;
     uint8_t     *mask_line, *mask, m;
@@ -246,19 +226,9 @@ fast_composite_in_n_8_8 (pixman_implementation_t *imp,
 
 static void
 fast_composite_in_8_8 (pixman_implementation_t *imp,
-                       pixman_op_t              op,
-                       pixman_image_t *         src_image,
-                       pixman_image_t *         mask_image,
-                       pixman_image_t *         dest_image,
-                       int32_t                  src_x,
-                       int32_t                  src_y,
-                       int32_t                  mask_x,
-                       int32_t                  mask_y,
-                       int32_t                  dest_x,
-                       int32_t                  dest_y,
-                       int32_t                  width,
-                       int32_t                  height)
+                       pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint8_t     *dst_line, *dst;
     uint8_t     *src_line, *src;
     int dst_stride, src_stride;
@@ -293,19 +263,9 @@ fast_composite_in_8_8 (pixman_implementation_t *imp,
 
 static void
 fast_composite_over_n_8_8888 (pixman_implementation_t *imp,
-                              pixman_op_t              op,
-                              pixman_image_t *         src_image,
-                              pixman_image_t *         mask_image,
-                              pixman_image_t *         dest_image,
-                              int32_t                  src_x,
-                              int32_t                  src_y,
-                              int32_t                  mask_x,
-                              int32_t                  mask_y,
-                              int32_t                  dest_x,
-                              int32_t                  dest_y,
-                              int32_t                  width,
-                              int32_t                  height)
+                              pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t src, srca;
     uint32_t    *dst_line, *dst, d;
     uint8_t     *mask_line, *mask, m;
@@ -351,19 +311,9 @@ fast_composite_over_n_8_8888 (pixman_implementation_t *imp,
 
 static void
 fast_composite_add_n_8888_8888_ca (pixman_implementation_t *imp,
-				   pixman_op_t              op,
-				   pixman_image_t *         src_image,
-				   pixman_image_t *         mask_image,
-				   pixman_image_t *         dest_image,
-				   int32_t                  src_x,
-				   int32_t                  src_y,
-				   int32_t                  mask_x,
-				   int32_t                  mask_y,
-				   int32_t                  dest_x,
-				   int32_t                  dest_y,
-				   int32_t                  width,
-				   int32_t                  height)
+				   pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t src, s;
     uint32_t    *dst_line, *dst, d;
     uint32_t    *mask_line, *mask, ma;
@@ -407,19 +357,9 @@ fast_composite_add_n_8888_8888_ca (pixman_implementation_t *imp,
 
 static void
 fast_composite_over_n_8888_8888_ca (pixman_implementation_t *imp,
-                                    pixman_op_t              op,
-                                    pixman_image_t *         src_image,
-                                    pixman_image_t *         mask_image,
-                                    pixman_image_t *         dest_image,
-                                    int32_t                  src_x,
-                                    int32_t                  src_y,
-                                    int32_t                  mask_x,
-                                    int32_t                  mask_y,
-                                    int32_t                  dest_x,
-                                    int32_t                  dest_y,
-                                    int32_t                  width,
-                                    int32_t                  height)
+                                    pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t src, srca, s;
     uint32_t    *dst_line, *dst, d;
     uint32_t    *mask_line, *mask, ma;
@@ -473,19 +413,9 @@ fast_composite_over_n_8888_8888_ca (pixman_implementation_t *imp,
 
 static void
 fast_composite_over_n_8_0888 (pixman_implementation_t *imp,
-                              pixman_op_t              op,
-                              pixman_image_t *         src_image,
-                              pixman_image_t *         mask_image,
-                              pixman_image_t *         dest_image,
-                              int32_t                  src_x,
-                              int32_t                  src_y,
-                              int32_t                  mask_x,
-                              int32_t                  mask_y,
-                              int32_t                  dest_x,
-                              int32_t                  dest_y,
-                              int32_t                  width,
-                              int32_t                  height)
+                              pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t src, srca;
     uint8_t     *dst_line, *dst;
     uint32_t d;
@@ -538,19 +468,9 @@ fast_composite_over_n_8_0888 (pixman_implementation_t *imp,
 
 static void
 fast_composite_over_n_8_0565 (pixman_implementation_t *imp,
-                              pixman_op_t              op,
-                              pixman_image_t *         src_image,
-                              pixman_image_t *         mask_image,
-                              pixman_image_t *         dest_image,
-                              int32_t                  src_x,
-                              int32_t                  src_y,
-                              int32_t                  mask_x,
-                              int32_t                  mask_y,
-                              int32_t                  dest_x,
-                              int32_t                  dest_y,
-                              int32_t                  width,
-                              int32_t                  height)
+                              pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t src, srca;
     uint16_t    *dst_line, *dst;
     uint32_t d;
@@ -604,19 +524,9 @@ fast_composite_over_n_8_0565 (pixman_implementation_t *imp,
 
 static void
 fast_composite_over_n_8888_0565_ca (pixman_implementation_t *imp,
-                                    pixman_op_t              op,
-                                    pixman_image_t *         src_image,
-                                    pixman_image_t *         mask_image,
-                                    pixman_image_t *         dest_image,
-                                    int32_t                  src_x,
-                                    int32_t                  src_y,
-                                    int32_t                  mask_x,
-                                    int32_t                  mask_y,
-                                    int32_t                  dest_x,
-                                    int32_t                  dest_y,
-                                    int32_t                  width,
-                                    int32_t                  height)
+                                    pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t  src, srca, s;
     uint16_t  src16;
     uint16_t *dst_line, *dst;
@@ -681,19 +591,9 @@ fast_composite_over_n_8888_0565_ca (pixman_implementation_t *imp,
 
 static void
 fast_composite_over_8888_8888 (pixman_implementation_t *imp,
-                               pixman_op_t              op,
-                               pixman_image_t *         src_image,
-                               pixman_image_t *         mask_image,
-                               pixman_image_t *         dest_image,
-                               int32_t                  src_x,
-                               int32_t                  src_y,
-                               int32_t                  mask_x,
-                               int32_t                  mask_y,
-                               int32_t                  dest_x,
-                               int32_t                  dest_y,
-                               int32_t                  width,
-                               int32_t                  height)
+                               pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t    *dst_line, *dst;
     uint32_t    *src_line, *src, s;
     int dst_stride, src_stride;
@@ -726,19 +626,9 @@ fast_composite_over_8888_8888 (pixman_implementation_t *imp,
 
 static void
 fast_composite_src_x888_8888 (pixman_implementation_t *imp,
-			      pixman_op_t              op,
-			      pixman_image_t *         src_image,
-			      pixman_image_t *         mask_image,
-			      pixman_image_t *         dest_image,
-			      int32_t                  src_x,
-			      int32_t                  src_y,
-			      int32_t                  mask_x,
-			      int32_t                  mask_y,
-			      int32_t                  dest_x,
-			      int32_t                  dest_y,
-			      int32_t                  width,
-			      int32_t                  height)
+			      pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t    *dst_line, *dst;
     uint32_t    *src_line, *src;
     int dst_stride, src_stride;
@@ -763,19 +653,9 @@ fast_composite_src_x888_8888 (pixman_implementation_t *imp,
 #if 0
 static void
 fast_composite_over_8888_0888 (pixman_implementation_t *imp,
-			       pixman_op_t              op,
-			       pixman_image_t *         src_image,
-			       pixman_image_t *         mask_image,
-			       pixman_image_t *         dest_image,
-			       int32_t                  src_x,
-			       int32_t                  src_y,
-			       int32_t                  mask_x,
-			       int32_t                  mask_y,
-			       int32_t                  dest_x,
-			       int32_t                  dest_y,
-			       int32_t                  width,
-			       int32_t                  height)
+			       pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint8_t     *dst_line, *dst;
     uint32_t d;
     uint32_t    *src_line, *src, s;
@@ -815,19 +695,9 @@ fast_composite_over_8888_0888 (pixman_implementation_t *imp,
 
 static void
 fast_composite_over_8888_0565 (pixman_implementation_t *imp,
-                               pixman_op_t              op,
-                               pixman_image_t *         src_image,
-                               pixman_image_t *         mask_image,
-                               pixman_image_t *         dest_image,
-                               int32_t                  src_x,
-                               int32_t                  src_y,
-                               int32_t                  mask_x,
-                               int32_t                  mask_y,
-                               int32_t                  dest_x,
-                               int32_t                  dest_y,
-                               int32_t                  width,
-                               int32_t                  height)
+                               pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint16_t    *dst_line, *dst;
     uint32_t d;
     uint32_t    *src_line, *src, s;
@@ -870,19 +740,9 @@ fast_composite_over_8888_0565 (pixman_implementation_t *imp,
 
 static void
 fast_composite_src_x888_0565 (pixman_implementation_t *imp,
-                              pixman_op_t              op,
-                              pixman_image_t *         src_image,
-                              pixman_image_t *         mask_image,
-                              pixman_image_t *         dest_image,
-                              int32_t                  src_x,
-                              int32_t                  src_y,
-                              int32_t                  mask_x,
-                              int32_t                  mask_y,
-                              int32_t                  dest_x,
-                              int32_t                  dest_y,
-                              int32_t                  width,
-                              int32_t                  height)
+                              pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint16_t    *dst_line, *dst;
     uint32_t    *src_line, *src, s;
     int dst_stride, src_stride;
@@ -910,19 +770,9 @@ fast_composite_src_x888_0565 (pixman_implementation_t *imp,
 
 static void
 fast_composite_add_8_8 (pixman_implementation_t *imp,
-			pixman_op_t              op,
-			pixman_image_t *         src_image,
-			pixman_image_t *         mask_image,
-			pixman_image_t *         dest_image,
-			int32_t                  src_x,
-			int32_t                  src_y,
-			int32_t                  mask_x,
-			int32_t                  mask_y,
-			int32_t                  dest_x,
-			int32_t                  dest_y,
-			int32_t                  width,
-			int32_t                  height)
+			pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint8_t     *dst_line, *dst;
     uint8_t     *src_line, *src;
     int dst_stride, src_stride;
@@ -961,19 +811,9 @@ fast_composite_add_8_8 (pixman_implementation_t *imp,
 
 static void
 fast_composite_add_8888_8888 (pixman_implementation_t *imp,
-                              pixman_op_t              op,
-                              pixman_image_t *         src_image,
-                              pixman_image_t *         mask_image,
-                              pixman_image_t *         dest_image,
-                              int32_t                  src_x,
-                              int32_t                  src_y,
-                              int32_t                  mask_x,
-                              int32_t                  mask_y,
-                              int32_t                  dest_x,
-                              int32_t                  dest_y,
-                              int32_t                  width,
-                              int32_t                  height)
+                              pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t    *dst_line, *dst;
     uint32_t    *src_line, *src;
     int dst_stride, src_stride;
@@ -1011,19 +851,9 @@ fast_composite_add_8888_8888 (pixman_implementation_t *imp,
 
 static void
 fast_composite_add_n_8_8 (pixman_implementation_t *imp,
-			  pixman_op_t              op,
-			  pixman_image_t *         src_image,
-			  pixman_image_t *         mask_image,
-			  pixman_image_t *         dest_image,
-			  int32_t                  src_x,
-			  int32_t                  src_y,
-			  int32_t                  mask_x,
-			  int32_t                  mask_y,
-			  int32_t                  dest_x,
-			  int32_t                  dest_y,
-			  int32_t                  width,
-			  int32_t                  height)
+			  pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint8_t     *dst_line, *dst;
     uint8_t     *mask_line, *mask;
     int dst_stride, mask_stride;
@@ -1077,19 +907,9 @@ fast_composite_add_n_8_8 (pixman_implementation_t *imp,
 
 static void
 fast_composite_add_1000_1000 (pixman_implementation_t *imp,
-                              pixman_op_t              op,
-                              pixman_image_t *         src_image,
-                              pixman_image_t *         mask_image,
-                              pixman_image_t *         dest_image,
-                              int32_t                  src_x,
-                              int32_t                  src_y,
-                              int32_t                  mask_x,
-                              int32_t                  mask_y,
-                              int32_t                  dest_x,
-                              int32_t                  dest_y,
-                              int32_t                  width,
-                              int32_t                  height)
+                              pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t     *dst_line, *dst;
     uint32_t     *src_line, *src;
     int           dst_stride, src_stride;
@@ -1122,19 +942,9 @@ fast_composite_add_1000_1000 (pixman_implementation_t *imp,
 
 static void
 fast_composite_over_n_1_8888 (pixman_implementation_t *imp,
-                              pixman_op_t              op,
-                              pixman_image_t *         src_image,
-                              pixman_image_t *         mask_image,
-                              pixman_image_t *         dest_image,
-                              int32_t                  src_x,
-                              int32_t                  src_y,
-                              int32_t                  mask_x,
-                              int32_t                  mask_y,
-                              int32_t                  dest_x,
-                              int32_t                  dest_y,
-                              int32_t                  width,
-                              int32_t                  height)
+                              pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t     src, srca;
     uint32_t    *dst, *dst_line;
     uint32_t    *mask, *mask_line;
@@ -1214,19 +1024,9 @@ fast_composite_over_n_1_8888 (pixman_implementation_t *imp,
 
 static void
 fast_composite_over_n_1_0565 (pixman_implementation_t *imp,
-                              pixman_op_t              op,
-                              pixman_image_t *         src_image,
-                              pixman_image_t *         mask_image,
-                              pixman_image_t *         dest_image,
-                              int32_t                  src_x,
-                              int32_t                  src_y,
-                              int32_t                  mask_x,
-                              int32_t                  mask_y,
-                              int32_t                  dest_x,
-                              int32_t                  dest_y,
-                              int32_t                  width,
-                              int32_t                  height)
+                              pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t     src, srca;
     uint16_t    *dst, *dst_line;
     uint32_t    *mask, *mask_line;
@@ -1316,19 +1116,9 @@ fast_composite_over_n_1_0565 (pixman_implementation_t *imp,
 
 static void
 fast_composite_solid_fill (pixman_implementation_t *imp,
-                           pixman_op_t              op,
-                           pixman_image_t *         src_image,
-                           pixman_image_t *         mask_image,
-                           pixman_image_t *         dest_image,
-                           int32_t                  src_x,
-                           int32_t                  src_y,
-                           int32_t                  mask_x,
-                           int32_t                  mask_y,
-                           int32_t                  dest_x,
-                           int32_t                  dest_y,
-                           int32_t                  width,
-                           int32_t                  height)
+                           pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t src;
 
     src = _pixman_image_get_solid (imp, src_image, dest_image->bits.format);
@@ -1356,19 +1146,9 @@ fast_composite_solid_fill (pixman_implementation_t *imp,
 
 static void
 fast_composite_src_memcpy (pixman_implementation_t *imp,
-			   pixman_op_t              op,
-			   pixman_image_t *         src_image,
-			   pixman_image_t *         mask_image,
-			   pixman_image_t *         dest_image,
-			   int32_t                  src_x,
-			   int32_t                  src_y,
-			   int32_t                  mask_x,
-			   int32_t                  mask_y,
-			   int32_t                  dest_x,
-			   int32_t                  dest_y,
-			   int32_t                  width,
-			   int32_t                  height)
+			   pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     int bpp = PIXMAN_FORMAT_BPP (dest_image->bits.format) / 8;
     uint32_t n_bytes = width * bpp;
     int dst_stride, src_stride;
@@ -1497,19 +1277,9 @@ combine_src (uint32_t s, uint32_t *dst)
 
 static void
 fast_composite_scaled_nearest (pixman_implementation_t *imp,
-			       pixman_op_t              op,
-			       pixman_image_t *         src_image,
-			       pixman_image_t *         mask_image,
-			       pixman_image_t *         dest_image,
-			       int32_t                  src_x,
-			       int32_t                  src_y,
-			       int32_t                  mask_x,
-			       int32_t                  mask_y,
-			       int32_t                  dest_x,
-			       int32_t                  dest_y,
-			       int32_t                  width,
-			       int32_t                  height)
+			       pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t       *dst_line;
     uint32_t       *src_line;
     int             dst_stride, src_stride;
@@ -1813,25 +1583,15 @@ blt_rotated_270_##suffix (pix_type       *dst,                                \
                                                                               \
 static void                                                                   \
 fast_composite_rotate_90_##suffix (pixman_implementation_t *imp,              \
-				   pixman_op_t              op,               \
-				   pixman_image_t *         src_image,        \
-				   pixman_image_t *         mask_image,       \
-				   pixman_image_t *         dest_image,        \
-				   int32_t                  src_x,            \
-				   int32_t                  src_y,            \
-				   int32_t                  mask_x,           \
-				   int32_t                  mask_y,           \
-				   int32_t                  dest_x,           \
-				   int32_t                  dest_y,           \
-				   int32_t                  width,            \
-				   int32_t                  height)           \
-{                                                                             \
-    pix_type       *dst_line;                                                 \
+				   pixman_composite_info_t *info)	      \
+{									      \
+    PIXMAN_COMPOSITE_ARGS (info);					      \
+    pix_type       *dst_line;						      \
     pix_type       *src_line;                                                 \
     int             dst_stride, src_stride;                                   \
     int             src_x_t, src_y_t;                                         \
                                                                               \
-    PIXMAN_IMAGE_GET_LINE (dest_image, dest_x, dest_y, pix_type,               \
+    PIXMAN_IMAGE_GET_LINE (dest_image, dest_x, dest_y, pix_type,              \
 			   dst_stride, dst_line, 1);                          \
     src_x_t = -src_y + pixman_fixed_to_int (                                  \
 				src_image->common.transform->matrix[0][2] +   \
@@ -1847,25 +1607,15 @@ fast_composite_rotate_90_##suffix (pixman_implementation_t *imp,              \
                                                                               \
 static void                                                                   \
 fast_composite_rotate_270_##suffix (pixman_implementation_t *imp,             \
-				    pixman_op_t              op,              \
-				    pixman_image_t *         src_image,       \
-				    pixman_image_t *         mask_image,      \
-				    pixman_image_t *         dest_image,       \
-				    int32_t                  src_x,           \
-				    int32_t                  src_y,           \
-				    int32_t                  mask_x,          \
-				    int32_t                  mask_y,          \
-				    int32_t                  dest_x,          \
-				    int32_t                  dest_y,          \
-				    int32_t                  width,           \
-				    int32_t                  height)          \
+				    pixman_composite_info_t *info)            \
 {                                                                             \
-    pix_type       *dst_line;                                                 \
+    PIXMAN_COMPOSITE_ARGS (info);					      \
+    pix_type       *dst_line;						      \
     pix_type       *src_line;                                                 \
     int             dst_stride, src_stride;                                   \
     int             src_x_t, src_y_t;                                         \
                                                                               \
-    PIXMAN_IMAGE_GET_LINE (dest_image, dest_x, dest_y, pix_type,               \
+    PIXMAN_IMAGE_GET_LINE (dest_image, dest_x, dest_y, pix_type,              \
 			   dst_stride, dst_line, 1);                          \
     src_x_t = src_y + pixman_fixed_to_int (                                   \
 				src_image->common.transform->matrix[0][2] +   \

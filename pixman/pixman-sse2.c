@@ -2360,19 +2360,9 @@ create_mask_2x32_128 (uint32_t mask0,
 
 static void
 sse2_composite_over_n_8888 (pixman_implementation_t *imp,
-                            pixman_op_t              op,
-                            pixman_image_t *         src_image,
-                            pixman_image_t *         mask_image,
-                            pixman_image_t *         dest_image,
-                            int32_t                  src_x,
-                            int32_t                  src_y,
-                            int32_t                  mask_x,
-                            int32_t                  mask_y,
-                            int32_t                  dest_x,
-                            int32_t                  dest_y,
-                            int32_t                  width,
-                            int32_t                  height)
+                            pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t src;
     uint32_t    *dst_line, *dst, d;
     int32_t w;
@@ -2439,19 +2429,9 @@ sse2_composite_over_n_8888 (pixman_implementation_t *imp,
 
 static void
 sse2_composite_over_n_0565 (pixman_implementation_t *imp,
-                            pixman_op_t              op,
-                            pixman_image_t *         src_image,
-                            pixman_image_t *         mask_image,
-                            pixman_image_t *         dest_image,
-                            int32_t                  src_x,
-                            int32_t                  src_y,
-                            int32_t                  mask_x,
-                            int32_t                  mask_y,
-                            int32_t                  dest_x,
-                            int32_t                  dest_y,
-                            int32_t                  width,
-                            int32_t                  height)
+                            pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t src;
     uint16_t    *dst_line, *dst, d;
     int32_t w;
@@ -2524,19 +2504,9 @@ sse2_composite_over_n_0565 (pixman_implementation_t *imp,
 
 static void
 sse2_composite_add_n_8888_8888_ca (pixman_implementation_t *imp,
-				   pixman_op_t              op,
-				   pixman_image_t *         src_image,
-				   pixman_image_t *         mask_image,
-				   pixman_image_t *         dest_image,
-				   int32_t                  src_x,
-				   int32_t                  src_y,
-				   int32_t                  mask_x,
-				   int32_t                  mask_y,
-				   int32_t                  dest_x,
-				   int32_t                  dest_y,
-				   int32_t                  width,
-				   int32_t                  height)
+				   pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t src;
     uint32_t    *dst_line, d;
     uint32_t    *mask_line, m;
@@ -2646,19 +2616,9 @@ sse2_composite_add_n_8888_8888_ca (pixman_implementation_t *imp,
 
 static void
 sse2_composite_over_n_8888_8888_ca (pixman_implementation_t *imp,
-                                    pixman_op_t              op,
-                                    pixman_image_t *         src_image,
-                                    pixman_image_t *         mask_image,
-                                    pixman_image_t *         dest_image,
-                                    int32_t                  src_x,
-                                    int32_t                  src_y,
-                                    int32_t                  mask_x,
-                                    int32_t                  mask_y,
-                                    int32_t                  dest_x,
-                                    int32_t                  dest_y,
-                                    int32_t                  width,
-                                    int32_t                  height)
+                                    pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t src;
     uint32_t    *dst_line, d;
     uint32_t    *mask_line, m;
@@ -2769,19 +2729,9 @@ sse2_composite_over_n_8888_8888_ca (pixman_implementation_t *imp,
 
 static void
 sse2_composite_over_8888_n_8888 (pixman_implementation_t *imp,
-                                 pixman_op_t              op,
-                                 pixman_image_t *         src_image,
-                                 pixman_image_t *         mask_image,
-                                 pixman_image_t *         dest_image,
-                                 int32_t                  src_x,
-                                 int32_t                  src_y,
-                                 int32_t                  mask_x,
-                                 int32_t                  mask_y,
-                                 int32_t                  dest_x,
-                                 int32_t                  dest_y,
-                                 int32_t                  width,
-                                 int32_t                  height)
+                                 pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t    *dst_line, *dst;
     uint32_t    *src_line, *src;
     uint32_t mask;
@@ -2883,19 +2833,9 @@ sse2_composite_over_8888_n_8888 (pixman_implementation_t *imp,
 
 static void
 sse2_composite_src_x888_8888 (pixman_implementation_t *imp,
-			      pixman_op_t              op,
-			      pixman_image_t *         src_image,
-			      pixman_image_t *         mask_image,
-			      pixman_image_t *         dest_image,
-			      int32_t                  src_x,
-			      int32_t                  src_y,
-			      int32_t                  mask_x,
-			      int32_t                  mask_y,
-			      int32_t                  dest_x,
-			      int32_t                  dest_y,
-			      int32_t                  width,
-			      int32_t                  height)
+			      pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t    *dst_line, *dst;
     uint32_t    *src_line, *src;
     int32_t w;
@@ -2951,19 +2891,9 @@ sse2_composite_src_x888_8888 (pixman_implementation_t *imp,
 
 static void
 sse2_composite_over_x888_n_8888 (pixman_implementation_t *imp,
-                                 pixman_op_t              op,
-                                 pixman_image_t *         src_image,
-                                 pixman_image_t *         mask_image,
-                                 pixman_image_t *         dest_image,
-                                 int32_t                  src_x,
-                                 int32_t                  src_y,
-                                 int32_t                  mask_x,
-                                 int32_t                  mask_y,
-                                 int32_t                  dest_x,
-                                 int32_t                  dest_y,
-                                 int32_t                  width,
-                                 int32_t                  height)
+                                 pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t    *dst_line, *dst;
     uint32_t    *src_line, *src;
     uint32_t mask;
@@ -3052,19 +2982,9 @@ sse2_composite_over_x888_n_8888 (pixman_implementation_t *imp,
 
 static void
 sse2_composite_over_8888_8888 (pixman_implementation_t *imp,
-                               pixman_op_t              op,
-                               pixman_image_t *         src_image,
-                               pixman_image_t *         mask_image,
-                               pixman_image_t *         dest_image,
-                               int32_t                  src_x,
-                               int32_t                  src_y,
-                               int32_t                  mask_x,
-                               int32_t                  mask_y,
-                               int32_t                  dest_x,
-                               int32_t                  dest_y,
-                               int32_t                  width,
-                               int32_t                  height)
+                               pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     int dst_stride, src_stride;
     uint32_t    *dst_line, *dst;
     uint32_t    *src_line, *src;
@@ -3100,19 +3020,9 @@ composite_over_8888_0565pixel (uint32_t src, uint16_t dst)
 
 static void
 sse2_composite_over_8888_0565 (pixman_implementation_t *imp,
-                               pixman_op_t              op,
-                               pixman_image_t *         src_image,
-                               pixman_image_t *         mask_image,
-                               pixman_image_t *         dest_image,
-                               int32_t                  src_x,
-                               int32_t                  src_y,
-                               int32_t                  mask_x,
-                               int32_t                  mask_y,
-                               int32_t                  dest_x,
-                               int32_t                  dest_y,
-                               int32_t                  width,
-                               int32_t                  height)
+                               pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint16_t    *dst_line, *dst, d;
     uint32_t    *src_line, *src, s;
     int dst_stride, src_stride;
@@ -3203,19 +3113,9 @@ sse2_composite_over_8888_0565 (pixman_implementation_t *imp,
 
 static void
 sse2_composite_over_n_8_8888 (pixman_implementation_t *imp,
-                              pixman_op_t              op,
-                              pixman_image_t *         src_image,
-                              pixman_image_t *         mask_image,
-                              pixman_image_t *         dest_image,
-                              int32_t                  src_x,
-                              int32_t                  src_y,
-                              int32_t                  mask_x,
-                              int32_t                  mask_y,
-                              int32_t                  dest_x,
-                              int32_t                  dest_y,
-                              int32_t                  width,
-                              int32_t                  height)
+                              pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t src, srca;
     uint32_t *dst_line, *dst;
     uint8_t *mask_line, *mask;
@@ -3484,19 +3384,9 @@ pixman_fill_sse2 (uint32_t *bits,
 
 static void
 sse2_composite_src_n_8_8888 (pixman_implementation_t *imp,
-                             pixman_op_t              op,
-                             pixman_image_t *         src_image,
-                             pixman_image_t *         mask_image,
-                             pixman_image_t *         dest_image,
-                             int32_t                  src_x,
-                             int32_t                  src_y,
-                             int32_t                  mask_x,
-                             int32_t                  mask_y,
-                             int32_t                  dest_x,
-                             int32_t                  dest_y,
-                             int32_t                  width,
-                             int32_t                  height)
+                             pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t src, srca;
     uint32_t    *dst_line, *dst;
     uint8_t     *mask_line, *mask;
@@ -3612,19 +3502,9 @@ sse2_composite_src_n_8_8888 (pixman_implementation_t *imp,
 
 static void
 sse2_composite_over_n_8_0565 (pixman_implementation_t *imp,
-                              pixman_op_t              op,
-                              pixman_image_t *         src_image,
-                              pixman_image_t *         mask_image,
-                              pixman_image_t *         dest_image,
-                              int32_t                  src_x,
-                              int32_t                  src_y,
-                              int32_t                  mask_x,
-                              int32_t                  mask_y,
-                              int32_t                  dest_x,
-                              int32_t                  dest_y,
-                              int32_t                  width,
-                              int32_t                  height)
+                              pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t src;
     uint16_t    *dst_line, *dst, d;
     uint8_t     *mask_line, *mask;
@@ -3758,19 +3638,9 @@ sse2_composite_over_n_8_0565 (pixman_implementation_t *imp,
 
 static void
 sse2_composite_over_pixbuf_0565 (pixman_implementation_t *imp,
-                                 pixman_op_t              op,
-                                 pixman_image_t *         src_image,
-                                 pixman_image_t *         mask_image,
-                                 pixman_image_t *         dest_image,
-                                 int32_t                  src_x,
-                                 int32_t                  src_y,
-                                 int32_t                  mask_x,
-                                 int32_t                  mask_y,
-                                 int32_t                  dest_x,
-                                 int32_t                  dest_y,
-                                 int32_t                  width,
-                                 int32_t                  height)
+                                 pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint16_t    *dst_line, *dst, d;
     uint32_t    *src_line, *src, s;
     int dst_stride, src_stride;
@@ -3878,19 +3748,9 @@ sse2_composite_over_pixbuf_0565 (pixman_implementation_t *imp,
 
 static void
 sse2_composite_over_pixbuf_8888 (pixman_implementation_t *imp,
-                                 pixman_op_t              op,
-                                 pixman_image_t *         src_image,
-                                 pixman_image_t *         mask_image,
-                                 pixman_image_t *         dest_image,
-                                 int32_t                  src_x,
-                                 int32_t                  src_y,
-                                 int32_t                  mask_x,
-                                 int32_t                  mask_y,
-                                 int32_t                  dest_x,
-                                 int32_t                  dest_y,
-                                 int32_t                  width,
-                                 int32_t                  height)
+                                 pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t    *dst_line, *dst, d;
     uint32_t    *src_line, *src, s;
     int dst_stride, src_stride;
@@ -3977,19 +3837,9 @@ sse2_composite_over_pixbuf_8888 (pixman_implementation_t *imp,
 
 static void
 sse2_composite_over_n_8888_0565_ca (pixman_implementation_t *imp,
-                                    pixman_op_t              op,
-                                    pixman_image_t *         src_image,
-                                    pixman_image_t *         mask_image,
-                                    pixman_image_t *         dest_image,
-                                    int32_t                  src_x,
-                                    int32_t                  src_y,
-                                    int32_t                  mask_x,
-                                    int32_t                  mask_y,
-                                    int32_t                  dest_x,
-                                    int32_t                  dest_y,
-                                    int32_t                  width,
-                                    int32_t                  height)
+                                    pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t src;
     uint16_t    *dst_line, *dst, d;
     uint32_t    *mask_line, *mask, m;
@@ -4121,19 +3971,9 @@ sse2_composite_over_n_8888_0565_ca (pixman_implementation_t *imp,
 
 static void
 sse2_composite_in_n_8_8 (pixman_implementation_t *imp,
-                         pixman_op_t              op,
-                         pixman_image_t *         src_image,
-                         pixman_image_t *         mask_image,
-                         pixman_image_t *         dest_image,
-                         int32_t                  src_x,
-                         int32_t                  src_y,
-                         int32_t                  mask_x,
-                         int32_t                  mask_y,
-                         int32_t                  dest_x,
-                         int32_t                  dest_y,
-                         int32_t                  width,
-                         int32_t                  height)
+                         pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint8_t     *dst_line, *dst;
     uint8_t     *mask_line, *mask;
     int dst_stride, mask_stride;
@@ -4217,19 +4057,9 @@ sse2_composite_in_n_8_8 (pixman_implementation_t *imp,
 
 static void
 sse2_composite_in_n_8 (pixman_implementation_t *imp,
-		       pixman_op_t              op,
-		       pixman_image_t *         src_image,
-		       pixman_image_t *         mask_image,
-		       pixman_image_t *         dest_image,
-		       int32_t                  src_x,
-		       int32_t                  src_y,
-		       int32_t                  mask_x,
-		       int32_t                  mask_y,
-		       int32_t                  dest_x,
-		       int32_t                  dest_y,
-		       int32_t                  width,
-		       int32_t                  height)
+		       pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint8_t     *dst_line, *dst;
     int dst_stride;
     uint32_t d;
@@ -4309,19 +4139,9 @@ sse2_composite_in_n_8 (pixman_implementation_t *imp,
 
 static void
 sse2_composite_in_8_8 (pixman_implementation_t *imp,
-                       pixman_op_t              op,
-                       pixman_image_t *         src_image,
-                       pixman_image_t *         mask_image,
-                       pixman_image_t *         dest_image,
-                       int32_t                  src_x,
-                       int32_t                  src_y,
-                       int32_t                  mask_x,
-                       int32_t                  mask_y,
-                       int32_t                  dest_x,
-                       int32_t                  dest_y,
-                       int32_t                  width,
-                       int32_t                  height)
+                       pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint8_t     *dst_line, *dst;
     uint8_t     *src_line, *src;
     int src_stride, dst_stride;
@@ -4390,19 +4210,9 @@ sse2_composite_in_8_8 (pixman_implementation_t *imp,
 
 static void
 sse2_composite_add_n_8_8 (pixman_implementation_t *imp,
-			  pixman_op_t              op,
-			  pixman_image_t *         src_image,
-			  pixman_image_t *         mask_image,
-			  pixman_image_t *         dest_image,
-			  int32_t                  src_x,
-			  int32_t                  src_y,
-			  int32_t                  mask_x,
-			  int32_t                  mask_y,
-			  int32_t                  dest_x,
-			  int32_t                  dest_y,
-			  int32_t                  width,
-			  int32_t                  height)
+			  pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint8_t     *dst_line, *dst;
     uint8_t     *mask_line, *mask;
     int dst_stride, mask_stride;
@@ -4486,19 +4296,9 @@ sse2_composite_add_n_8_8 (pixman_implementation_t *imp,
 
 static void
 sse2_composite_add_n_8 (pixman_implementation_t *imp,
-			pixman_op_t              op,
-			pixman_image_t *         src_image,
-			pixman_image_t *         mask_image,
-			pixman_image_t *         dest_image,
-			int32_t                  src_x,
-			int32_t                  src_y,
-			int32_t                  mask_x,
-			int32_t                  mask_y,
-			int32_t                  dest_x,
-			int32_t                  dest_y,
-			int32_t                  width,
-			int32_t                  height)
+			pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint8_t     *dst_line, *dst;
     int dst_stride;
     int32_t w;
@@ -4569,19 +4369,9 @@ sse2_composite_add_n_8 (pixman_implementation_t *imp,
 
 static void
 sse2_composite_add_8_8 (pixman_implementation_t *imp,
-			pixman_op_t              op,
-			pixman_image_t *         src_image,
-			pixman_image_t *         mask_image,
-			pixman_image_t *         dest_image,
-			int32_t                  src_x,
-			int32_t                  src_y,
-			int32_t                  mask_x,
-			int32_t                  mask_y,
-			int32_t                  dest_x,
-			int32_t                  dest_y,
-			int32_t                  width,
-			int32_t                  height)
+			pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint8_t     *dst_line, *dst;
     uint8_t     *src_line, *src;
     int dst_stride, src_stride;
@@ -4631,19 +4421,9 @@ sse2_composite_add_8_8 (pixman_implementation_t *imp,
 
 static void
 sse2_composite_add_8888_8888 (pixman_implementation_t *imp,
-                              pixman_op_t              op,
-                              pixman_image_t *         src_image,
-                              pixman_image_t *         mask_image,
-                              pixman_image_t *         dest_image,
-                              int32_t                  src_x,
-                              int32_t                  src_y,
-                              int32_t                  mask_x,
-                              int32_t                  mask_y,
-                              int32_t                  dest_x,
-                              int32_t                  dest_y,
-                              int32_t                  width,
-                              int32_t                  height)
+                              pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t    *dst_line, *dst;
     uint32_t    *src_line, *src;
     int dst_stride, src_stride;
@@ -4789,19 +4569,9 @@ pixman_blt_sse2 (uint32_t *src_bits,
 
 static void
 sse2_composite_copy_area (pixman_implementation_t *imp,
-                          pixman_op_t              op,
-                          pixman_image_t *         src_image,
-                          pixman_image_t *         mask_image,
-                          pixman_image_t *         dest_image,
-                          int32_t                  src_x,
-                          int32_t                  src_y,
-                          int32_t                  mask_x,
-                          int32_t                  mask_y,
-                          int32_t                  dest_x,
-                          int32_t                  dest_y,
-                          int32_t                  width,
-                          int32_t                  height)
+                          pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     pixman_blt_sse2 (src_image->bits.bits,
                      dest_image->bits.bits,
                      src_image->bits.rowstride,
@@ -4813,19 +4583,9 @@ sse2_composite_copy_area (pixman_implementation_t *imp,
 
 static void
 sse2_composite_over_x888_8_8888 (pixman_implementation_t *imp,
-                                 pixman_op_t              op,
-                                 pixman_image_t *         src_image,
-                                 pixman_image_t *         mask_image,
-                                 pixman_image_t *         dest_image,
-                                 int32_t                  src_x,
-                                 int32_t                  src_y,
-                                 int32_t                  mask_x,
-                                 int32_t                  mask_y,
-                                 int32_t                  dest_x,
-                                 int32_t                  dest_y,
-                                 int32_t                  width,
-                                 int32_t                  height)
+                                 pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t    *src, *src_line, s;
     uint32_t    *dst, *dst_line, d;
     uint8_t         *mask, *mask_line;
@@ -4948,19 +4708,9 @@ sse2_composite_over_x888_8_8888 (pixman_implementation_t *imp,
 
 static void
 sse2_composite_over_8888_8_8888 (pixman_implementation_t *imp,
-                                 pixman_op_t              op,
-                                 pixman_image_t *         src_image,
-                                 pixman_image_t *         mask_image,
-                                 pixman_image_t *         dest_image,
-                                 int32_t                  src_x,
-                                 int32_t                  src_y,
-                                 int32_t                  mask_x,
-                                 int32_t                  mask_y,
-                                 int32_t                  dest_x,
-                                 int32_t                  dest_y,
-                                 int32_t                  width,
-                                 int32_t                  height)
+                                 pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t    *src, *src_line, s;
     uint32_t    *dst, *dst_line, d;
     uint8_t         *mask, *mask_line;
@@ -5101,19 +4851,9 @@ sse2_composite_over_8888_8_8888 (pixman_implementation_t *imp,
 
 static void
 sse2_composite_over_reverse_n_8888 (pixman_implementation_t *imp,
-				    pixman_op_t              op,
-				    pixman_image_t *         src_image,
-				    pixman_image_t *         mask_image,
-				    pixman_image_t *         dest_image,
-				    int32_t                  src_x,
-				    int32_t                  src_y,
-				    int32_t                  mask_x,
-				    int32_t                  mask_y,
-				    int32_t                  dest_x,
-				    int32_t                  dest_y,
-				    int32_t                  width,
-				    int32_t                  height)
+				    pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t src;
     uint32_t    *dst_line, *dst;
     __m128i xmm_src;
@@ -5192,19 +4932,9 @@ sse2_composite_over_reverse_n_8888 (pixman_implementation_t *imp,
 
 static void
 sse2_composite_over_8888_8888_8888 (pixman_implementation_t *imp,
-				    pixman_op_t              op,
-				    pixman_image_t *         src_image,
-				    pixman_image_t *         mask_image,
-				    pixman_image_t *         dest_image,
-				    int32_t                  src_x,
-				    int32_t                  src_y,
-				    int32_t                  mask_x,
-				    int32_t                  mask_y,
-				    int32_t                  dest_x,
-				    int32_t                  dest_y,
-				    int32_t                  width,
-				    int32_t                  height)
+				    pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t    *src, *src_line, s;
     uint32_t    *dst, *dst_line, d;
     uint32_t    *mask, *mask_line;

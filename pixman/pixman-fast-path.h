@@ -253,20 +253,10 @@ scanline_func_name (dst_type_t       *dst,							\
 				  dst_type_t, repeat_mode, have_mask, mask_is_solid)		\
 static void											\
 fast_composite_scaled_nearest  ## scale_func_name (pixman_implementation_t *imp,		\
-						   pixman_op_t              op,			\
-						   pixman_image_t *         src_image,		\
-						   pixman_image_t *         mask_image,		\
-						   pixman_image_t *         dest_image,		\
-						   int32_t                  src_x,		\
-						   int32_t                  src_y,		\
-						   int32_t                  mask_x,		\
-						   int32_t                  mask_y,		\
-						   int32_t                  dest_x,		\
-						   int32_t                  dest_y,		\
-						   int32_t                  width,		\
-						   int32_t                  height)		\
+						   pixman_composite_info_t *info)               \
 {												\
-    dst_type_t *dst_line;									\
+    PIXMAN_COMPOSITE_ARGS (info);					                        \
+    dst_type_t *dst_line;						                        \
     mask_type_t *mask_line;									\
     src_type_t *src_first_line;									\
     int       y;										\
@@ -664,19 +654,9 @@ bilinear_pad_repeat_get_scanline_bounds (int32_t         source_image_width,
 				  dst_type_t, repeat_mode, have_mask, mask_is_solid)		\
 static void											\
 fast_composite_scaled_bilinear ## scale_func_name (pixman_implementation_t *imp,		\
-						   pixman_op_t              op,			\
-						   pixman_image_t *         src_image,		\
-						   pixman_image_t *         mask_image,		\
-						   pixman_image_t *         dest_image,		\
-						   int32_t                  src_x,		\
-						   int32_t                  src_y,		\
-						   int32_t                  mask_x,		\
-						   int32_t                  mask_y,		\
-						   int32_t                  dest_x,		\
-						   int32_t                  dest_y,		\
-						   int32_t                  width,		\
-						   int32_t                  height)		\
+						   pixman_composite_info_t *info)		\
 {												\
+    PIXMAN_COMPOSITE_ARGS (info);								\
     dst_type_t *dst_line;									\
     mask_type_t *mask_line;									\
     src_type_t *src_first_line;									\

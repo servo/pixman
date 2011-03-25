@@ -63,20 +63,10 @@ pixman_composite_##name##_asm_##cputype (int32_t   w,                   \
                                                                         \
 static void                                                             \
 cputype##_composite_##name (pixman_implementation_t *imp,               \
-                            pixman_op_t              op,                \
-                            pixman_image_t *         src_image,         \
-                            pixman_image_t *         mask_image,        \
-                            pixman_image_t *         dest_image,        \
-                            int32_t                  src_x,             \
-                            int32_t                  src_y,             \
-                            int32_t                  mask_x,            \
-                            int32_t                  mask_y,            \
-                            int32_t                  dest_x,            \
-                            int32_t                  dest_y,            \
-                            int32_t                  width,             \
-                            int32_t                  height)            \
+                            pixman_composite_info_t *info)              \
 {                                                                       \
-    dst_type *dst_line;                                                 \
+    PIXMAN_COMPOSITE_ARGS (info);                                       \
+    dst_type *dst_line;							\
     src_type *src_line;                                                 \
     int32_t dst_stride, src_stride;                                     \
                                                                         \
@@ -101,19 +91,9 @@ pixman_composite_##name##_asm_##cputype (int32_t    w,                  \
                                                                         \
 static void                                                             \
 cputype##_composite_##name (pixman_implementation_t *imp,               \
-                            pixman_op_t              op,                \
-                            pixman_image_t *         src_image,         \
-                            pixman_image_t *         mask_image,        \
-                            pixman_image_t *         dest_image,        \
-                            int32_t                  src_x,             \
-                            int32_t                  src_y,             \
-                            int32_t                  mask_x,            \
-                            int32_t                  mask_y,            \
-                            int32_t                  dest_x,            \
-                            int32_t                  dest_y,            \
-                            int32_t                  width,             \
-                            int32_t                  height)            \
+			    pixman_composite_info_t *info)              \
 {                                                                       \
+    PIXMAN_COMPOSITE_ARGS (info);					\
     dst_type  *dst_line;                                                \
     int32_t    dst_stride;                                              \
     uint32_t   src;                                                     \
@@ -147,20 +127,10 @@ pixman_composite_##name##_asm_##cputype (int32_t    w,                  \
                                                                         \
 static void                                                             \
 cputype##_composite_##name (pixman_implementation_t *imp,               \
-                            pixman_op_t              op,                \
-                            pixman_image_t *         src_image,         \
-                            pixman_image_t *         mask_image,        \
-                            pixman_image_t *         dest_image,        \
-                            int32_t                  src_x,             \
-                            int32_t                  src_y,             \
-                            int32_t                  mask_x,            \
-                            int32_t                  mask_y,            \
-                            int32_t                  dest_x,            \
-                            int32_t                  dest_y,            \
-                            int32_t                  width,             \
-                            int32_t                  height)            \
+                            pixman_composite_info_t *info)              \
 {                                                                       \
-    dst_type  *dst_line;                                                \
+    PIXMAN_COMPOSITE_ARGS (info);                                       \
+    dst_type  *dst_line;						\
     mask_type *mask_line;                                               \
     int32_t    dst_stride, mask_stride;                                 \
     uint32_t   src;                                                     \
@@ -196,20 +166,10 @@ pixman_composite_##name##_asm_##cputype (int32_t    w,                  \
                                                                         \
 static void                                                             \
 cputype##_composite_##name (pixman_implementation_t *imp,               \
-                            pixman_op_t              op,                \
-                            pixman_image_t *         src_image,         \
-                            pixman_image_t *         mask_image,        \
-                            pixman_image_t *         dest_image,        \
-                            int32_t                  src_x,             \
-                            int32_t                  src_y,             \
-                            int32_t                  mask_x,            \
-                            int32_t                  mask_y,            \
-                            int32_t                  dest_x,            \
-                            int32_t                  dest_y,            \
-                            int32_t                  width,             \
-                            int32_t                  height)            \
+                            pixman_composite_info_t *info)              \
 {                                                                       \
-    dst_type  *dst_line;                                                \
+    PIXMAN_COMPOSITE_ARGS (info);                                       \
+    dst_type  *dst_line;						\
     src_type  *src_line;                                                \
     int32_t    dst_stride, src_stride;                                  \
     uint32_t   mask;                                                    \
@@ -247,20 +207,10 @@ pixman_composite_##name##_asm_##cputype (int32_t    w,                  \
                                                                         \
 static void                                                             \
 cputype##_composite_##name (pixman_implementation_t *imp,               \
-                            pixman_op_t              op,                \
-                            pixman_image_t *         src_image,         \
-                            pixman_image_t *         mask_image,        \
-                            pixman_image_t *         dest_image,        \
-                            int32_t                  src_x,             \
-                            int32_t                  src_y,             \
-                            int32_t                  mask_x,            \
-                            int32_t                  mask_y,            \
-                            int32_t                  dest_x,            \
-                            int32_t                  dest_y,            \
-                            int32_t                  width,             \
-                            int32_t                  height)            \
+                            pixman_composite_info_t *info)              \
 {                                                                       \
-    dst_type  *dst_line;                                                \
+    PIXMAN_COMPOSITE_ARGS (info);                                       \
+    dst_type  *dst_line;						\
     src_type  *src_line;                                                \
     mask_type *mask_line;                                               \
     int32_t    dst_stride, src_stride, mask_stride;                     \

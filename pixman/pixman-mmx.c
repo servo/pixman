@@ -1087,19 +1087,9 @@ mmx_combine_add_ca (pixman_implementation_t *imp,
 
 static void
 mmx_composite_over_n_8888 (pixman_implementation_t *imp,
-                           pixman_op_t              op,
-                           pixman_image_t *         src_image,
-                           pixman_image_t *         mask_image,
-                           pixman_image_t *         dest_image,
-                           int32_t                  src_x,
-                           int32_t                  src_y,
-                           int32_t                  mask_x,
-                           int32_t                  mask_y,
-                           int32_t                  dest_x,
-                           int32_t                  dest_y,
-                           int32_t                  width,
-                           int32_t                  height)
+                           pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t src;
     uint32_t    *dst_line, *dst;
     int32_t w;
@@ -1166,19 +1156,9 @@ mmx_composite_over_n_8888 (pixman_implementation_t *imp,
 
 static void
 mmx_composite_over_n_0565 (pixman_implementation_t *imp,
-                           pixman_op_t              op,
-                           pixman_image_t *         src_image,
-                           pixman_image_t *         mask_image,
-                           pixman_image_t *         dest_image,
-                           int32_t                  src_x,
-                           int32_t                  src_y,
-                           int32_t                  mask_x,
-                           int32_t                  mask_y,
-                           int32_t                  dest_x,
-                           int32_t                  dest_y,
-                           int32_t                  width,
-                           int32_t                  height)
+                           pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t src;
     uint16_t    *dst_line, *dst;
     int32_t w;
@@ -1254,19 +1234,9 @@ mmx_composite_over_n_0565 (pixman_implementation_t *imp,
 
 static void
 mmx_composite_over_n_8888_8888_ca (pixman_implementation_t *imp,
-                                   pixman_op_t              op,
-                                   pixman_image_t *         src_image,
-                                   pixman_image_t *         mask_image,
-                                   pixman_image_t *         dest_image,
-                                   int32_t                  src_x,
-                                   int32_t                  src_y,
-                                   int32_t                  mask_x,
-                                   int32_t                  mask_y,
-                                   int32_t                  dest_x,
-                                   int32_t                  dest_y,
-                                   int32_t                  width,
-                                   int32_t                  height)
+                                   pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t src;
     uint32_t    *dst_line;
     uint32_t    *mask_line;
@@ -1357,19 +1327,9 @@ mmx_composite_over_n_8888_8888_ca (pixman_implementation_t *imp,
 
 static void
 mmx_composite_over_8888_n_8888 (pixman_implementation_t *imp,
-                                pixman_op_t              op,
-                                pixman_image_t *         src_image,
-                                pixman_image_t *         mask_image,
-                                pixman_image_t *         dest_image,
-                                int32_t                  src_x,
-                                int32_t                  src_y,
-                                int32_t                  mask_x,
-                                int32_t                  mask_y,
-                                int32_t                  dest_x,
-                                int32_t                  dest_y,
-                                int32_t                  width,
-                                int32_t                  height)
+                                pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t    *dst_line, *dst;
     uint32_t    *src_line, *src;
     uint32_t mask;
@@ -1441,19 +1401,9 @@ mmx_composite_over_8888_n_8888 (pixman_implementation_t *imp,
 
 static void
 mmx_composite_over_x888_n_8888 (pixman_implementation_t *imp,
-                                pixman_op_t              op,
-                                pixman_image_t *         src_image,
-                                pixman_image_t *         mask_image,
-                                pixman_image_t *         dest_image,
-                                int32_t                  src_x,
-                                int32_t                  src_y,
-                                int32_t                  mask_x,
-                                int32_t                  mask_y,
-                                int32_t                  dest_x,
-                                int32_t                  dest_y,
-                                int32_t                  width,
-                                int32_t                  height)
+                                pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t *dst_line, *dst;
     uint32_t *src_line, *src;
     uint32_t mask;
@@ -1577,19 +1527,9 @@ mmx_composite_over_x888_n_8888 (pixman_implementation_t *imp,
 
 static void
 mmx_composite_over_8888_8888 (pixman_implementation_t *imp,
-                              pixman_op_t              op,
-                              pixman_image_t *         src_image,
-                              pixman_image_t *         mask_image,
-                              pixman_image_t *         dest_image,
-                              int32_t                  src_x,
-                              int32_t                  src_y,
-                              int32_t                  mask_x,
-                              int32_t                  mask_y,
-                              int32_t                  dest_x,
-                              int32_t                  dest_y,
-                              int32_t                  width,
-                              int32_t                  height)
+                              pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t *dst_line, *dst;
     uint32_t *src_line, *src;
     uint32_t s;
@@ -1635,19 +1575,9 @@ mmx_composite_over_8888_8888 (pixman_implementation_t *imp,
 
 static void
 mmx_composite_over_8888_0565 (pixman_implementation_t *imp,
-                              pixman_op_t              op,
-                              pixman_image_t *         src_image,
-                              pixman_image_t *         mask_image,
-                              pixman_image_t *         dest_image,
-                              int32_t                  src_x,
-                              int32_t                  src_y,
-                              int32_t                  mask_x,
-                              int32_t                  mask_y,
-                              int32_t                  dest_x,
-                              int32_t                  dest_y,
-                              int32_t                  width,
-                              int32_t                  height)
+                              pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint16_t    *dst_line, *dst;
     uint32_t    *src_line, *src;
     int dst_stride, src_stride;
@@ -1738,19 +1668,9 @@ mmx_composite_over_8888_0565 (pixman_implementation_t *imp,
 
 static void
 mmx_composite_over_n_8_8888 (pixman_implementation_t *imp,
-                             pixman_op_t              op,
-                             pixman_image_t *         src_image,
-                             pixman_image_t *         mask_image,
-                             pixman_image_t *         dest_image,
-                             int32_t                  src_x,
-                             int32_t                  src_y,
-                             int32_t                  mask_x,
-                             int32_t                  mask_y,
-                             int32_t                  dest_x,
-                             int32_t                  dest_y,
-                             int32_t                  width,
-                             int32_t                  height)
+                             pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t src, srca;
     uint32_t *dst_line, *dst;
     uint8_t *mask_line, *mask;
@@ -2012,19 +1932,9 @@ pixman_fill_mmx (uint32_t *bits,
 
 static void
 mmx_composite_src_n_8_8888 (pixman_implementation_t *imp,
-                            pixman_op_t              op,
-                            pixman_image_t *         src_image,
-                            pixman_image_t *         mask_image,
-                            pixman_image_t *         dest_image,
-                            int32_t                  src_x,
-                            int32_t                  src_y,
-                            int32_t                  mask_x,
-                            int32_t                  mask_y,
-                            int32_t                  dest_x,
-                            int32_t                  dest_y,
-                            int32_t                  width,
-                            int32_t                  height)
+                            pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t src, srca;
     uint32_t    *dst_line, *dst;
     uint8_t     *mask_line, *mask;
@@ -2143,19 +2053,9 @@ mmx_composite_src_n_8_8888 (pixman_implementation_t *imp,
 
 static void
 mmx_composite_over_n_8_0565 (pixman_implementation_t *imp,
-                             pixman_op_t              op,
-                             pixman_image_t *         src_image,
-                             pixman_image_t *         mask_image,
-                             pixman_image_t *         dest_image,
-                             int32_t                  src_x,
-                             int32_t                  src_y,
-                             int32_t                  mask_x,
-                             int32_t                  mask_y,
-                             int32_t                  dest_x,
-                             int32_t                  dest_y,
-                             int32_t                  width,
-                             int32_t                  height)
+                             pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t src, srca;
     uint16_t *dst_line, *dst;
     uint8_t *mask_line, *mask;
@@ -2284,19 +2184,9 @@ mmx_composite_over_n_8_0565 (pixman_implementation_t *imp,
 
 static void
 mmx_composite_over_pixbuf_0565 (pixman_implementation_t *imp,
-                                pixman_op_t              op,
-                                pixman_image_t *         src_image,
-                                pixman_image_t *         mask_image,
-                                pixman_image_t *         dest_image,
-                                int32_t                  src_x,
-                                int32_t                  src_y,
-                                int32_t                  mask_x,
-                                int32_t                  mask_y,
-                                int32_t                  dest_x,
-                                int32_t                  dest_y,
-                                int32_t                  width,
-                                int32_t                  height)
+                                pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint16_t    *dst_line, *dst;
     uint32_t    *src_line, *src;
     int dst_stride, src_stride;
@@ -2404,19 +2294,9 @@ mmx_composite_over_pixbuf_0565 (pixman_implementation_t *imp,
 
 static void
 mmx_composite_over_pixbuf_8888 (pixman_implementation_t *imp,
-                                pixman_op_t              op,
-                                pixman_image_t *         src_image,
-                                pixman_image_t *         mask_image,
-                                pixman_image_t *         dest_image,
-                                int32_t                  src_x,
-                                int32_t                  src_y,
-                                int32_t                  mask_x,
-                                int32_t                  mask_y,
-                                int32_t                  dest_x,
-                                int32_t                  dest_y,
-                                int32_t                  width,
-                                int32_t                  height)
+                                pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t    *dst_line, *dst;
     uint32_t    *src_line, *src;
     int dst_stride, src_stride;
@@ -2504,19 +2384,9 @@ mmx_composite_over_pixbuf_8888 (pixman_implementation_t *imp,
 
 static void
 mmx_composite_over_n_8888_0565_ca (pixman_implementation_t *imp,
-                                   pixman_op_t              op,
-                                   pixman_image_t *         src_image,
-                                   pixman_image_t *         mask_image,
-                                   pixman_image_t *         dest_image,
-                                   int32_t                  src_x,
-                                   int32_t                  src_y,
-                                   int32_t                  mask_x,
-                                   int32_t                  mask_y,
-                                   int32_t                  dest_x,
-                                   int32_t                  dest_y,
-                                   int32_t                  width,
-                                   int32_t                  height)
+                                   pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t src;
     uint16_t    *dst_line;
     uint32_t    *mask_line;
@@ -2611,19 +2481,9 @@ mmx_composite_over_n_8888_0565_ca (pixman_implementation_t *imp,
 
 static void
 mmx_composite_in_n_8_8 (pixman_implementation_t *imp,
-                        pixman_op_t              op,
-                        pixman_image_t *         src_image,
-                        pixman_image_t *         mask_image,
-                        pixman_image_t *         dest_image,
-                        int32_t                  src_x,
-                        int32_t                  src_y,
-                        int32_t                  mask_x,
-                        int32_t                  mask_y,
-                        int32_t                  dest_x,
-                        int32_t                  dest_y,
-                        int32_t                  width,
-                        int32_t                  height)
+                        pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint8_t *dst_line, *dst;
     uint8_t *mask_line, *mask;
     int dst_stride, mask_stride;
@@ -2690,19 +2550,9 @@ mmx_composite_in_n_8_8 (pixman_implementation_t *imp,
 
 static void
 mmx_composite_in_8_8 (pixman_implementation_t *imp,
-                      pixman_op_t              op,
-                      pixman_image_t *         src_image,
-                      pixman_image_t *         mask_image,
-                      pixman_image_t *         dest_image,
-                      int32_t                  src_x,
-                      int32_t                  src_y,
-                      int32_t                  mask_x,
-                      int32_t                  mask_y,
-                      int32_t                  dest_x,
-                      int32_t                  dest_y,
-                      int32_t                  width,
-                      int32_t                  height)
+                      pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint8_t     *dst_line, *dst;
     uint8_t     *src_line, *src;
     int src_stride, dst_stride;
@@ -2755,19 +2605,9 @@ mmx_composite_in_8_8 (pixman_implementation_t *imp,
 
 static void
 mmx_composite_add_n_8_8 (pixman_implementation_t *imp,
-			 pixman_op_t              op,
-			 pixman_image_t *         src_image,
-			 pixman_image_t *         mask_image,
-			 pixman_image_t *         dest_image,
-			 int32_t                  src_x,
-			 int32_t                  src_y,
-			 int32_t                  mask_x,
-			 int32_t                  mask_y,
-			 int32_t                  dest_x,
-			 int32_t                  dest_y,
-			 int32_t                  width,
-			 int32_t                  height)
+			 pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint8_t     *dst_line, *dst;
     uint8_t     *mask_line, *mask;
     int dst_stride, mask_stride;
@@ -2835,19 +2675,9 @@ mmx_composite_add_n_8_8 (pixman_implementation_t *imp,
 
 static void
 mmx_composite_add_8_8 (pixman_implementation_t *imp,
-		       pixman_op_t              op,
-		       pixman_image_t *         src_image,
-		       pixman_image_t *         mask_image,
-		       pixman_image_t *         dest_image,
-		       int32_t                  src_x,
-		       int32_t                  src_y,
-		       int32_t                  mask_x,
-		       int32_t                  mask_y,
-		       int32_t                  dest_x,
-		       int32_t                  dest_y,
-		       int32_t                  width,
-		       int32_t                  height)
+		       pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint8_t *dst_line, *dst;
     uint8_t *src_line, *src;
     int dst_stride, src_stride;
@@ -2908,19 +2738,9 @@ mmx_composite_add_8_8 (pixman_implementation_t *imp,
 
 static void
 mmx_composite_add_8888_8888 (pixman_implementation_t *imp,
-                             pixman_op_t              op,
-                             pixman_image_t *         src_image,
-                             pixman_image_t *         mask_image,
-                             pixman_image_t *         dest_image,
-                             int32_t                  src_x,
-                             int32_t                  src_y,
-                             int32_t                  mask_x,
-                             int32_t                  mask_y,
-                             int32_t                  dest_x,
-                             int32_t                  dest_y,
-                             int32_t                  width,
-                             int32_t                  height)
+                             pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     __m64 dst64;
     uint32_t    *dst_line, *dst;
     uint32_t    *src_line, *src;
@@ -3114,19 +2934,10 @@ pixman_blt_mmx (uint32_t *src_bits,
 
 static void
 mmx_composite_copy_area (pixman_implementation_t *imp,
-                         pixman_op_t              op,
-                         pixman_image_t *         src_image,
-                         pixman_image_t *         mask_image,
-                         pixman_image_t *         dest_image,
-                         int32_t                  src_x,
-                         int32_t                  src_y,
-                         int32_t                  mask_x,
-                         int32_t                  mask_y,
-                         int32_t                  dest_x,
-                         int32_t                  dest_y,
-                         int32_t                  width,
-                         int32_t                  height)
+                         pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
+
     pixman_blt_mmx (src_image->bits.bits,
                     dest_image->bits.bits,
                     src_image->bits.rowstride,
@@ -3139,19 +2950,9 @@ mmx_composite_copy_area (pixman_implementation_t *imp,
 #if 0
 static void
 mmx_composite_over_x888_8_8888 (pixman_implementation_t *imp,
-                                pixman_op_t              op,
-                                pixman_image_t *         src_image,
-                                pixman_image_t *         mask_image,
-                                pixman_image_t *         dest_image,
-                                int32_t                  src_x,
-                                int32_t                  src_y,
-                                int32_t                  mask_x,
-                                int32_t                  mask_y,
-                                int32_t                  dest_x,
-                                int32_t                  dest_y,
-                                int32_t                  width,
-                                int32_t                  height)
+                                pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint32_t  *src, *src_line;
     uint32_t  *dst, *dst_line;
     uint8_t  *mask, *mask_line;

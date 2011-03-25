@@ -101,19 +101,9 @@ static const op_info_t op_flags[PIXMAN_N_OPERATORS] =
 
 static void
 general_composite_rect  (pixman_implementation_t *imp,
-                         pixman_op_t              op,
-                         pixman_image_t *         src_image,
-                         pixman_image_t *         mask_image,
-                         pixman_image_t *         dest_image,
-                         int32_t                  src_x,
-                         int32_t                  src_y,
-                         int32_t                  mask_x,
-                         int32_t                  mask_y,
-                         int32_t                  dest_x,
-                         int32_t                  dest_y,
-                         int32_t                  width,
-                         int32_t                  height)
+                         pixman_composite_info_t *info)
 {
+    PIXMAN_COMPOSITE_ARGS (info);
     uint64_t stack_scanline_buffer[(SCANLINE_BUFFER_LENGTH * 3 + 7) / 8];
     uint8_t *scanline_buffer = (uint8_t *) stack_scanline_buffer;
     uint8_t *src_buffer, *mask_buffer, *dest_buffer;
