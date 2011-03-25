@@ -233,8 +233,8 @@ general_blt (pixman_implementation_t *imp,
              int                      dst_bpp,
              int                      src_x,
              int                      src_y,
-             int                      dst_x,
-             int                      dst_y,
+             int                      dest_x,
+             int                      dest_y,
              int                      width,
              int                      height)
 {
