@@ -119,7 +119,7 @@ for w in -Werror -errwarn; do
 		[CFLAGS=$w],
 		[int main(int c, char **v) { (void)c; (void)v; return 0; }],
 		[WERROR=$w; yesno=yes], [yesno=no])
-	AC_MSG_RESULT($_yesno)
+	AC_MSG_RESULT($yesno)
     fi
 done
 
