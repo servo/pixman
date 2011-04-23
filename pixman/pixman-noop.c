@@ -82,6 +82,11 @@ noop_src_iter_init (pixman_implementation_t *imp, pixman_iter_t *iter)
     {
 	iter->get_scanline = get_scanline_null;
     }
+    else if ((iter->flags & (ITER_IGNORE_ALPHA | ITER_IGNORE_RGB)) ==
+	     (ITER_IGNORE_ALPHA | ITER_IGNORE_RGB))
+    {
+	iter->get_scanline = _pixman_iter_get_scanline_noop;
+    }
     else if ((iter->flags & ITER_NARROW)				&&
 	     (image->common.flags & FLAGS) == FLAGS			&&
 	     iter->x >= 0 && iter->y >= 0				&&

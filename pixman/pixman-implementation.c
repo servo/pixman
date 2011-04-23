@@ -260,15 +260,7 @@ _pixman_implementation_src_iter_init (pixman_implementation_t	*imp,
     iter->height = height;
     iter->flags = flags;
 
-    if ((flags & (ITER_IGNORE_ALPHA | ITER_IGNORE_RGB)) ==
-	     (ITER_IGNORE_ALPHA | ITER_IGNORE_RGB))
-    {
-	iter->get_scanline = _pixman_iter_get_scanline_noop;
-    }
-    else
-    {
-	(*imp->src_iter_init) (imp, iter);
-    }
+    (*imp->src_iter_init) (imp, iter);
 }
 
 void
