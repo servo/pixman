@@ -13,6 +13,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#include <stddef.h>
 
 #include "pixman-compiler.h"
 
@@ -736,6 +737,50 @@ pixman_bool_t
 pixman_region16_copy_from_region32 (pixman_region16_t *dst,
                                     pixman_region32_t *src);
 
+/* Doubly linked lists */
+typedef struct pixman_link_t pixman_link_t;
+struct pixman_link_t
+{
+    pixman_link_t *next;
+    pixman_link_t *prev;
+};
+
+typedef struct pixman_list_t pixman_list_t;
+struct pixman_list_t
+{
+    pixman_link_t *head;
+    pixman_link_t *tail;
+};
+
+static force_inline void
+pixman_list_init (pixman_list_t *list)
+{
+    list->head = (pixman_link_t *)list;
+    list->tail = (pixman_link_t *)list;
+}
+
+static force_inline void
+pixman_list_prepend (pixman_list_t *list, pixman_link_t *link)
+{
+    link->next = list->head;
+    link->prev = (pixman_link_t *)list;
+    list->head->prev = link;
+    list->head = link;
+}
+
+static force_inline void
+pixman_list_unlink (pixman_link_t *link)
+{
+    link->prev->next = link->next;
+    link->next->prev = link->prev;
+}
+
+static force_inline void
+pixman_list_move_to_front (pixman_list_t *list, pixman_link_t *link)
+{
+    pixman_list_unlink (link);
+    pixman_list_prepend (list, link);
+}
 
 /* Misc macros */
 
