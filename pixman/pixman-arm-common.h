@@ -348,13 +348,13 @@ scaled_bilinear_scanline_##cputype##_##name##_##op (                          \
                                                                               \
 FAST_BILINEAR_MAINLOOP_COMMON (cputype##_##name##_cover_##op,                 \
                        scaled_bilinear_scanline_##cputype##_##name##_##op,    \
-                       src_type, uint32_t, dst_type, COVER, FALSE, FALSE)     \
+                       src_type, uint32_t, dst_type, COVER, FLAG_NONE)        \
 FAST_BILINEAR_MAINLOOP_COMMON (cputype##_##name##_none_##op,                  \
                        scaled_bilinear_scanline_##cputype##_##name##_##op,    \
-                       src_type, uint32_t, dst_type, NONE, FALSE, FALSE)      \
+                       src_type, uint32_t, dst_type, NONE, FLAG_NONE)         \
 FAST_BILINEAR_MAINLOOP_COMMON (cputype##_##name##_pad_##op,                   \
                        scaled_bilinear_scanline_##cputype##_##name##_##op,    \
-                       src_type, uint32_t, dst_type, PAD, FALSE, FALSE)
+                       src_type, uint32_t, dst_type, PAD, FLAG_NONE)
 
 
 #define PIXMAN_ARM_BIND_SCALED_BILINEAR_SRC_A8_DST(flags, cputype, name, op,  \
@@ -393,12 +393,15 @@ scaled_bilinear_scanline_##cputype##_##name##_##op (                          \
                                                                               \
 FAST_BILINEAR_MAINLOOP_COMMON (cputype##_##name##_cover_##op,                 \
                        scaled_bilinear_scanline_##cputype##_##name##_##op,    \
-                       src_type, uint8_t, dst_type, COVER, TRUE, FALSE)       \
+                       src_type, uint8_t, dst_type, COVER,                    \
+                       FLAG_HAVE_NON_SOLID_MASK)                              \
 FAST_BILINEAR_MAINLOOP_COMMON (cputype##_##name##_none_##op,                  \
                        scaled_bilinear_scanline_##cputype##_##name##_##op,    \
-                       src_type, uint8_t, dst_type, NONE, TRUE, FALSE)        \
+                       src_type, uint8_t, dst_type, NONE,                     \
+                       FLAG_HAVE_NON_SOLID_MASK)                              \
 FAST_BILINEAR_MAINLOOP_COMMON (cputype##_##name##_pad_##op,                   \
                        scaled_bilinear_scanline_##cputype##_##name##_##op,    \
-                       src_type, uint8_t, dst_type, PAD, TRUE, FALSE)
+                       src_type, uint8_t, dst_type, PAD,                      \
+                       FLAG_HAVE_NON_SOLID_MASK)
 
 #endif

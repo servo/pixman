@@ -30,6 +30,24 @@
 
 #define PIXMAN_REPEAT_COVER -1
 
+/* Flags describing input parameters to fast path macro template.
+ * Turning on some flag values may indicate that
+ * "some property X is available so template can use this" or
+ * "some property X should be handled by template".
+ *
+ * FLAG_HAVE_SOLID_MASK
+ *  Input mask is solid so template should handle this.
+ *
+ * FLAG_HAVE_NON_SOLID_MASK
+ *  Input mask is bits mask so template should handle this.
+ *
+ * FLAG_HAVE_SOLID_MASK and FLAG_HAVE_NON_SOLID_MASK are mutually
+ * exclusive. (It's not allowed to turn both flags on)
+ */
+#define FLAG_NONE				(0)
+#define FLAG_HAVE_SOLID_MASK			(1 <<   1)
+#define FLAG_HAVE_NON_SOLID_MASK		(1 <<   2)
+
 static force_inline pixman_bool_t
 repeat (pixman_repeat_t repeat, int *c, int size)
 {
@@ -651,7 +669,7 @@ bilinear_pad_repeat_get_scanline_bounds (int32_t         source_image_width,
  *       multiplication instructions.
  */
 #define FAST_BILINEAR_MAINLOOP_INT(scale_func_name, scanline_func, src_type_t, mask_type_t,	\
-				  dst_type_t, repeat_mode, have_mask, mask_is_solid)		\
+				  dst_type_t, repeat_mode, flags)				\
 static void											\
 fast_composite_scaled_bilinear ## scale_func_name (pixman_implementation_t *imp,		\
 						   pixman_composite_info_t *info)		\
@@ -673,19 +691,17 @@ fast_composite_scaled_bilinear ## scale_func_name (pixman_implementation_t *imp,
     int src_stride, mask_stride, dst_stride;							\
 												\
     PIXMAN_IMAGE_GET_LINE (dest_image, dest_x, dest_y, dst_type_t, dst_stride, dst_line, 1);	\
-    if (have_mask)										\
+    if (flags & FLAG_HAVE_SOLID_MASK)								\
     {												\
-	if (mask_is_solid)									\
-	{											\
-	    solid_mask = _pixman_image_get_solid (imp, mask_image, dest_image->bits.format);	\
-	    mask_stride = 0;									\
-	}											\
-	else											\
-	{											\
-	    PIXMAN_IMAGE_GET_LINE (mask_image, mask_x, mask_y, mask_type_t,			\
-				   mask_stride, mask_line, 1);					\
-	}											\
+	solid_mask = _pixman_image_get_solid (imp, mask_image, dest_image->bits.format);	\
+	mask_stride = 0;									\
     }												\
+    else if (flags & FLAG_HAVE_NON_SOLID_MASK)							\
+    {												\
+	PIXMAN_IMAGE_GET_LINE (mask_image, mask_x, mask_y, mask_type_t,				\
+			       mask_stride, mask_line, 1);					\
+    }												\
+												\
     /* pass in 0 instead of src_x and src_y because src_x and src_y need to be			\
      * transformed from destination space to source space */					\
     PIXMAN_IMAGE_GET_LINE (src_image, 0, 0, src_type_t, src_stride, src_first_line, 1);		\
@@ -728,7 +744,7 @@ fast_composite_scaled_bilinear ## scale_func_name (pixman_implementation_t *imp,
 	dst = dst_line;										\
 	dst_line += dst_stride;									\
 	vx = v.vector[0];									\
-	if (have_mask && !mask_is_solid)							\
+	if (flags & FLAG_HAVE_NON_SOLID_MASK)							\
 	{											\
 	    mask = mask_line;									\
 	    mask_line += mask_stride;								\
@@ -766,7 +782,7 @@ fast_composite_scaled_bilinear ## scale_func_name (pixman_implementation_t *imp,
 		scanline_func (dst, mask,							\
 			       buf1, buf2, left_pad, weight1, weight2, 0, 0, 0, FALSE);		\
 		dst += left_pad;								\
-		if (have_mask && !mask_is_solid)						\
+		if (flags & FLAG_HAVE_NON_SOLID_MASK)						\
 		    mask += left_pad;								\
 	    }											\
 	    if (width > 0)									\
@@ -774,7 +790,7 @@ fast_composite_scaled_bilinear ## scale_func_name (pixman_implementation_t *imp,
 		scanline_func (dst, mask,							\
 			       src1, src2, width, weight1, weight2, vx, unit_x, 0, FALSE);	\
 		dst += width;									\
-		if (have_mask && !mask_is_solid)						\
+		if (flags & FLAG_HAVE_NON_SOLID_MASK)						\
 		    mask += width;								\
 	    }											\
 	    if (right_pad > 0)									\
@@ -821,7 +837,7 @@ fast_composite_scaled_bilinear ## scale_func_name (pixman_implementation_t *imp,
 		scanline_func (dst, mask,							\
 			       buf1, buf2, left_pad, weight1, weight2, 0, 0, 0, TRUE);		\
 		dst += left_pad;								\
-		if (have_mask && !mask_is_solid)						\
+		if (flags & FLAG_HAVE_NON_SOLID_MASK)						\
 		    mask += left_pad;								\
 	    }											\
 	    if (left_tz > 0)									\
@@ -834,7 +850,7 @@ fast_composite_scaled_bilinear ## scale_func_name (pixman_implementation_t *imp,
 			       buf1, buf2, left_tz, weight1, weight2,				\
 			       pixman_fixed_frac (vx), unit_x, 0, FALSE);			\
 		dst += left_tz;									\
-		if (have_mask && !mask_is_solid)						\
+		if (flags & FLAG_HAVE_NON_SOLID_MASK)						\
 		    mask += left_tz;								\
 		vx += left_tz * unit_x;								\
 	    }											\
@@ -843,7 +859,7 @@ fast_composite_scaled_bilinear ## scale_func_name (pixman_implementation_t *imp,
 		scanline_func (dst, mask,							\
 			       src1, src2, width, weight1, weight2, vx, unit_x, 0, FALSE);	\
 		dst += width;									\
-		if (have_mask && !mask_is_solid)						\
+		if (flags & FLAG_HAVE_NON_SOLID_MASK)						\
 		    mask += width;								\
 		vx += width * unit_x;								\
 	    }											\
@@ -857,7 +873,7 @@ fast_composite_scaled_bilinear ## scale_func_name (pixman_implementation_t *imp,
 			       buf1, buf2, right_tz, weight1, weight2,				\
 			       pixman_fixed_frac (vx), unit_x, 0, FALSE);			\
 		dst += right_tz;								\
-		if (have_mask && !mask_is_solid)						\
+		if (flags & FLAG_HAVE_NON_SOLID_MASK)						\
 		    mask += right_tz;								\
 	    }											\
 	    if (right_pad > 0)									\
@@ -879,9 +895,9 @@ fast_composite_scaled_bilinear ## scale_func_name (pixman_implementation_t *imp,
 
 /* A workaround for old sun studio, see: https://bugs.freedesktop.org/show_bug.cgi?id=32764 */
 #define FAST_BILINEAR_MAINLOOP_COMMON(scale_func_name, scanline_func, src_type_t, mask_type_t,	\
-				  dst_type_t, repeat_mode, have_mask, mask_is_solid)		\
+				  dst_type_t, repeat_mode, flags)				\
 	FAST_BILINEAR_MAINLOOP_INT(_ ## scale_func_name, scanline_func, src_type_t, mask_type_t,\
-				  dst_type_t, repeat_mode, have_mask, mask_is_solid)
+				  dst_type_t, repeat_mode, flags)
 
 #define SCALED_BILINEAR_FLAGS						\
     (FAST_PATH_SCALE_TRANSFORM	|					\
