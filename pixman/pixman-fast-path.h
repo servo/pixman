@@ -1027,6 +1027,17 @@ fast_composite_scaled_bilinear ## scale_func_name (pixman_implementation_t *imp,
 	fast_composite_scaled_bilinear_ ## func ## _cover ## _ ## op,	\
     }
 
+#define SIMPLE_BILINEAR_FAST_PATH_NORMAL(op,s,d,func)			\
+    {   PIXMAN_OP_ ## op,						\
+	PIXMAN_ ## s,							\
+	(SCALED_BILINEAR_FLAGS		|				\
+	 FAST_PATH_NORMAL_REPEAT	|				\
+	 FAST_PATH_X_UNIT_POSITIVE),					\
+	PIXMAN_null, 0,							\
+	PIXMAN_ ## d, FAST_PATH_STD_DEST_FLAGS,				\
+	fast_composite_scaled_bilinear_ ## func ## _normal ## _ ## op,	\
+    }
+
 #define SIMPLE_BILINEAR_A8_MASK_FAST_PATH_PAD(op,s,d,func)		\
     {   PIXMAN_OP_ ## op,						\
 	PIXMAN_ ## s,							\
@@ -1056,6 +1067,17 @@ fast_composite_scaled_bilinear ## scale_func_name (pixman_implementation_t *imp,
 	PIXMAN_a8, MASK_FLAGS (a8, FAST_PATH_UNIFIED_ALPHA),		\
 	PIXMAN_ ## d, FAST_PATH_STD_DEST_FLAGS,				\
 	fast_composite_scaled_bilinear_ ## func ## _cover ## _ ## op,	\
+    }
+
+#define SIMPLE_BILINEAR_A8_MASK_FAST_PATH_NORMAL(op,s,d,func)		\
+    {   PIXMAN_OP_ ## op,						\
+	PIXMAN_ ## s,							\
+	(SCALED_BILINEAR_FLAGS		|				\
+	 FAST_PATH_NORMAL_REPEAT	|				\
+	 FAST_PATH_X_UNIT_POSITIVE),					\
+	PIXMAN_a8, MASK_FLAGS (a8, FAST_PATH_UNIFIED_ALPHA),		\
+	PIXMAN_ ## d, FAST_PATH_STD_DEST_FLAGS,				\
+	fast_composite_scaled_bilinear_ ## func ## _normal ## _ ## op,	\
     }
 
 #define SIMPLE_BILINEAR_SOLID_MASK_FAST_PATH_PAD(op,s,d,func)		\
@@ -1089,20 +1111,34 @@ fast_composite_scaled_bilinear ## scale_func_name (pixman_implementation_t *imp,
 	fast_composite_scaled_bilinear_ ## func ## _cover ## _ ## op,	\
     }
 
+#define SIMPLE_BILINEAR_SOLID_MASK_FAST_PATH_NORMAL(op,s,d,func)	\
+    {   PIXMAN_OP_ ## op,						\
+	PIXMAN_ ## s,							\
+	(SCALED_BILINEAR_FLAGS		|				\
+	 FAST_PATH_NORMAL_REPEAT	|				\
+	 FAST_PATH_X_UNIT_POSITIVE),					\
+	PIXMAN_solid, MASK_FLAGS (solid, FAST_PATH_UNIFIED_ALPHA),	\
+	PIXMAN_ ## d, FAST_PATH_STD_DEST_FLAGS,				\
+	fast_composite_scaled_bilinear_ ## func ## _normal ## _ ## op,	\
+    }
+
 /* Prefer the use of 'cover' variant, because it is faster */
 #define SIMPLE_BILINEAR_FAST_PATH(op,s,d,func)				\
     SIMPLE_BILINEAR_FAST_PATH_COVER (op,s,d,func),			\
     SIMPLE_BILINEAR_FAST_PATH_NONE (op,s,d,func),			\
-    SIMPLE_BILINEAR_FAST_PATH_PAD (op,s,d,func)
+    SIMPLE_BILINEAR_FAST_PATH_PAD (op,s,d,func),			\
+    SIMPLE_BILINEAR_FAST_PATH_NORMAL (op,s,d,func)
 
 #define SIMPLE_BILINEAR_A8_MASK_FAST_PATH(op,s,d,func)			\
     SIMPLE_BILINEAR_A8_MASK_FAST_PATH_COVER (op,s,d,func),		\
     SIMPLE_BILINEAR_A8_MASK_FAST_PATH_NONE (op,s,d,func),		\
-    SIMPLE_BILINEAR_A8_MASK_FAST_PATH_PAD (op,s,d,func)
+    SIMPLE_BILINEAR_A8_MASK_FAST_PATH_PAD (op,s,d,func),		\
+    SIMPLE_BILINEAR_A8_MASK_FAST_PATH_NORMAL (op,s,d,func)
 
 #define SIMPLE_BILINEAR_SOLID_MASK_FAST_PATH(op,s,d,func)		\
     SIMPLE_BILINEAR_SOLID_MASK_FAST_PATH_COVER (op,s,d,func),		\
     SIMPLE_BILINEAR_SOLID_MASK_FAST_PATH_NONE (op,s,d,func),		\
-    SIMPLE_BILINEAR_SOLID_MASK_FAST_PATH_PAD (op,s,d,func)
+    SIMPLE_BILINEAR_SOLID_MASK_FAST_PATH_PAD (op,s,d,func),		\
+    SIMPLE_BILINEAR_SOLID_MASK_FAST_PATH_NORMAL (op,s,d,func)
 
 #endif
