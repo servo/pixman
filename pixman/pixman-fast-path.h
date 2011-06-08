@@ -690,6 +690,9 @@ fast_composite_scaled_bilinear ## scale_func_name (pixman_implementation_t *imp,
     const mask_type_t *mask = &solid_mask;							\
     int src_stride, mask_stride, dst_stride;							\
 												\
+    int src_width;										\
+    pixman_fixed_t src_width_fixed;								\
+												\
     PIXMAN_IMAGE_GET_LINE (dest_image, dest_x, dest_y, dst_type_t, dst_stride, dst_line, 1);	\
     if (flags & FLAG_HAVE_SOLID_MASK)								\
     {												\
@@ -736,6 +739,12 @@ fast_composite_scaled_bilinear ## scale_func_name (pixman_implementation_t *imp,
 	    left_tz = right_tz = 0;								\
 	}											\
 	v.vector[0] += left_pad * unit_x;							\
+    }												\
+												\
+    if (PIXMAN_REPEAT_ ## repeat_mode == PIXMAN_REPEAT_NORMAL)					\
+    {												\
+	src_width = src_image->bits.width;							\
+	src_width_fixed = pixman_int_to_fixed (src_width);					\
     }												\
 												\
     while (--height >= 0)									\
@@ -882,6 +891,87 @@ fast_composite_scaled_bilinear ## scale_func_name (pixman_implementation_t *imp,
 		buf2[0] = buf2[1] = 0;								\
 		scanline_func (dst, mask,							\
 			       buf1, buf2, right_pad, weight1, weight2, 0, 0, 0, TRUE);		\
+	    }											\
+	}											\
+	else if (PIXMAN_REPEAT_ ## repeat_mode == PIXMAN_REPEAT_NORMAL)				\
+	{											\
+	    int32_t	    num_pixels;								\
+	    int32_t	    width_remain;							\
+	    src_type_t *    src_line_top;							\
+	    src_type_t *    src_line_bottom;							\
+	    src_type_t	    buf1[2];								\
+	    src_type_t	    buf2[2];								\
+												\
+	    repeat (PIXMAN_REPEAT_NORMAL, &y1, src_image->bits.height);				\
+	    repeat (PIXMAN_REPEAT_NORMAL, &y2, src_image->bits.height);				\
+	    src_line_top = src_first_line + src_stride * y1;					\
+	    src_line_bottom = src_first_line + src_stride * y2;					\
+												\
+	    /* Top & Bottom wrap around buffer */						\
+	    buf1[0] = src_line_top[src_image->bits.width - 1];					\
+	    buf1[1] = src_line_top[0];								\
+	    buf2[0] = src_line_bottom[src_image->bits.width - 1];				\
+	    buf2[1] = src_line_bottom[0];							\
+												\
+	    width_remain = width;								\
+												\
+	    while (width_remain > 0)								\
+	    {											\
+		repeat (PIXMAN_REPEAT_NORMAL, &vx, src_width_fixed);				\
+												\
+		/* Wrap around part */								\
+		if (pixman_fixed_to_int (vx) == src_width - 1)					\
+		{										\
+		    /* for positive unit_x							\
+		     * num_pixels = max(n) + 1, where vx + n*unit_x < src_width_fixed		\
+		     *										\
+		     * vx is in range [0, src_width_fixed - pixman_fixed_e]			\
+		     * So we are safe from overflow.						\
+		     */										\
+		    num_pixels = ((src_width_fixed - vx - pixman_fixed_e) / unit_x) + 1;	\
+												\
+		    if (num_pixels > width_remain)						\
+			num_pixels = width_remain;						\
+												\
+		    scanline_func (dst, mask, buf1, buf2, num_pixels,				\
+				   weight1, weight2, pixman_fixed_frac(vx),			\
+				   unit_x, src_width_fixed, FALSE);				\
+												\
+		    width_remain -= num_pixels;							\
+		    vx += num_pixels * unit_x;							\
+		    dst += num_pixels;								\
+												\
+		    if (flags & FLAG_HAVE_NON_SOLID_MASK)					\
+			mask += num_pixels;							\
+												\
+		    repeat (PIXMAN_REPEAT_NORMAL, &vx, src_width_fixed);			\
+		}										\
+												\
+		/* Normal scanline composite */							\
+		if (pixman_fixed_to_int (vx) != src_width - 1 && width_remain > 0)		\
+		{										\
+		    /* for positive unit_x							\
+		     * num_pixels = max(n) + 1, where vx + n*unit_x < (src_width_fixed - 1)	\
+		     *										\
+		     * vx is in range [0, src_width_fixed - pixman_fixed_e]			\
+		     * So we are safe from overflow here.					\
+		     */										\
+		    num_pixels = ((src_width_fixed - pixman_fixed_1 - vx - pixman_fixed_e)	\
+				  / unit_x) + 1;						\
+												\
+		    if (num_pixels > width_remain)						\
+			num_pixels = width_remain;						\
+												\
+		    scanline_func (dst, mask, src_line_top, src_line_bottom, num_pixels,	\
+				   weight1, weight2, vx, unit_x, src_width_fixed, FALSE);	\
+												\
+		    width_remain -= num_pixels;							\
+		    vx += num_pixels * unit_x;							\
+		    dst += num_pixels;								\
+												\
+		    if (flags & FLAG_HAVE_NON_SOLID_MASK)					\
+		        mask += num_pixels;							\
+		}										\
 	    }											\
 	}											\
 	else											\
