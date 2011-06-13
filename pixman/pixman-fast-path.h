@@ -48,6 +48,11 @@
 #define FLAG_HAVE_SOLID_MASK			(1 <<   1)
 #define FLAG_HAVE_NON_SOLID_MASK		(1 <<   2)
 
+/* To avoid too short repeated scanline function calls, extend source
+ * scanlines having width less than below constant value.
+ */
+#define REPEAT_NORMAL_MIN_WIDTH			64
+
 static force_inline pixman_bool_t
 repeat (pixman_repeat_t repeat, int *c, int size)
 {
@@ -692,6 +697,8 @@ fast_composite_scaled_bilinear ## scale_func_name (pixman_implementation_t *imp,
 												\
     int src_width;										\
     pixman_fixed_t src_width_fixed;								\
+    int max_x;											\
+    pixman_bool_t need_src_extension;								\
 												\
     PIXMAN_IMAGE_GET_LINE (dest_image, dest_x, dest_y, dst_type_t, dst_stride, dst_line, 1);	\
     if (flags & FLAG_HAVE_SOLID_MASK)								\
@@ -743,7 +750,25 @@ fast_composite_scaled_bilinear ## scale_func_name (pixman_implementation_t *imp,
 												\
     if (PIXMAN_REPEAT_ ## repeat_mode == PIXMAN_REPEAT_NORMAL)					\
     {												\
-	src_width = src_image->bits.width;							\
+	vx = v.vector[0];									\
+	repeat (PIXMAN_REPEAT_NORMAL, &vx, pixman_int_to_fixed(src_image->bits.width));		\
+	max_x = pixman_fixed_to_int (vx + (width - 1) * unit_x) + 1;				\
+												\
+	if (src_image->bits.width < REPEAT_NORMAL_MIN_WIDTH)					\
+	{											\
+	    src_width = 0;									\
+												\
+	    while (src_width < REPEAT_NORMAL_MIN_WIDTH && src_width <= max_x)			\
+		src_width += src_image->bits.width;						\
+												\
+	    need_src_extension = TRUE;								\
+	}											\
+	else											\
+	{											\
+	    src_width = src_image->bits.width;							\
+	    need_src_extension = FALSE;								\
+	}											\
+												\
 	src_width_fixed = pixman_int_to_fixed (src_width);					\
     }												\
 												\
@@ -901,22 +926,41 @@ fast_composite_scaled_bilinear ## scale_func_name (pixman_implementation_t *imp,
 	    src_type_t *    src_line_bottom;							\
 	    src_type_t	    buf1[2];								\
 	    src_type_t	    buf2[2];								\
+	    src_type_t	    extended_src_line0[REPEAT_NORMAL_MIN_WIDTH*2];			\
+	    src_type_t	    extended_src_line1[REPEAT_NORMAL_MIN_WIDTH*2];			\
+	    int		    i, j;								\
 												\
 	    repeat (PIXMAN_REPEAT_NORMAL, &y1, src_image->bits.height);				\
 	    repeat (PIXMAN_REPEAT_NORMAL, &y2, src_image->bits.height);				\
 	    src_line_top = src_first_line + src_stride * y1;					\
 	    src_line_bottom = src_first_line + src_stride * y2;					\
 												\
+	    if (need_src_extension)								\
+	    {											\
+		for (i=0; i<src_width;)								\
+		{										\
+		    for (j=0; j<src_image->bits.width; j++, i++)				\
+		    {										\
+			extended_src_line0[i] = src_line_top[j];				\
+			extended_src_line1[i] = src_line_bottom[j];				\
+		    }										\
+		}										\
+												\
+		src_line_top = &extended_src_line0[0];						\
+		src_line_bottom = &extended_src_line1[0];					\
+	    }											\
+												\
 	    /* Top & Bottom wrap around buffer */						\
-	    buf1[0] = src_line_top[src_image->bits.width - 1];					\
+	    buf1[0] = src_line_top[src_width - 1];						\
 	    buf1[1] = src_line_top[0];								\
-	    buf2[0] = src_line_bottom[src_image->bits.width - 1];				\
+	    buf2[0] = src_line_bottom[src_width - 1];						\
 	    buf2[1] = src_line_bottom[0];							\
 												\
 	    width_remain = width;								\
 												\
 	    while (width_remain > 0)								\
 	    {											\
+		/* We use src_width_fixed because it can make vx in original source range */	\
 		repeat (PIXMAN_REPEAT_NORMAL, &vx, src_width_fixed);				\
 												\
 		/* Wrap around part */								\
