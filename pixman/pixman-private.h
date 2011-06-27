@@ -373,6 +373,10 @@ typedef struct
     int32_t                  dest_y;
     int32_t                  width;
     int32_t                  height;
+
+    uint32_t                 src_flags;
+    uint32_t                 mask_flags;
+    uint32_t                 dest_flags;
 } pixman_composite_info_t;
 
 #define PIXMAN_COMPOSITE_ARGS(info)					\

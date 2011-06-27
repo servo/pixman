@@ -804,6 +804,9 @@ pixman_image_composite32 (pixman_op_t      op,
 	info.src_image = src;
 	info.mask_image = mask;
 	info.dest_image = dest;
+	info.src_flags = src_flags;
+	info.mask_flags = mask_flags;
+	info.dest_flags = dest_flags;
 
 	pbox = pixman_region32_rectangles (&region, &n);
 
