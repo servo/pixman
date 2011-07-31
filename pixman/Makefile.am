@@ -22,7 +22,7 @@ EXTRA_DIST =				\
 DISTCLEANFILES = $(BUILT_SOURCES)
 
 # mmx code
-if USE_MMX
+if USE_X86_MMX
 noinst_LTLIBRARIES += libpixman-mmx.la
 libpixman_mmx_la_SOURCES = \
 	pixman-mmx.c

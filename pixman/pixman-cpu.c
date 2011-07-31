@@ -337,7 +337,7 @@ pixman_have_arm_neon (void)
 
 #endif /* USE_ARM_SIMD || USE_ARM_NEON */
 
-#if defined(USE_MMX) || defined(USE_SSE2)
+#if defined(USE_X86_MMX) || defined(USE_SSE2)
 /* The CPU detection code needs to be in a file not compiled with
  * "-mmmx -msse", as gcc would generate CMOV instructions otherwise
  * that would lead to SIGILL instructions on old CPUs that don't have
@@ -564,7 +564,7 @@ pixman_have_sse2 (void)
 #endif
 
 #else /* __amd64__ */
-#ifdef USE_MMX
+#ifdef USE_X86_MMX
 #define pixman_have_mmx() TRUE
 #endif
 #ifdef USE_SSE2
@@ -581,7 +581,7 @@ _pixman_choose_implementation (void)
     imp = _pixman_implementation_create_general();
     imp = _pixman_implementation_create_fast_path (imp);
     
-#ifdef USE_MMX
+#ifdef USE_X86_MMX
     if (pixman_have_mmx ())
 	imp = _pixman_implementation_create_mmx (imp);
 #endif

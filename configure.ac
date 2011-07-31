@@ -303,7 +303,7 @@ CFLAGS=$xserver_save_CFLAGS
 
 AC_ARG_ENABLE(mmx,
    [AC_HELP_STRING([--disable-mmx],
-                   [disable MMX fast paths])],
+                   [disable x86 MMX fast paths])],
    [enable_mmx=$enableval], [enable_mmx=auto])
 
 if test $enable_mmx = no ; then
@@ -311,17 +311,17 @@ if test $enable_mmx = no ; then
 fi
 
 if test $have_mmx_intrinsics = yes ; then
-   AC_DEFINE(USE_MMX, 1, [use MMX compiler intrinsics])
+   AC_DEFINE(USE_X86_MMX, 1, [use x86 MMX compiler intrinsics])
 else
    MMX_CFLAGS=
 fi
 
 AC_MSG_RESULT($have_mmx_intrinsics)
 if test $enable_mmx = yes && test $have_mmx_intrinsics = no ; then
-   AC_MSG_ERROR([MMX intrinsics not detected])
+   AC_MSG_ERROR([x86 MMX intrinsics not detected])
 fi
 
-AM_CONDITIONAL(USE_MMX, test $have_mmx_intrinsics = yes)
+AM_CONDITIONAL(USE_X86_MMX, test $have_mmx_intrinsics = yes)
 
 dnl ===========================================================================
 dnl Check for SSE2

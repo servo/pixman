@@ -33,7 +33,7 @@
 #include <config.h>
 #endif
 
-#ifdef USE_MMX
+#ifdef USE_X86_MMX
 
 #include <mmintrin.h>
 #include "pixman-private.h"
@@ -3145,4 +3145,4 @@ _pixman_implementation_create_mmx (pixman_implementation_t *fallback)
     return imp;
 }
 
-#endif /* USE_MMX */
+#endif /* USE_X86_MMX */
