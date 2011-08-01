@@ -90,5 +90,17 @@ libpixman_1_la_LIBADD += libpixman-arm-neon.la
 ASM_CFLAGS_arm_neon=
 endif
 
+# iwmmxt code
+if USE_ARM_IWMMXT
+noinst_LTLIBRARIES += libpixman-iwmmxt.la
+libpixman_iwmmxt_la_SOURCES = pixman-mmx.c
+libpixman_iwmmxt_la_CFLAGS = $(DEP_CFLAGS) $(IWMMXT_CFLAGS)
+libpixman_iwmmxt_la_LIBADD = $(DEP_LIBS)
+libpixman_1_la_LDFLAGS += $(IWMMXT_LDFLAGS)
+libpixman_1_la_LIBADD += libpixman-iwmmxt.la
+
+ASM_CFLAGS_IWMMXT=$(IWMMXT_CFLAGS)
+endif
+
 .c.s : $(libpixmaninclude_HEADERS) $(BUILT_SOURCES)
 	$(CC) $(CFLAGS) $(ASM_CFLAGS_$(@:pixman-%.s=%)) $(ASM_CFLAGS_$(@:pixman-arm-%.s=arm_%)) -DHAVE_CONFIG_H -I$(srcdir) -I$(builddir) -I$(top_builddir) -S -o $@ $<
