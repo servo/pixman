@@ -2378,13 +2378,13 @@ PREFIX (_contains_point) (region_type_t * region,
         return(TRUE);
     }
 
-    for (pbox = PIXREGION_BOXPTR (region), pbox_end = pbox + numRects;
-	 pbox != pbox_end;
-	 pbox++)
-    {
-        if (y >= pbox->y2)
-	    continue;           /* not there yet */
+    pbox = PIXREGION_BOXPTR (region);
+    pbox_end = pbox + numRects;
 
+    pbox = find_box_for_y (pbox, pbox_end, y);
+
+    for (;pbox != pbox_end; pbox++)
+    {
         if ((y < pbox->y1) || (x < pbox->x1))
 	    break;              /* missed it */
 
