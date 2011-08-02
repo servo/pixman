@@ -61,6 +61,10 @@ compute_crc32 (uint32_t    in_crc32,
 	       const void *buf,
 	       size_t      buf_len);
 
+/* Returns TRUE if running on a little endian system */
+pixman_bool_t
+is_little_endian (void);
+
 /* perform endian conversion of pixel data
  */
 void
