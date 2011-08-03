@@ -44,10 +44,14 @@ lcg_rand_N (int max)
 static inline uint32_t
 lcg_rand_u32 (void)
 {
-    uint32_t lo = lcg_rand();
-    uint32_t hi = lcg_rand();
+    /* This uses the 10/11 most significant bits from the 3 lcg results
+     * (and mixes them with the low from the adjacent one).
+     */
+    uint32_t lo = lcg_rand() >> -(32 - 15 - 11 * 2);
+    uint32_t mid = lcg_rand() << (32 - 15 - 11 * 1);
+    uint32_t hi = lcg_rand() << (32 - 15 - 11 * 0);
 
-    return (hi << 16) | lo;
+    return (hi ^ mid ^ lo);
 }
 
 /* CRC 32 computation
