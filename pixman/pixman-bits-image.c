@@ -1490,10 +1490,10 @@ static uint32_t *
 create_bits (pixman_format_code_t format,
              int                  width,
              int                  height,
-             int *                rowstride_bytes)
+             int *		  rowstride_bytes)
 {
     int stride;
-    int buf_size;
+    size_t buf_size;
     int bpp;
 
     /* what follows is a long-winded way, avoiding any possibility of integer
@@ -1502,11 +1502,11 @@ create_bits (pixman_format_code_t format,
      */
 
     bpp = PIXMAN_FORMAT_BPP (format);
-    if (pixman_multiply_overflows_int (width, bpp))
+    if (_pixman_multiply_overflows_int (width, bpp))
 	return NULL;
 
     stride = width * bpp;
-    if (pixman_addition_overflows_int (stride, 0x1f))
+    if (_pixman_addition_overflows_int (stride, 0x1f))
 	return NULL;
 
     stride += 0x1f;
@@ -1514,7 +1514,7 @@ create_bits (pixman_format_code_t format,
 
     stride *= sizeof (uint32_t);
 
-    if (pixman_multiply_overflows_int (height, stride))
+    if (_pixman_multiply_overflows_size (height, stride))
 	return NULL;
 
     buf_size = height * stride;
