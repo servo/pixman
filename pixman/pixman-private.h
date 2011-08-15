@@ -783,6 +783,49 @@ pixman_region16_copy_from_region32 (pixman_region16_t *dst,
 #   define SCREEN_SHIFT_RIGHT(x,n)	((x) << (n))
 #endif
 
+static force_inline uint32_t
+unorm_to_unorm (uint32_t val, int from_bits, int to_bits)
+{
+    uint32_t result;
+
+    if (from_bits == 0)
+	return 0;
+
+    /* Delete any extra bits */
+    val &= ((1 << from_bits) - 1);
+
+    if (from_bits >= to_bits)
+	return val >> (from_bits - to_bits);
+
+    /* Start out with the high bit of val in the high bit of result. */
+    result = val << (to_bits - from_bits);
+
+    /* Copy the bits in result, doubling the number of bits each time, until
+     * we fill all to_bits. Unrolled manually because from_bits and to_bits
+     * are usually known statically, so the compiler can turn all of this
+     * into a few shifts.
+     */
+#define REPLICATE()							\
+    do									\
+    {									\
+	if (from_bits < to_bits)					\
+	{								\
+	    result |= result >> from_bits;				\
+									\
+	    from_bits *= 2;						\
+	}								\
+    }									\
+    while (0)
+
+    REPLICATE();
+    REPLICATE();
+    REPLICATE();
+    REPLICATE();
+    REPLICATE();
+
+    return result;
+}
+
 /*
  * Various debugging code
  */
