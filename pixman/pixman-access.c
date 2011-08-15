@@ -86,6 +86,106 @@
     ((uint8_t *) ((bits) + offset0 +                                    \
                   ((stride) >> 1) * ((line) >> 1)))
 
+/* Misc. helpers */
+
+static force_inline void
+get_shifts (pixman_format_code_t  format,
+	    int			 *a,
+	    int			 *r,
+	    int                  *g,
+	    int                  *b)
+{
+    switch (PIXMAN_FORMAT_TYPE (format))
+    {
+    case PIXMAN_TYPE_A:
+	*b = 0;
+	*g = 0;
+	*r = 0;
+	*a = 0;
+	break;
+
+    case PIXMAN_TYPE_ARGB:
+	*b = 0;
+	*g = *b + PIXMAN_FORMAT_B (format);
+	*r = *g + PIXMAN_FORMAT_G (format);
+	*a = *r + PIXMAN_FORMAT_R (format);
+	break;
+
+    case PIXMAN_TYPE_ABGR:
+	*r = 0;
+	*g = *r + PIXMAN_FORMAT_R (format);
+	*b = *g + PIXMAN_FORMAT_G (format);
+	*a = *b + PIXMAN_FORMAT_B (format);
+	break;
+
+    case PIXMAN_TYPE_BGRA:
+	/* With BGRA formats we start counting at the high end of the pixel */
+	*b = PIXMAN_FORMAT_BPP (format) - PIXMAN_FORMAT_B (format);
+	*g = *b - PIXMAN_FORMAT_B (format);
+	*r = *g - PIXMAN_FORMAT_G (format);
+	*a = *r - PIXMAN_FORMAT_R (format);
+	break;
+
+    case PIXMAN_TYPE_RGBA:
+	/* With BGRA formats we start counting at the high end of the pixel */
+	*r = PIXMAN_FORMAT_BPP (format) - PIXMAN_FORMAT_R (format);
+	*g = *r - PIXMAN_FORMAT_R (format);
+	*b = *g - PIXMAN_FORMAT_G (format);
+	*a = *b - PIXMAN_FORMAT_B (format);
+	break;
+
+    default:
+	assert (0);
+	break;
+    }
+}
+
+static force_inline uint32_t
+convert_channel (uint32_t pixel, uint32_t def_value,
+		 int n_from_bits, int from_shift,
+		 int n_to_bits, int to_shift)
+{
+    uint32_t v;
+
+    if (n_from_bits && n_to_bits)
+	v  = unorm_to_unorm (pixel >> from_shift, n_from_bits, n_to_bits);
+    else if (n_to_bits)
+	v = def_value;
+    else
+	v = 0;
+
+    return (v & ((1 << n_to_bits) - 1)) << to_shift;
+}
+
+static force_inline uint32_t
+convert_pixel (pixman_format_code_t from, pixman_format_code_t to, uint32_t pixel)
+{
+    int a_from_shift, r_from_shift, g_from_shift, b_from_shift;
+    int a_to_shift, r_to_shift, g_to_shift, b_to_shift;
+    uint32_t a, r, g, b;
+
+    get_shifts (from, &a_from_shift, &r_from_shift, &g_from_shift, &b_from_shift);
+    get_shifts (to, &a_to_shift, &r_to_shift, &g_to_shift, &b_to_shift);
+
+    a = convert_channel (pixel, ~0,
+			 PIXMAN_FORMAT_A (from), a_from_shift,
+			 PIXMAN_FORMAT_A (to), a_to_shift);
+
+    r = convert_channel (pixel, 0,
+			 PIXMAN_FORMAT_R (from), r_from_shift,
+			 PIXMAN_FORMAT_R (to), r_to_shift);
+
+    g = convert_channel (pixel, 0,
+			 PIXMAN_FORMAT_G (from), g_from_shift,
+			 PIXMAN_FORMAT_G (to), g_to_shift);
+
+    b = convert_channel (pixel, 0,
+			 PIXMAN_FORMAT_B (from), b_from_shift,
+			 PIXMAN_FORMAT_B (to), b_to_shift);
+
+    return a | r | g | b;
+}
+
 /********************************** Fetch ************************************/
 
 static void
