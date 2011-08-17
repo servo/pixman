@@ -186,6 +186,120 @@ convert_pixel (pixman_format_code_t from, pixman_format_code_t to, uint32_t pixe
     return a | r | g | b;
 }
 
+static force_inline uint32_t
+convert_pixel_from_a8r8g8b8 (pixman_format_code_t format, uint32_t pixel)
+{
+    return convert_pixel (PIXMAN_a8r8g8b8, format, pixel);
+}
+
+static force_inline uint32_t
+convert_pixel_to_a8r8g8b8 (pixman_format_code_t format, uint32_t pixel)
+{
+    return convert_pixel (format, PIXMAN_a8r8g8b8, pixel);
+}
+
+static force_inline uint32_t
+fetch_and_convert_pixel (pixman_image_t	*	image,
+			 const uint8_t *	bits,
+			 pixman_format_code_t	format)
+{
+    uint32_t pixel;
+
+    switch (PIXMAN_FORMAT_BPP (format))
+    {
+    default:
+	pixel = 0xffff00ff; /* As ugly as possible to detect the bug */
+	break;
+    }
+
+    return convert_pixel_to_a8r8g8b8 (format, pixel);
+}
+
+static force_inline void
+convert_and_store_pixel (bits_image_t *		image,
+			 uint8_t *		dest,
+			 pixman_format_code_t	format,
+			 uint32_t		pixel)
+{
+    uint32_t converted = convert_pixel_from_a8r8g8b8 (format, pixel);
+
+    switch (PIXMAN_FORMAT_BPP (format))
+    {
+    default:
+	*dest = 0x0;
+	break;
+    }
+}
+
+#define MAKE_ACCESSORS(format)						\
+    static void								\
+    fetch_scanline_ ## format (pixman_image_t *image,			\
+			       int	       x,			\
+			       int             y,			\
+			       int             width,			\
+			       uint32_t *      buffer,			\
+			       const uint32_t *mask)			\
+    {									\
+	int byte_pp = PIXMAN_FORMAT_BPP (PIXMAN_ ## format) / 8;	\
+	uint8_t *bits =							\
+	    (uint8_t *)(image->bits.bits + y * image->bits.rowstride);	\
+	uint8_t *end;							\
+									\
+	bits += byte_pp * x;						\
+	end = bits + width * byte_pp;					\
+									\
+	while (bits < end)						\
+	{								\
+	    *buffer++ =							\
+		fetch_and_convert_pixel (image, bits, PIXMAN_ ## format); \
+	    								\
+	    bits += byte_pp;						\
+	}								\
+    }									\
+									\
+    static void								\
+    store_scanline_ ## format (bits_image_t *  image,			\
+			       int             x,			\
+			       int             y,			\
+			       int             width,			\
+			       const uint32_t *values)			\
+    {									\
+	int byte_pp = PIXMAN_FORMAT_BPP (PIXMAN_ ## format) / 8;	\
+	uint8_t *dest =							\
+	    (uint8_t *)(image->bits + y * image->rowstride);		\
+	const uint32_t *end;						\
+									\
+	dest += byte_pp * x;						\
+	end = values + width;						\
+									\
+	while (values < end)						\
+	{								\
+	    convert_and_store_pixel (					\
+		image, dest, PIXMAN_ ## format, *values);		\
+									\
+	    values++;							\
+	    dest += byte_pp;						\
+	}								\
+    }									\
+									\
+    static uint32_t							\
+    fetch_pixel_ ## format (bits_image_t *image,			\
+			    int		offset,				\
+			    int		line)				\
+    {									\
+	uint8_t *bits =							\
+	    (uint8_t *)(image->bits + line * image->rowstride);		\
+	int byte_pp = PIXMAN_FORMAT_BPP (PIXMAN_ ## format) / 8;	\
+									\
+	bits += offset * byte_pp;					\
+									\
+	return fetch_and_convert_pixel ((pixman_image_t *)image,	\
+					bits, PIXMAN_ ## format);	\
+    }									\
+									\
+    static const void *const __dummy__ ## format
+
+
 /********************************** Fetch ************************************/
 
 static void
