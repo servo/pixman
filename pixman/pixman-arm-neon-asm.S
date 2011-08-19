@@ -706,13 +706,55 @@ generate_composite_function_single_scanline \
 
 /******************************************************************************/
 
-/* TODO: expand macros and do better instructions scheduling */
+.macro pixman_composite_over_n_8888_process_pixblock_head
+    /* deinterleaved source pixels in {d0, d1, d2, d3} */
+    /* inverted alpha in {d24} */
+    /* destination pixels in {d4, d5, d6, d7} */
+    vmull.u8    q8, d24, d4
+    vmull.u8    q9, d24, d5
+    vmull.u8    q10, d24, d6
+    vmull.u8    q11, d24, d7
+.endm
+
+.macro pixman_composite_over_n_8888_process_pixblock_tail
+    vrshr.u16   q14, q8, #8
+    vrshr.u16   q15, q9, #8
+    vrshr.u16   q2, q10, #8
+    vrshr.u16   q3, q11, #8
+    vraddhn.u16 d28, q14, q8
+    vraddhn.u16 d29, q15, q9
+    vraddhn.u16 d30, q2, q10
+    vraddhn.u16 d31, q3, q11
+    vqadd.u8    q14, q0, q14
+    vqadd.u8    q15, q1, q15
+.endm
+
 .macro pixman_composite_over_n_8888_process_pixblock_tail_head
-    pixman_composite_over_8888_8888_process_pixblock_tail
+        vrshr.u16   q14, q8, #8
+        vrshr.u16   q15, q9, #8
+        vrshr.u16   q2, q10, #8
+        vrshr.u16   q3, q11, #8
+        vraddhn.u16 d28, q14, q8
+        vraddhn.u16 d29, q15, q9
+        vraddhn.u16 d30, q2, q10
+        vraddhn.u16 d31, q3, q11
     vld4.8      {d4, d5, d6, d7}, [DST_R, :128]!
-    vst4.8      {d28, d29, d30, d31}, [DST_W, :128]!
-    pixman_composite_over_8888_8888_process_pixblock_head
-    cache_preload 8, 8
+        vqadd.u8    q14, q0, q14
+                                    PF add PF_X, PF_X, #8
+                                    PF tst PF_CTL, #0x0F
+                                    PF addne PF_X, PF_X, #8
+                                    PF subne PF_CTL, PF_CTL, #1
+        vqadd.u8    q15, q1, q15
+                                    PF cmp PF_X, ORIG_W
+    vmull.u8    q8, d24, d4
+                                    PF pld, [PF_DST, PF_X, lsl #dst_bpp_shift]
+    vmull.u8    q9, d24, d5
+                                    PF subge PF_X, PF_X, ORIG_W
+    vmull.u8    q10, d24, d6
+                                    PF subges PF_CTL, PF_CTL, #0x10
+    vmull.u8    q11, d24, d7
+                                    PF ldrgeb DUMMY, [PF_DST, DST_STRIDE, lsl #dst_bpp_shift]!
+        vst4.8      {d28, d29, d30, d31}, [DST_W, :128]!
 .endm
 
 .macro pixman_composite_over_n_8888_init
@@ -722,6 +764,7 @@ generate_composite_function_single_scanline \
     vdup.8      d1, d3[1]
     vdup.8      d2, d3[2]
     vdup.8      d3, d3[3]
+    vmvn.8      d24, d3  /* get inverted alpha */
 .endm
 
 generate_composite_function \
