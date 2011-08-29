@@ -1191,6 +1191,85 @@ FAST_NEAREST (8888_565_none, 8888, 0565, uint32_t, uint16_t, OVER, NONE)
 FAST_NEAREST (8888_565_pad, 8888, 0565, uint32_t, uint16_t, OVER, PAD)
 FAST_NEAREST (8888_565_normal, 8888, 0565, uint32_t, uint16_t, OVER, NORMAL)
 
+static void
+fast_composite_tiled_repeat (pixman_implementation_t *imp,
+			     pixman_composite_info_t *info)
+{
+    PIXMAN_COMPOSITE_ARGS (info);
+    pixman_composite_func_t func;
+    pixman_format_code_t mask_format;
+    uint32_t src_flags, mask_flags;
+
+    src_flags = (info->src_flags & ~FAST_PATH_NORMAL_REPEAT) |
+		    FAST_PATH_SAMPLES_COVER_CLIP_NEAREST;
+
+    if (mask_image)
+    {
+	mask_format = mask_image->common.extended_format_code;
+	mask_flags = info->mask_flags;
+    }
+    else
+    {
+	mask_format = PIXMAN_null;
+	mask_flags = FAST_PATH_IS_OPAQUE;
+    }
+
+    if (_pixman_lookup_composite_function (
+	    imp->toplevel, info->op,
+	    src_image->common.extended_format_code, src_flags,
+	    mask_format, mask_flags,
+	    dest_image->common.extended_format_code, info->dest_flags,
+	    &imp, &func))
+    {
+	int32_t sx, sy;
+	int32_t width_remain;
+	int32_t num_pixels;
+	pixman_composite_info_t info2 = *info;
+
+	sx = src_x;
+	sy = src_y;
+
+	while (--height >= 0)
+	{
+	    sx = MOD (sx, src_image->bits.width);
+	    sy = MOD (sy, src_image->bits.height);
+
+	    width_remain = width;
+
+	    while (width_remain > 0)
+	    {
+		num_pixels = src_image->bits.width - sx;
+
+		if (num_pixels > width_remain)
+		    num_pixels = width_remain;
+
+		info2.src_x = sx;
+		info2.src_y = sy;
+		info2.width = num_pixels;
+		info2.height = 1;
+
+		func (imp, &info2);
+
+		width_remain -= num_pixels;
+		info2.mask_x += num_pixels;
+		info2.dest_x += num_pixels;
+		sx = 0;
+	    }
+
+	    sx = src_x;
+	    sy++;
+	    info2.mask_x = info->mask_x;
+	    info2.mask_y++;
+	    info2.dest_x = info->dest_x;
+	    info2.dest_y++;
+	}
+    }
+    else
+    {
+	_pixman_log_error (FUNC, "Didn't find a suitable function ");
+    }
+}
+
 /* Use more unrolling for src_0565_0565 because it is typically CPU bound */
 static force_inline void
 scaled_nearest_scanline_565_565_SRC (uint16_t *       dst,
@@ -1786,6 +1865,16 @@ static const pixman_fast_path_t c_fast_paths[] =
     SIMPLE_ROTATE_FAST_PATH (SRC, x8r8g8b8, x8r8g8b8, 8888),
     SIMPLE_ROTATE_FAST_PATH (SRC, r5g6b5, r5g6b5, 565),
     SIMPLE_ROTATE_FAST_PATH (SRC, a8, a8, 8),
+
+    /* Simple repeat fast path entry. */
+    {	PIXMAN_OP_any,
+	PIXMAN_any,
+	(FAST_PATH_STANDARD_FLAGS | FAST_PATH_ID_TRANSFORM | FAST_PATH_BITS_IMAGE |
+	 FAST_PATH_NORMAL_REPEAT),
+	PIXMAN_any, 0,
+	PIXMAN_any, FAST_PATH_STD_DEST_FLAGS,
+	fast_composite_tiled_repeat
+    },
 
     {   PIXMAN_OP_NONE	},
 };
