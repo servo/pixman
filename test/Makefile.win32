@@ -18,6 +18,9 @@ BENCHS  = $(patsubst %,   $(CFG_VAR)/%.exe, $(BENCHMARKS))
 
 all: inform $(TESTS) $(BENCHS)
 
+check: inform $(TESTS)
+	@for test in $(TESTS) ; do ./$$test && echo "PASS: $$test" || echo "FAIL: $$test" ; done
+
 $(CFG_VAR)/libutils.lib: $(libutils_OBJECTS)
 	@$(AR) $(PIXMAN_ARFLAGS) -OUT:$@ $^
 

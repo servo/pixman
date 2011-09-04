@@ -14,7 +14,12 @@ clean_r:
 	@$(MAKE) -C pixman -f Makefile.win32 clean
 	@$(MAKE) -C test   -f Makefile.win32 clean
 
+check_r:
+	@$(MAKE) -C test -f Makefile.win32 check
+
 # Base targets
 all: test_r
 
 clean: clean_r
+
+check: check_r
