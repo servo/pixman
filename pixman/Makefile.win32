@@ -1,7 +1,13 @@
+default: all
+
+top_srcdir = ..
+include $(top_srcdir)/pixman/Makefile.sources
+
 LIBRARY     = pixman-1
 
 CC   = cl
 LINK = link
+PERL = perl
 
 CFG_VAR = $(CFG)
 ifeq ($(CFG_VAR),)
@@ -29,49 +35,19 @@ else
 CFLAGS += -O2
 endif
 
-SOURCES =				\
-	pixman-image.c			\
-	pixman-access.c			\
-	pixman-access-accessors.c	\
-	pixman-region16.c		\
-	pixman-region32.c		\
-	pixman-combine32.c		\
-	pixman-combine64.c		\
-	pixman-utils.c			\
-	pixman-edge.c			\
-	pixman-edge-accessors.c		\
-	pixman-trap.c			\
-	pixman-timer.c			\
-	pixman-matrix.c			\
-	pixman-gradient-walker.c	\
-	pixman-conical-gradient.c	\
-	pixman-linear-gradient.c	\
-	pixman-radial-gradient.c	\
-	pixman-bits-image.c		\
-	pixman.c			\
-	pixman-noop.c			\
-	pixman-cpu.c			\
-	pixman-fast-path.c		\
-	pixman-implementation.c		\
-	pixman-solid-fill.c		\
-	pixman-general.c		\
-	$(NULL)
-
-BUILT_SOURCES = pixman-combine32.h pixman-combine32.c pixman-combine64.h pixman-combine64.c
-
 # MMX compilation flags
 ifeq ($(MMX_VAR),on)
 CFLAGS += $(MMX_CFLAGS)
-SOURCES += pixman-mmx.c
+libpixman_sources += pixman-mmx.c
 endif
 
 # SSE2 compilation flags
 ifeq ($(SSE2_VAR),on)
 CFLAGS += $(SSE2_CFLAGS)
-SOURCES += pixman-sse2.c
+libpixman_sources += pixman-sse2.c
 endif
 
-OBJECTS     = $(patsubst %.c, $(CFG_VAR)/%.obj, $(SOURCES))
+OBJECTS = $(patsubst %.c, $(CFG_VAR)/%.obj, $(libpixman_sources))
 
 # targets
 all: inform informMMX informSSE2 $(CFG_VAR)/$(LIBRARY).lib
@@ -131,16 +107,6 @@ $(CFG_VAR)/%.obj: %.c $(BUILT_SOURCES)
 
 $(CFG_VAR)/$(LIBRARY).lib: $(OBJECTS)
 	lib -NOLOGO -OUT:$@ $(OBJECTS) || exit 0
-
-pixman-combine32.c: pixman-combine.c.template pixman-combine32.h make-combine.pl
-	perl ./make-combine.pl 8 < $< > $@ || ($(RM) $@; exit 1)
-pixman-combine32.h: pixman-combine.h.template make-combine.pl
-	perl ./make-combine.pl 8 < $< > $@ || ($(RM) $@; exit 1)
-
-pixman-combine64.c: pixman-combine.c.template pixman-combine64.h make-combine.pl
-	perl ./make-combine.pl 16 < $< > $@ || ($(RM) $@; exit 1)
-pixman-combine64.h: pixman-combine.h.template make-combine.pl
-	perl ./make-combine.pl 16 < $< > $@ || ($(RM) $@; exit 1)
 
 clean_r:
 	@rm -f $(CFG_VAR)/*.obj $(CFG_VAR)/*.lib $(CFG_VAR)/*.pdb $(CFG)/*.ilk || exit 0
