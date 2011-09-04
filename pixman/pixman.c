@@ -448,7 +448,7 @@ update_cache:
 
 static pixman_bool_t
 compute_sample_extents (pixman_transform_t *transform,
-			pixman_box32_t *extents, int x, int y, 
+			pixman_box32_t *extents,
 			pixman_fixed_t x_off, pixman_fixed_t y_off,
 			pixman_fixed_t width, pixman_fixed_t height)
 {
@@ -456,10 +456,10 @@ compute_sample_extents (pixman_transform_t *transform,
     pixman_fixed_48_16_t tx1, ty1, tx2, ty2;
 
     /* We have checked earlier that (extents->x1 - x) etc. fit in a pixman_fixed_t */
-    x1 = (pixman_fixed_48_16_t)pixman_int_to_fixed (extents->x1 - x) + pixman_fixed_1 / 2;
-    y1 = (pixman_fixed_48_16_t)pixman_int_to_fixed (extents->y1 - y) + pixman_fixed_1 / 2;
-    x2 = (pixman_fixed_48_16_t)pixman_int_to_fixed (extents->x2 - x) - pixman_fixed_1 / 2;
-    y2 = (pixman_fixed_48_16_t)pixman_int_to_fixed (extents->y2 - y) - pixman_fixed_1 / 2;
+    x1 = (pixman_fixed_48_16_t)pixman_int_to_fixed (extents->x1) + pixman_fixed_1 / 2;
+    y1 = (pixman_fixed_48_16_t)pixman_int_to_fixed (extents->y1) + pixman_fixed_1 / 2;
+    x2 = (pixman_fixed_48_16_t)pixman_int_to_fixed (extents->x2) - pixman_fixed_1 / 2;
+    y2 = (pixman_fixed_48_16_t)pixman_int_to_fixed (extents->y2) - pixman_fixed_1 / 2;
 
     if (!transform)
     {
@@ -474,7 +474,7 @@ compute_sample_extents (pixman_transform_t *transform,
 
 	/* Silence GCC */
 	tx1 = ty1 = tx2 = ty2 = 0;
-    
+
 	for (i = 0; i < 4; ++i)
 	{
 	    pixman_fixed_48_16_t tx, ty;
@@ -541,8 +541,9 @@ compute_sample_extents (pixman_transform_t *transform,
 #define IS_16BIT(x) (((x) >= INT16_MIN) && ((x) <= INT16_MAX))
 
 static pixman_bool_t
-analyze_extent (pixman_image_t *image, int x, int y,
-		const pixman_box32_t *extents, uint32_t *flags)
+analyze_extent (pixman_image_t       *image,
+		const pixman_box32_t *extents,
+		uint32_t             *flags)
 {
     pixman_transform_t *transform;
     pixman_fixed_t *params;
@@ -558,10 +559,10 @@ analyze_extent (pixman_image_t *image, int x, int y,
      * check here that the expanded-by-one source
      * extents in destination space fits in 16 bits
      */
-    if (!IS_16BIT (extents->x1 - x - 1)		||
-	!IS_16BIT (extents->y1 - y - 1)		||
-	!IS_16BIT (extents->x2 - x + 1)		||
-	!IS_16BIT (extents->y2 - y + 1))
+    if (!IS_16BIT (extents->x1 - 1)		||
+	!IS_16BIT (extents->y1 - 1)		||
+	!IS_16BIT (extents->x2 + 1)		||
+	!IS_16BIT (extents->y2 + 1))
     {
 	return FALSE;
     }
@@ -577,17 +578,17 @@ analyze_extent (pixman_image_t *image, int x, int y,
 	    return FALSE;
 
 #define ID_AND_NEAREST (FAST_PATH_ID_TRANSFORM | FAST_PATH_NEAREST_FILTER)
-	
+
 	if ((image->common.flags & ID_AND_NEAREST) == ID_AND_NEAREST &&
-	    extents->x1 - x >= 0 &&
-	    extents->y1 - y >= 0 &&
-	    extents->x2 - x <= image->bits.width &&
-	    extents->y2 - y <= image->bits.height)
+	    extents->x1 >= 0 &&
+	    extents->y1 >= 0 &&
+	    extents->x2 <= image->bits.width &&
+	    extents->y2 <= image->bits.height)
 	{
 	    *flags |= FAST_PATH_SAMPLES_COVER_CLIP;
 	    return TRUE;
 	}
-    
+
 	switch (image->common.filter)
 	{
 	case PIXMAN_FILTER_CONVOLUTION:
@@ -623,7 +624,7 @@ analyze_extent (pixman_image_t *image, int x, int y,
 	 * the source image, and set the FAST_PATH_SAMPLES_COVER_CLIP if it is.
 	 */
 	ex = *extents;
-	if (compute_sample_extents (transform, &ex, x, y, x_off, y_off, width, height) &&
+	if (compute_sample_extents (transform, &ex, x_off, y_off, width, height) &&
 	    ex.x1 >= 0 && ex.y1 >= 0 &&
 	    ex.x2 <= image->bits.width && ex.y2 <= image->bits.height)
 	{
@@ -647,7 +648,7 @@ analyze_extent (pixman_image_t *image, int x, int y,
     ex.x2 = extents->x2 + 1;
     ex.y2 = extents->y2 + 1;
 
-    if (!compute_sample_extents (transform, &ex, x, y, x_off, y_off, width, height))
+    if (!compute_sample_extents (transform, &ex, x_off, y_off, width, height))
 	return FALSE;
 
     return TRUE;
@@ -689,7 +690,7 @@ pixman_image_composite32 (pixman_op_t      op,
     pixman_format_code_t src_format, mask_format, dest_format;
     uint32_t src_flags, mask_flags, dest_flags;
     pixman_region32_t region;
-    pixman_box32_t *extents;
+    pixman_box32_t extents;
     pixman_implementation_t *imp;
     pixman_composite_func_t func;
 
@@ -736,12 +737,22 @@ pixman_image_composite32 (pixman_op_t      op,
 	goto out;
     }
 
-    extents = pixman_region32_extents (&region);
+    extents = *pixman_region32_extents (&region);
 
-    if (!analyze_extent (src, dest_x - src_x, dest_y - src_y, extents, &src_flags))
+    extents.x1 -= dest_x - src_x;
+    extents.y1 -= dest_y - src_y;
+    extents.x2 -= dest_x - src_x;
+    extents.y2 -= dest_y - src_y;
+
+    if (!analyze_extent (src, &extents, &src_flags))
 	goto out;
 
-    if (!analyze_extent (mask, dest_x - mask_x, dest_y - mask_y, extents, &mask_flags))
+    extents.x1 -= src_x - mask_x;
+    extents.y1 -= src_y - mask_y;
+    extents.x2 -= src_x - mask_x;
+    extents.y2 -= src_y - mask_y;
+
+    if (!analyze_extent (mask, &extents, &mask_flags))
 	goto out;
 
     /* If the clip is within the source samples, and the samples are opaque,
@@ -751,10 +762,10 @@ pixman_image_composite32 (pixman_op_t      op,
 
     if ((src_flags & BOTH) == BOTH)
 	src_flags |= FAST_PATH_IS_OPAQUE;
-    
+
     if ((mask_flags & BOTH) == BOTH)
 	mask_flags |= FAST_PATH_IS_OPAQUE;
-    
+
     /*
      * Check if we can replace our operator by a simpler one
      * if the src or dest are opaque. The output operator should be
