@@ -33,7 +33,7 @@
 #include <config.h>
 #endif
 
-#ifdef USE_X86_MMX
+#if defined USE_X86_MMX || defined USE_ARM_IWMMXT
 
 #include <mmintrin.h>
 #include "pixman-private.h"
@@ -45,6 +45,15 @@
 #define CHECKPOINT() error_f ("at %s %d\n", __FUNCTION__, __LINE__)
 #else
 #define CHECKPOINT()
+#endif
+
+#ifdef USE_ARM_IWMMXT
+/* Empty the multimedia state. For some reason, ARM's mmintrin.h doesn't provide this.  */
+extern __inline void __attribute__((__gnu_inline__, __always_inline__, __artificial__))
+_mm_empty (void)
+{
+
+}
 #endif
 
 /* Notes about writing mmx code
@@ -3218,4 +3227,4 @@ _pixman_implementation_create_mmx (pixman_implementation_t *fallback)
     return imp;
 }
 
-#endif /* USE_X86_MMX */
+#endif /* USE_X86_MMX || USE_ARM_IWMMXT */
