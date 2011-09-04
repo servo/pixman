@@ -250,6 +250,10 @@ compute_image_info (pixman_image_t *image)
     case PIXMAN_FILTER_GOOD:
     case PIXMAN_FILTER_BEST:
 	flags |= (FAST_PATH_BILINEAR_FILTER | FAST_PATH_NO_CONVOLUTION_FILTER);
+
+	/* Reduce BILINEAR to NEAREST for identity transforms */
+	if (flags & FAST_PATH_ID_TRANSFORM)
+	    flags |= FAST_PATH_NEAREST_FILTER;
 	break;
 
     case PIXMAN_FILTER_CONVOLUTION:

@@ -609,14 +609,15 @@ _pixman_iter_get_scanline_noop (pixman_iter_t *iter, const uint32_t *mask);
 #define FAST_PATH_IS_OPAQUE			(1 << 13)
 #define FAST_PATH_NO_NORMAL_REPEAT		(1 << 14)
 #define FAST_PATH_NO_NONE_REPEAT		(1 << 15)
-#define FAST_PATH_SAMPLES_COVER_CLIP		(1 << 16)
-#define FAST_PATH_X_UNIT_POSITIVE		(1 << 17)
-#define FAST_PATH_AFFINE_TRANSFORM		(1 << 18)
-#define FAST_PATH_Y_UNIT_ZERO			(1 << 19)
-#define FAST_PATH_BILINEAR_FILTER		(1 << 20)
-#define FAST_PATH_ROTATE_90_TRANSFORM		(1 << 21)
-#define FAST_PATH_ROTATE_180_TRANSFORM		(1 << 22)
-#define FAST_PATH_ROTATE_270_TRANSFORM		(1 << 23)
+#define FAST_PATH_X_UNIT_POSITIVE		(1 << 16)
+#define FAST_PATH_AFFINE_TRANSFORM		(1 << 17)
+#define FAST_PATH_Y_UNIT_ZERO			(1 << 18)
+#define FAST_PATH_BILINEAR_FILTER		(1 << 19)
+#define FAST_PATH_ROTATE_90_TRANSFORM		(1 << 20)
+#define FAST_PATH_ROTATE_180_TRANSFORM		(1 << 21)
+#define FAST_PATH_ROTATE_270_TRANSFORM		(1 << 22)
+#define FAST_PATH_SAMPLES_COVER_CLIP_NEAREST	(1 << 23)
+#define FAST_PATH_SAMPLES_COVER_CLIP_BILINEAR	(1 << 24)
 
 #define FAST_PATH_PAD_REPEAT						\
     (FAST_PATH_NO_NONE_REPEAT		|				\
@@ -652,7 +653,7 @@ _pixman_iter_get_scanline_noop (pixman_iter_t *iter, const uint32_t *mask);
 #define SOURCE_FLAGS(format)						\
     (FAST_PATH_STANDARD_FLAGS |						\
      ((PIXMAN_ ## format == PIXMAN_solid) ?				\
-      0 : (FAST_PATH_SAMPLES_COVER_CLIP | FAST_PATH_ID_TRANSFORM)))
+      0 : (FAST_PATH_SAMPLES_COVER_CLIP_NEAREST | FAST_PATH_NEAREST_FILTER | FAST_PATH_ID_TRANSFORM)))
 
 #define MASK_FLAGS(format, extra)					\
     ((PIXMAN_ ## format == PIXMAN_null) ? 0 : (SOURCE_FLAGS (format) | extra))

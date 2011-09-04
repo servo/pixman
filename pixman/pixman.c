@@ -524,9 +524,9 @@ analyze_extent (pixman_image_t       *image,
 		uint32_t             *flags)
 {
     pixman_transform_t *transform;
-    pixman_fixed_t *params;
     pixman_fixed_t x_off, y_off;
     pixman_fixed_t width, height;
+    pixman_fixed_t *params;
     box_48_16_t transformed;
     pixman_box32_t exp_extents;
 
@@ -556,15 +556,13 @@ analyze_extent (pixman_image_t       *image,
 	if (image->bits.width >= 0x7fff	|| image->bits.height >= 0x7fff)
 	    return FALSE;
 
-#define ID_AND_NEAREST (FAST_PATH_ID_TRANSFORM | FAST_PATH_NEAREST_FILTER)
-
-	if ((image->common.flags & ID_AND_NEAREST) == ID_AND_NEAREST &&
+	if ((image->common.flags & FAST_PATH_ID_TRANSFORM) == FAST_PATH_ID_TRANSFORM &&
 	    extents->x1 >= 0 &&
 	    extents->y1 >= 0 &&
 	    extents->x2 <= image->bits.width &&
 	    extents->y2 <= image->bits.height)
 	{
-	    *flags |= FAST_PATH_SAMPLES_COVER_CLIP;
+	    *flags |= FAST_PATH_SAMPLES_COVER_CLIP_NEAREST;
 	    return TRUE;
 	}
 
@@ -614,18 +612,28 @@ analyze_extent (pixman_image_t       *image,
      * may happen during sampling. Note that (8 * pixman_fixed_e) is very far from
      * 0.5 so this won't cause the area computed to be overly pessimistic.
      */
-    transformed.x1 += x_off - 8 * pixman_fixed_e;
-    transformed.y1 += y_off - 8 * pixman_fixed_e;
-    transformed.x2 += x_off + width + 8 * pixman_fixed_e;
-    transformed.y2 += y_off + height + 8 * pixman_fixed_e;
+    transformed.x1 -= 8 * pixman_fixed_e;
+    transformed.y1 -= 8 * pixman_fixed_e;
+    transformed.x2 += 8 * pixman_fixed_e;
+    transformed.y2 += 8 * pixman_fixed_e;
 
-    if (image->common.type == BITS					&&
-	pixman_fixed_to_int (transformed.x1) >= 0			&&
-	pixman_fixed_to_int (transformed.y1) >= 0			&&
-	pixman_fixed_to_int (transformed.x2) < image->bits.width	&&
-	pixman_fixed_to_int (transformed.y2) < image->bits.height)
+    if (image->common.type == BITS)
     {
-	*flags |= FAST_PATH_SAMPLES_COVER_CLIP;
+	if (pixman_fixed_to_int (transformed.x1) >= 0			&&
+	    pixman_fixed_to_int (transformed.y1) >= 0			&&
+	    pixman_fixed_to_int (transformed.x2) < image->bits.width	&&
+	    pixman_fixed_to_int (transformed.y2) < image->bits.height)
+	{
+	    *flags |= FAST_PATH_SAMPLES_COVER_CLIP_NEAREST;
+	}
+
+	if (pixman_fixed_to_int (transformed.x1 - pixman_fixed_1 / 2) >= 0		  &&
+	    pixman_fixed_to_int (transformed.y1 - pixman_fixed_1 / 2) >= 0		  &&
+	    pixman_fixed_to_int (transformed.x2 + pixman_fixed_1 / 2) < image->bits.width &&
+	    pixman_fixed_to_int (transformed.y2 + pixman_fixed_1 / 2) < image->bits.height)
+	{
+	    *flags |= FAST_PATH_SAMPLES_COVER_CLIP_BILINEAR;
+	}
     }
 
     /* Check we don't overflow when the destination extents are expanded by one.
@@ -753,16 +761,27 @@ pixman_image_composite32 (pixman_op_t      op,
     if (!analyze_extent (mask, &extents, &mask_flags))
 	goto out;
 
-    /* If the clip is within the source samples, and the samples are opaque,
-     * then the source is effectively opaque.
+    /* If the clip is within the source samples, and the samples are
+     * opaque, then the source is effectively opaque.
      */
-#define BOTH (FAST_PATH_SAMPLES_OPAQUE | FAST_PATH_SAMPLES_COVER_CLIP)
+#define NEAREST_OPAQUE	(FAST_PATH_SAMPLES_OPAQUE |			\
+			 FAST_PATH_NEAREST_FILTER |			\
+			 FAST_PATH_SAMPLES_COVER_CLIP_NEAREST)
+#define BILINEAR_OPAQUE	(FAST_PATH_SAMPLES_OPAQUE |			\
+			 FAST_PATH_BILINEAR_FILTER |			\
+			 FAST_PATH_SAMPLES_COVER_CLIP_BILINEAR)
 
-    if ((src_flags & BOTH) == BOTH)
+    if ((src_flags & NEAREST_OPAQUE) == NEAREST_OPAQUE ||
+	(src_flags & BILINEAR_OPAQUE) == BILINEAR_OPAQUE)
+    {
 	src_flags |= FAST_PATH_IS_OPAQUE;
+    }
 
-    if ((mask_flags & BOTH) == BOTH)
+    if ((mask_flags & NEAREST_OPAQUE) == NEAREST_OPAQUE ||
+	(mask_flags & BILINEAR_OPAQUE) == BILINEAR_OPAQUE)
+    {
 	mask_flags |= FAST_PATH_IS_OPAQUE;
+    }
 
     /*
      * Check if we can replace our operator by a simpler one
