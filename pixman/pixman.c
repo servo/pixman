@@ -446,93 +446,107 @@ update_cache:
     return TRUE;
 }
 
+typedef struct
+{
+    pixman_fixed_48_16_t	x1;
+    pixman_fixed_48_16_t	y1;
+    pixman_fixed_48_16_t	x2;
+    pixman_fixed_48_16_t	y2;
+} box_48_16_t;
+
+static pixman_bool_t
+compute_transformed_extents (pixman_transform_t *transform,
+			     const pixman_box32_t *extents,
+			     box_48_16_t *transformed)
+{
+    pixman_fixed_48_16_t tx1, ty1, tx2, ty2;
+    pixman_fixed_t x1, y1, x2, y2;
+    int i;
+
+    x1 = pixman_int_to_fixed (extents->x1) + pixman_fixed_1 / 2;
+    y1 = pixman_int_to_fixed (extents->y1) + pixman_fixed_1 / 2;
+    x2 = pixman_int_to_fixed (extents->x2) - pixman_fixed_1 / 2;
+    y2 = pixman_int_to_fixed (extents->y2) - pixman_fixed_1 / 2;
+
+    if (!transform)
+    {
+	transformed->x1 = x1;
+	transformed->y1 = y1;
+	transformed->x2 = x2;
+	transformed->y2 = y2;
+
+	return TRUE;
+    }
+
+    tx1 = ty1 = INT64_MAX;
+    tx2 = ty2 = INT64_MIN;
+
+    for (i = 0; i < 4; ++i)
+    {
+	pixman_fixed_48_16_t tx, ty;
+	pixman_vector_t v;
+
+	v.vector[0] = (i & 0x01)? x1 : x2;
+	v.vector[1] = (i & 0x02)? y1 : y2;
+	v.vector[2] = pixman_fixed_1;
+
+	if (!pixman_transform_point (transform, &v))
+	    return FALSE;
+
+	tx = (pixman_fixed_48_16_t)v.vector[0];
+	ty = (pixman_fixed_48_16_t)v.vector[1];
+
+	if (tx < tx1)
+	    tx1 = tx;
+	if (ty < ty1)
+	    ty1 = ty;
+	if (tx > tx2)
+	    tx2 = tx;
+	if (ty > ty2)
+	    ty2 = ty;
+    }
+
+    transformed->x1 = tx1;
+    transformed->y1 = ty1;
+    transformed->x2 = tx2;
+    transformed->y2 = ty2;
+
+    return TRUE;
+}
+
 static pixman_bool_t
 compute_sample_extents (pixman_transform_t *transform,
 			pixman_box32_t *extents,
 			pixman_fixed_t x_off, pixman_fixed_t y_off,
 			pixman_fixed_t width, pixman_fixed_t height)
 {
-    pixman_fixed_t x1, y1, x2, y2;
-    pixman_fixed_48_16_t tx1, ty1, tx2, ty2;
+    box_48_16_t transformed;
 
-    /* We have checked earlier that (extents->x1 - x) etc. fit in a pixman_fixed_t */
-    x1 = (pixman_fixed_48_16_t)pixman_int_to_fixed (extents->x1) + pixman_fixed_1 / 2;
-    y1 = (pixman_fixed_48_16_t)pixman_int_to_fixed (extents->y1) + pixman_fixed_1 / 2;
-    x2 = (pixman_fixed_48_16_t)pixman_int_to_fixed (extents->x2) - pixman_fixed_1 / 2;
-    y2 = (pixman_fixed_48_16_t)pixman_int_to_fixed (extents->y2) - pixman_fixed_1 / 2;
-
-    if (!transform)
-    {
-	tx1 = (pixman_fixed_48_16_t)x1;
-	ty1 = (pixman_fixed_48_16_t)y1;
-	tx2 = (pixman_fixed_48_16_t)x2;
-	ty2 = (pixman_fixed_48_16_t)y2;
-    }
-    else
-    {
-	int i;
-
-	/* Silence GCC */
-	tx1 = ty1 = tx2 = ty2 = 0;
-
-	for (i = 0; i < 4; ++i)
-	{
-	    pixman_fixed_48_16_t tx, ty;
-	    pixman_vector_t v;
-
-	    v.vector[0] = (i & 0x01)? x1 : x2;
-	    v.vector[1] = (i & 0x02)? y1 : y2;
-	    v.vector[2] = pixman_fixed_1;
-
-	    if (!pixman_transform_point (transform, &v))
-		return FALSE;
-
-	    tx = (pixman_fixed_48_16_t)v.vector[0];
-	    ty = (pixman_fixed_48_16_t)v.vector[1];
-
-	    if (i == 0)
-	    {
-		tx1 = tx;
-		ty1 = ty;
-		tx2 = tx;
-		ty2 = ty;
-	    }
-	    else
-	    {
-		if (tx < tx1)
-		    tx1 = tx;
-		if (ty < ty1)
-		    ty1 = ty;
-		if (tx > tx2)
-		    tx2 = tx;
-		if (ty > ty2)
-		    ty2 = ty;
-	    }
-	}
-    }
+    if (!compute_transformed_extents (transform, extents, &transformed))
+	return FALSE;
 
     /* Expand the source area by a tiny bit so account of different rounding that
      * may happen during sampling. Note that (8 * pixman_fixed_e) is very far from
      * 0.5 so this won't cause the area computed to be overly pessimistic.
      */
-    tx1 += x_off - 8 * pixman_fixed_e;
-    ty1 += y_off - 8 * pixman_fixed_e;
-    tx2 += x_off + width + 8 * pixman_fixed_e;
-    ty2 += y_off + height + 8 * pixman_fixed_e;
+    transformed.x1 += x_off - 8 * pixman_fixed_e;
+    transformed.y1 += y_off - 8 * pixman_fixed_e;
+    transformed.x2 += x_off + width + 8 * pixman_fixed_e;
+    transformed.y2 += y_off + height + 8 * pixman_fixed_e;
 
-    if (tx1 < pixman_min_fixed_48_16 || tx1 > pixman_max_fixed_48_16 ||
-	ty1 < pixman_min_fixed_48_16 || ty1 > pixman_max_fixed_48_16 ||
-	tx2 < pixman_min_fixed_48_16 || tx2 > pixman_max_fixed_48_16 ||
-	ty2 < pixman_min_fixed_48_16 || ty2 > pixman_max_fixed_48_16)
+    if (transformed.x1 < pixman_min_fixed_48_16 || transformed.x1 > pixman_max_fixed_48_16 ||
+	transformed.y1 < pixman_min_fixed_48_16 || transformed.y1 > pixman_max_fixed_48_16 ||
+	transformed.x2 < pixman_min_fixed_48_16 || transformed.x2 > pixman_max_fixed_48_16 ||
+	transformed.y2 < pixman_min_fixed_48_16 || transformed.y2 > pixman_max_fixed_48_16)
     {
 	return FALSE;
     }
     else
     {
-	extents->x1 = pixman_fixed_to_int (tx1);
-	extents->y1 = pixman_fixed_to_int (ty1);
-	extents->x2 = pixman_fixed_to_int (tx2) + 1;
-	extents->y2 = pixman_fixed_to_int (ty2) + 1;
+	extents->x1 = pixman_fixed_to_int (transformed.x1);
+	extents->y1 = pixman_fixed_to_int (transformed.y1);
+	extents->x2 = pixman_fixed_to_int (transformed.x2) + 1;
+	extents->y2 = pixman_fixed_to_int (transformed.y2) + 1;
 
 	return TRUE;
     }
