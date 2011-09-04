@@ -2,25 +2,12 @@ default: all
 
 top_srcdir = ..
 include $(top_srcdir)/test/Makefile.sources
+include $(top_srcdir)/Makefile.win32.common
 
-CC   = cl
-LINK = link
-
-CFG_VAR = $(CFG)
-ifeq ($(CFG_VAR),)
-CFG_VAR=release
-endif
-
-CFLAGS     = -MD -nologo -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE -D_BIND_TO_CURRENT_VCLIBS_VERSION -D_MT -I../pixman -I. -I../
-TEST_LDADD = ../pixman/$(CFG_VAR)/pixman-1.lib $(CFG_VAR)/libutils.lib
-INCLUDES = -I../pixman -I$(top_builddir)/pixman
-
-# optimization flags
-ifeq ($(CFG_VAR),debug)
-CFLAGS += -Od -Zi
-else
-CFLAGS += -O2
-endif
+TEST_LDADD = \
+	$(top_builddir)/pixman/$(CFG_VAR)/$(LIBRARY).lib \
+	$(CFG_VAR)/libutils.lib \
+	$(NULL)
 
 libutils_OBJECTS = $(patsubst %.c, $(CFG_VAR)/%.obj, $(libutils_sources))
 
@@ -29,18 +16,13 @@ OBJECTS = $(patsubst %.c, $(CFG_VAR)/%.obj, $(SOURCES))
 TESTS   = $(patsubst %,   $(CFG_VAR)/%.exe, $(TESTPROGRAMS))
 BENCHS  = $(patsubst %,   $(CFG_VAR)/%.exe, $(BENCHMARKS))
 
-
-all: $(TESTS) $(BENCHS)
+all: inform $(TESTS) $(BENCHS)
 
 $(CFG_VAR)/libutils.lib: $(libutils_OBJECTS)
-	@lib -NOLOGO -OUT:$@ $^ || exit 0
-
-$(CFG_VAR)/%.obj: %.c
-	@mkdir -p $(CFG_VAR)
-	@$(CC) -c $(CFLAGS) -Fo"$@" $<
+	@$(AR) $(PIXMAN_ARFLAGS) -OUT:$@ $^
 
 $(CFG_VAR)/%.exe: $(CFG_VAR)/%.obj $(TEST_LDADD)
-	@$(LINK) /NOLOGO /OUT:$@ $^
+	@$(LD) $(PIXMAN_LDFLAGS) -OUT:$@ $^
 
-clean:
-	@rm -f $(CFG_VAR)/*.obj $(CFG_VAR)/*.pdb || exit 0
+$(top_builddir)/pixman/$(CFG_VAR)/$(LIBRARY).lib:
+	@$(MAKE) -C $(top_builddir)/pixman -f Makefile.win32
