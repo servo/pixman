@@ -514,45 +514,9 @@ compute_transformed_extents (pixman_transform_t *transform,
     return TRUE;
 }
 
-static pixman_bool_t
-compute_sample_extents (pixman_transform_t *transform,
-			pixman_box32_t *extents,
-			pixman_fixed_t x_off, pixman_fixed_t y_off,
-			pixman_fixed_t width, pixman_fixed_t height)
-{
-    box_48_16_t transformed;
-
-    if (!compute_transformed_extents (transform, extents, &transformed))
-	return FALSE;
-
-    /* Expand the source area by a tiny bit so account of different rounding that
-     * may happen during sampling. Note that (8 * pixman_fixed_e) is very far from
-     * 0.5 so this won't cause the area computed to be overly pessimistic.
-     */
-    transformed.x1 += x_off - 8 * pixman_fixed_e;
-    transformed.y1 += y_off - 8 * pixman_fixed_e;
-    transformed.x2 += x_off + width + 8 * pixman_fixed_e;
-    transformed.y2 += y_off + height + 8 * pixman_fixed_e;
-
-    if (transformed.x1 < pixman_min_fixed_48_16 || transformed.x1 > pixman_max_fixed_48_16 ||
-	transformed.y1 < pixman_min_fixed_48_16 || transformed.y1 > pixman_max_fixed_48_16 ||
-	transformed.x2 < pixman_min_fixed_48_16 || transformed.x2 > pixman_max_fixed_48_16 ||
-	transformed.y2 < pixman_min_fixed_48_16 || transformed.y2 > pixman_max_fixed_48_16)
-    {
-	return FALSE;
-    }
-    else
-    {
-	extents->x1 = pixman_fixed_to_int (transformed.x1);
-	extents->y1 = pixman_fixed_to_int (transformed.y1);
-	extents->x2 = pixman_fixed_to_int (transformed.x2) + 1;
-	extents->y2 = pixman_fixed_to_int (transformed.y2) + 1;
-
-	return TRUE;
-    }
-}
-
 #define IS_16BIT(x) (((x) >= INT16_MIN) && ((x) <= INT16_MAX))
+#define ABS(f)      (((f) < 0)?  (-(f)) : (f))
+#define IS_16_16(f) (((f) >= pixman_min_fixed_48_16 && ((f) <= pixman_max_fixed_48_16)))
 
 static pixman_bool_t
 analyze_extent (pixman_image_t       *image,
@@ -563,7 +527,8 @@ analyze_extent (pixman_image_t       *image,
     pixman_fixed_t *params;
     pixman_fixed_t x_off, y_off;
     pixman_fixed_t width, height;
-    pixman_box32_t ex;
+    box_48_16_t transformed;
+    pixman_box32_t exp_extents;
 
     if (!image)
 	return TRUE;
@@ -633,17 +598,6 @@ analyze_extent (pixman_image_t       *image,
 	default:
 	    return FALSE;
 	}
-
-	/* Check whether the non-expanded, transformed extent is entirely within
-	 * the source image, and set the FAST_PATH_SAMPLES_COVER_CLIP if it is.
-	 */
-	ex = *extents;
-	if (compute_sample_extents (transform, &ex, x_off, y_off, width, height) &&
-	    ex.x1 >= 0 && ex.y1 >= 0 &&
-	    ex.x2 <= image->bits.width && ex.y2 <= image->bits.height)
-	{
-	    *flags |= FAST_PATH_SAMPLES_COVER_CLIP;
-	}
     }
     else
     {
@@ -653,17 +607,47 @@ analyze_extent (pixman_image_t       *image,
 	height = 0;
     }
 
-    /* Check that the extents expanded by one don't overflow. This ensures that
-     * compositing functions can simply walk the source space using 16.16
-     * variables without worrying about overflow.
-     */
-    ex.x1 = extents->x1 - 1;
-    ex.y1 = extents->y1 - 1;
-    ex.x2 = extents->x2 + 1;
-    ex.y2 = extents->y2 + 1;
-
-    if (!compute_sample_extents (transform, &ex, x_off, y_off, width, height))
+    if (!compute_transformed_extents (transform, extents, &transformed))
 	return FALSE;
+
+    /* Expand the source area by a tiny bit so account of different rounding that
+     * may happen during sampling. Note that (8 * pixman_fixed_e) is very far from
+     * 0.5 so this won't cause the area computed to be overly pessimistic.
+     */
+    transformed.x1 += x_off - 8 * pixman_fixed_e;
+    transformed.y1 += y_off - 8 * pixman_fixed_e;
+    transformed.x2 += x_off + width + 8 * pixman_fixed_e;
+    transformed.y2 += y_off + height + 8 * pixman_fixed_e;
+
+    if (image->common.type == BITS					&&
+	pixman_fixed_to_int (transformed.x1) >= 0			&&
+	pixman_fixed_to_int (transformed.y1) >= 0			&&
+	pixman_fixed_to_int (transformed.x2) < image->bits.width	&&
+	pixman_fixed_to_int (transformed.y2) < image->bits.height)
+    {
+	*flags |= FAST_PATH_SAMPLES_COVER_CLIP;
+    }
+
+    /* Check we don't overflow when the destination extents are expanded by one.
+     * This ensures that compositing functions can simply walk the source space
+     * using 16.16 variables without worrying about overflow.
+     */
+    exp_extents = *extents;
+    exp_extents.x1 -= 1;
+    exp_extents.y1 -= 1;
+    exp_extents.x2 += 1;
+    exp_extents.y2 += 1;
+
+    if (!compute_transformed_extents (transform, &exp_extents, &transformed))
+	return FALSE;
+    
+    if (!IS_16_16 (transformed.x1 + x_off - 8 * pixman_fixed_e)	||
+	!IS_16_16 (transformed.y1 + y_off - 8 * pixman_fixed_e)	||
+	!IS_16_16 (transformed.x2 + x_off + 8 * pixman_fixed_e + width)	||
+	!IS_16_16 (transformed.y2 + y_off + 8 * pixman_fixed_e + height))
+    {
+	return FALSE;
+    }
 
     return TRUE;
 }
