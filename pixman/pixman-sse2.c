@@ -5396,6 +5396,107 @@ FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_8888_normal_SRC,
 			       uint32_t, uint32_t, uint32_t,
 			       NORMAL, FLAG_NONE)
 
+static force_inline void
+scaled_bilinear_scanline_sse2_8888_8888_OVER (uint32_t *       dst,
+					      const uint32_t * mask,
+					      const uint32_t * src_top,
+					      const uint32_t * src_bottom,
+					      int32_t          w,
+					      int              wt,
+					      int              wb,
+					      pixman_fixed_t   vx,
+					      pixman_fixed_t   unit_x,
+					      pixman_fixed_t   max_vx,
+					      pixman_bool_t    zero_src)
+{
+    BILINEAR_DECLARE_VARIABLES;
+    uint32_t pix1, pix2, pix3, pix4;
+
+    while (w && ((unsigned long)dst & 15))
+    {
+	BILINEAR_INTERPOLATE_ONE_PIXEL (pix1);
+
+	if (pix1)
+	{
+	    pix2 = *dst;
+	    *dst = core_combine_over_u_pixel_sse2 (pix1, pix2);
+	}
+
+	w--;
+	dst++;
+    }
+
+    while (w  >= 4)
+    {
+	__m128i xmm_src;
+	__m128i xmm_src_hi, xmm_src_lo, xmm_dst_hi, xmm_dst_lo;
+	__m128i xmm_alpha_hi, xmm_alpha_lo;
+
+	BILINEAR_INTERPOLATE_ONE_PIXEL (pix1);
+	BILINEAR_INTERPOLATE_ONE_PIXEL (pix2);
+	BILINEAR_INTERPOLATE_ONE_PIXEL (pix3);
+	BILINEAR_INTERPOLATE_ONE_PIXEL (pix4);
+
+	xmm_src = _mm_set_epi32 (pix4, pix3, pix2, pix1);
+
+	if (!is_zero (xmm_src))
+	{
+	    if (is_opaque (xmm_src))
+	    {
+		save_128_aligned ((__m128i *)dst, xmm_src);
+	    }
+	    else
+	    {
+		__m128i xmm_dst = load_128_aligned ((__m128i *)dst);
+
+		unpack_128_2x128 (xmm_src, &xmm_src_lo, &xmm_src_hi);
+		unpack_128_2x128 (xmm_dst, &xmm_dst_lo, &xmm_dst_hi);
+
+		expand_alpha_2x128 (xmm_src_lo, xmm_src_hi, &xmm_alpha_lo, &xmm_alpha_hi);
+		over_2x128 (&xmm_src_lo, &xmm_src_hi, &xmm_alpha_lo, &xmm_alpha_hi,
+			    &xmm_dst_lo, &xmm_dst_hi);
+
+		save_128_aligned ((__m128i *)dst, pack_2x128_128 (xmm_dst_lo, xmm_dst_hi));
+	    }
+	}
+
+	w -= 4;
+	dst += 4;
+    }
+
+    while (w)
+    {
+	BILINEAR_INTERPOLATE_ONE_PIXEL (pix1);
+
+	if (pix1)
+	{
+	    pix2 = *dst;
+	    *dst = core_combine_over_u_pixel_sse2 (pix1, pix2);
+	}
+
+	w--;
+	dst++;
+    }
+}
+
+FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_8888_cover_OVER,
+			       scaled_bilinear_scanline_sse2_8888_8888_OVER,
+			       uint32_t, uint32_t, uint32_t,
+			       COVER, FLAG_NONE)
+FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_8888_pad_OVER,
+			       scaled_bilinear_scanline_sse2_8888_8888_OVER,
+			       uint32_t, uint32_t, uint32_t,
+			       PAD, FLAG_NONE)
+FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_8888_none_OVER,
+			       scaled_bilinear_scanline_sse2_8888_8888_OVER,
+			       uint32_t, uint32_t, uint32_t,
+			       NONE, FLAG_NONE)
+FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_8888_normal_OVER,
+			       scaled_bilinear_scanline_sse2_8888_8888_OVER,
+			       uint32_t, uint32_t, uint32_t,
+			       NORMAL, FLAG_NONE)
+
+
 static const pixman_fast_path_t sse2_fast_paths[] =
 {
     /* PIXMAN_OP_OVER */
@@ -5501,9 +5602,13 @@ static const pixman_fast_path_t sse2_fast_paths[] =
     SIMPLE_BILINEAR_FAST_PATH (SRC, a8r8g8b8, x8r8g8b8, sse2_8888_8888),
     SIMPLE_BILINEAR_FAST_PATH (SRC, x8r8g8b8, x8r8g8b8, sse2_8888_8888),
 
+    SIMPLE_BILINEAR_FAST_PATH (OVER, a8r8g8b8, x8r8g8b8, sse2_8888_8888),
+    SIMPLE_BILINEAR_FAST_PATH (OVER, a8b8g8r8, x8b8g8r8, sse2_8888_8888),
+    SIMPLE_BILINEAR_FAST_PATH (OVER, a8r8g8b8, a8r8g8b8, sse2_8888_8888),
+    SIMPLE_BILINEAR_FAST_PATH (OVER, a8b8g8r8, a8b8g8r8, sse2_8888_8888),
+
     { PIXMAN_OP_NONE },
 };
-
 
 static pixman_bool_t
 sse2_blt (pixman_implementation_t *imp,
