@@ -3040,8 +3040,8 @@ static const pixman_fast_path_t mmx_fast_paths[] =
      */
     PIXMAN_STD_FAST_PATH    (OVER, x8r8g8b8, a8,       x8r8g8b8, mmx_composite_over_x888_8_8888    ),
     PIXMAN_STD_FAST_PATH    (OVER, x8r8g8b8, a8,       a8r8g8b8, mmx_composite_over_x888_8_8888    ),
-    PIXMAN_STD_FAST_PATH    (OVER, x8b8r8g8, a8,       x8b8g8r8, mmx_composite_over_x888_8_8888    ),
-    PIXMAN_STD_FAST_PATH    (OVER, x8b8r8g8, a8,       a8r8g8b8, mmx_composite_over_x888_8_8888    ),
+    PIXMAN_STD_FAST_PATH    (OVER, x8b8g8r8, a8,       x8b8g8r8, mmx_composite_over_x888_8_8888    ),
+    PIXMAN_STD_FAST_PATH    (OVER, x8b8g8r8, a8,       a8b8g8r8, mmx_composite_over_x888_8_8888    ),
 #endif
     PIXMAN_STD_FAST_PATH    (OVER, solid,    null,     a8r8g8b8, mmx_composite_over_n_8888         ),
     PIXMAN_STD_FAST_PATH    (OVER, solid,    null,     x8r8g8b8, mmx_composite_over_n_8888         ),
