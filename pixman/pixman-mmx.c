@@ -314,6 +314,13 @@ static __inline__ uint64_t ldq_u(uint64_t *p)
 #ifdef USE_X86_MMX
     /* x86's alignment restrictions are very relaxed. */
     return *p;
+#elif defined USE_ARM_IWMMXT
+    int align = (uintptr_t)p & 7;
+    __m64 *aligned_p;
+    if (align == 0)
+	return *p;
+    aligned_p = (__m64 *)((uintptr_t)p & ~7);
+    return _mm_align_si64 (aligned_p[0], aligned_p[1], align);
 #else
     struct __una_u64 { uint64_t x __attribute__((packed)); };
     const struct __una_u64 *ptr = (const struct __una_u64 *) p;
