@@ -375,6 +375,7 @@ compute_image_info (pixman_image_t *image)
 	else
 	{
 	    code = image->bits.format;
+	    flags |= FAST_PATH_BITS_IMAGE;
 	}
 
 	if (!PIXMAN_FORMAT_A (image->bits.format)				&&
