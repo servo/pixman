@@ -250,6 +250,19 @@ _pixman_radial_gradient_iter_init (pixman_image_t *image, pixman_iter_t *iter);
 void
 _pixman_conical_gradient_iter_init (pixman_image_t *image, pixman_iter_t *iter);
 
+void
+_pixman_image_init (pixman_image_t *image);
+
+pixman_bool_t
+_pixman_bits_image_init (pixman_image_t *     image,
+                         pixman_format_code_t format,
+                         int                  width,
+                         int                  height,
+                         uint32_t *           bits,
+                         int                  rowstride);
+pixman_bool_t
+_pixman_image_fini (pixman_image_t *image);
+
 pixman_image_t *
 _pixman_image_allocate (void);
 
