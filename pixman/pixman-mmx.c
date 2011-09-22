@@ -1784,7 +1784,7 @@ pixman_fill_mmx (uint32_t *bits,
     uint32_t byte_width;
     uint8_t     *byte_line;
 
-#ifdef __GNUC__
+#if defined __GNUC__ && defined USE_X86_MMX
     __m64 v1, v2, v3, v4, v5, v6, v7;
 #endif
 
@@ -1818,7 +1818,7 @@ pixman_fill_mmx (uint32_t *bits,
     fill = ((uint64_t)xor << 32) | xor;
     vfill = to_m64 (fill);
 
-#ifdef __GNUC__
+#if defined __GNUC__ && defined USE_X86_MMX
     __asm__ (
         "movq		%7,	%0\n"
         "movq		%7,	%1\n"
@@ -1864,7 +1864,7 @@ pixman_fill_mmx (uint32_t *bits,
 
 	while (w >= 64)
 	{
-#ifdef __GNUC__
+#if defined __GNUC__ && defined USE_X86_MMX
 	    __asm__ (
 	        "movq	%1,	  (%0)\n"
 	        "movq	%2,	 8(%0)\n"
@@ -2844,7 +2844,7 @@ pixman_blt_mmx (uint32_t *src_bits,
 
 	while (w >= 64)
 	{
-#if defined (__GNUC__) || (defined(__SUNPRO_C) && (__SUNPRO_C >= 0x590))
+#if (defined (__GNUC__) || (defined(__SUNPRO_C) && (__SUNPRO_C >= 0x590))) && defined USE_X86_MMX
 	    __asm__ (
 	        "movq	  (%1),	  %%mm0\n"
 	        "movq	 8(%1),	  %%mm1\n"
