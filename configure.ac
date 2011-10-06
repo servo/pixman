@@ -552,6 +552,9 @@ AC_MSG_CHECKING(whether to use ARM IWMMXT intrinsics)
 xserver_save_CFLAGS=$CFLAGS
 CFLAGS="$IWMMXT_CFLAGS $CFLAGS"
 AC_COMPILE_IFELSE([
+#ifndef __arm__
+#error "IWMMXT is only available on ARM"
+#endif
 #if defined(__GNUC__) && (__GNUC__ < 4 || (__GNUC__ == 3 && __GNUC_MINOR__ < 6))
 #error "Need GCC >= 4.6 for IWMMXT intrinsics"
 #endif
