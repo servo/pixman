@@ -56,8 +56,6 @@ gradient_walker_reset (pixman_gradient_walker_t *walker,
     int n, count = walker->num_stops;
     pixman_gradient_stop_t *stops = walker->stops;
 
-    static const pixman_color_t transparent_black = { 0, 0, 0, 0 };
-
     switch (walker->repeat)
     {
     case PIXMAN_REPEAT_NORMAL:
@@ -68,27 +66,12 @@ gradient_walker_reset (pixman_gradient_walker_t *walker,
 		break;
 	}
 
-	if (n == 0)
-	{
-	    left_x =  stops[count - 1].x - 0x10000;
-	    left_c = &stops[count - 1].color;
-	}
-	else
-	{
-	    left_x =  stops[n - 1].x;
-	    left_c = &stops[n - 1].color;
-	}
+	left_x =  stops[n - 1].x;
+	left_c = &stops[n - 1].color;
 
-	if (n == count)
-	{
-	    right_x =  stops[0].x + 0x10000;
-	    right_c = &stops[0].color;
-	}
-	else
-	{
-	    right_x =  stops[n].x;
-	    right_c = &stops[n].color;
-	}
+	right_x =  stops[n].x;
+	right_c = &stops[n].color;
+
 	left_x  += (pos - x);
 	right_x += (pos - x);
 	break;
@@ -100,27 +83,11 @@ gradient_walker_reset (pixman_gradient_walker_t *walker,
 		break;
 	}
 
-	if (n == 0)
-	{
-	    left_x =  INT32_MIN;
-	    left_c = &stops[0].color;
-	}
-	else
-	{
-	    left_x =  stops[n - 1].x;
-	    left_c = &stops[n - 1].color;
-	}
+	left_x =  stops[n - 1].x;
+	left_c = &stops[n - 1].color;
 
-	if (n == count)
-	{
-	    right_x =  INT32_MAX;
-	    right_c = &stops[n - 1].color;
-	}
-	else
-	{
-	    right_x =  stops[n].x;
-	    right_c = &stops[n].color;
-	}
+	right_x =  stops[n].x;
+	right_c = &stops[n].color;
 	break;
 
     case PIXMAN_REPEAT_REFLECT:
@@ -134,27 +101,11 @@ gradient_walker_reset (pixman_gradient_walker_t *walker,
 		break;
 	}
 
-	if (n == 0)
-	{
-	    left_x =  -stops[0].x;
-	    left_c = &stops[0].color;
-	}
-	else
-	{
-	    left_x =  stops[n - 1].x;
-	    left_c = &stops[n - 1].color;
-	}
+	left_x =  stops[n - 1].x;
+	left_c = &stops[n - 1].color;
 
-	if (n == count)
-	{
-	    right_x = 0x20000 - stops[n - 1].x;
-	    right_c = &stops[n - 1].color;
-	}
-	else
-	{
-	    right_x =  stops[n].x;
-	    right_c = &stops[n].color;
-	}
+	right_x =  stops[n].x;
+	right_c = &stops[n].color;
 
 	if ((int32_t)pos & 0x10000)
 	{
@@ -182,25 +133,11 @@ gradient_walker_reset (pixman_gradient_walker_t *walker,
 		break;
 	}
 
-	if (n == 0)
-	{
-	    left_x  =  INT32_MIN;
-	    right_x =  stops[0].x;
-	    left_c  = right_c = (pixman_color_t*) &transparent_black;
-	}
-	else if (n == count)
-	{
-	    left_x  = stops[n - 1].x;
-	    right_x = INT32_MAX;
-	    left_c  = right_c = (pixman_color_t*) &transparent_black;
-	}
-	else
-	{
-	    left_x  =  stops[n - 1].x;
-	    right_x =  stops[n].x;
-	    left_c  = &stops[n - 1].color;
-	    right_c = &stops[n].color;
-	}
+	left_x  =  stops[n - 1].x;
+	left_c  = &stops[n - 1].color;
+
+	right_x =  stops[n].x;
+	right_c = &stops[n].color;
     }
 
     walker->left_x   = left_x;
