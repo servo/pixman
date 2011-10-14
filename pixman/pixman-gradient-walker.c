@@ -56,57 +56,40 @@ gradient_walker_reset (pixman_gradient_walker_t *walker,
     int n, count = walker->num_stops;
     pixman_gradient_stop_t *stops = walker->stops;
 
-    switch (walker->repeat)
+    if (walker->repeat == PIXMAN_REPEAT_NORMAL)
     {
-    case PIXMAN_REPEAT_NORMAL:
-	x = (int32_t)pos & 0xFFFF;
-	for (n = 0; n < count; n++)
-	{
-	    if (x < stops[n].x)
-		break;
-	}
-
-	left_x =  stops[n - 1].x;
-	left_c = &stops[n - 1].color;
-
-	right_x =  stops[n].x;
-	right_c = &stops[n].color;
-
-	left_x  += (pos - x);
-	right_x += (pos - x);
-	break;
-
-    case PIXMAN_REPEAT_PAD:
-	for (n = 0; n < count; n++)
-	{
-	    if (pos < stops[n].x)
-		break;
-	}
-
-	left_x =  stops[n - 1].x;
-	left_c = &stops[n - 1].color;
-
-	right_x =  stops[n].x;
-	right_c = &stops[n].color;
-	break;
-
-    case PIXMAN_REPEAT_REFLECT:
-	x = (int32_t)pos & 0xFFFF;
+	x = (int32_t)pos & 0xffff;
+    }
+    else if (walker->repeat == PIXMAN_REPEAT_REFLECT)
+    {
+	x = (int32_t)pos & 0xffff;
 	if ((int32_t)pos & 0x10000)
 	    x = 0x10000 - x;
+    }
+    else
+    {
+	x = pos;
+    }
+    
+    for (n = 0; n < count; n++)
+    {
+	if (x < stops[n].x)
+	    break;
+    }
+    
+    left_x =  stops[n - 1].x;
+    left_c = &stops[n - 1].color;
+    
+    right_x =  stops[n].x;
+    right_c = &stops[n].color;
 
-	for (n = 0; n < count; n++)
-	{
-	    if (x < stops[n].x)
-		break;
-	}
-
-	left_x =  stops[n - 1].x;
-	left_c = &stops[n - 1].color;
-
-	right_x =  stops[n].x;
-	right_c = &stops[n].color;
-
+    if (walker->repeat == PIXMAN_REPEAT_NORMAL)
+    {
+	left_x  += (pos - x);
+	right_x += (pos - x);
+    }
+    else if (walker->repeat == PIXMAN_REPEAT_REFLECT)
+    {
 	if ((int32_t)pos & 0x10000)
 	{
 	    pixman_color_t  *tmp_c;
@@ -124,20 +107,6 @@ gradient_walker_reset (pixman_gradient_walker_t *walker,
 	}
 	left_x  += (pos - x);
 	right_x += (pos - x);
-	break;
-
-    default:  /* REPEAT_NONE */
-	for (n = 0; n < count; n++)
-	{
-	    if (pos < stops[n].x)
-		break;
-	}
-
-	left_x  =  stops[n - 1].x;
-	left_c  = &stops[n - 1].color;
-
-	right_x =  stops[n].x;
-	right_c = &stops[n].color;
     }
 
     walker->left_x   = left_x;
