@@ -1260,7 +1260,7 @@ generate_composite_function \
                                     PF subges PF_CTL, PF_CTL, #0x10
     vmull.u8    q11, d24, d3
                                     PF ldrgeb DUMMY, [PF_MASK, MASK_STRIDE, lsl #mask_bpp_shift]!
-        vst4.8      {d28, d29, d30, d31}, [DST_W :128]!
+        vst4.8      {d28, d29, d30, d31}, [DST_W, :128]!
     vrsra.u16   q8, q8, #8
     vrsra.u16   q9, q9, #8
     vrsra.u16   q10, q10, #8
