@@ -280,7 +280,7 @@ test_composite (int testnum, int verbose)
 
     lcg_srand (testnum);
 
-    op = op_list[lcg_rand_n (sizeof (op_list) / sizeof (op_list[0]))];
+    op = op_list[lcg_rand_n (ARRAY_LENGTH (op_list))];
 
     if (lcg_rand_n (8))
     {
