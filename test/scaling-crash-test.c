@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "pixman.h"
+#include "utils.h"
 
 /*
  * We have a source image filled with solid color, set NORMAL or PAD repeat,

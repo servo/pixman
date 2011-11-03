@@ -25,10 +25,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#define PIXMAN_USE_INTERNAL_API
-#include <pixman.h>
-
 #include "utils.h"
 
 #define SOLID_FLAG 1
