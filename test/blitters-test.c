@@ -424,6 +424,6 @@ main (int argc, const char *argv[])
     }
 
     return fuzzer_test_main("blitters", 2000000,
-			    0x29137844,
+			    0x3EDA4108,
 			    test_composite, argc, argv);
 }
