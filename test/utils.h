@@ -159,3 +159,30 @@ typedef struct
 
 void
 round_color (pixman_format_code_t format, color_t *color);
+
+typedef struct
+{
+    pixman_format_code_t format;
+    uint32_t am, rm, gm, bm;
+    uint32_t as, rs, gs, bs;
+    uint32_t aw, rw, gw, bw;
+} pixel_checker_t;
+
+void
+pixel_checker_init (pixel_checker_t *checker, pixman_format_code_t format);
+
+void
+pixel_checker_split_pixel (const pixel_checker_t *checker, uint32_t pixel,
+			   int *a, int *r, int *g, int *b);
+
+void
+pixel_checker_get_max (const pixel_checker_t *checker, color_t *color,
+		       int *a, int *r, int *g, int *b);
+
+void
+pixel_checker_get_min (const pixel_checker_t *checker, color_t *color,
+		       int *a, int *r, int *g, int *b);
+
+pixman_bool_t
+pixel_checker_check (const pixel_checker_t *checker,
+		     uint32_t pixel, color_t *color);
