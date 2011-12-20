@@ -704,14 +704,23 @@ initialize_palette (pixman_indexed_t *palette, uint32_t depth, int is_rgb)
     }
 }
 
-void
-color_correct (pixman_format_code_t format,
-	       color_t *color)
+static double
+round_channel (double p, int m)
 {
-#define MASK(x) ((1 << (x)) - 1)
-#define round_pix(pix, m)						\
-    ((int)((pix) * (MASK(m)) + .5) / (double) (MASK(m)))
+    int t;
+    double r;
 
+    t = p * ((1 << m));
+    t -= t >> m;
+
+    r = t / (double)((1 << m) - 1);
+
+    return r;
+}
+
+void
+round_color (pixman_format_code_t format, color_t *color)
+{
     if (PIXMAN_FORMAT_R (format) == 0)
     {
 	color->r = 0.0;
@@ -720,16 +729,13 @@ color_correct (pixman_format_code_t format,
     }
     else
     {
-	color->r = round_pix (color->r, PIXMAN_FORMAT_R (format));
-	color->g = round_pix (color->g, PIXMAN_FORMAT_G (format));
-	color->b = round_pix (color->b, PIXMAN_FORMAT_B (format));
+	color->r = round_channel (color->r, PIXMAN_FORMAT_R (format));
+	color->g = round_channel (color->g, PIXMAN_FORMAT_G (format));
+	color->b = round_channel (color->b, PIXMAN_FORMAT_B (format));
     }
 
     if (PIXMAN_FORMAT_A (format) == 0)
-	color->a = 1.0;
+	color->a = 1;
     else
-	color->a = round_pix (color->a, PIXMAN_FORMAT_A (format));
-
-#undef round_pix
-#undef MASK
+	color->a = round_channel (color->a, PIXMAN_FORMAT_A (format));
 }

@@ -158,5 +158,4 @@ typedef struct
 } color_t;
 
 void
-color_correct (pixman_format_code_t format,
-	       color_t *color);
+round_color (pixman_format_code_t format, color_t *color);

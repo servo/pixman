@@ -640,7 +640,7 @@ composite_test (image_t *dst,
 	tmsk = *mask->color;
 	if (mask->size)
 	{
-	    color_correct (mask->format->format, &tmsk);
+	    round_color (mask->format->format, &tmsk);
 
 	    if (component_alpha &&
 		PIXMAN_FORMAT_R (mask->format->format) == 0)
@@ -663,13 +663,13 @@ composite_test (image_t *dst,
     get_pixel (dst->image, dst->format->format, &result);
 
     tdst = *dst->color;
-    color_correct (dst->format->format, &tdst);
+    round_color (dst->format->format, &tdst);
     tsrc = *src->color;
     if (src->size)
-	color_correct (src->format->format, &tsrc);
+	round_color (src->format->format, &tsrc);
     do_composite (op->op, &tsrc, mask ? &tmsk : NULL, &tdst,
 		  &expected, component_alpha);
-    color_correct (dst->format->format, &expected);
+    round_color (dst->format->format, &expected);
 
     diff = eval_diff (&expected, &result, dst->format->format);
 
