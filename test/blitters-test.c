@@ -103,7 +103,7 @@ free_random_image (uint32_t initcrc,
 		mask <<= (PIXMAN_FORMAT_BPP (fmt) - PIXMAN_FORMAT_DEPTH (fmt));
 	    }
 
-	    for (i = 0; i < 32; i++)
+	    for (i = 0; i * PIXMAN_FORMAT_BPP (fmt) < 32; i++)
 		mask |= mask << (i * PIXMAN_FORMAT_BPP (fmt));
 
 	    for (i = 0; i < stride * height / 4; i++)
