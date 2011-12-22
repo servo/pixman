@@ -703,3 +703,33 @@ initialize_palette (pixman_indexed_t *palette, uint32_t depth, int is_rgb)
 	assert (palette->ent[CONVERT_15 (palette->rgba[i], is_rgb)] == i);
     }
 }
+
+void
+color_correct (pixman_format_code_t format,
+	       color_t *color)
+{
+#define MASK(x) ((1 << (x)) - 1)
+#define round_pix(pix, m)						\
+    ((int)((pix) * (MASK(m)) + .5) / (double) (MASK(m)))
+
+    if (PIXMAN_FORMAT_R (format) == 0)
+    {
+	color->r = 0.0;
+	color->g = 0.0;
+	color->b = 0.0;
+    }
+    else
+    {
+	color->r = round_pix (color->r, PIXMAN_FORMAT_R (format));
+	color->g = round_pix (color->g, PIXMAN_FORMAT_G (format));
+	color->b = round_pix (color->b, PIXMAN_FORMAT_B (format));
+    }
+
+    if (PIXMAN_FORMAT_A (format) == 0)
+	color->a = 1.0;
+    else
+	color->a = round_pix (color->a, PIXMAN_FORMAT_A (format));
+
+#undef round_pix
+#undef MASK
+}

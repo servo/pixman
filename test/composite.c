@@ -28,15 +28,9 @@
 #include <time.h>
 #include "utils.h"
 
-typedef struct color_t color_t;
 typedef struct format_t format_t;
 typedef struct image_t image_t;
 typedef struct operator_t operator_t;
-
-struct color_t
-{
-    double r, g, b, a;
-};
 
 struct format_t
 {
@@ -478,36 +472,6 @@ do_composite (pixman_op_t op,
     result->g = calc_op (op, srcval.g, dst->g, srcalpha.g, dst->a);
     result->b = calc_op (op, srcval.b, dst->b, srcalpha.b, dst->a);
     result->a = calc_op (op, srcval.a, dst->a, srcalpha.a, dst->a);
-}
-
-static void
-color_correct (pixman_format_code_t format,
-	       color_t *color)
-{
-#define MASK(x) ((1 << (x)) - 1)
-#define round_pix(pix, m)						\
-    ((int)((pix) * (MASK(m)) + .5) / (double) (MASK(m)))
-
-    if (PIXMAN_FORMAT_R (format) == 0)
-    {
-	color->r = 0.0;
-	color->g = 0.0;
-	color->b = 0.0;
-    }
-    else
-    {
-	color->r = round_pix (color->r, PIXMAN_FORMAT_R (format));
-	color->g = round_pix (color->g, PIXMAN_FORMAT_G (format));
-	color->b = round_pix (color->b, PIXMAN_FORMAT_B (format));
-    }
-
-    if (PIXMAN_FORMAT_A (format) == 0)
-	color->a = 1.0;
-    else
-	color->a = round_pix (color->a, PIXMAN_FORMAT_A (format));
-
-#undef round_pix
-#undef MASK
 }
 
 static void

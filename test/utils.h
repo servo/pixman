@@ -151,3 +151,12 @@ aligned_malloc (size_t align, size_t size);
 
 void
 initialize_palette (pixman_indexed_t *palette, uint32_t depth, int is_rgb);
+
+typedef struct
+{
+    double r, g, b, a;
+} color_t;
+
+void
+color_correct (pixman_format_code_t format,
+	       color_t *color);
