@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include "utils.h"
 
-#define WIDTH 100
-#define HEIGHT 100
+#define WIDTH 48
+#define HEIGHT 48
 
 static const pixman_format_code_t formats[] =
 {
@@ -66,24 +66,6 @@ make_image (pixman_format_code_t format)
 
     if (image && bits)
 	pixman_image_set_destroy_function (image, on_destroy, NULL);
-
-    return image;
-}
-
-static pixman_image_t *
-create_image (pixman_format_code_t format, pixman_format_code_t alpha_format,
-	      int alpha_origin_x, int alpha_origin_y)
-{
-    pixman_image_t *image = make_image (format);
-
-    if (alpha_format != PIXMAN_null)
-    {
-	pixman_image_t *alpha = make_image (alpha_format);
-
-	pixman_image_set_alpha_map (image, alpha,
-				    alpha_origin_x, alpha_origin_y);
-	pixman_image_unref (alpha);
-    }
 
     return image;
 }
@@ -185,7 +167,7 @@ run_test (int s, int d, int sa, int da, int soff, int doff)
     pixman_format_code_t df = formats[d];
     pixman_format_code_t saf = alpha_formats[sa];
     pixman_format_code_t daf = alpha_formats[da];
-    pixman_image_t *src, *dst, *orig_dst;
+    pixman_image_t *src, *dst, *orig_dst, *alpha, *orig_alpha;
     pixman_transform_t t1;
     int j, k;
     int n_alpha_bits, n_red_bits;
@@ -199,9 +181,35 @@ run_test (int s, int d, int sa, int da, int soff, int doff)
 
     n_red_bits = PIXMAN_FORMAT_R (df);
 
-    src = create_image (sf, saf, soff, soff);
-    orig_dst = create_image (df, daf, doff, doff);
-    dst = create_image (df, daf, doff, doff);
+    /* Source */
+    src = make_image (sf);
+    if (saf != PIXMAN_null)
+    {
+	alpha = make_image (saf);
+	pixman_image_set_alpha_map (src, alpha, soff, soff);
+	pixman_image_unref (alpha);
+    }
+
+    /* Destination */
+    orig_dst = make_image (df);
+    dst = make_image (df);
+    pixman_image_composite (PIXMAN_OP_SRC, orig_dst, NULL, dst,
+			    0, 0, 0, 0, 0, 0, WIDTH, HEIGHT);
+
+    if (daf != PIXMAN_null)
+    {
+	orig_alpha = make_image (daf);
+	alpha = make_image (daf);
+
+	pixman_image_composite (PIXMAN_OP_SRC, orig_alpha, NULL, alpha,
+				0, 0, 0, 0, 0, 0, WIDTH, HEIGHT);
+
+	pixman_image_set_alpha_map (orig_dst, orig_alpha, doff, doff);
+	pixman_image_set_alpha_map (dst, alpha, doff, doff);
+
+	pixman_image_unref (orig_alpha);
+	pixman_image_unref (alpha);
+    }
 
     /* Transformations, repeats and filters on destinations should be ignored,
      * so just set some random ones.
@@ -214,9 +222,6 @@ run_test (int s, int d, int sa, int da, int soff, int doff)
     pixman_image_set_transform (dst, &t1);
     pixman_image_set_filter (dst, PIXMAN_FILTER_BILINEAR, NULL, 0);
     pixman_image_set_repeat (dst, PIXMAN_REPEAT_REFLECT);
-
-    pixman_image_composite (PIXMAN_OP_SRC, orig_dst, NULL, dst,
-			    0, 0, 0, 0, 0, 0, WIDTH, HEIGHT);
 
     pixman_image_composite (PIXMAN_OP_ADD, src, NULL, dst,
 			    0, 0, 0, 0, 0, 0, WIDTH, HEIGHT);
