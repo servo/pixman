@@ -139,6 +139,45 @@ get_alpha (pixman_image_t *image, int x, int y, int orig_x, int orig_y)
     return r;
 }
 
+static uint16_t
+get_red (pixman_image_t *image, int x, int y, int orig_x, int orig_y)
+{
+    uint8_t *bits;
+    uint16_t r;
+
+    bits = (uint8_t *)image->bits.bits;
+
+    if (image->bits.format == PIXMAN_a8)
+    {
+	r = 0x00;
+    }
+    else if (image->bits.format == PIXMAN_a2r10g10b10)
+    {
+	r = ((uint32_t *)bits)[y * WIDTH + x] >> 14;
+	r &= 0xffc0;
+	r |= (r >> 10);
+    }
+    else if (image->bits.format == PIXMAN_a8r8g8b8)
+    {
+	r = ((uint32_t *)bits)[y * WIDTH + x] >> 16;
+	r &= 0xff;
+	r |= r << 8;
+    }
+    else if (image->bits.format == PIXMAN_a4r4g4b4)
+    {
+	r = ((uint16_t *)bits)[y * WIDTH + x] >> 8;
+	r &= 0xf;
+	r |= r << 4;
+	r |= r << 8;
+    }
+    else
+    {
+	assert (0);
+    }
+
+    return r;
+}
+
 static int
 run_test (int s, int d, int sa, int da, int soff, int doff)
 {
@@ -149,7 +188,7 @@ run_test (int s, int d, int sa, int da, int soff, int doff)
     pixman_image_t *src, *dst, *orig_dst;
     pixman_transform_t t1;
     int j, k;
-    int n_alpha_bits;
+    int n_alpha_bits, n_red_bits;
 
     soff = origins[soff];
     doff = origins[doff];
@@ -158,6 +197,7 @@ run_test (int s, int d, int sa, int da, int soff, int doff)
     if (daf != PIXMAN_null)
 	n_alpha_bits = PIXMAN_FORMAT_A (daf);
 
+    n_red_bits = PIXMAN_FORMAT_R (df);
 
     src = create_image (sf, saf, soff, soff);
     orig_dst = create_image (df, daf, doff, doff);
@@ -185,21 +225,22 @@ run_test (int s, int d, int sa, int da, int soff, int doff)
     {
 	for (k = MAX (doff, 0); k < MIN (WIDTH, WIDTH + doff); ++k)
 	{
-	    uint8_t sa, da, oda, ref;
+	    uint8_t sa, da, oda, refa;
+	    uint16_t sr, dr, odr, refr;
 
 	    sa = get_alpha (src, k, j, soff, soff);
 	    da = get_alpha (dst, k, j, doff, doff);
 	    oda = get_alpha (orig_dst, k, j, doff, doff);
 
 	    if (sa + oda > 255)
-		ref = 255;
+		refa = 255;
 	    else
-		ref = sa + oda;
+		refa = sa + oda;
 
-	    if (da >> (8 - n_alpha_bits) != ref >> (8 - n_alpha_bits))
+	    if (da >> (8 - n_alpha_bits) != refa >> (8 - n_alpha_bits))
 	    {
 		printf ("\nWrong alpha value at (%d, %d). Should be 0x%x; got 0x%x. Source was 0x%x, original dest was 0x%x\n",
-			k, j, ref, da, sa, oda);
+			k, j, refa, da, sa, oda);
 
 		printf ("src: %s, alpha: %s, origin %d %d\ndst: %s, alpha: %s, origin: %d %d\n\n",
 			format_name (sf),
@@ -209,6 +250,38 @@ run_test (int s, int d, int sa, int da, int soff, int doff)
 			format_name (daf),
 			doff, doff);
 		return 1;
+	    }
+
+	    /* There are cases where we go through the 8 bit compositing
+	     * path even with 10bpc formats. This results in incorrect
+	     * results here, so only do the red check for narrow formats
+	     */
+	    if (n_red_bits <= 8)
+	    {
+		sr = get_red (src, k, j, soff, soff);
+		dr = get_red (dst, k, j, doff, doff);
+		odr = get_red (orig_dst, k, j, doff, doff);
+
+		if (sr + odr > 0xffff)
+		    refr = 0xffff;
+		else
+		    refr = sr + odr;
+
+		if (abs ((dr >> (16 - n_red_bits)) - (refr >> (16 - n_red_bits))) > 1)
+		{
+		    printf ("%d red bits\n", n_red_bits);
+		    printf ("\nWrong red value at (%d, %d). Should be 0x%x; got 0x%x. Source was 0x%x, original dest was 0x%x\n",
+			    k, j, refr, dr, sr, odr);
+
+		    printf ("src: %s, alpha: %s, origin %d %d\ndst: %s, alpha: %s, origin: %d %d\n\n",
+			    format_name (sf),
+			    format_name (saf),
+			    soff, soff,
+			    format_name (df),
+			    format_name (daf),
+			    doff, doff);
+		    return 1;
+		}
 	    }
 	}
     }
