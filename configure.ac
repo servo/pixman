@@ -855,7 +855,14 @@ AC_SUBST(TOOLCHAIN_SUPPORTS_ATTRIBUTE_CONSTRUCTOR)
 dnl ==================
 dnl libpng
 
-PKG_CHECK_MODULES(PNG, [libpng], have_libpng=yes, have_libpng=no)
+AC_ARG_ENABLE(libpng, AS_HELP_STRING([--enable-libpng], [Build support for libpng (default: auto)]),
+                      [have_libpng=$enableval], [have_libpng=auto])
+
+case x$have_libpng in
+	xyes) PKG_CHECK_MODULES(PNG, [libpng]) ;;
+	xno) ;;
+	*) PKG_CHECK_MODULES(PNG, [libpng], have_libpng=yes, have_libpng=no) ;;
+esac
 
 if test x$have_libpng = xyes; then
     AC_DEFINE([HAVE_LIBPNG], [1], [Whether we have libpng])
