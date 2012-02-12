@@ -551,7 +551,7 @@ have_iwmmxt_intrinsics=no
 AC_MSG_CHECKING(whether to use ARM IWMMXT intrinsics)
 xserver_save_CFLAGS=$CFLAGS
 CFLAGS="$IWMMXT_CFLAGS $CFLAGS"
-AC_COMPILE_IFELSE([
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
 #ifndef __arm__
 #error "IWMMXT is only available on ARM"
 #endif
@@ -562,11 +562,11 @@ AC_COMPILE_IFELSE([
 int main () {
 	union {
 		__m64 v;
-		[char c[8];]
+		char c[8];
 	} a = { .c = {1, 2, 3, 4, 5, 6, 7, 8} };
 	int b = 4;
 	__m64 c = _mm_srli_si64 (a.v, b);
-}], have_iwmmxt_intrinsics=yes)
+}]])], have_iwmmxt_intrinsics=yes)
 CFLAGS=$xserver_save_CFLAGS
 
 AC_ARG_ENABLE(arm-iwmmxt,
