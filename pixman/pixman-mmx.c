@@ -324,7 +324,7 @@ in_over (__m64 src, __m64 srca, __m64 mask, __m64 dest)
 
 /* Elemental unaligned loads */
 
-static force_inline __m64 ldq_u(uint64_t *p)
+static force_inline __m64 ldq_u(__m64 *p)
 {
 #ifdef USE_X86_MMX
     /* x86's alignment restrictions are very relaxed. */
@@ -337,7 +337,7 @@ static force_inline __m64 ldq_u(uint64_t *p)
     aligned_p = (__m64 *)((uintptr_t)p & ~7);
     return (__m64) _mm_align_si64 (aligned_p[0], aligned_p[1], align);
 #else
-    struct __una_u64 { uint64_t x __attribute__((packed)); };
+    struct __una_u64 { __m64 x __attribute__((packed)); };
     const struct __una_u64 *ptr = (const struct __una_u64 *) p;
     return (__m64) ptr->x;
 #endif
@@ -370,8 +370,8 @@ load8888 (const uint32_t *v)
 static force_inline __m64
 load8888u (const uint32_t *v)
 {
-    uint32_t l = ldl_u(v);
-    return load8888(&l);
+    uint32_t l = ldl_u (v);
+    return load8888 (&l);
 }
 
 static force_inline __m64
@@ -389,7 +389,7 @@ store (uint32_t *dest, __m64 v)
 static force_inline void
 store8888 (uint32_t *dest, __m64 v)
 {
-    v = pack8888 (v, _mm_setzero_si64());
+    v = pack8888 (v, _mm_setzero_si64 ());
     store (dest, v);
 }
 
@@ -1452,7 +1452,7 @@ mmx_composite_over_8888_n_8888 (pixman_implementation_t *imp,
 
 	while (w >= 2)
 	{
-	    __m64 vs = ldq_u((uint64_t *)src);
+	    __m64 vs = ldq_u ((__m64 *)src);
 	    __m64 vd = *(__m64 *)dst;
 	    __m64 vsrc0 = expand8888 (vs, 0);
 	    __m64 vsrc1 = expand8888 (vs, 1);
@@ -1534,14 +1534,14 @@ mmx_composite_over_x888_n_8888 (pixman_implementation_t *imp,
 	    __m64 vd6 = *(__m64 *)(dst + 12);
 	    __m64 vd7 = *(__m64 *)(dst + 14);
 
-	    __m64 vs0 = ldq_u((uint64_t *)(src + 0));
-	    __m64 vs1 = ldq_u((uint64_t *)(src + 2));
-	    __m64 vs2 = ldq_u((uint64_t *)(src + 4));
-	    __m64 vs3 = ldq_u((uint64_t *)(src + 6));
-	    __m64 vs4 = ldq_u((uint64_t *)(src + 8));
-	    __m64 vs5 = ldq_u((uint64_t *)(src + 10));
-	    __m64 vs6 = ldq_u((uint64_t *)(src + 12));
-	    __m64 vs7 = ldq_u((uint64_t *)(src + 14));
+	    __m64 vs0 = ldq_u ((__m64 *)(src + 0));
+	    __m64 vs1 = ldq_u ((__m64 *)(src + 2));
+	    __m64 vs2 = ldq_u ((__m64 *)(src + 4));
+	    __m64 vs3 = ldq_u ((__m64 *)(src + 6));
+	    __m64 vs4 = ldq_u ((__m64 *)(src + 8));
+	    __m64 vs5 = ldq_u ((__m64 *)(src + 10));
+	    __m64 vs6 = ldq_u ((__m64 *)(src + 12));
+	    __m64 vs7 = ldq_u ((__m64 *)(src + 14));
 
 	    vd0 = pack8888 (
 	        in_over (expandx888 (vs0, 0), srca, vmask, expand8888 (vd0, 0)),
@@ -2821,7 +2821,7 @@ mmx_composite_add_8_8 (pixman_implementation_t *imp,
 
 	while (w >= 8)
 	{
-	    *(__m64*)dst = _mm_adds_pu8 (ldq_u((uint64_t *)src), *(__m64*)dst);
+	    *(__m64*)dst = _mm_adds_pu8 (ldq_u ((__m64 *)src), *(__m64*)dst);
 	    dst += 8;
 	    src += 8;
 	    w -= 8;
@@ -2879,7 +2879,7 @@ mmx_composite_add_8888_8888 (pixman_implementation_t *imp,
 
 	while (w >= 2)
 	{
-	    dst64 = _mm_adds_pu8 (ldq_u((uint64_t *)src), *(__m64*)dst);
+	    dst64 = _mm_adds_pu8 (ldq_u ((__m64 *)src), *(__m64*)dst);
 	    *(uint64_t*)dst = to_uint64 (dst64);
 	    dst += 2;
 	    src += 2;
@@ -2970,7 +2970,7 @@ pixman_blt_mmx (uint32_t *src_bits,
 
 	while (w >= 4 && ((unsigned long)d & 7))
 	{
-	    *(uint32_t *)d = ldl_u((uint32_t *)s);
+	    *(uint32_t *)d = ldl_u ((uint32_t *)s);
 
 	    w -= 4;
 	    s += 4;
@@ -3004,14 +3004,14 @@ pixman_blt_mmx (uint32_t *src_bits,
 		  "%mm0", "%mm1", "%mm2", "%mm3",
 		  "%mm4", "%mm5", "%mm6", "%mm7");
 #else
-	    __m64 v0 = ldq_u((uint64_t *)(s + 0));
-	    __m64 v1 = ldq_u((uint64_t *)(s + 8));
-	    __m64 v2 = ldq_u((uint64_t *)(s + 16));
-	    __m64 v3 = ldq_u((uint64_t *)(s + 24));
-	    __m64 v4 = ldq_u((uint64_t *)(s + 32));
-	    __m64 v5 = ldq_u((uint64_t *)(s + 40));
-	    __m64 v6 = ldq_u((uint64_t *)(s + 48));
-	    __m64 v7 = ldq_u((uint64_t *)(s + 56));
+	    __m64 v0 = ldq_u ((__m64 *)(s + 0));
+	    __m64 v1 = ldq_u ((__m64 *)(s + 8));
+	    __m64 v2 = ldq_u ((__m64 *)(s + 16));
+	    __m64 v3 = ldq_u ((__m64 *)(s + 24));
+	    __m64 v4 = ldq_u ((__m64 *)(s + 32));
+	    __m64 v5 = ldq_u ((__m64 *)(s + 40));
+	    __m64 v6 = ldq_u ((__m64 *)(s + 48));
+	    __m64 v7 = ldq_u ((__m64 *)(s + 56));
 	    *(__m64 *)(d + 0)  = v0;
 	    *(__m64 *)(d + 8)  = v1;
 	    *(__m64 *)(d + 16) = v2;
@@ -3028,7 +3028,7 @@ pixman_blt_mmx (uint32_t *src_bits,
 	}
 	while (w >= 4)
 	{
-	    *(uint32_t *)d = ldl_u((uint32_t *)s);
+	    *(uint32_t *)d = ldl_u ((uint32_t *)s);
 
 	    w -= 4;
 	    s += 4;
