@@ -1360,7 +1360,7 @@ mmx_composite_over_n_8888_8888_ca (pixman_implementation_t *imp,
 	    twidth -= 2;
 	}
 
-	while (twidth)
+	if (twidth)
 	{
 	    uint32_t m = *(uint32_t *)p;
 
@@ -1901,14 +1901,14 @@ pixman_fill_mmx (uint32_t *bits,
 	byte_line += stride;
 	w = byte_width;
 
-	while (w >= 1 && ((unsigned long)d & 1))
+	if (w >= 1 && ((unsigned long)d & 1))
 	{
 	    *(uint8_t *)d = (xor & 0xff);
 	    w--;
 	    d++;
 	}
 
-	while (w >= 2 && ((unsigned long)d & 3))
+	if (w >= 2 && ((unsigned long)d & 3))
 	{
 	    *(uint16_t *)d = xor;
 	    w -= 2;
@@ -1961,13 +1961,13 @@ pixman_fill_mmx (uint32_t *bits,
 	    w -= 4;
 	    d += 4;
 	}
-	while (w >= 2)
+	if (w >= 2)
 	{
 	    *(uint16_t *)d = xor;
 	    w -= 2;
 	    d += 2;
 	}
-	while (w >= 1)
+	if (w >= 1)
 	{
 	    *(uint8_t *)d = (xor & 0xff);
 	    w--;
@@ -2925,7 +2925,7 @@ pixman_blt_mmx (uint32_t *src_bits,
 	dst_bytes += dst_stride;
 	w = byte_width;
 
-	while (w >= 1 && ((unsigned long)d & 1))
+	if (w >= 1 && ((unsigned long)d & 1))
 	{
 	    *(uint8_t *)d = *(uint8_t *)s;
 	    w -= 1;
@@ -2933,7 +2933,7 @@ pixman_blt_mmx (uint32_t *src_bits,
 	    d += 1;
 	}
 
-	while (w >= 2 && ((unsigned long)d & 3))
+	if (w >= 2 && ((unsigned long)d & 3))
 	{
 	    *(uint16_t *)d = *(uint16_t *)s;
 	    w -= 2;
