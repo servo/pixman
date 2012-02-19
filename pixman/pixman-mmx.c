@@ -56,6 +56,21 @@ _mm_empty (void)
 }
 #endif
 
+#ifdef USE_X86_MMX
+/* We have to compile with -msse to use xmmintrin.h, but that causes SSE
+ * instructions to be generated that we don't want. Just duplicate the
+ * functions we want to use.  */
+extern __inline __m64 __attribute__((__gnu_inline__, __always_inline__, __artificial__))
+_mm_mulhi_pu16 (__m64 __A, __m64 __B)
+{
+    asm("pmulhuw %1, %0\n\t"
+	: "+y" (__A)
+	: "y" (__B)
+    );
+    return __A;
+}
+#endif
+
 /* Notes about writing mmx code
  *
  * give memory operands as the second operand. If you give it as the
@@ -128,6 +143,7 @@ typedef struct
     mmxdatafield mmx_ffff0000ffff0000;
     mmxdatafield mmx_0000ffff00000000;
     mmxdatafield mmx_000000000000ffff;
+    mmxdatafield mmx_4x0101;
 } mmx_data_t;
 
 #if defined(_MSC_VER)
@@ -155,6 +171,7 @@ static const mmx_data_t c =
     MMXDATA_INIT (.mmx_ffff0000ffff0000,         0xffff0000ffff0000),
     MMXDATA_INIT (.mmx_0000ffff00000000,         0x0000ffff00000000),
     MMXDATA_INIT (.mmx_000000000000ffff,         0x000000000000ffff),
+    MMXDATA_INIT (.mmx_4x0101,                   0x0101010101010101),
 };
 
 #ifdef USE_CVT_INTRINSICS
@@ -218,8 +235,7 @@ pix_multiply (__m64 a, __m64 b)
 
     res = _mm_mullo_pi16 (a, b);
     res = _mm_adds_pu16 (res, MC (4x0080));
-    res = _mm_adds_pu16 (res, _mm_srli_pi16 (res, 8));
-    res = _mm_srli_pi16 (res, 8);
+    res = _mm_mulhi_pu16 (res, MC (4x0101));
 
     return res;
 }
