@@ -69,7 +69,23 @@ _mm_mulhi_pu16 (__m64 __A, __m64 __B)
     );
     return __A;
 }
+
+extern __inline __m64 __attribute__((__gnu_inline__, __always_inline__, __artificial__))
+_mm_shuffle_pi16 (__m64 __A, int8_t const __N)
+{
+    __m64 ret;
+
+    asm("pshufw %2, %1, %0\n\t"
+	: "=y" (ret)
+	: "y" (__A), "K" (__N)
+    );
+
+    return ret;
+}
 #endif
+
+#define _MM_SHUFFLE(fp3,fp2,fp1,fp0) \
+ (((fp3) << 6) | ((fp2) << 4) | ((fp1) << 2) | (fp0))
 
 /* Notes about writing mmx code
  *
@@ -140,9 +156,6 @@ typedef struct
     mmxdatafield mmx_mask_2;
     mmxdatafield mmx_mask_3;
     mmxdatafield mmx_full_alpha;
-    mmxdatafield mmx_ffff0000ffff0000;
-    mmxdatafield mmx_0000ffff00000000;
-    mmxdatafield mmx_000000000000ffff;
     mmxdatafield mmx_4x0101;
 } mmx_data_t;
 
@@ -168,9 +181,6 @@ static const mmx_data_t c =
     MMXDATA_INIT (.mmx_mask_2,                   0xffff0000ffffffff),
     MMXDATA_INIT (.mmx_mask_3,                   0x0000ffffffffffff),
     MMXDATA_INIT (.mmx_full_alpha,               0x00ff000000000000),
-    MMXDATA_INIT (.mmx_ffff0000ffff0000,         0xffff0000ffff0000),
-    MMXDATA_INIT (.mmx_0000ffff00000000,         0x0000ffff00000000),
-    MMXDATA_INIT (.mmx_000000000000ffff,         0x000000000000ffff),
     MMXDATA_INIT (.mmx_4x0101,                   0x0101010101010101),
 };
 
@@ -249,52 +259,19 @@ pix_add (__m64 a, __m64 b)
 static force_inline __m64
 expand_alpha (__m64 pixel)
 {
-    __m64 t1, t2;
-
-    t1 = shift (pixel, -48);
-    t2 = shift (t1, 16);
-    t1 = _mm_or_si64 (t1, t2);
-    t2 = shift (t1, 32);
-    t1 = _mm_or_si64 (t1, t2);
-
-    return t1;
+    return _mm_shuffle_pi16(pixel, _MM_SHUFFLE (3, 3, 3, 3));
 }
 
 static force_inline __m64
 expand_alpha_rev (__m64 pixel)
 {
-    __m64 t1, t2;
-
-    /* move alpha to low 16 bits and zero the rest */
-    t1 = shift (pixel,  48);
-    t1 = shift (t1, -48);
-
-    t2 = shift (t1, 16);
-    t1 = _mm_or_si64 (t1, t2);
-    t2 = shift (t1, 32);
-    t1 = _mm_or_si64 (t1, t2);
-
-    return t1;
+    return _mm_shuffle_pi16(pixel, _MM_SHUFFLE (0, 0, 0, 0));
 }
 
 static force_inline __m64
 invert_colors (__m64 pixel)
 {
-    __m64 x, y, z;
-
-    x = y = z = pixel;
-
-    x = _mm_and_si64 (x, MC (ffff0000ffff0000));
-    y = _mm_and_si64 (y, MC (000000000000ffff));
-    z = _mm_and_si64 (z, MC (0000ffff00000000));
-
-    y = shift (y, 32);
-    z = shift (z, -32);
-
-    x = _mm_or_si64 (x, y);
-    x = _mm_or_si64 (x, z);
-
-    return x;
+    return _mm_shuffle_pi16(pixel, _MM_SHUFFLE (3, 0, 1, 2));
 }
 
 static force_inline __m64
