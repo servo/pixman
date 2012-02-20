@@ -259,14 +259,14 @@ PIXMAN_CHECK_CFLAG([-fvisibility=hidden], [dnl
 #error Have -fvisibility but it is ignored and generates a warning
 #endif
 #else
-error Need GCC 4.0 for visibility
+#error Need GCC 4.0 for visibility
 #endif
 ])
 
 PIXMAN_CHECK_CFLAG([-xldscope=hidden], [dnl
 #if defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
 #else
-error Need Sun Studio 8 for visibility
+#error Need Sun Studio 8 for visibility
 #endif
 ])
 
@@ -292,7 +292,7 @@ xserver_save_CFLAGS=$CFLAGS
 CFLAGS="$MMX_CFLAGS $CFLAGS"
 AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
 #if defined(__GNUC__) && (__GNUC__ < 3 || (__GNUC__ == 3 && __GNUC_MINOR__ < 4))
-error "Need GCC >= 3.4 for MMX intrinsics"
+#error "Need GCC >= 3.4 for MMX intrinsics"
 #endif
 #include <mmintrin.h>
 int main () {
@@ -427,7 +427,7 @@ xserver_save_CFLAGS=$CFLAGS
 CFLAGS="$VMX_CFLAGS $CFLAGS"
 AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
 #if defined(__GNUC__) && (__GNUC__ < 3 || (__GNUC__ == 3 && __GNUC_MINOR__ < 4))
-error "Need GCC >= 3.4 for sane altivec support"
+#error "Need GCC >= 3.4 for sane altivec support"
 #endif
 #include <altivec.h>
 int main () {
