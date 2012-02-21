@@ -464,7 +464,7 @@ pix_add_mul (__m64 x, __m64 a, __m64 y, __m64 b)
 
 #define pix_add_mul(x, a, y, b)	 \
     ( x = pix_multiply (x, a),	 \
-      y = pix_multiply (y, a),	 \
+      y = pix_multiply (y, b),	 \
       pix_add (x, y) )
 
 #endif
