@@ -63,7 +63,7 @@ _mm_empty (void)
 extern __inline __m64 __attribute__((__gnu_inline__, __always_inline__, __artificial__))
 _mm_mulhi_pu16 (__m64 __A, __m64 __B)
 {
-    asm("pmulhuw %1, %0\n\t"
+    asm ("pmulhuw %1, %0\n\t"
 	: "+y" (__A)
 	: "y" (__B)
     );
@@ -75,7 +75,7 @@ _mm_shuffle_pi16 (__m64 __A, int8_t const __N)
 {
     __m64 ret;
 
-    asm("pshufw %2, %1, %0\n\t"
+    asm ("pshufw %2, %1, %0\n\t"
 	: "=y" (ret)
 	: "y" (__A), "K" (__N)
     );
@@ -259,19 +259,19 @@ pix_add (__m64 a, __m64 b)
 static force_inline __m64
 expand_alpha (__m64 pixel)
 {
-    return _mm_shuffle_pi16(pixel, _MM_SHUFFLE (3, 3, 3, 3));
+    return _mm_shuffle_pi16 (pixel, _MM_SHUFFLE (3, 3, 3, 3));
 }
 
 static force_inline __m64
 expand_alpha_rev (__m64 pixel)
 {
-    return _mm_shuffle_pi16(pixel, _MM_SHUFFLE (0, 0, 0, 0));
+    return _mm_shuffle_pi16 (pixel, _MM_SHUFFLE (0, 0, 0, 0));
 }
 
 static force_inline __m64
 invert_colors (__m64 pixel)
 {
-    return _mm_shuffle_pi16(pixel, _MM_SHUFFLE (3, 0, 1, 2));
+    return _mm_shuffle_pi16 (pixel, _MM_SHUFFLE (3, 0, 1, 2));
 }
 
 static force_inline __m64
@@ -295,14 +295,6 @@ static force_inline __m64
 in (__m64 src, __m64 mask)
 {
     return pix_multiply (src, mask);
-}
-
-static force_inline __m64
-in_over_full_src_alpha (__m64 src, __m64 mask, __m64 dest)
-{
-    src = _mm_or_si64 (src, MC (full_alpha));
-
-    return over (in (src, mask), mask, dest);
 }
 
 #ifndef _MSC_VER
