@@ -36,8 +36,41 @@
 #include "pixman-private.h"
 #include "pixman-mips-dspr2.h"
 
+PIXMAN_MIPS_BIND_FAST_PATH_SRC_DST (0, src_x888_8888,
+                                    uint32_t, 1, uint32_t, 1)
+PIXMAN_MIPS_BIND_FAST_PATH_SRC_DST (0, src_8888_0565,
+                                    uint32_t, 1, uint16_t, 1)
+PIXMAN_MIPS_BIND_FAST_PATH_SRC_DST (0, src_0565_8888,
+                                    uint16_t, 1, uint32_t, 1)
+PIXMAN_MIPS_BIND_FAST_PATH_SRC_DST (DO_FAST_MEMCPY, src_0565_0565,
+                                    uint16_t, 1, uint16_t, 1)
+PIXMAN_MIPS_BIND_FAST_PATH_SRC_DST (DO_FAST_MEMCPY, src_8888_8888,
+                                    uint32_t, 1, uint32_t, 1)
+PIXMAN_MIPS_BIND_FAST_PATH_SRC_DST (DO_FAST_MEMCPY, src_0888_0888,
+                                    uint8_t, 3, uint8_t, 3)
+
 static const pixman_fast_path_t mips_dspr2_fast_paths[] =
 {
+    PIXMAN_STD_FAST_PATH (SRC, r5g6b5,   null, r5g6b5,   mips_composite_src_0565_0565),
+    PIXMAN_STD_FAST_PATH (SRC, b5g6r5,   null, b5g6r5,   mips_composite_src_0565_0565),
+    PIXMAN_STD_FAST_PATH (SRC, a8r8g8b8, null, r5g6b5,   mips_composite_src_8888_0565),
+    PIXMAN_STD_FAST_PATH (SRC, x8r8g8b8, null, r5g6b5,   mips_composite_src_8888_0565),
+    PIXMAN_STD_FAST_PATH (SRC, a8b8g8r8, null, b5g6r5,   mips_composite_src_8888_0565),
+    PIXMAN_STD_FAST_PATH (SRC, x8b8g8r8, null, b5g6r5,   mips_composite_src_8888_0565),
+    PIXMAN_STD_FAST_PATH (SRC, r5g6b5,   null, a8r8g8b8, mips_composite_src_0565_8888),
+    PIXMAN_STD_FAST_PATH (SRC, r5g6b5,   null, x8r8g8b8, mips_composite_src_0565_8888),
+    PIXMAN_STD_FAST_PATH (SRC, b5g6r5,   null, a8b8g8r8, mips_composite_src_0565_8888),
+    PIXMAN_STD_FAST_PATH (SRC, b5g6r5,   null, x8b8g8r8, mips_composite_src_0565_8888),
+    PIXMAN_STD_FAST_PATH (SRC, a8r8g8b8, null, x8r8g8b8, mips_composite_src_8888_8888),
+    PIXMAN_STD_FAST_PATH (SRC, x8r8g8b8, null, x8r8g8b8, mips_composite_src_8888_8888),
+    PIXMAN_STD_FAST_PATH (SRC, a8b8g8r8, null, x8b8g8r8, mips_composite_src_8888_8888),
+    PIXMAN_STD_FAST_PATH (SRC, x8b8g8r8, null, x8b8g8r8, mips_composite_src_8888_8888),
+    PIXMAN_STD_FAST_PATH (SRC, a8r8g8b8, null, a8r8g8b8, mips_composite_src_8888_8888),
+    PIXMAN_STD_FAST_PATH (SRC, a8b8g8r8, null, a8b8g8r8, mips_composite_src_8888_8888),
+    PIXMAN_STD_FAST_PATH (SRC, x8r8g8b8, null, a8r8g8b8, mips_composite_src_x888_8888),
+    PIXMAN_STD_FAST_PATH (SRC, x8b8g8r8, null, a8b8g8r8, mips_composite_src_x888_8888),
+    PIXMAN_STD_FAST_PATH (SRC, r8g8b8,   null, r8g8b8,   mips_composite_src_0888_0888),
+
     { PIXMAN_OP_NONE },
 };
 

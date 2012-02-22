@@ -107,7 +107,10 @@ if USE_MIPS_DSPR2
 noinst_LTLIBRARIES += libpixman-mips-dspr2.la
 libpixman_mips_dspr2_la_SOURCES = \
         pixman-mips-dspr2.c \
-        pixman-mips-dspr2.h
+        pixman-mips-dspr2.h \
+        pixman-mips-dspr2-asm.S \
+        pixman-mips-dspr2-asm.h \
+        pixman-mips-memcpy-asm.S
 libpixman_mips_dspr2_la_CFLAGS = $(DEP_CFLAGS)
 libpixman_mips_dspr2_la_LIBADD = $(DEP_LIBS)
 libpixman_1_la_LIBADD += libpixman-mips-dspr2.la

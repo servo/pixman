@@ -35,4 +35,50 @@
 #include "pixman-private.h"
 #include "pixman-inlines.h"
 
+#define SKIP_ZERO_SRC  1
+#define SKIP_ZERO_MASK 2
+#define DO_FAST_MEMCPY 3
+
+void
+pixman_mips_fast_memcpy (void *dst, void *src, uint32_t n_bytes);
+
+/****************************************************************/
+
+#define PIXMAN_MIPS_BIND_FAST_PATH_SRC_DST(flags, name,          \
+                                           src_type, src_cnt,    \
+                                           dst_type, dst_cnt)    \
+void                                                             \
+pixman_composite_##name##_asm_mips (dst_type *dst,               \
+                                    src_type *src,               \
+                                    int32_t   w);                \
+                                                                 \
+static void                                                      \
+mips_composite_##name (pixman_implementation_t *imp,             \
+                       pixman_composite_info_t *info)            \
+{                                                                \
+    PIXMAN_COMPOSITE_ARGS (info);                                \
+    dst_type *dst_line, *dst;                                    \
+    src_type *src_line, *src;                                    \
+    int32_t dst_stride, src_stride;                              \
+    int bpp = PIXMAN_FORMAT_BPP (dest_image->bits.format) / 8;   \
+                                                                 \
+    PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, src_type,    \
+                           src_stride, src_line, src_cnt);       \
+    PIXMAN_IMAGE_GET_LINE (dest_image, dest_x, dest_y, dst_type, \
+                           dst_stride, dst_line, dst_cnt);       \
+                                                                 \
+    while (height--)                                             \
+    {                                                            \
+      dst = dst_line;                                            \
+      dst_line += dst_stride;                                    \
+      src = src_line;                                            \
+      src_line += src_stride;                                    \
+                                                                 \
+      if (flags == DO_FAST_MEMCPY)                               \
+        pixman_mips_fast_memcpy (dst, src, width * bpp);         \
+      else                                                       \
+        pixman_composite_##name##_asm_mips (dst, src, width);    \
+    }                                                            \
+}
+
 #endif //PIXMAN_MIPS_DSPR2_H
