@@ -3029,7 +3029,6 @@ mmx_composite_copy_area (pixman_implementation_t *imp,
                     src_x, src_y, dest_x, dest_y, width, height);
 }
 
-#ifdef USE_ARM_IWMMXT
 static void
 mmx_composite_over_x888_8_8888 (pixman_implementation_t *imp,
                                 pixman_composite_info_t *info)
@@ -3086,7 +3085,6 @@ mmx_composite_over_x888_8_8888 (pixman_implementation_t *imp,
 
     _mm_empty ();
 }
-#endif
 
 static const pixman_fast_path_t mmx_fast_paths[] =
 {
@@ -3116,15 +3114,10 @@ static const pixman_fast_path_t mmx_fast_paths[] =
     PIXMAN_STD_FAST_PATH    (OVER, a8r8g8b8, solid,    x8r8g8b8, mmx_composite_over_8888_n_8888    ),
     PIXMAN_STD_FAST_PATH    (OVER, a8b8g8r8, solid,    a8b8g8r8, mmx_composite_over_8888_n_8888    ),
     PIXMAN_STD_FAST_PATH    (OVER, a8b8g8r8, solid,    x8b8g8r8, mmx_composite_over_8888_n_8888    ),
-#ifdef USE_ARM_IWMMXT
-    /* FIXME: This code is commented out since it's apparently
-     * not actually faster than the generic code on x86.
-     */
     PIXMAN_STD_FAST_PATH    (OVER, x8r8g8b8, a8,       x8r8g8b8, mmx_composite_over_x888_8_8888    ),
     PIXMAN_STD_FAST_PATH    (OVER, x8r8g8b8, a8,       a8r8g8b8, mmx_composite_over_x888_8_8888    ),
     PIXMAN_STD_FAST_PATH    (OVER, x8b8g8r8, a8,       x8b8g8r8, mmx_composite_over_x888_8_8888    ),
     PIXMAN_STD_FAST_PATH    (OVER, x8b8g8r8, a8,       a8b8g8r8, mmx_composite_over_x888_8_8888    ),
-#endif
     PIXMAN_STD_FAST_PATH    (OVER, solid,    null,     a8r8g8b8, mmx_composite_over_n_8888         ),
     PIXMAN_STD_FAST_PATH    (OVER, solid,    null,     x8r8g8b8, mmx_composite_over_n_8888         ),
     PIXMAN_STD_FAST_PATH    (OVER, solid,    null,     r5g6b5,   mmx_composite_over_n_0565         ),
