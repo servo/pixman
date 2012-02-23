@@ -2883,7 +2883,6 @@ mmx_composite_add_8888_8888 (pixman_implementation_t *imp,
                              pixman_composite_info_t *info)
 {
     PIXMAN_COMPOSITE_ARGS (info);
-    __m64 dst64;
     uint32_t    *dst_line, *dst;
     uint32_t    *src_line, *src;
     int dst_stride, src_stride;
@@ -2913,8 +2912,7 @@ mmx_composite_add_8888_8888 (pixman_implementation_t *imp,
 
 	while (w >= 2)
 	{
-	    dst64 = _mm_adds_pu8 (ldq_u ((__m64 *)src), *(__m64*)dst);
-	    *(uint64_t*)dst = to_uint64 (dst64);
+	    *(__m64 *)dst = _mm_adds_pu8 (ldq_u ((__m64 *)src), *(__m64*)dst);
 	    dst += 2;
 	    src += 2;
 	    w -= 2;
