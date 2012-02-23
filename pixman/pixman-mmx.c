@@ -2169,7 +2169,7 @@ mmx_composite_over_n_8_0565 (pixman_implementation_t *imp,
     int dst_stride, mask_stride;
     int32_t w;
     __m64 vsrc, vsrca, tmp;
-    uint64_t srcsrcsrcsrc, src16;
+    __m64 srcsrcsrcsrc;
 
     CHECKPOINT ();
 
@@ -2186,11 +2186,7 @@ mmx_composite_over_n_8_0565 (pixman_implementation_t *imp,
     vsrca = expand_alpha (vsrc);
 
     tmp = pack_565 (vsrc, _mm_setzero_si64 (), 0);
-    src16 = to_uint64 (tmp);
-
-    srcsrcsrcsrc =
-	(uint64_t)src16 << 48 | (uint64_t)src16 << 32 |
-	(uint64_t)src16 << 16 | (uint64_t)src16;
+    srcsrcsrcsrc = expand_alpha_rev (tmp);
 
     while (height--)
     {
@@ -2234,7 +2230,7 @@ mmx_composite_over_n_8_0565 (pixman_implementation_t *imp,
 
 	    if (srca == 0xff && (m0 & m1 & m2 & m3) == 0xff)
 	    {
-		*(uint64_t *)dst = srcsrcsrcsrc;
+		*(__m64 *)dst = srcsrcsrcsrc;
 	    }
 	    else if (m0 | m1 | m2 | m3)
 	    {
