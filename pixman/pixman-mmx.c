@@ -67,6 +67,19 @@ _mm_empty (void)
 /* We have to compile with -msse to use xmmintrin.h, but that causes SSE
  * instructions to be generated that we don't want. Just duplicate the
  * functions we want to use.  */
+extern __inline int __attribute__((__gnu_inline__, __always_inline__, __artificial__))
+_mm_movemask_pi8 (__m64 __A)
+{
+    int ret;
+
+    asm ("pmovmskb %1, %0\n\t"
+	: "=r" (ret)
+	: "y" (__A)
+    );
+
+    return ret;
+}
+
 extern __inline __m64 __attribute__((__gnu_inline__, __always_inline__, __artificial__))
 _mm_mulhi_pu16 (__m64 __A, __m64 __B)
 {
@@ -425,6 +438,34 @@ store8888 (uint32_t *dest, __m64 v)
 {
     v = pack8888 (v, _mm_setzero_si64 ());
     store (dest, v);
+}
+
+static force_inline pixman_bool_t
+is_equal (__m64 a, __m64 b)
+{
+#ifdef USE_LOONGSON_MMI
+    /* __m64 is double, we can compare directly. */
+    return a == b;
+#else
+    return _mm_movemask_pi8 (_mm_cmpeq_pi8 (a, b)) == 0xff;
+#endif
+}
+
+static force_inline pixman_bool_t
+is_opaque (__m64 v)
+{
+#ifdef USE_LOONGSON_MMI
+    return is_equal (_mm_and_si64 (v, MC (full_alpha)), MC (full_alpha));
+#else
+    __m64 ffs = _mm_cmpeq_pi8 (v, v);
+    return (_mm_movemask_pi8 (_mm_cmpeq_pi8 (v, ffs)) & 0x40);
+#endif
+}
+
+static force_inline pixman_bool_t
+is_zero (__m64 v)
+{
+    return is_equal (v, _mm_setzero_si64 ());
 }
 
 /* Expand 16 bits positioned at @pos (0-3) of a mmx register into
