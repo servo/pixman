@@ -375,10 +375,16 @@ pack8888 (__m64 lo, __m64 hi)
 }
 
 static force_inline void
+store (uint32_t *dest, __m64 v)
+{
+    *dest = _mm_cvtsi64_si32 (v);
+}
+
+static force_inline void
 store8888 (uint32_t *dest, __m64 v)
 {
     v = pack8888 (v, _mm_setzero_si64());
-    *dest = _mm_cvtsi64_si32 (v);
+    store (dest, v);
 }
 
 /* Expand 16 bits positioned at @pos (0-3) of a mmx register into
@@ -2858,8 +2864,8 @@ mmx_composite_add_8888_8888 (pixman_implementation_t *imp,
 
 	while (w && (unsigned long)dst & 7)
 	{
-	    *dst = _mm_cvtsi64_si32 (_mm_adds_pu8 (_mm_cvtsi32_si64 (*src),
-	                                           _mm_cvtsi32_si64 (*dst)));
+	    store (dst, _mm_adds_pu8 (_mm_cvtsi32_si64 (*src),
+	                              _mm_cvtsi32_si64 (*dst)));
 	    dst++;
 	    src++;
 	    w--;
@@ -2876,8 +2882,8 @@ mmx_composite_add_8888_8888 (pixman_implementation_t *imp,
 
 	if (w)
 	{
-	    *dst = _mm_cvtsi64_si32 (_mm_adds_pu8 (_mm_cvtsi32_si64 (*src),
-	                                           _mm_cvtsi32_si64 (*dst)));
+	    store (dst, _mm_adds_pu8 (_mm_cvtsi32_si64 (*src),
+	                              _mm_cvtsi32_si64 (*dst)));
 
 	}
     }
