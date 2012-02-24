@@ -33,9 +33,13 @@
 #include <config.h>
 #endif
 
-#if defined USE_X86_MMX || defined USE_ARM_IWMMXT
+#if defined USE_X86_MMX || defined USE_ARM_IWMMXT || defined USE_LOONGSON_MMI
 
+#ifdef USE_LOONGSON_MMI
+#include <loongson-mmintrin.h>
+#else
 #include <mmintrin.h>
+#endif
 #include "pixman-private.h"
 #include "pixman-combine32.h"
 
@@ -125,11 +129,14 @@ _mm_shuffle_pi16 (__m64 __A, int8_t const __N)
  * uint64_t and __m64 values, then define USE_CVT_INTRINSICS.
  * If __m64 and uint64_t values can just be cast to each other directly,
  * then define USE_M64_CASTS.
+ * If __m64 is a double datatype, then define USE_M64_DOUBLE.
  */
 #ifdef _MSC_VER
 # define M64_MEMBER m64_u64
 #elif defined(__ICC)
 # define USE_CVT_INTRINSICS
+#elif defined(USE_LOONGSON_MMI)
+# define USE_M64_DOUBLE
 #elif defined(__GNUC__)
 # define USE_M64_CASTS
 #elif defined(__SUNPRO_C)
@@ -147,7 +154,7 @@ _mm_shuffle_pi16 (__m64 __A, int8_t const __N)
 # endif
 #endif
 
-#if defined(USE_M64_CASTS) || defined(USE_CVT_INTRINSICS)
+#if defined(USE_M64_CASTS) || defined(USE_CVT_INTRINSICS) || defined(USE_M64_DOUBLE)
 typedef uint64_t mmxdatafield;
 #else
 typedef __m64 mmxdatafield;
@@ -199,6 +206,8 @@ static const mmx_data_t c =
 #    define MC(x) to_m64 (c.mmx_ ## x)
 #elif defined(USE_M64_CASTS)
 #    define MC(x) ((__m64)c.mmx_ ## x)
+#elif defined(USE_M64_DOUBLE)
+#    define MC(x) (*(__m64 *)&c.mmx_ ## x)
 #else
 #    define MC(x) c.mmx_ ## x
 #endif
@@ -213,6 +222,8 @@ to_m64 (uint64_t x)
 
     res.M64_MEMBER = x;
     return res;
+#elif defined USE_M64_DOUBLE
+    return *(__m64 *)&x;
 #else /* USE_M64_CASTS */
     return (__m64)x;
 #endif
@@ -226,6 +237,8 @@ to_uint64 (__m64 x)
 #elif defined M64_MEMBER        /* __m64 is a struct, not an integral type */
     uint64_t res = x.M64_MEMBER;
     return res;
+#elif defined USE_M64_DOUBLE
+    return *(uint64_t *)&x;
 #else /* USE_M64_CASTS */
     return (uint64_t)x;
 #endif
@@ -358,13 +371,26 @@ static force_inline uint32_t ldl_u(const uint32_t *p)
 static force_inline __m64
 load (const uint32_t *v)
 {
+#ifdef USE_LOONGSON_MMI
+    __m64 ret;
+    asm ("lwc1 %0, %1\n\t"
+	: "=f" (ret)
+	: "m" (*v)
+    );
+    return ret;
+#else
     return _mm_cvtsi32_si64 (*v);
+#endif
 }
 
 static force_inline __m64
 load8888 (const uint32_t *v)
 {
+#ifdef USE_LOONGSON_MMI
+    return _mm_unpacklo_pi8_f (*(__m32 *)v, _mm_setzero_si64 ());
+#else
     return _mm_unpacklo_pi8 (load (v), _mm_setzero_si64 ());
+#endif
 }
 
 static force_inline __m64
@@ -383,7 +409,15 @@ pack8888 (__m64 lo, __m64 hi)
 static force_inline void
 store (uint32_t *dest, __m64 v)
 {
+#ifdef USE_LOONGSON_MMI
+    asm ("swc1 %1, %0\n\t"
+	: "=m" (*dest)
+	: "f" (v)
+	: "memory"
+    );
+#else
     *dest = _mm_cvtsi64_si32 (v);
+#endif
 }
 
 static force_inline void
@@ -3275,4 +3309,4 @@ _pixman_implementation_create_mmx (pixman_implementation_t *fallback)
     return imp;
 }
 
-#endif /* USE_X86_MMX || USE_ARM_IWMMXT */
+#endif /* USE_X86_MMX || USE_ARM_IWMMXT || USE_LOONGSON_MMI */
