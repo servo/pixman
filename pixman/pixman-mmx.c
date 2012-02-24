@@ -356,9 +356,15 @@ static force_inline uint32_t ldl_u(const uint32_t *p)
 }
 
 static force_inline __m64
+load (const uint32_t *v)
+{
+    return _mm_cvtsi32_si64 (*v);
+}
+
+static force_inline __m64
 load8888 (const uint32_t *v)
 {
-    return _mm_unpacklo_pi8 (_mm_cvtsi32_si64 (*v), _mm_setzero_si64 ());
+    return _mm_unpacklo_pi8 (load (v), _mm_setzero_si64 ());
 }
 
 static force_inline __m64
@@ -2864,8 +2870,8 @@ mmx_composite_add_8888_8888 (pixman_implementation_t *imp,
 
 	while (w && (unsigned long)dst & 7)
 	{
-	    store (dst, _mm_adds_pu8 (_mm_cvtsi32_si64 (*src),
-	                              _mm_cvtsi32_si64 (*dst)));
+	    store (dst, _mm_adds_pu8 (load ((const uint32_t *)src),
+	                              load ((const uint32_t *)dst)));
 	    dst++;
 	    src++;
 	    w--;
@@ -2882,8 +2888,8 @@ mmx_composite_add_8888_8888 (pixman_implementation_t *imp,
 
 	if (w)
 	{
-	    store (dst, _mm_adds_pu8 (_mm_cvtsi32_si64 (*src),
-	                              _mm_cvtsi32_si64 (*dst)));
+	    store (dst, _mm_adds_pu8 (load ((const uint32_t *)src),
+	                              load ((const uint32_t *)dst)));
 
 	}
     }
