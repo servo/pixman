@@ -569,23 +569,20 @@ pix_add_mul (__m64 x, __m64 a, __m64 y, __m64 b)
 
 /* --------------- MMX code patch for fbcompose.c --------------------- */
 
-static force_inline uint32_t
+static force_inline __m64
 combine (const uint32_t *src, const uint32_t *mask)
 {
-    uint32_t ssrc = *src;
+    __m64 vsrc = load8888 (src);
 
     if (mask)
     {
 	__m64 m = load8888 (mask);
-	__m64 s = load8888 (&ssrc);
 
 	m = expand_alpha (m);
-	s = pix_multiply (s, m);
-
-	store8888 (&ssrc, s);
+	vsrc = pix_multiply (vsrc, m);
     }
 
-    return ssrc;
+    return vsrc;
 }
 
 static void
@@ -600,19 +597,16 @@ mmx_combine_over_u (pixman_implementation_t *imp,
 
     while (dest < end)
     {
-	uint32_t ssrc = combine (src, mask);
-	uint32_t a = ssrc >> 24;
+	__m64 vsrc = combine (src, mask);
 
-	if (a == 0xff)
+	if (is_opaque (vsrc))
 	{
-	    *dest = ssrc;
+	    store8888 (dest, vsrc);
 	}
-	else if (ssrc)
+	else if (!is_zero (vsrc))
 	{
-	    __m64 s, sa;
-	    s = load8888 (&ssrc);
-	    sa = expand_alpha (s);
-	    store8888 (dest, over (s, sa, load8888 (dest)));
+	    __m64 sa = expand_alpha (vsrc);
+	    store8888 (dest, over (vsrc, sa, load8888 (dest)));
 	}
 
 	++dest;
@@ -636,11 +630,11 @@ mmx_combine_over_reverse_u (pixman_implementation_t *imp,
     while (dest < end)
     {
 	__m64 d, da;
-	uint32_t s = combine (src, mask);
+	__m64 s = combine (src, mask);
 
 	d = load8888 (dest);
 	da = expand_alpha (d);
-	store8888 (dest, over (d, da, load8888 (&s)));
+	store8888 (dest, over (d, da, s));
 
 	++dest;
 	++src;
@@ -662,10 +656,9 @@ mmx_combine_in_u (pixman_implementation_t *imp,
 
     while (dest < end)
     {
-	__m64 x, a;
-	uint32_t ssrc = combine (src, mask);
+	__m64 a;
+	__m64 x = combine (src, mask);
 
-	x = load8888 (&ssrc);
 	a = load8888 (dest);
 	a = expand_alpha (a);
 	x = pix_multiply (x, a);
@@ -692,11 +685,10 @@ mmx_combine_in_reverse_u (pixman_implementation_t *imp,
 
     while (dest < end)
     {
-	__m64 x, a;
-	uint32_t ssrc = combine (src, mask);
+	__m64 a = combine (src, mask);
+	__m64 x;
 
 	x = load8888 (dest);
-	a = load8888 (&ssrc);
 	a = expand_alpha (a);
 	x = pix_multiply (x, a);
 	store8888 (dest, x);
@@ -721,10 +713,9 @@ mmx_combine_out_u (pixman_implementation_t *imp,
 
     while (dest < end)
     {
-	__m64 x, a;
-	uint32_t ssrc = combine (src, mask);
+	__m64 a;
+	__m64 x = combine (src, mask);
 
-	x = load8888 (&ssrc);
 	a = load8888 (dest);
 	a = expand_alpha (a);
 	a = negate (a);
@@ -751,11 +742,10 @@ mmx_combine_out_reverse_u (pixman_implementation_t *imp,
 
     while (dest < end)
     {
-	__m64 x, a;
-	uint32_t ssrc = combine (src, mask);
+	__m64 a = combine (src, mask);
+	__m64 x;
 
 	x = load8888 (dest);
-	a = load8888 (&ssrc);
 	a = expand_alpha (a);
 	a = negate (a);
 	x = pix_multiply (x, a);
@@ -782,10 +772,9 @@ mmx_combine_atop_u (pixman_implementation_t *imp,
 
     while (dest < end)
     {
-	__m64 s, da, d, sia;
-	uint32_t ssrc = combine (src, mask);
+	__m64 da, d, sia;
+	__m64 s = combine (src, mask);
 
-	s = load8888 (&ssrc);
 	d = load8888 (dest);
 	sia = expand_alpha (s);
 	sia = negate (sia);
@@ -815,10 +804,9 @@ mmx_combine_atop_reverse_u (pixman_implementation_t *imp,
 
     while (dest < end)
     {
-	__m64 s, dia, d, sa;
-	uint32_t ssrc = combine (src, mask);
+	__m64 dia, d, sa;
+	__m64 s = combine (src, mask);
 
-	s = load8888 (&ssrc);
 	d = load8888 (dest);
 	sa = expand_alpha (s);
 	dia = expand_alpha (d);
@@ -846,10 +834,9 @@ mmx_combine_xor_u (pixman_implementation_t *imp,
 
     while (dest < end)
     {
-	__m64 s, dia, d, sia;
-	uint32_t ssrc = combine (src, mask);
+	__m64 dia, d, sia;
+	__m64 s = combine (src, mask);
 
-	s = load8888 (&ssrc);
 	d = load8888 (dest);
 	sia = expand_alpha (s);
 	dia = expand_alpha (d);
@@ -878,10 +865,9 @@ mmx_combine_add_u (pixman_implementation_t *imp,
 
     while (dest < end)
     {
-	__m64 s, d;
-	uint32_t ssrc = combine (src, mask);
+	__m64 d;
+	__m64 s = combine (src, mask);
 
-	s = load8888 (&ssrc);
 	d = load8888 (dest);
 	s = pix_add (s, d);
 	store8888 (dest, s);
@@ -906,12 +892,14 @@ mmx_combine_saturate_u (pixman_implementation_t *imp,
 
     while (dest < end)
     {
-	uint32_t s = combine (src, mask);
+	uint32_t s, sa, da;
 	uint32_t d = *dest;
-	__m64 ms = load8888 (&s);
-	__m64 md = load8888 (&d);
-	uint32_t sa = s >> 24;
-	uint32_t da = ~d >> 24;
+	__m64 ms = combine (src, mask);
+	__m64 md = load8888 (dest);
+
+	store8888(&s, ms);
+	da = ~d >> 24;
+	sa = s >> 24;
 
 	if (sa > da)
 	{
