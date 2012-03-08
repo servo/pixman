@@ -294,9 +294,6 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
 #if defined(__GNUC__) && (__GNUC__ < 3 || (__GNUC__ == 3 && __GNUC_MINOR__ < 4))
 #error "Need GCC >= 3.4 for MMX intrinsics"
 #endif
-#if defined(__clang__)
-#error "clang chokes on the inline assembly in pixman-mmx.c"
-#endif
 #include <mmintrin.h>
 int main () {
     __m64 v = _mm_cvtsi32_si64 (1);
