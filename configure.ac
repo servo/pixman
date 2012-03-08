@@ -788,25 +788,27 @@ fi
 dnl =====================================
 dnl Thread local storage
 
-support_for__thread=no
-
-AC_MSG_CHECKING(for __thread)
-AC_LINK_IFELSE([AC_LANG_SOURCE([[
+AC_MSG_CHECKING(for thread local storage (TLS) support)
+AC_CACHE_VAL(ac_cv_tls, [
+    ac_cv_tls=none
+    keywords="__thread __declspec(thread)"
+    for kw in $keywords ; do
+        AC_TRY_COMPILE([
 #if defined(__MINGW32__) && !(__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5))
 #error This MinGW version has broken __thread support
 #endif
 #ifdef __OpenBSD__
 #error OpenBSD has broken __thread support
 #endif
-static __thread int x ;
-int main () { x = 123; return x; }
-]])], support_for__thread=yes)
 
-if test $support_for__thread = yes; then 
-   AC_DEFINE([TOOLCHAIN_SUPPORTS__THREAD],[],[Whether the tool chain supports __thread])
+int $kw test;], [], ac_cv_tls=$kw)
+    done
+])
+AC_MSG_RESULT($ac_cv_tls)
+
+if test "$ac_cv_tls" != "none"; then
+    AC_DEFINE_UNQUOTED([TLS], $pixman_tls, [The compiler supported TLS storage class])
 fi
-
-AC_MSG_RESULT($support_for__thread)
 
 dnl
 dnl posix tls
@@ -858,7 +860,7 @@ AC_DEFUN([PIXMAN_CHECK_PTHREAD],[dnl
     fi
 ])
 
-if test $support_for__thread = no; then
+if test $ac_cv_tls = none ; then
     support_for_pthread_setspecific=no
 
     AC_MSG_CHECKING(for pthread_setspecific)
