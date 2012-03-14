@@ -609,7 +609,7 @@ AC_MSG_CHECKING(whether to use MIPS DSPr2 assembler)
 xserver_save_CFLAGS=$CFLAGS
 CFLAGS="-mdspr2 $CFLAGS"
 
-AC_COMPILE_IFELSE([[
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
 #if !(defined(__mips__) &&  __mips_isa_rev >= 2)
 #error MIPS DSPr2 is currently only available on MIPS32r2 platforms.
 #endif
@@ -623,7 +623,7 @@ main ()
         : [a] "r" (a), [b] "r" (b)
     );
     return c;
-}]], have_mips_dspr2=yes)
+}]])], have_mips_dspr2=yes)
 CFLAGS=$xserver_save_CFLAGS
 
 AC_ARG_ENABLE(mips-dspr2,
