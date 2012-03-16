@@ -807,7 +807,7 @@ int $kw test;], [], ac_cv_tls=$kw)
 AC_MSG_RESULT($ac_cv_tls)
 
 if test "$ac_cv_tls" != "none"; then
-    AC_DEFINE_UNQUOTED([TLS], $pixman_tls, [The compiler supported TLS storage class])
+    AC_DEFINE_UNQUOTED([TLS], $ac_cv_tls, [The compiler supported TLS storage class])
 fi
 
 dnl
