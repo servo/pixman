@@ -1,8 +1,5 @@
 #include <gtk/gtk.h>
 #include <config.h>
-#include "pixman-private.h"	/* For image->bits.format
-				 * FIXME: there should probably be public API for this
-				 */
 #include "gtk-utils.h"
 
 GdkPixbuf *
@@ -94,7 +91,7 @@ show_image (pixman_image_t *image)
 
     gtk_window_set_default_size (GTK_WINDOW (window), width, height);
     
-    format = image->bits.format;
+    format = pixman_image_get_format (image);
     
     if (format == PIXMAN_a8r8g8b8)
 	has_alpha = TRUE;
