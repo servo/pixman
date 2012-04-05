@@ -319,7 +319,7 @@ in_over (__m64 src, __m64 srca, __m64 mask, __m64 dest)
 
 /* Elemental unaligned loads */
 
-static __inline__ __m64 ldq_u(uint64_t *p)
+static force_inline __m64 ldq_u(uint64_t *p)
 {
 #ifdef USE_X86_MMX
     /* x86's alignment restrictions are very relaxed. */
@@ -338,7 +338,7 @@ static __inline__ __m64 ldq_u(uint64_t *p)
 #endif
 }
 
-static __inline__ uint32_t ldl_u(const uint32_t *p)
+static force_inline uint32_t ldl_u(const uint32_t *p)
 {
 #ifdef USE_X86_MMX
     /* x86's alignment restrictions are very relaxed. */
