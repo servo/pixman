@@ -216,3 +216,14 @@ _mm_xor_si64 (__m64 __m1, __m64 __m2)
 	);
 	return ret;
 }
+
+extern __inline __m64 __attribute__((__gnu_inline__, __always_inline__, __artificial__))
+loongson_insert_pi16 (__m64 __m1, __m64 __m2, int64_t __pos)
+{
+	__m64 ret;
+	asm("pinsrh_%3 %0, %1, %2\n\t"
+	   : "=f" (ret)
+	   : "f" (__m1), "f" (__m2), "i" (__pos)
+	);
+	return ret;
+}

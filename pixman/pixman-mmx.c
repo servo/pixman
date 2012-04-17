@@ -182,10 +182,12 @@ typedef struct
     mmxdatafield mmx_565_r;
     mmxdatafield mmx_565_g;
     mmxdatafield mmx_565_b;
+#ifndef USE_LOONGSON_MMI
     mmxdatafield mmx_mask_0;
     mmxdatafield mmx_mask_1;
     mmxdatafield mmx_mask_2;
     mmxdatafield mmx_mask_3;
+#endif
     mmxdatafield mmx_full_alpha;
     mmxdatafield mmx_4x0101;
 } mmx_data_t;
@@ -207,10 +209,12 @@ static const mmx_data_t c =
     MMXDATA_INIT (.mmx_565_r,                    0x000000f800000000),
     MMXDATA_INIT (.mmx_565_g,                    0x0000000000fc0000),
     MMXDATA_INIT (.mmx_565_b,                    0x00000000000000f8),
+#ifndef USE_LOONGSON_MMI
     MMXDATA_INIT (.mmx_mask_0,                   0xffffffffffff0000),
     MMXDATA_INIT (.mmx_mask_1,                   0xffffffff0000ffff),
     MMXDATA_INIT (.mmx_mask_2,                   0xffff0000ffffffff),
     MMXDATA_INIT (.mmx_mask_3,                   0x0000ffffffffffff),
+#endif
     MMXDATA_INIT (.mmx_full_alpha,               0x00ff000000000000),
     MMXDATA_INIT (.mmx_4x0101,                   0x0101010101010101),
 };
@@ -528,6 +532,15 @@ pack_565 (__m64 pixel, __m64 target, int pos)
     g = _mm_and_si64 (p, MC (565_g));
     b = _mm_and_si64 (p, MC (565_b));
 
+#ifdef USE_LOONGSON_MMI
+    r = shift (r, -(32 - 8));
+    g = shift (g, -(16 - 3));
+    b = shift (b, -(0  + 3));
+
+    p = _mm_or_si64 (r, g);
+    p = _mm_or_si64 (p, b);
+    return loongson_insert_pi16 (t, p, pos);
+#else
     r = shift (r, -(32 - 8) + pos * 16);
     g = shift (g, -(16 - 3) + pos * 16);
     b = shift (b, -(0  + 3) + pos * 16);
@@ -545,6 +558,7 @@ pack_565 (__m64 pixel, __m64 target, int pos)
     p = _mm_or_si64 (g, p);
 
     return _mm_or_si64 (b, p);
+#endif
 }
 
 #ifndef _MSC_VER
