@@ -493,7 +493,11 @@ expand565 (__m64 pixel, int pos)
     __m64 t1, t2;
 
     /* move pixel to low 16 bit and zero the rest */
+#ifdef USE_LOONGSON_MMI
+    p = loongson_extract_pi16 (p, pos);
+#else
     p = shift (shift (p, (3 - pos) * 16), -48);
+#endif
 
     t1 = shift (p, 36 - 11);
     t2 = shift (p, 16 - 5);
