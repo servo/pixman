@@ -3243,6 +3243,51 @@ mmx_fetch_r5g6b5 (pixman_iter_t *iter, const uint32_t *mask)
     return iter->buffer;
 }
 
+static uint32_t *
+mmx_fetch_a8 (pixman_iter_t *iter, const uint32_t *mask)
+{
+    int w = iter->width;
+    uint32_t *dst = iter->buffer;
+    uint8_t *src = iter->bits;
+
+    iter->bits += iter->stride;
+
+    while (w && (((unsigned long)dst) & 15))
+    {
+        *dst++ = *(src++) << 24;
+        w--;
+    }
+
+    while (w >= 8)
+    {
+	__m64 mm0 = ldq_u ((__m64 *)src);
+
+	__m64 mm1 = _mm_unpacklo_pi8  (_mm_setzero_si64(), mm0);
+	__m64 mm2 = _mm_unpackhi_pi8  (_mm_setzero_si64(), mm0);
+	__m64 mm3 = _mm_unpacklo_pi16 (_mm_setzero_si64(), mm1);
+	__m64 mm4 = _mm_unpackhi_pi16 (_mm_setzero_si64(), mm1);
+	__m64 mm5 = _mm_unpacklo_pi16 (_mm_setzero_si64(), mm2);
+	__m64 mm6 = _mm_unpackhi_pi16 (_mm_setzero_si64(), mm2);
+
+	*(__m64 *)(dst + 0) = mm3;
+	*(__m64 *)(dst + 2) = mm4;
+	*(__m64 *)(dst + 4) = mm5;
+	*(__m64 *)(dst + 6) = mm6;
+
+	dst += 8;
+	src += 8;
+	w -= 8;
+    }
+
+    while (w)
+    {
+	*dst++ = *(src++) << 24;
+	w--;
+    }
+
+    return iter->buffer;
+}
+
 typedef struct
 {
     pixman_format_code_t	format;
@@ -3252,6 +3297,7 @@ typedef struct
 static const fetcher_info_t fetchers[] =
 {
     { PIXMAN_r5g6b5,		mmx_fetch_r5g6b5 },
+    { PIXMAN_a8,		mmx_fetch_a8 },
     { PIXMAN_null }
 };
 

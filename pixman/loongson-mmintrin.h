@@ -183,6 +183,17 @@ _mm_unpackhi_pi8 (__m64 __m1, __m64 __m2)
 }
 
 extern __inline __m64 __attribute__((__gnu_inline__, __always_inline__, __artificial__))
+_mm_unpackhi_pi16 (__m64 __m1, __m64 __m2)
+{
+	__m64 ret;
+	asm("punpckhhw %0, %1, %2\n\t"
+	   : "=f" (ret)
+	   : "f" (__m1), "f" (__m2)
+	);
+	return ret;
+}
+
+extern __inline __m64 __attribute__((__gnu_inline__, __always_inline__, __artificial__))
 _mm_unpacklo_pi8 (__m64 __m1, __m64 __m2)
 {
 	__m64 ret;
@@ -200,6 +211,17 @@ _mm_unpacklo_pi8_f (__m32 __m1, __m64 __m2)
 {
 	__m64 ret;
 	asm("punpcklbh %0, %1, %2\n\t"
+	   : "=f" (ret)
+	   : "f" (__m1), "f" (__m2)
+	);
+	return ret;
+}
+
+extern __inline __m64 __attribute__((__gnu_inline__, __always_inline__, __artificial__))
+_mm_unpacklo_pi16 (__m64 __m1, __m64 __m2)
+{
+	__m64 ret;
+	asm("punpcklhw %0, %1, %2\n\t"
 	   : "=f" (ret)
 	   : "f" (__m1), "f" (__m2)
 	);
