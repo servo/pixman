@@ -190,6 +190,7 @@ typedef struct
 #endif
     mmxdatafield mmx_full_alpha;
     mmxdatafield mmx_4x0101;
+    mmxdatafield mmx_ff000000;
 } mmx_data_t;
 
 #if defined(_MSC_VER)
@@ -217,6 +218,7 @@ static const mmx_data_t c =
 #endif
     MMXDATA_INIT (.mmx_full_alpha,               0x00ff000000000000),
     MMXDATA_INIT (.mmx_4x0101,                   0x0101010101010101),
+    MMXDATA_INIT (.mmx_ff000000,                 0xff000000ff000000),
 };
 
 #ifdef USE_CVT_INTRINSICS
@@ -3196,6 +3198,102 @@ mmx_composite_over_x888_8_8888 (pixman_implementation_t *imp,
     _mm_empty ();
 }
 
+static uint32_t *
+mmx_fetch_r5g6b5 (pixman_iter_t *iter, const uint32_t *mask)
+{
+    int w = iter->width;
+    uint32_t *dst = iter->buffer;
+    uint16_t *src = (uint16_t *)iter->bits;
+
+    iter->bits += iter->stride;
+
+    while (w && ((unsigned long)dst) & 0x0f)
+    {
+	uint16_t s = *src++;
+
+	*dst++ = CONVERT_0565_TO_8888 (s);
+	w--;
+    }
+
+    while (w >= 4)
+    {
+	__m64 vsrc = ldq_u ((__m64 *)src);
+
+	__m64 mm0 = expand565 (vsrc, 0);
+	__m64 mm1 = expand565 (vsrc, 1);
+	__m64 mm2 = expand565 (vsrc, 2);
+	__m64 mm3 = expand565 (vsrc, 3);
+
+	*(__m64 *)(dst + 0) = _mm_or_si64 (pack8888 (mm0, mm1), MC (ff000000));
+	*(__m64 *)(dst + 2) = _mm_or_si64 (pack8888 (mm2, mm3), MC (ff000000));
+
+	dst += 4;
+	src += 4;
+	w -= 4;
+    }
+
+    while (w)
+    {
+	uint16_t s = *src++;
+
+	*dst++ = CONVERT_0565_TO_8888 (s);
+	w--;
+    }
+
+    return iter->buffer;
+}
+
+typedef struct
+{
+    pixman_format_code_t	format;
+    pixman_iter_get_scanline_t	get_scanline;
+} fetcher_info_t;
+
+static const fetcher_info_t fetchers[] =
+{
+    { PIXMAN_r5g6b5,		mmx_fetch_r5g6b5 },
+    { PIXMAN_null }
+};
+
+static void
+mmx_src_iter_init (pixman_implementation_t *imp, pixman_iter_t *iter)
+{
+    pixman_image_t *image = iter->image;
+    int x = iter->x;
+    int y = iter->y;
+    int width = iter->width;
+    int height = iter->height;
+
+#define FLAGS								\
+    (FAST_PATH_STANDARD_FLAGS | FAST_PATH_ID_TRANSFORM | FAST_PATH_BITS_IMAGE)
+
+    if ((iter->flags & ITER_NARROW)				&&
+	(image->common.flags & FLAGS) == FLAGS			&&
+	x >= 0 && y >= 0					&&
+	x + width <= image->bits.width				&&
+	y + height <= image->bits.height)
+    {
+	const fetcher_info_t *f;
+
+	for (f = &fetchers[0]; f->format != PIXMAN_null; f++)
+	{
+	    if (image->common.extended_format_code == f->format)
+	    {
+		uint8_t *b = (uint8_t *)image->bits.bits;
+		int s = image->bits.rowstride * 4;
+
+		iter->bits = b + s * iter->y + x * PIXMAN_FORMAT_BPP (f->format) / 8;
+		iter->stride = s;
+
+		iter->get_scanline = f->get_scanline;
+		return;
+	    }
+	}
+    }
+
+    imp->delegate->src_iter_init (imp->delegate, iter);
+}
+
 static const pixman_fast_path_t mmx_fast_paths[] =
 {
     PIXMAN_STD_FAST_PATH    (OVER, solid,    a8,       r5g6b5,   mmx_composite_over_n_8_0565       ),
@@ -3346,6 +3444,8 @@ _pixman_implementation_create_mmx (pixman_implementation_t *fallback)
 
     imp->blt = mmx_blt;
     imp->fill = mmx_fill;
+
+    imp->src_iter_init = mmx_src_iter_init;
 
     return imp;
 }
