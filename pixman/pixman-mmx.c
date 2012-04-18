@@ -3199,6 +3199,47 @@ mmx_composite_over_x888_8_8888 (pixman_implementation_t *imp,
 }
 
 static uint32_t *
+mmx_fetch_x8r8g8b8 (pixman_iter_t *iter, const uint32_t *mask)
+{
+    int w = iter->width;
+    uint32_t *dst = iter->buffer;
+    uint32_t *src = (uint32_t *)iter->bits;
+
+    iter->bits += iter->stride;
+
+    while (w && ((unsigned long)dst) & 7)
+    {
+	*dst++ = (*src++) | 0xff000000;
+	w--;
+    }
+
+    while (w >= 8)
+    {
+	__m64 vsrc1 = ldq_u ((__m64 *)(src + 0));
+	__m64 vsrc2 = ldq_u ((__m64 *)(src + 2));
+	__m64 vsrc3 = ldq_u ((__m64 *)(src + 4));
+	__m64 vsrc4 = ldq_u ((__m64 *)(src + 6));
+
+	*(__m64 *)(dst + 0) = _mm_or_si64 (vsrc1, MC (ff000000));
+	*(__m64 *)(dst + 2) = _mm_or_si64 (vsrc2, MC (ff000000));
+	*(__m64 *)(dst + 4) = _mm_or_si64 (vsrc3, MC (ff000000));
+	*(__m64 *)(dst + 6) = _mm_or_si64 (vsrc4, MC (ff000000));
+
+	dst += 8;
+	src += 8;
+	w -= 8;
+    }
+
+    while (w)
+    {
+	*dst++ = (*src++) | 0xff000000;
+	w--;
+    }
+
+    return iter->buffer;
+}
+
+static uint32_t *
 mmx_fetch_r5g6b5 (pixman_iter_t *iter, const uint32_t *mask)
 {
     int w = iter->width;
@@ -3296,6 +3337,7 @@ typedef struct
 
 static const fetcher_info_t fetchers[] =
 {
+    { PIXMAN_x8r8g8b8,		mmx_fetch_x8r8g8b8 },
     { PIXMAN_r5g6b5,		mmx_fetch_r5g6b5 },
     { PIXMAN_a8,		mmx_fetch_a8 },
     { PIXMAN_null }
