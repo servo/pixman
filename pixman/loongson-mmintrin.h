@@ -84,6 +84,17 @@ _mm_empty (void)
 }
 
 extern __inline __m64 __attribute__((__gnu_inline__, __always_inline__, __artificial__))
+_mm_madd_pi16 (__m64 __m1, __m64 __m2)
+{
+	__m64 ret;
+	asm("pmaddhw %0, %1, %2\n\t"
+	   : "=f" (ret)
+	   : "f" (__m1), "f" (__m2)
+	);
+	return ret;
+}
+
+extern __inline __m64 __attribute__((__gnu_inline__, __always_inline__, __artificial__))
 _mm_mulhi_pu16 (__m64 __m1, __m64 __m2)
 {
 	__m64 ret;

@@ -179,9 +179,12 @@ typedef struct
     mmxdatafield mmx_4x0080;
     mmxdatafield mmx_565_rgb;
     mmxdatafield mmx_565_unpack_multiplier;
+    mmxdatafield mmx_565_pack_multiplier;
     mmxdatafield mmx_565_r;
     mmxdatafield mmx_565_g;
     mmxdatafield mmx_565_b;
+    mmxdatafield mmx_packed_565_rb;
+    mmxdatafield mmx_packed_565_g;
 #ifndef USE_LOONGSON_MMI
     mmxdatafield mmx_mask_0;
     mmxdatafield mmx_mask_1;
@@ -207,9 +210,12 @@ static const mmx_data_t c =
     MMXDATA_INIT (.mmx_4x0080,                   0x0080008000800080),
     MMXDATA_INIT (.mmx_565_rgb,                  0x000001f0003f001f),
     MMXDATA_INIT (.mmx_565_unpack_multiplier,    0x0000008404100840),
+    MMXDATA_INIT (.mmx_565_pack_multiplier,      0x2000000420000004),
     MMXDATA_INIT (.mmx_565_r,                    0x000000f800000000),
     MMXDATA_INIT (.mmx_565_g,                    0x0000000000fc0000),
     MMXDATA_INIT (.mmx_565_b,                    0x00000000000000f8),
+    MMXDATA_INIT (.mmx_packed_565_rb,            0x00f800f800f800f8),
+    MMXDATA_INIT (.mmx_packed_565_g,             0x0000fc000000fc00),
 #ifndef USE_LOONGSON_MMI
     MMXDATA_INIT (.mmx_mask_0,                   0xffffffffffff0000),
     MMXDATA_INIT (.mmx_mask_1,                   0xffffffff0000ffff),
@@ -565,6 +571,27 @@ pack_565 (__m64 pixel, __m64 target, int pos)
 
     return _mm_or_si64 (b, p);
 #endif
+}
+
+static force_inline __m64
+pack_4xpacked565 (__m64 a, __m64 b)
+{
+    __m64 rb0 = _mm_and_si64 (a, MC (packed_565_rb));
+    __m64 rb1 = _mm_and_si64 (b, MC (packed_565_rb));
+
+    __m64 t0 = _mm_madd_pi16 (rb0, MC (565_pack_multiplier));
+    __m64 t1 = _mm_madd_pi16 (rb1, MC (565_pack_multiplier));
+
+    __m64 g0 = _mm_and_si64 (a, MC (packed_565_g));
+    __m64 g1 = _mm_and_si64 (b, MC (packed_565_g));
+
+    t0 = _mm_or_si64 (t0, g0);
+    t1 = _mm_or_si64 (t1, g1);
+
+    t0 = shift(t0, -5);
+    t1 = shift(t1, -5 + 16);
+
+    return _mm_shuffle_pi16 (_mm_or_si64 (t0, t1), _MM_SHUFFLE (3, 1, 2, 0));
 }
 
 #ifndef _MSC_VER
@@ -2091,6 +2118,60 @@ pixman_fill_mmx (uint32_t *bits,
 }
 
 static void
+mmx_composite_src_x888_0565 (pixman_implementation_t *imp,
+                             pixman_composite_info_t *info)
+{
+    PIXMAN_COMPOSITE_ARGS (info);
+    uint16_t    *dst_line, *dst;
+    uint32_t    *src_line, *src, s;
+    int dst_stride, src_stride;
+    int32_t w;
+
+    PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint32_t, src_stride, src_line, 1);
+    PIXMAN_IMAGE_GET_LINE (dest_image, dest_x, dest_y, uint16_t, dst_stride, dst_line, 1);
+
+    while (height--)
+    {
+	dst = dst_line;
+	dst_line += dst_stride;
+	src = src_line;
+	src_line += src_stride;
+	w = width;
+
+	while (w && (unsigned long)dst & 7)
+	{
+	    s = *src++;
+	    *dst = CONVERT_8888_TO_0565 (s);
+	    dst++;
+	    w--;
+	}
+
+	while (w >= 4)
+	{
+	    __m64 vdest;
+	    __m64 vsrc0 = ldq_u ((__m64 *)(src + 0));
+	    __m64 vsrc1 = ldq_u ((__m64 *)(src + 2));
+
+	    vdest = pack_4xpacked565 (vsrc0, vsrc1);
+
+	    *(__m64 *)dst = vdest;
+
+	    w -= 4;
+	    src += 4;
+	    dst += 4;
+	}
+
+	while (w)
+	{
+	    s = *src++;
+	    *dst = CONVERT_8888_TO_0565 (s);
+	    dst++;
+	    w--;
+	}
+    }
+}
+
+static void
 mmx_composite_src_n_8_8888 (pixman_implementation_t *imp,
                             pixman_composite_info_t *info)
 {
@@ -3433,6 +3514,10 @@ static const pixman_fast_path_t mmx_fast_paths[] =
     PIXMAN_STD_FAST_PATH    (ADD,  a8,       null,     a8,       mmx_composite_add_8_8		   ),
     PIXMAN_STD_FAST_PATH    (ADD,  solid,    a8,       a8,       mmx_composite_add_n_8_8           ),
 
+    PIXMAN_STD_FAST_PATH    (SRC,  a8r8g8b8, null,     r5g6b5,   mmx_composite_src_x888_0565       ),
+    PIXMAN_STD_FAST_PATH    (SRC,  a8b8g8r8, null,     b5g6r5,   mmx_composite_src_x888_0565       ),
+    PIXMAN_STD_FAST_PATH    (SRC,  x8r8g8b8, null,     r5g6b5,   mmx_composite_src_x888_0565       ),
+    PIXMAN_STD_FAST_PATH    (SRC,  x8b8g8r8, null,     b5g6r5,   mmx_composite_src_x888_0565       ),
     PIXMAN_STD_FAST_PATH    (SRC,  solid,    a8,       a8r8g8b8, mmx_composite_src_n_8_8888        ),
     PIXMAN_STD_FAST_PATH    (SRC,  solid,    a8,       x8r8g8b8, mmx_composite_src_n_8_8888        ),
     PIXMAN_STD_FAST_PATH    (SRC,  solid,    a8,       a8b8g8r8, mmx_composite_src_n_8_8888        ),
