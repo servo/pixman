@@ -589,9 +589,13 @@ pack_4xpacked565 (__m64 a, __m64 b)
     t1 = _mm_or_si64 (t1, g1);
 
     t0 = shift(t0, -5);
+#ifdef USE_ARM_IWMMXT
+    t1 = shift(t1, -5);
+    return _mm_packs_pu32 (t0, t1);
+#else
     t1 = shift(t1, -5 + 16);
-
     return _mm_shuffle_pi16 (_mm_or_si64 (t0, t1), _MM_SHUFFLE (3, 1, 2, 0));
+#endif
 }
 
 #ifndef _MSC_VER
