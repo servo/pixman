@@ -27,11 +27,13 @@ config.h
 config.h.in
 .*.swp
 demos/alpha-test
+demos/checkerboard
 demos/clip-in
 demos/clip-test
 demos/composite-test
 demos/convolution-test
 demos/gradient-test
+demos/quad2quad
 demos/radial-test
 demos/screen-test
 demos/trap-test
