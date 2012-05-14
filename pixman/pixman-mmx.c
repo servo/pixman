@@ -185,6 +185,9 @@ typedef struct
     mmxdatafield mmx_565_b;
     mmxdatafield mmx_packed_565_rb;
     mmxdatafield mmx_packed_565_g;
+    mmxdatafield mmx_expand_565_g;
+    mmxdatafield mmx_expand_565_b;
+    mmxdatafield mmx_expand_565_r;
 #ifndef USE_LOONGSON_MMI
     mmxdatafield mmx_mask_0;
     mmxdatafield mmx_mask_1;
@@ -216,6 +219,9 @@ static const mmx_data_t c =
     MMXDATA_INIT (.mmx_565_b,                    0x00000000000000f8),
     MMXDATA_INIT (.mmx_packed_565_rb,            0x00f800f800f800f8),
     MMXDATA_INIT (.mmx_packed_565_g,             0x0000fc000000fc00),
+    MMXDATA_INIT (.mmx_expand_565_g,             0x07e007e007e007e0),
+    MMXDATA_INIT (.mmx_expand_565_b,             0x001f001f001f001f),
+    MMXDATA_INIT (.mmx_expand_565_r,             0xf800f800f800f800),
 #ifndef USE_LOONGSON_MMI
     MMXDATA_INIT (.mmx_mask_0,                   0xffffffffffff0000),
     MMXDATA_INIT (.mmx_mask_1,                   0xffffffff0000ffff),
@@ -516,6 +522,34 @@ expand565 (__m64 pixel, int pos)
 
     pixel = _mm_mullo_pi16 (p, MC (565_unpack_multiplier));
     return _mm_srli_pi16 (pixel, 8);
+}
+
+/* Expand 4 16 bit pixels in an mmx register into two mmx registers of
+ *
+ *    AARRGGBBRRGGBB
+ */
+static force_inline void
+expand_4xpacked565 (__m64 vin, __m64 *vout0, __m64 *vout1)
+{
+    __m64 t0, t1, alpha = _mm_cmpeq_pi32 (_mm_setzero_si64 (), _mm_setzero_si64 ());
+    __m64 r = _mm_and_si64 (vin, MC (expand_565_r));
+    __m64 g = _mm_and_si64 (vin, MC (expand_565_g));
+    __m64 b = _mm_and_si64 (vin, MC (expand_565_b));
+
+    /* Replicate high bits into empty low bits. */
+    r = _mm_or_si64 (_mm_srli_pi16 (r, 8), _mm_srli_pi16 (r, 13));
+    g = _mm_or_si64 (_mm_srli_pi16 (g, 3), _mm_srli_pi16 (g, 9));
+    b = _mm_or_si64 (_mm_slli_pi16 (b, 3), _mm_srli_pi16 (b, 2));
+
+    r = _mm_packs_pu16 (r, _mm_setzero_si64 ());	/* 00 00 00 00 R3 R2 R1 R0 */
+    g = _mm_packs_pu16 (g, _mm_setzero_si64 ());	/* 00 00 00 00 G3 G2 G1 G0 */
+    b = _mm_packs_pu16 (b, _mm_setzero_si64 ());	/* 00 00 00 00 B3 B2 B1 B0 */
+
+    t1 = _mm_unpacklo_pi8 (r, alpha);			/* A3 R3 A2 R2 A1 R1 A0 R0 */
+    t0 = _mm_unpacklo_pi8 (b, g);			/* G3 B3 G2 B2 G1 B1 G0 B0 */
+
+    *vout0 = _mm_unpacklo_pi16 (t0, t1);		/* A1 R1 G1 B1 A0 R0 G0 B0 */
+    *vout1 = _mm_unpackhi_pi16 (t0, t1);		/* A3 R3 G3 B3 A2 R2 G2 B2 */
 }
 
 static force_inline __m64
@@ -3346,14 +3380,12 @@ mmx_fetch_r5g6b5 (pixman_iter_t *iter, const uint32_t *mask)
     while (w >= 4)
     {
 	__m64 vsrc = ldq_u ((__m64 *)src);
+	__m64 mm0, mm1;
 
-	__m64 mm0 = expand565 (vsrc, 0);
-	__m64 mm1 = expand565 (vsrc, 1);
-	__m64 mm2 = expand565 (vsrc, 2);
-	__m64 mm3 = expand565 (vsrc, 3);
+	expand_4xpacked565 (vsrc, &mm0, &mm1);
 
-	*(__m64 *)(dst + 0) = _mm_or_si64 (pack8888 (mm0, mm1), MC (ff000000));
-	*(__m64 *)(dst + 2) = _mm_or_si64 (pack8888 (mm2, mm3), MC (ff000000));
+	*(__m64 *)(dst + 0) = mm0;
+	*(__m64 *)(dst + 2) = mm1;
 
 	dst += 4;
 	src += 4;
