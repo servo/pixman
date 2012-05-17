@@ -529,12 +529,14 @@ expand565 (__m64 pixel, int pos)
  *    AARRGGBBRRGGBB
  */
 static force_inline void
-expand_4xpacked565 (__m64 vin, __m64 *vout0, __m64 *vout1)
+expand_4xpacked565 (__m64 vin, __m64 *vout0, __m64 *vout1, int full_alpha)
 {
-    __m64 t0, t1, alpha = _mm_cmpeq_pi32 (_mm_setzero_si64 (), _mm_setzero_si64 ());
+    __m64 t0, t1, alpha = _mm_setzero_si64 ();;
     __m64 r = _mm_and_si64 (vin, MC (expand_565_r));
     __m64 g = _mm_and_si64 (vin, MC (expand_565_g));
     __m64 b = _mm_and_si64 (vin, MC (expand_565_b));
+    if (full_alpha)
+	alpha = _mm_cmpeq_pi32 (alpha, alpha);
 
     /* Replicate high bits into empty low bits. */
     r = _mm_or_si64 (_mm_srli_pi16 (r, 8), _mm_srli_pi16 (r, 13));
@@ -565,6 +567,17 @@ static force_inline __m64
 expandx888 (__m64 in, int pos)
 {
     return _mm_or_si64 (expand8888 (in, pos), MC (full_alpha));
+}
+
+static force_inline void
+expand_4x565 (__m64 vin, __m64 *vout0, __m64 *vout1, __m64 *vout2, __m64 *vout3, int full_alpha)
+{
+    __m64 v0, v1;
+    expand_4xpacked565 (vin, &v0, &v1, full_alpha);
+    *vout0 = expand8888 (v0, 0);
+    *vout1 = expand8888 (v0, 1);
+    *vout2 = expand8888 (v1, 0);
+    *vout3 = expand8888 (v1, 1);
 }
 
 static force_inline __m64
@@ -1442,11 +1455,14 @@ mmx_composite_over_n_0565 (pixman_implementation_t *imp,
 	while (w >= 4)
 	{
 	    __m64 vdest = *(__m64 *)dst;
+	    __m64 v0, v1, v2, v3;
 
-	    __m64 v0 = over (vsrc, vsrca, expand565 (vdest, 0));
-	    __m64 v1 = over (vsrc, vsrca, expand565 (vdest, 1));
-	    __m64 v2 = over (vsrc, vsrca, expand565 (vdest, 2));
-	    __m64 v3 = over (vsrc, vsrca, expand565 (vdest, 3));
+	    expand_4x565 (vdest, &v0, &v1, &v2, &v3, 0);
+
+	    v0 = over (vsrc, vsrca, v0);
+	    v1 = over (vsrc, vsrca, v1);
+	    v2 = over (vsrc, vsrca, v2);
+	    v3 = over (vsrc, vsrca, v3);
 
 	    *(__m64 *)dst = pack_4x565 (v0, v1, v2, v3);
 
@@ -1862,16 +1878,19 @@ mmx_composite_over_8888_0565 (pixman_implementation_t *imp,
 	while (w >= 4)
 	{
 	    __m64 vdest = *(__m64 *)dst;
+	    __m64 v0, v1, v2, v3;
+
+	    expand_4x565 (vdest, &v0, &v1, &v2, &v3, 0);
 
 	    __m64 vsrc0 = load8888 ((src + 0));
 	    __m64 vsrc1 = load8888 ((src + 1));
 	    __m64 vsrc2 = load8888 ((src + 2));
 	    __m64 vsrc3 = load8888 ((src + 3));
 
-	    __m64 v0 = over (vsrc0, expand_alpha (vsrc0), expand565 (vdest, 0));
-	    __m64 v1 = over (vsrc1, expand_alpha (vsrc1), expand565 (vdest, 1));
-	    __m64 v2 = over (vsrc2, expand_alpha (vsrc2), expand565 (vdest, 2));
-	    __m64 v3 = over (vsrc3, expand_alpha (vsrc3), expand565 (vdest, 3));
+	    v0 = over (vsrc0, expand_alpha (vsrc0), v0);
+	    v1 = over (vsrc1, expand_alpha (vsrc1), v1);
+	    v2 = over (vsrc2, expand_alpha (vsrc2), v2);
+	    v3 = over (vsrc3, expand_alpha (vsrc3), v3);
 
 	    *(__m64 *)dst = pack_4x565 (v0, v1, v2, v3);
 
@@ -2409,19 +2428,21 @@ mmx_composite_over_n_8_0565 (pixman_implementation_t *imp,
 	    else if (m0 | m1 | m2 | m3)
 	    {
 		__m64 vdest = *(__m64 *)dst;
+		__m64 v0, v1, v2, v3;
+
+		expand_4x565 (vdest, &v0, &v1, &v2, &v3, 0);
 
 		__m64 vm0 = to_m64 (m0);
-		__m64 v0 = in_over (vsrc, vsrca, expand_alpha_rev (vm0),
-					   expand565 (vdest, 0));
+		v0 = in_over (vsrc, vsrca, expand_alpha_rev (vm0), v0);
+
 		__m64 vm1 = to_m64 (m1);
-		__m64 v1 = in_over (vsrc, vsrca, expand_alpha_rev (vm1),
-					   expand565 (vdest, 1));
+		v1 = in_over (vsrc, vsrca, expand_alpha_rev (vm1), v1);
+
 		__m64 vm2 = to_m64 (m2);
-		__m64 v2 = in_over (vsrc, vsrca, expand_alpha_rev (vm2),
-					   expand565 (vdest, 2));
+		v2 = in_over (vsrc, vsrca, expand_alpha_rev (vm2), v2);
+
 		__m64 vm3 = to_m64 (m3);
-		__m64 v3 = in_over (vsrc, vsrca, expand_alpha_rev (vm3),
-					   expand565 (vdest, 3));
+		v3 = in_over (vsrc, vsrca, expand_alpha_rev (vm3), v3);
 
 		*(__m64 *)dst = pack_4x565 (v0, v1, v2, v3);;
 	    }
@@ -2530,11 +2551,19 @@ mmx_composite_over_pixbuf_0565 (pixman_implementation_t *imp,
 	    else if (s0 | s1 | s2 | s3)
 	    {
 		__m64 vdest = *(__m64 *)dst;
+		__m64 v0, v1, v2, v3;
 
-		__m64 v0 = over_rev_non_pre (load8888 (&s0), expand565 (vdest, 0));
-		__m64 v1 = over_rev_non_pre (load8888 (&s1), expand565 (vdest, 1));
-		__m64 v2 = over_rev_non_pre (load8888 (&s2), expand565 (vdest, 2));
-		__m64 v3 = over_rev_non_pre (load8888 (&s3), expand565 (vdest, 3));
+		__m64 vsrc0 = load8888 (&s0);
+		__m64 vsrc1 = load8888 (&s1);
+		__m64 vsrc2 = load8888 (&s2);
+		__m64 vsrc3 = load8888 (&s3);
+
+		expand_4x565 (vdest, &v0, &v1, &v2, &v3, 0);
+
+		v0 = over_rev_non_pre (vsrc0, v0);
+		v1 = over_rev_non_pre (vsrc1, v1);
+		v2 = over_rev_non_pre (vsrc2, v2);
+		v3 = over_rev_non_pre (vsrc3, v3);
 
 		*(__m64 *)dst = pack_4x565 (v0, v1, v2, v3);
 	    }
@@ -2710,11 +2739,14 @@ mmx_composite_over_n_8888_0565_ca (pixman_implementation_t *imp,
 	    if ((m0 | m1 | m2 | m3))
 	    {
 		__m64 vdest = *(__m64 *)q;
+		__m64 v0, v1, v2, v3;
 
-		__m64 v0 = in_over (vsrc, vsrca, load8888 (&m0), expand565 (vdest, 0));
-		__m64 v1 = in_over (vsrc, vsrca, load8888 (&m1), expand565 (vdest, 1));
-		__m64 v2 = in_over (vsrc, vsrca, load8888 (&m2), expand565 (vdest, 2));
-		__m64 v3 = in_over (vsrc, vsrca, load8888 (&m3), expand565 (vdest, 3));
+		expand_4x565 (vdest, &v0, &v1, &v2, &v3, 0);
+
+		v0 = in_over (vsrc, vsrca, load8888 (&m0), v0);
+		v1 = in_over (vsrc, vsrca, load8888 (&m1), v1);
+		v2 = in_over (vsrc, vsrca, load8888 (&m2), v2);
+		v3 = in_over (vsrc, vsrca, load8888 (&m3), v3);
 
 		*(__m64 *)q = pack_4x565 (v0, v1, v2, v3);
 	    }
@@ -3382,7 +3414,7 @@ mmx_fetch_r5g6b5 (pixman_iter_t *iter, const uint32_t *mask)
 	__m64 vsrc = ldq_u ((__m64 *)src);
 	__m64 mm0, mm1;
 
-	expand_4xpacked565 (vsrc, &mm0, &mm1);
+	expand_4xpacked565 (vsrc, &mm0, &mm1, 1);
 
 	*(__m64 *)(dst + 0) = mm0;
 	*(__m64 *)(dst + 2) = mm1;
