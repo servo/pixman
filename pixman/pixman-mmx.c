@@ -3435,6 +3435,75 @@ mmx_composite_over_x888_8_8888 (pixman_implementation_t *imp,
     _mm_empty ();
 }
 
+static void
+mmx_composite_over_reverse_n_8888 (pixman_implementation_t *imp,
+                                   pixman_composite_info_t *info)
+{
+    PIXMAN_COMPOSITE_ARGS (info);
+    uint32_t src;
+    uint32_t    *dst_line, *dst;
+    int32_t w;
+    int dst_stride;
+    __m64 vsrc;
+
+    CHECKPOINT ();
+
+    src = _pixman_image_get_solid (imp, src_image, dest_image->bits.format);
+
+    if (src == 0)
+	return;
+
+    PIXMAN_IMAGE_GET_LINE (dest_image, dest_x, dest_y, uint32_t, dst_stride, dst_line, 1);
+
+    vsrc = load8888 (&src);
+
+    while (height--)
+    {
+	dst = dst_line;
+	dst_line += dst_stride;
+	w = width;
+
+	CHECKPOINT ();
+
+	while (w && (unsigned long)dst & 7)
+	{
+	    __m64 vdest = load8888 (dst);
+
+	    store8888 (dst, over (vdest, expand_alpha (vdest), vsrc));
+
+	    w--;
+	    dst++;
+	}
+
+	while (w >= 2)
+	{
+	    __m64 vdest = *(__m64 *)dst;
+	    __m64 dest0 = expand8888 (vdest, 0);
+	    __m64 dest1 = expand8888 (vdest, 1);
+
+
+	    dest0 = over (dest0, expand_alpha (dest0), vsrc);
+	    dest1 = over (dest1, expand_alpha (dest1), vsrc);
+
+	    *(__m64 *)dst = pack8888 (dest0, dest1);
+
+	    dst += 2;
+	    w -= 2;
+	}
+
+	CHECKPOINT ();
+
+	if (w)
+	{
+	    __m64 vdest = load8888 (dst);
+
+	    store8888 (dst, over (vdest, expand_alpha (vdest), vsrc));
+	}
+    }
+
+    _mm_empty ();
+}
+
 static uint32_t *
 mmx_fetch_x8r8g8b8 (pixman_iter_t *iter, const uint32_t *mask)
 {
@@ -3662,6 +3731,9 @@ static const pixman_fast_path_t mmx_fast_paths[] =
     PIXMAN_STD_FAST_PATH    (OVER, a8b8g8r8, null,     a8b8g8r8, mmx_composite_over_8888_8888      ),
     PIXMAN_STD_FAST_PATH    (OVER, a8b8g8r8, null,     x8b8g8r8, mmx_composite_over_8888_8888      ),
     PIXMAN_STD_FAST_PATH    (OVER, a8b8g8r8, null,     b5g6r5,   mmx_composite_over_8888_0565      ),
+
+    PIXMAN_STD_FAST_PATH    (OVER_REVERSE, solid, null, a8r8g8b8, mmx_composite_over_reverse_n_8888),
+    PIXMAN_STD_FAST_PATH    (OVER_REVERSE, solid, null, a8b8g8r8, mmx_composite_over_reverse_n_8888),
 
     PIXMAN_STD_FAST_PATH    (ADD,  r5g6b5,   null,     r5g6b5,   mmx_composite_add_0565_0565       ),
     PIXMAN_STD_FAST_PATH    (ADD,  b5g6r5,   null,     b5g6r5,   mmx_composite_add_0565_0565       ),
