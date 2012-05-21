@@ -3567,6 +3567,12 @@ do {										\
     pix = lo;									\
 } while (0)
 
+#define BILINEAR_SKIP_ONE_PIXEL()						\
+do {										\
+    vx += unit_x;								\
+    mm_x = _mm_add_pi16 (mm_x, mm_ux);						\
+} while(0)
+
 static force_inline void
 scaled_bilinear_scanline_mmx_8888_8888_SRC (uint32_t *       dst,
 					    const uint32_t * mask,
@@ -3659,6 +3665,79 @@ FAST_BILINEAR_MAINLOOP_COMMON (mmx_8888_8888_normal_OVER,
 			       scaled_bilinear_scanline_mmx_8888_8888_OVER,
 			       uint32_t, uint32_t, uint32_t,
 			       NORMAL, FLAG_NONE)
+
+static force_inline void
+scaled_bilinear_scanline_mmx_8888_8_8888_OVER (uint32_t *       dst,
+					       const uint8_t  * mask,
+					       const uint32_t * src_top,
+					       const uint32_t * src_bottom,
+					       int32_t          w,
+					       int              wt,
+					       int              wb,
+					       pixman_fixed_t   vx,
+					       pixman_fixed_t   unit_x,
+					       pixman_fixed_t   max_vx,
+					       pixman_bool_t    zero_src)
+{
+    BILINEAR_DECLARE_VARIABLES;
+    __m64 pix1, pix2;
+    uint32_t m;
+
+    while (w)
+    {
+	m = (uint32_t) *mask++;
+
+	if (m)
+	{
+	    BILINEAR_INTERPOLATE_ONE_PIXEL (pix1);
+
+	    if (m == 0xff && is_opaque (pix1))
+	    {
+		store (dst, pix1);
+	    }
+	    else
+	    {
+		__m64 ms, md, ma, msa;
+
+		pix2 = load (dst);
+		ma = expand_alpha_rev (to_m64 (m));
+		ms = _mm_unpacklo_pi8 (pix1, _mm_setzero_si64 ());
+		md = _mm_unpacklo_pi8 (pix2, _mm_setzero_si64 ());
+
+		msa = expand_alpha (ms);
+
+		store8888 (dst, (in_over (ms, msa, ma, md)));
+	    }
+	}
+	else
+	{
+	    BILINEAR_SKIP_ONE_PIXEL ();
+	}
+
+	w--;
+	dst++;
+    }
+
+    _mm_empty ();
+}
+
+FAST_BILINEAR_MAINLOOP_COMMON (mmx_8888_8_8888_cover_OVER,
+			       scaled_bilinear_scanline_mmx_8888_8_8888_OVER,
+			       uint32_t, uint8_t, uint32_t,
+			       COVER, FLAG_HAVE_NON_SOLID_MASK)
+FAST_BILINEAR_MAINLOOP_COMMON (mmx_8888_8_8888_pad_OVER,
+			       scaled_bilinear_scanline_mmx_8888_8_8888_OVER,
+			       uint32_t, uint8_t, uint32_t,
+			       PAD, FLAG_HAVE_NON_SOLID_MASK)
+FAST_BILINEAR_MAINLOOP_COMMON (mmx_8888_8_8888_none_OVER,
+			       scaled_bilinear_scanline_mmx_8888_8_8888_OVER,
+			       uint32_t, uint8_t, uint32_t,
+			       NONE, FLAG_HAVE_NON_SOLID_MASK)
+FAST_BILINEAR_MAINLOOP_COMMON (mmx_8888_8_8888_normal_OVER,
+			       scaled_bilinear_scanline_mmx_8888_8_8888_OVER,
+			       uint32_t, uint8_t, uint32_t,
+			       NORMAL, FLAG_HAVE_NON_SOLID_MASK)
+
 static uint32_t *
 mmx_fetch_x8r8g8b8 (pixman_iter_t *iter, const uint32_t *mask)
 {
@@ -3925,6 +4004,11 @@ static const pixman_fast_path_t mmx_fast_paths[] =
     SIMPLE_BILINEAR_FAST_PATH (OVER, a8b8g8r8,         x8b8g8r8, mmx_8888_8888                     ),
     SIMPLE_BILINEAR_FAST_PATH (OVER, a8r8g8b8,         a8r8g8b8, mmx_8888_8888                     ),
     SIMPLE_BILINEAR_FAST_PATH (OVER, a8b8g8r8,         a8b8g8r8, mmx_8888_8888                     ),
+
+    SIMPLE_BILINEAR_A8_MASK_FAST_PATH (OVER, a8r8g8b8, x8r8g8b8, mmx_8888_8_8888                   ),
+    SIMPLE_BILINEAR_A8_MASK_FAST_PATH (OVER, a8b8g8r8, x8b8g8r8, mmx_8888_8_8888                   ),
+    SIMPLE_BILINEAR_A8_MASK_FAST_PATH (OVER, a8r8g8b8, a8r8g8b8, mmx_8888_8_8888                   ),
+    SIMPLE_BILINEAR_A8_MASK_FAST_PATH (OVER, a8b8g8r8, a8b8g8r8, mmx_8888_8_8888                   ),
 
     { PIXMAN_OP_NONE },
 };
