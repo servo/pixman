@@ -317,7 +317,7 @@ LEAF_MIPS_DSPR2(pixman_composite_over_n_8888_8888_ca_asm_mips)
  * a3 - w
  */
 
-    SAVE_REGS_ON_STACK 16, s0, s1, s2, s3, s4, s5, s6, s7
+    SAVE_REGS_ON_STACK 8, s0, s1, s2, s3, s4, s5
     beqz         a3, 4f
      nop
     li           t6, 0xff
@@ -337,23 +337,21 @@ LEAF_MIPS_DSPR2(pixman_composite_over_n_8888_8888_ca_asm_mips)
     beqz         t2, 12f      /* if (t0 == 0) && (t1 == 0) */
      addiu       a2, a2, 8
     and          t3, t0, t1
-    move         s0, t8       /* s0 = srca */
-    move         s1, t8       /* s1 = srca */
     move         t4, a1       /* t4 = src */
     move         t5, a1       /* t5 = src */
     lw           t2, 0(a0)    /* t2 = dst */
     beq          t3, t7, 11f  /* if (t0 == 0xffffffff) && (t1 == 0xffffffff) */
-     lw          t3, 4(a0)    /* t0 = dst */
+     lw          t3, 4(a0)    /* t3 = dst */
     MIPS_2xUN8x4_MUL_2xUN8x4 a1, a1, t0, t1, t4, t5, t9, s0, s1, s2, s3, s4, s5
-    MIPS_2xUN8x4_MUL_2xUN8   t0, t1, t8, t8, s0, s1, t9, s2, s3, s4, s5, s6, s7
+    MIPS_2xUN8x4_MUL_2xUN8   t0, t1, t8, t8, t0, t1, t9, s0, s1, s2, s3, s4, s5
 11:
-    not          s0, s0
-    not          s1, s1
-    MIPS_2xUN8x4_MUL_2xUN8x4 t2, t3, s0, s1, s2, s3, t9, t0, t1, s4, s5, s6, s7
-    addu_s.qb    t0, t4, s2
-    addu_s.qb    t1, t5, s3
-    sw           t0, 0(a0)
-    sw           t1, 4(a0)
+    not          t0, t0
+    not          t1, t1
+    MIPS_2xUN8x4_MUL_2xUN8x4 t2, t3, t0, t1, t2, t3, t9, s0, s1, s2, s3, s4, s5
+    addu_s.qb    t2, t4, t2
+    addu_s.qb    t3, t5, t3
+    sw           t2, 0(a0)
+    sw           t3, 4(a0)
 12:
     addiu        a3, a3, -2
     addiu        t1, a3, -1
@@ -369,20 +367,20 @@ LEAF_MIPS_DSPR2(pixman_composite_over_n_8888_8888_ca_asm_mips)
     beqz         t2, 22f      /* if (t0 == 0) & (t1 == 0) */
      addiu       a2, a2, 8
     and          t2, t0, t1
-    move         s0, a1
+    move         t4, a1
     beq          t2, t7, 21f  /* if (t0 == 0xffffffff) && (t1 == 0xffffffff) */
-     move        s1, a1
+     move        t5, a1
     lw           t2, 0(a0)    /* t2 = dst */
     lw           t3, 4(a0)    /* t3 = dst */
     MIPS_2xUN8x4_MUL_2xUN8x4 a1, a1, t0, t1, t4, t5, t9, s0, s1, s2, s3, s4, s5
     not          t0, t0
     not          t1, t1
-    MIPS_2xUN8x4_MUL_2xUN8x4 t2, t3, t0, t1, s0, s1, t9, s2, s3, s4, s5, s6, s7
-    addu_s.qb    s0, t4, s0
-    addu_s.qb    s1, t5, s1
+    MIPS_2xUN8x4_MUL_2xUN8x4 t2, t3, t0, t1, t2, t3, t9, s0, s1, s2, s3, s4, s5
+    addu_s.qb    t4, t4, t2
+    addu_s.qb    t5, t5, t3
 21:
-    sw           s0, 0(a0)
-    sw           s1, 4(a0)
+    sw           t4, 0(a0)
+    sw           t5, 4(a0)
 22:
     addiu        a3, a3, -2
     addiu        t1, a3, -1
@@ -395,20 +393,19 @@ LEAF_MIPS_DSPR2(pixman_composite_over_n_8888_8888_ca_asm_mips)
     lw           t1, 0(a2)    /* t1 = mask */
     beqz         t1, 4f
      nop
-    move         s0, t8       /* s0 = srca */
     move         t2, a1       /* t2 = src */
     beq          t1, t7, 31f
      lw          t0, 0(a0)    /* t0 = dst */
 
     MIPS_UN8x4_MUL_UN8x4  a1, t1, t2, t9, t3, t4, t5, t6
-    MIPS_UN8x4_MUL_UN8    t1, t8, s0, t9, t3, t4, t5
+    MIPS_UN8x4_MUL_UN8    t1, t8, t1, t9, t3, t4, t5
 31:
-    not          s0, s0
-    MIPS_UN8x4_MUL_UN8x4  t0, s0, t3, t9, t4, t5, t6, t1
-    addu_s.qb    t0, t2, t3
+    not          t1, t1
+    MIPS_UN8x4_MUL_UN8x4  t0, t1, t0, t9, t3, t4, t5, t6
+    addu_s.qb    t0, t2, t0
     sw           t0, 0(a0)
 4:
-    RESTORE_REGS_FROM_STACK 16, s0, s1, s2, s3, s4, s5, s6, s7
+    RESTORE_REGS_FROM_STACK 8, s0, s1, s2, s3, s4, s5
     j            ra
      nop
 
@@ -447,8 +444,8 @@ LEAF_MIPS_DSPR2(pixman_composite_over_n_8888_0565_ca_asm_mips)
     beqz         t2, 12f      /* if (t0 == 0) && (t1 == 0) */
      addiu       a2, a2, 8
     and          t3, t0, t1
-    move         t0, t8
-    move         t1, a1
+    move         s2, a1       /* s2 = src */
+    move         s3, a1       /* s3 = src */
     lhu          t2, 0(a0)    /* t2 = dst */
     beq          t3, s1, 11f  /* if (t0 == 0xffffffff) && (t1 == 0xffffffff) */
      lhu         t3, 2(a0)    /* t3 = dst */
@@ -461,7 +458,7 @@ LEAF_MIPS_DSPR2(pixman_composite_over_n_8888_0565_ca_asm_mips)
     MIPS_2xUN8x4_MUL_2xUN8x4 s4, s5, t0, t1, s4, s5, t9, t4, s6, s7, s8, t0, t1
     addu_s.qb    s2, s2, s4
     addu_s.qb    s3, s3, s5
-    CONVERT_2x8888_TO_2x0565 s2, s3, t2, t3, t5, t6, t7, s1, s2
+    CONVERT_2x8888_TO_2x0565 s2, s3, t2, t3, t5, t6, t7, s4, s5
     sh           t2, 0(a0)
     sh           t3, 2(a0)
 12:
@@ -507,17 +504,16 @@ LEAF_MIPS_DSPR2(pixman_composite_over_n_8888_0565_ca_asm_mips)
     lw           t1, 0(a2)    /* t1 = mask */
     beqz         t1, 4f
      nop
-    move         s0, t8       /* s0 = srca */
     move         t2, a1       /* t2 = src */
     beq          t1, t7, 31f
      lhu         t0, 0(a0)    /* t0 = dst */
 
     MIPS_UN8x4_MUL_UN8x4     a1, t1, t2, t9, t3, t4, t5, t6
-    MIPS_UN8x4_MUL_UN8       t1, t8, s0, t9, t3, t4, t5
+    MIPS_UN8x4_MUL_UN8       t1, t8, t1, t9, t3, t4, t5
 31:
-    not          s0, s0
+    not          t1, t1
     CONVERT_1x0565_TO_1x8888 t0, s1, s2, s3
-    MIPS_UN8x4_MUL_UN8x4     s1, s0, t3, t9, t4, t5, t6, t1
+    MIPS_UN8x4_MUL_UN8x4     s1, t1, t3, t9, t4, t5, t6, t7
     addu_s.qb    t0, t2, t3
     CONVERT_1x8888_TO_1x0565 t0, s1, s2, s3
     sh           s1, 0(a0)
