@@ -3664,8 +3664,8 @@ mmx_src_iter_init (pixman_implementation_t *imp, pixman_iter_t *iter)
 #define FLAGS								\
     (FAST_PATH_STANDARD_FLAGS | FAST_PATH_ID_TRANSFORM | FAST_PATH_BITS_IMAGE)
 
-    if ((iter->flags & ITER_NARROW)				&&
-	(image->common.flags & FLAGS) == FLAGS			&&
+    if ((iter->iter_flags & ITER_NARROW)			&&
+	(iter->image_flags & FLAGS) == FLAGS			&&
 	x >= 0 && y >= 0					&&
 	x + width <= image->bits.width				&&
 	y + height <= image->bits.height)
