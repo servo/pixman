@@ -2232,6 +2232,8 @@ mmx_composite_src_x888_0565 (pixman_implementation_t *imp,
 	    w--;
 	}
     }
+
+    _mm_empty ();
 }
 
 static void
@@ -3542,6 +3544,7 @@ mmx_fetch_x8r8g8b8 (pixman_iter_t *iter, const uint32_t *mask)
 	w--;
     }
 
+    _mm_empty ();
     return iter->buffer;
 }
 
@@ -3585,6 +3588,7 @@ mmx_fetch_r5g6b5 (pixman_iter_t *iter, const uint32_t *mask)
 	w--;
     }
 
+    _mm_empty ();
     return iter->buffer;
 }
 
@@ -3630,6 +3634,7 @@ mmx_fetch_a8 (pixman_iter_t *iter, const uint32_t *mask)
 	w--;
     }
 
+    _mm_empty ();
     return iter->buffer;
 }
 
