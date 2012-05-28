@@ -581,6 +581,19 @@ _pixman_choose_implementation (void);
 /*
  * Utilities
  */
+pixman_bool_t
+_pixman_compute_composite_region32 (pixman_region32_t * region,
+				    pixman_image_t *    src_image,
+				    pixman_image_t *    mask_image,
+				    pixman_image_t *    dest_image,
+				    int32_t             src_x,
+				    int32_t             src_y,
+				    int32_t             mask_x,
+				    int32_t             mask_y,
+				    int32_t             dest_x,
+				    int32_t             dest_y,
+				    int32_t             width,
+				    int32_t             height);
 uint32_t *
 _pixman_iter_get_scanline_noop (pixman_iter_t *iter, const uint32_t *mask);
 

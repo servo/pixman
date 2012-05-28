@@ -399,24 +399,99 @@ pixman_composite_glyphs_no_mask (pixman_op_t            op,
 				 int                    n_glyphs,
 				 pixman_glyph_t        *glyphs)
 {
+    pixman_region32_t region;
+    pixman_format_code_t glyph_format = PIXMAN_null;
+    uint32_t glyph_flags = 0;
+    pixman_format_code_t dest_format;
+    uint32_t dest_flags;
+    pixman_composite_func_t func = NULL;
+    pixman_implementation_t *implementation = NULL;
+    pixman_composite_info_t info;
     int i;
+
+    _pixman_image_validate (src);
+    _pixman_image_validate (dest);
+    
+    dest_format = dest->common.extended_format_code;
+    dest_flags = dest->common.flags;
+    
+    pixman_region32_init (&region);
+    if (!_pixman_compute_composite_region32 (
+	    &region,
+	    src, NULL, dest,
+	    src_x - dest_x, src_y - dest_y, 0, 0, 0, 0,
+	    dest->bits.width, dest->bits.height))
+    {
+	goto out;
+    }
+
+    info.op = op;
+    info.src_image = src;
+    info.dest_image = dest;
+    info.src_flags = src->common.flags;
+    info.dest_flags = dest->common.flags;
 
     for (i = 0; i < n_glyphs; ++i)
     {
 	glyph_t *glyph = (glyph_t *)glyphs[i].glyph;
 	pixman_image_t *glyph_img = glyph->image;
+	pixman_box32_t glyph_box;
+	pixman_box32_t *pbox;
+	uint32_t extra = FAST_PATH_SAMPLES_COVER_CLIP_NEAREST;
+	pixman_box32_t composite_box;
+	int n;
 
-	pixman_image_composite32 (op, src, glyph_img, dest,
-				  src_x + glyphs[i].x - glyph->origin_x,
-				  src_y + glyphs[i].y - glyph->origin_y,
-				  0, 0,
-				  dest_x + glyphs[i].x - glyph->origin_x,
-				  dest_y + glyphs[i].y - glyph->origin_y,
-				  glyph_img->bits.width,
-				  glyph_img->bits.height);
+	glyph_box.x1 = dest_x + glyphs[i].x - glyph->origin_x;
+	glyph_box.y1 = dest_y + glyphs[i].y - glyph->origin_y;
+	glyph_box.x2 = glyph_box.x1 + glyph->image->bits.width;
+	glyph_box.y2 = glyph_box.y1 + glyph->image->bits.height;
+	
+	pbox = pixman_region32_rectangles (&region, &n);
+	
+	info.mask_image = glyph_img;
 
+	while (n--)
+	{
+	    if (box32_intersect (&composite_box, pbox, &glyph_box))
+	    {
+		if (glyph_img->common.extended_format_code != glyph_format	||
+		    glyph_img->common.flags != glyph_flags)
+		{
+		    glyph_format = glyph_img->common.extended_format_code;
+		    glyph_flags = glyph_img->common.flags;
+		    
+		    _pixman_lookup_composite_function (
+			get_implementation(), op,
+			src->common.extended_format_code, src->common.flags,
+			glyph_format, glyph_flags | extra,
+			dest_format, dest_flags,
+			&implementation, &func);
+
+		    if (!func)
+			goto out;
+		}
+
+		info.src_x = src_x + composite_box.x1 - dest_x;
+		info.src_y = src_y + composite_box.y1 - dest_y;
+		info.mask_x = composite_box.x1 - (dest_x + glyphs[i].x - glyph->origin_x);
+		info.mask_y = composite_box.y1 - (dest_y + glyphs[i].y - glyph->origin_y);
+		info.dest_x = composite_box.x1;
+		info.dest_y = composite_box.y1;
+		info.width = composite_box.x2 - composite_box.x1;
+		info.height = composite_box.y2 - composite_box.y1;
+
+		info.mask_flags = glyph_flags;
+
+		func (implementation, &info);
+	    }
+
+	    pbox++;
+	}
 	pixman_list_move_to_front (&cache->mru, &glyph->mru_link);
     }
+
+out:
+    pixman_region32_fini (&region);
 }
 
 static void
