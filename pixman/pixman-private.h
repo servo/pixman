@@ -688,6 +688,18 @@ _pixman_iter_get_scanline_noop (pixman_iter_t *iter, const uint32_t *mask);
 	    dest, FAST_PATH_STD_DEST_FLAGS,				\
 	    func) }
 
+extern pixman_implementation_t *global_implementation;
+
+static force_inline pixman_implementation_t *
+get_implementation (void)
+{
+#ifndef TOOLCHAIN_SUPPORTS_ATTRIBUTE_CONSTRUCTOR
+    if (!global_implementation)
+	global_implementation = _pixman_choose_implementation ();
+#endif
+    return global_implementation;
+}
+
 /* Memory allocation helpers */
 void *
 pixman_malloc_ab (unsigned int n, unsigned int b);
