@@ -614,7 +614,7 @@ fi
 have_iwmmxt_intrinsics=no
 AC_MSG_CHECKING(whether to use ARM IWMMXT intrinsics)
 xserver_save_CFLAGS=$CFLAGS
-CFLAGS="$IWMMXT_CFLAGS $CFLAGS"
+CFLAGS="$CFLAGS $IWMMXT_CFLAGS"
 AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
 #ifndef __arm__
 #error "IWMMXT is only available on ARM"
