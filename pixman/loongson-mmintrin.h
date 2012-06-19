@@ -45,6 +45,28 @@ _mm_setzero_si64 (void)
 }
 
 extern __inline __m64 __attribute__((__gnu_inline__, __always_inline__, __artificial__))
+_mm_add_pi16 (__m64 __m1, __m64 __m2)
+{
+	__m64 ret;
+	asm("paddh %0, %1, %2\n\t"
+	   : "=f" (ret)
+	   : "f" (__m1), "f" (__m2)
+	);
+	return ret;
+}
+
+extern __inline __m64 __attribute__((__gnu_inline__, __always_inline__, __artificial__))
+_mm_add_pi32 (__m64 __m1, __m64 __m2)
+{
+	__m64 ret;
+	asm("paddw %0, %1, %2\n\t"
+	   : "=f" (ret)
+	   : "f" (__m1), "f" (__m2)
+	);
+	return ret;
+}
+
+extern __inline __m64 __attribute__((__gnu_inline__, __always_inline__, __artificial__))
 _mm_adds_pu16 (__m64 __m1, __m64 __m2)
 {
 	__m64 ret;
@@ -150,6 +172,35 @@ _mm_packs_pu16 (__m64 __m1, __m64 __m2)
 }
 
 extern __inline __m64 __attribute__((__gnu_inline__, __always_inline__, __artificial__))
+_mm_packs_pi32 (__m64 __m1, __m64 __m2)
+{
+	__m64 ret;
+	asm("packsswh %0, %1, %2\n\t"
+	   : "=f" (ret)
+	   : "f" (__m1), "f" (__m2)
+	);
+	return ret;
+}
+
+extern __inline __m64 __attribute__((__gnu_inline__, __always_inline__, __artificial__))
+_mm_set_pi16 (uint16_t __w3, uint16_t __w2, uint16_t __w1, uint16_t __w0)
+{
+	uint64_t val = ((uint64_t)__w3 << 48)
+		     | ((uint64_t)__w2 << 32)
+		     | ((uint64_t)__w1 << 16)
+		     | ((uint64_t)__w0 <<  0);
+	return *(__m64 *)&val;
+}
+
+extern __inline __m64 __attribute__((__gnu_inline__, __always_inline__, __artificial__))
+_mm_set_pi32 (unsigned __i1, unsigned __i0)
+{
+	uint64_t val = ((uint64_t)__i1 << 32)
+		     | ((uint64_t)__i0 <<  0);
+	return *(__m64 *)&val;
+}
+
+extern __inline __m64 __attribute__((__gnu_inline__, __always_inline__, __artificial__))
 _mm_shuffle_pi16 (__m64 __m, int64_t __n)
 {
 	__m64 ret;
@@ -193,12 +244,34 @@ _mm_srli_pi16 (__m64 __m, int64_t __count)
 }
 
 extern __inline __m64 __attribute__((__gnu_inline__, __always_inline__, __artificial__))
+_mm_srli_pi32 (__m64 __m, int64_t __count)
+{
+	__m64 ret;
+	asm("psrlw %0, %1, %2\n\t"
+	   : "=f" (ret)
+	   : "f" (__m), "f" (*(__m64 *)&__count)
+	);
+	return ret;
+}
+
+extern __inline __m64 __attribute__((__gnu_inline__, __always_inline__, __artificial__))
 _mm_srli_si64 (__m64 __m, int64_t __count)
 {
 	__m64 ret;
 	asm("dsrl  %0, %1, %2\n\t"
 	   : "=f" (ret)
 	   : "f" (__m), "f" (*(__m64 *)&__count)
+	);
+	return ret;
+}
+
+extern __inline __m64 __attribute__((__gnu_inline__, __always_inline__, __artificial__))
+_mm_sub_pi16 (__m64 __m1, __m64 __m2)
+{
+	__m64 ret;
+	asm("psubh %0, %1, %2\n\t"
+	   : "=f" (ret)
+	   : "f" (__m1), "f" (__m2)
 	);
 	return ret;
 }

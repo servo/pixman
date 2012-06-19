@@ -42,6 +42,7 @@
 #endif
 #include "pixman-private.h"
 #include "pixman-combine32.h"
+#include "pixman-inlines.h"
 
 #define no_vERBOSE
 
@@ -3502,6 +3503,94 @@ mmx_composite_over_reverse_n_8888 (pixman_implementation_t *imp,
     _mm_empty ();
 }
 
+#define BSHIFT ((1 << BILINEAR_INTERPOLATION_BITS))
+
+#define BILINEAR_DECLARE_VARIABLES						\
+    const __m64 mm_wt = _mm_set_pi16 (wt, wt, wt, wt);				\
+    const __m64 mm_wb = _mm_set_pi16 (wb, wb, wb, wb);				\
+    const __m64 mm_BSHIFT = _mm_set_pi16 (BSHIFT, BSHIFT, BSHIFT, BSHIFT);	\
+    const __m64 mm_ux = _mm_set_pi16 (unit_x, unit_x, unit_x, unit_x);		\
+    const __m64 mm_zero = _mm_setzero_si64 ();					\
+    __m64 mm_x = _mm_set_pi16 (vx, vx, vx, vx)
+
+#define BILINEAR_INTERPOLATE_ONE_PIXEL(pix)					\
+do {										\
+    /* fetch 2x2 pixel block into 2 mmx registers */				\
+    __m64 t = ldq_u ((__m64 *)&src_top [pixman_fixed_to_int (vx)]);		\
+    __m64 b = ldq_u ((__m64 *)&src_bottom [pixman_fixed_to_int (vx)]);		\
+    vx += unit_x;								\
+    /* vertical interpolation */						\
+    __m64 t_hi = _mm_mullo_pi16 (_mm_unpackhi_pi8 (t, mm_zero), mm_wt);		\
+    __m64 t_lo = _mm_mullo_pi16 (_mm_unpacklo_pi8 (t, mm_zero), mm_wt);		\
+    __m64 b_hi = _mm_mullo_pi16 (_mm_unpackhi_pi8 (b, mm_zero), mm_wb);		\
+    __m64 b_lo = _mm_mullo_pi16 (_mm_unpacklo_pi8 (b, mm_zero), mm_wb);		\
+    __m64 hi = _mm_add_pi16 (t_hi, b_hi);					\
+    __m64 lo = _mm_add_pi16 (t_lo, b_lo);					\
+    /* calculate horizontal weights */						\
+    __m64 mm_wh_lo = _mm_sub_pi16 (mm_BSHIFT, _mm_srli_pi16 (mm_x,		\
+					16 - BILINEAR_INTERPOLATION_BITS));	\
+    __m64 mm_wh_hi = _mm_srli_pi16 (mm_x,					\
+					16 - BILINEAR_INTERPOLATION_BITS);	\
+    mm_x = _mm_add_pi16 (mm_x, mm_ux);						\
+    /* horizontal interpolation */						\
+    __m64 mm_lo_lo = _mm_mullo_pi16 (lo, mm_wh_lo);				\
+    __m64 mm_lo_hi = _mm_mullo_pi16 (hi, mm_wh_hi);				\
+    __m64 mm_hi_lo = _mm_mulhi_pu16 (lo, mm_wh_lo);				\
+    __m64 mm_hi_hi = _mm_mulhi_pu16 (hi, mm_wh_hi);				\
+    lo = _mm_add_pi32 (_mm_unpacklo_pi16 (mm_lo_lo, mm_hi_lo),			\
+		       _mm_unpacklo_pi16 (mm_lo_hi, mm_hi_hi));			\
+    hi = _mm_add_pi32 (_mm_unpackhi_pi16 (mm_lo_lo, mm_hi_lo),			\
+		       _mm_unpackhi_pi16 (mm_lo_hi, mm_hi_hi));			\
+    /* shift and pack the result */						\
+    hi = _mm_srli_pi32 (hi, BILINEAR_INTERPOLATION_BITS * 2);			\
+    lo = _mm_srli_pi32 (lo, BILINEAR_INTERPOLATION_BITS * 2);			\
+    lo = _mm_packs_pi32 (lo, hi);						\
+    lo = _mm_packs_pu16 (lo, lo);						\
+    store (&pix, lo);								\
+} while (0)
+
+static force_inline void
+scaled_bilinear_scanline_mmx_8888_8888_SRC (uint32_t *       dst,
+					    const uint32_t * mask,
+					    const uint32_t * src_top,
+					    const uint32_t * src_bottom,
+					    int32_t          w,
+					    int              wt,
+					    int              wb,
+					    pixman_fixed_t   vx,
+					    pixman_fixed_t   unit_x,
+					    pixman_fixed_t   max_vx,
+					    pixman_bool_t    zero_src)
+{
+    BILINEAR_DECLARE_VARIABLES;
+    uint32_t pix;
+
+    while (w--)
+    {
+	BILINEAR_INTERPOLATE_ONE_PIXEL (pix);
+	*dst++ = pix;
+    }
+
+    _mm_empty ();
+}
+
+FAST_BILINEAR_MAINLOOP_COMMON (mmx_8888_8888_cover_SRC,
+			       scaled_bilinear_scanline_mmx_8888_8888_SRC,
+			       uint32_t, uint32_t, uint32_t,
+			       COVER, FLAG_NONE)
+FAST_BILINEAR_MAINLOOP_COMMON (mmx_8888_8888_pad_SRC,
+			       scaled_bilinear_scanline_mmx_8888_8888_SRC,
+			       uint32_t, uint32_t, uint32_t,
+			       PAD, FLAG_NONE)
+FAST_BILINEAR_MAINLOOP_COMMON (mmx_8888_8888_none_SRC,
+			       scaled_bilinear_scanline_mmx_8888_8888_SRC,
+			       uint32_t, uint32_t, uint32_t,
+			       NONE, FLAG_NONE)
+FAST_BILINEAR_MAINLOOP_COMMON (mmx_8888_8888_normal_SRC,
+			       scaled_bilinear_scanline_mmx_8888_8888_SRC,
+			       uint32_t, uint32_t, uint32_t,
+			       NORMAL, FLAG_NONE)
+
 static uint32_t *
 mmx_fetch_x8r8g8b8 (pixman_iter_t *iter, const uint32_t *mask)
 {
@@ -3756,6 +3845,13 @@ static const pixman_fast_path_t mmx_fast_paths[] =
 
     PIXMAN_STD_FAST_PATH    (IN,   a8,       null,     a8,       mmx_composite_in_8_8              ),
     PIXMAN_STD_FAST_PATH    (IN,   solid,    a8,       a8,       mmx_composite_in_n_8_8            ),
+
+    SIMPLE_BILINEAR_FAST_PATH (SRC, a8r8g8b8,          a8r8g8b8, mmx_8888_8888                     ),
+    SIMPLE_BILINEAR_FAST_PATH (SRC, a8r8g8b8,          x8r8g8b8, mmx_8888_8888                     ),
+    SIMPLE_BILINEAR_FAST_PATH (SRC, x8r8g8b8,          x8r8g8b8, mmx_8888_8888                     ),
+    SIMPLE_BILINEAR_FAST_PATH (SRC, a8b8g8r8,          a8b8g8r8, mmx_8888_8888                     ),
+    SIMPLE_BILINEAR_FAST_PATH (SRC, a8b8g8r8,          x8b8g8r8, mmx_8888_8888                     ),
+    SIMPLE_BILINEAR_FAST_PATH (SRC, x8b8g8r8,          x8b8g8r8, mmx_8888_8888                     ),
 
     { PIXMAN_OP_NONE },
 };
