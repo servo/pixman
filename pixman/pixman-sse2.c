@@ -5364,10 +5364,12 @@ FAST_NEAREST_MAINLOOP_COMMON (sse2_8888_n_8888_none_OVER,
 			      scaled_nearest_scanline_sse2_8888_n_8888_OVER,
 			      uint32_t, uint32_t, uint32_t, NONE, TRUE, TRUE)
 
+#define BMSK ((1 << BILINEAR_INTERPOLATION_BITS) - 1)
+
 #define BILINEAR_DECLARE_VARIABLES						\
     const __m128i xmm_wt = _mm_set_epi16 (wt, wt, wt, wt, wt, wt, wt, wt);	\
     const __m128i xmm_wb = _mm_set_epi16 (wb, wb, wb, wb, wb, wb, wb, wb);	\
-    const __m128i xmm_xorc = _mm_set_epi16 (0, 0, 0, 0, 0xff, 0xff, 0xff, 0xff);\
+    const __m128i xmm_xorc = _mm_set_epi16 (0, 0, 0, 0, BMSK, BMSK, BMSK, BMSK);\
     const __m128i xmm_addc = _mm_set_epi16 (0, 0, 0, 0, 1, 1, 1, 1);		\
     const __m128i xmm_ux = _mm_set_epi16 (unit_x, unit_x, unit_x, unit_x,	\
 					  unit_x, unit_x, unit_x, unit_x);	\
@@ -5389,9 +5391,8 @@ do {										\
 		       _mm_mullo_epi16 (_mm_unpacklo_epi8 (blbr, xmm_zero),	\
 					xmm_wb));				\
     /* calculate horizontal weights */						\
-    xmm_wh = _mm_add_epi16 (xmm_addc,						\
-			    _mm_xor_si128 (xmm_xorc,				\
-					   _mm_srli_epi16 (xmm_x, 8)));		\
+    xmm_wh = _mm_add_epi16 (xmm_addc, _mm_xor_si128 (xmm_xorc,			\
+		   _mm_srli_epi16 (xmm_x, 16 - BILINEAR_INTERPOLATION_BITS)));	\
     xmm_x = _mm_add_epi16 (xmm_x, xmm_ux);					\
     /* horizontal interpolation */						\
     xmm_lo = _mm_mullo_epi16 (a, xmm_wh);					\
@@ -5399,7 +5400,7 @@ do {										\
     a = _mm_add_epi32 (_mm_unpacklo_epi16 (xmm_lo, xmm_hi),			\
 		       _mm_unpackhi_epi16 (xmm_lo, xmm_hi));			\
     /* shift and pack the result */						\
-    a = _mm_srli_epi32 (a, 16);							\
+    a = _mm_srli_epi32 (a, BILINEAR_INTERPOLATION_BITS * 2);			\
     a = _mm_packs_epi32 (a, a);							\
     a = _mm_packus_epi16 (a, a);						\
     pix = _mm_cvtsi128_si32 (a);						\
