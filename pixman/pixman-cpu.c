@@ -22,75 +22,9 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-
-#include <string.h>
 #include <stdlib.h>
 
 #include "pixman-private.h"
-
-#if defined(USE_MIPS_DSPR2) || defined(USE_LOONGSON_MMI)
-
-#if defined (__linux__) /* linux ELF */
-
-static pixman_bool_t
-pixman_have_mips_feature (const char *search_string)
-{
-    const char *file_name = "/proc/cpuinfo";
-    /* Simple detection of MIPS features at runtime for Linux.
-     * It is based on /proc/cpuinfo, which reveals hardware configuration
-     * to user-space applications.  According to MIPS (early 2010), no similar
-     * facility is universally available on the MIPS architectures, so it's up
-     * to individual OSes to provide such.
-     */
-
-    char cpuinfo_line[256];
-
-    FILE *f = NULL;
-
-    if ((f = fopen (file_name, "r")) == NULL)
-        return FALSE;
-
-    while (fgets (cpuinfo_line, sizeof (cpuinfo_line), f) != NULL)
-    {
-        if (strstr (cpuinfo_line, search_string) != NULL)
-        {
-            fclose (f);
-            return TRUE;
-        }
-    }
-
-    fclose (f);
-
-    /* Did not find string in the proc file. */
-    return FALSE;
-}
-
-#if defined(USE_MIPS_DSPR2)
-pixman_bool_t
-pixman_have_mips_dspr2 (void)
-{
-     /* Only currently available MIPS core that supports DSPr2 is 74K. */
-    return pixman_have_mips_feature ("MIPS 74K");
-}
-#endif
-
-#if defined(USE_LOONGSON_MMI)
-pixman_bool_t
-pixman_have_loongson_mmi (void)
-{
-    /* I really don't know if some Loongson CPUs don't have MMI. */
-    return pixman_have_mips_feature ("Loongson");
-}
-#endif
-
-#else /* linux ELF */
-
-#define pixman_have_mips_dspr2() FALSE
-#define pixman_have_loongson_mmi() FALSE
-
-#endif /* linux ELF */
-
-#endif /* USE_MIPS_DSPR2 || USE_LOONGSON_MMI */
 
 pixman_bool_t
 _pixman_disabled (const char *name)
@@ -136,16 +70,7 @@ _pixman_choose_implementation (void)
     imp = _pixman_x86_get_implementations (imp);
     imp = _pixman_arm_get_implementations (imp);
     imp = _pixman_ppc_get_implementations (imp);
-    
-#ifdef USE_LOONGSON_MMI
-    if (!_pixman_disabled ("loongson-mmi") && pixman_have_loongson_mmi ())
-	imp = _pixman_implementation_create_mmx (imp);
-#endif
-
-#ifdef USE_MIPS_DSPR2
-    if (!_pixman_disabled ("mips-dspr2") && pixman_have_mips_dspr2 ())
-	imp = _pixman_implementation_create_mips_dspr2 (imp);
-#endif
+    imp = _pixman_mips_get_implementations (imp);
 
     imp = _pixman_implementation_create_noop (imp);
 
