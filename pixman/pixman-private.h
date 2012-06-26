@@ -588,6 +588,8 @@ _pixman_implementation_create_vmx (pixman_implementation_t *fallback);
 pixman_implementation_t *
 _pixman_choose_implementation (void);
 
+pixman_bool_t
+_pixman_disabled (const char *name);
 
 
 /*

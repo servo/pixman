@@ -729,8 +729,8 @@ pixman_have_sse2 (void)
 #endif /* __amd64__ */
 #endif
 
-static pixman_bool_t
-disabled (const char *name)
+pixman_bool_t
+_pixman_disabled (const char *name)
 {
     const char *env;
 
@@ -767,44 +767,44 @@ _pixman_choose_implementation (void)
 
     imp = _pixman_implementation_create_general();
 
-    if (!disabled ("fast"))
+    if (!_pixman_disabled ("fast"))
 	imp = _pixman_implementation_create_fast_path (imp);
 
 #ifdef USE_X86_MMX
-    if (!disabled ("mmx") && pixman_have_mmx ())
+    if (!_pixman_disabled ("mmx") && pixman_have_mmx ())
 	imp = _pixman_implementation_create_mmx (imp);
 #endif
 
 #ifdef USE_SSE2
-    if (!disabled ("sse2") && pixman_have_sse2 ())
+    if (!_pixman_disabled ("sse2") && pixman_have_sse2 ())
 	imp = _pixman_implementation_create_sse2 (imp);
 #endif
 
 #ifdef USE_ARM_SIMD
-    if (!disabled ("arm-simd") && pixman_have_arm_simd ())
+    if (!_pixman_disabled ("arm-simd") && pixman_have_arm_simd ())
 	imp = _pixman_implementation_create_arm_simd (imp);
 #endif
 
 #ifdef USE_ARM_IWMMXT
-    if (!disabled ("arm-iwmmxt") && pixman_have_arm_iwmmxt ())
+    if (!_pixman_disabled ("arm-iwmmxt") && pixman_have_arm_iwmmxt ())
 	imp = _pixman_implementation_create_mmx (imp);
 #endif
 #ifdef USE_LOONGSON_MMI
-    if (!disabled ("loongson-mmi") && pixman_have_loongson_mmi ())
+    if (!_pixman_disabled ("loongson-mmi") && pixman_have_loongson_mmi ())
 	imp = _pixman_implementation_create_mmx (imp);
 #endif
 #ifdef USE_ARM_NEON
-    if (!disabled ("arm-neon") && pixman_have_arm_neon ())
+    if (!_pixman_disabled ("arm-neon") && pixman_have_arm_neon ())
 	imp = _pixman_implementation_create_arm_neon (imp);
 #endif
 
 #ifdef USE_MIPS_DSPR2
-    if (!disabled ("mips-dspr2") && pixman_have_mips_dspr2 ())
+    if (!_pixman_disabled ("mips-dspr2") && pixman_have_mips_dspr2 ())
 	imp = _pixman_implementation_create_mips_dspr2 (imp);
 #endif
 
 #ifdef USE_VMX
-    if (!disabled ("vmx") && pixman_have_vmx ())
+    if (!_pixman_disabled ("vmx") && pixman_have_vmx ())
 	imp = _pixman_implementation_create_vmx (imp);
 #endif
 
