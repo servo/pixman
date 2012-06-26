@@ -592,6 +592,9 @@ pixman_implementation_t *
 _pixman_x86_get_implementations (pixman_implementation_t *imp);
 
 pixman_implementation_t *
+_pixman_arm_get_implementations (pixman_implementation_t *imp);
+
+pixman_implementation_t *
 _pixman_choose_implementation (void);
 
 pixman_bool_t

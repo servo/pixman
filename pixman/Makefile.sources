@@ -8,6 +8,7 @@ libpixman_sources =			\
 	pixman-conical-gradient.c	\
 	pixman-cpu.c			\
 	pixman-x86.c			\
+	pixman-arm.c			\
 	pixman-edge.c			\
 	pixman-edge-accessors.c		\
 	pixman-fast-path.c		\
