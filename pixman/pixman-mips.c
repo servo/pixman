@@ -30,21 +30,18 @@
 #include <string.h>
 #include <stdlib.h>
 
-#if defined (__linux__) /* linux ELF */
-
 static pixman_bool_t
-pixman_have_mips_feature (const char *search_string)
+have_feature (const char *search_string)
 {
-    const char *file_name = "/proc/cpuinfo";
+#if defined (__linux__) /* linux ELF */
     /* Simple detection of MIPS features at runtime for Linux.
      * It is based on /proc/cpuinfo, which reveals hardware configuration
      * to user-space applications.  According to MIPS (early 2010), no similar
      * facility is universally available on the MIPS architectures, so it's up
      * to individual OSes to provide such.
      */
-
+    const char *file_name = "/proc/cpuinfo";
     char cpuinfo_line[256];
-
     FILE *f = NULL;
 
     if ((f = fopen (file_name, "r")) == NULL)
@@ -60,51 +57,28 @@ pixman_have_mips_feature (const char *search_string)
     }
 
     fclose (f);
+#endif
 
-    /* Did not find string in the proc file. */
+    /* Did not find string in the proc file, or not Linux ELF. */
     return FALSE;
 }
 
-#if defined(USE_MIPS_DSPR2)
-pixman_bool_t
-pixman_have_mips_dspr2 (void)
-{
-     /* Only currently available MIPS core that supports DSPr2 is 74K. */
-    return pixman_have_mips_feature ("MIPS 74K");
-}
 #endif
-
-#if defined(USE_LOONGSON_MMI)
-pixman_bool_t
-pixman_have_loongson_mmi (void)
-{
-    /* I really don't know if some Loongson CPUs don't have MMI. */
-    return pixman_have_mips_feature ("Loongson");
-}
-#endif
-
-#else /* linux ELF */
-
-#define pixman_have_mips_dspr2() FALSE
-#define pixman_have_loongson_mmi() FALSE
-
-#endif /* linux ELF */
-
-#endif /* USE_MIPS_DSPR2 || USE_LOONGSON_MMI */
 
 pixman_implementation_t *
 _pixman_mips_get_implementations (pixman_implementation_t *imp)
 {
 #ifdef USE_LOONGSON_MMI
-    if (!_pixman_disabled ("loongson-mmi") && pixman_have_loongson_mmi ())
+    /* I really don't know if some Loongson CPUs don't have MMI. */
+    if (!_pixman_disabled ("loongson-mmi") && have_feature ("Loongson"))
 	imp = _pixman_implementation_create_mmx (imp);
 #endif
 
 #ifdef USE_MIPS_DSPR2
-    if (!_pixman_disabled ("mips-dspr2") && pixman_have_mips_dspr2 ())
+    /* Only currently available MIPS core that supports DSPr2 is 74K. */
+    if (!_pixman_disabled ("mips-dspr2") && have_feature ("MIPS 74K"))
 	imp = _pixman_implementation_create_mips_dspr2 (imp);
 #endif
 
     return imp;
 }
-
