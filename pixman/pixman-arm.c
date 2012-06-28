@@ -25,132 +25,83 @@
 
 #include "pixman-private.h"
 
+typedef enum
+{
+    ARM_V7		= (1 << 0),
+    ARM_V6		= (1 << 1),
+    ARM_VFP		= (1 << 2),
+    ARM_NEON		= (1 << 3),
+    ARM_IWMMXT		= (1 << 4)
+} arm_cpu_features_t;
+
 #if defined(USE_ARM_SIMD) || defined(USE_ARM_NEON) || defined(USE_ARM_IWMMXT)
-
-#include <string.h>
-#include <stdlib.h>
-
-#if defined(USE_ARM_SIMD) && defined(_MSC_VER)
-/* Needed for EXCEPTION_ILLEGAL_INSTRUCTION */
-#include <windows.h>
-#endif
-
-#if defined(__APPLE__)
-#include "TargetConditionals.h"
-#endif
 
 #if defined(_MSC_VER)
 
-#if defined(USE_ARM_SIMD)
+/* Needed for EXCEPTION_ILLEGAL_INSTRUCTION */
+#include <windows.h>
+
+extern int pixman_msvc_try_arm_neon_op ();
 extern int pixman_msvc_try_arm_simd_op ();
 
-pixman_bool_t
-pixman_have_arm_simd (void)
+static arm_cpu_features_t
+detect_cpu_features (void)
 {
-    static pixman_bool_t initialized = FALSE;
-    static pixman_bool_t have_arm_simd = FALSE;
+    arm_cpu_features_t features = 0;
 
-    if (!initialized)
+    __try
     {
-	__try {
-	    pixman_msvc_try_arm_simd_op ();
-	    have_arm_simd = TRUE;
-	} __except (GetExceptionCode () == EXCEPTION_ILLEGAL_INSTRUCTION) {
-	    have_arm_simd = FALSE;
-	}
-	initialized = TRUE;
+	pixman_msvc_try_arm_simd_op ();
+	features |= ARM_V6;
+    }
+    __except (GetExceptionCode () == EXCEPTION_ILLEGAL_INSTRUCTION)
+    {
     }
 
-    return have_arm_simd;
-}
-
-#endif /* USE_ARM_SIMD */
-
-#if defined(USE_ARM_NEON)
-extern int pixman_msvc_try_arm_neon_op ();
-
-pixman_bool_t
-pixman_have_arm_neon (void)
-{
-    static pixman_bool_t initialized = FALSE;
-    static pixman_bool_t have_arm_neon = FALSE;
-
-    if (!initialized)
+    __try
     {
-	__try
-	{
-	    pixman_msvc_try_arm_neon_op ();
-	    have_arm_neon = TRUE;
-	}
-	__except (GetExceptionCode () == EXCEPTION_ILLEGAL_INSTRUCTION)
-	{
-	    have_arm_neon = FALSE;
-	}
-	initialized = TRUE;
+	pixman_msvc_try_arm_neon_op ();
+	features |= ARM_NEON;
+    }
+    __except (GetExceptionCode () == EXCEPTION_ILLEGAL_INSTRUCTION)
+    {
     }
 
-    return have_arm_neon;
+    return features;
 }
 
-#endif /* USE_ARM_NEON */
+#elif defined(__APPLE__) && defined(TARGET_OS_IPHONE) /* iOS */
 
-#elif (defined (__APPLE__) && defined(TARGET_OS_IPHONE)) /* iOS (iPhone/iPad/iPod touch) */
+#include "TargetConditionals.h"
 
-/* Detection of ARM NEON on iOS is fairly simple because iOS binaries
- * contain separate executable images for each processor architecture.
- * So all we have to do is detect the armv7 architecture build. The
- * operating system automatically runs the armv7 binary for armv7 devices
- * and the armv6 binary for armv6 devices.
- */
-
-pixman_bool_t
-pixman_have_arm_simd (void)
+static arm_cpu_features_t
+detect_cpu_features (void)
 {
-#if defined(USE_ARM_SIMD)
-    return TRUE;
-#else
-    return FALSE;
+    arm_cpu_features_t features = 0;
+
+    features |= ARM_V6;
+
+    /* Detection of ARM NEON on iOS is fairly simple because iOS binaries
+     * contain separate executable images for each processor architecture.
+     * So all we have to do is detect the armv7 architecture build. The
+     * operating system automatically runs the armv7 binary for armv7 devices
+     * and the armv6 binary for armv6 devices.
+     */
+#if defined(__ARM_NEON__)
+    features |= ARM_NEON;
 #endif
+
+    return features;
 }
 
-pixman_bool_t
-pixman_have_arm_neon (void)
-{
-#if defined(USE_ARM_NEON) && defined(__ARM_NEON__)
-    /* This is an armv7 cpu build */
-    return TRUE;
-#else
-    /* This is an armv6 cpu build */
-    return FALSE;
-#endif
-}
-
-pixman_bool_t
-pixman_have_arm_iwmmxt (void)
-{
-#if defined(USE_ARM_IWMMXT)
-    return FALSE;
-#else
-    return FALSE;
-#endif
-}
-
-#elif defined (__linux__) || defined(__ANDROID__) || defined(ANDROID) /* linux ELF or ANDROID */
-
-static pixman_bool_t arm_has_v7 = FALSE;
-static pixman_bool_t arm_has_v6 = FALSE;
-static pixman_bool_t arm_has_vfp = FALSE;
-static pixman_bool_t arm_has_neon = FALSE;
-static pixman_bool_t arm_has_iwmmxt = FALSE;
-static pixman_bool_t arm_tests_initialized = FALSE;
-
-#if defined(__ANDROID__) || defined(ANDROID) /* Android device support */
+#elif defined(__ANDROID__) || defined(ANDROID) /* Android */
 
 #include <cpu-features.h>
 
-static void
-pixman_arm_read_auxv_or_cpu_features ()
+static arm_cpu_features_t
+detect_cpu_features (void)
 {
+    arm_cpu_features_t features = 0;
     AndroidCpuFamily cpu_family;
     uint64_t cpu_features;
 
@@ -160,16 +111,16 @@ pixman_arm_read_auxv_or_cpu_features ()
     if (cpu_family == ANDROID_CPU_FAMILY_ARM)
     {
 	if (cpu_features & ANDROID_CPU_ARM_FEATURE_ARMv7)
-	    arm_has_v7 = TRUE;
-	
+	    features |= ARM_V7;
+
 	if (cpu_features & ANDROID_CPU_ARM_FEATURE_VFPv3)
-	    arm_has_vfp = TRUE;
-	
+	    features |= ARM_VFP;
+
 	if (cpu_features & ANDROID_CPU_ARM_FEATURE_NEON)
-	    arm_has_neon = TRUE;
+	    features |= ARM_NEON;
     }
 
-    arm_tests_initialized = TRUE;
+    return features;
 }
 
 #elif defined (__linux__) /* linux ELF */
@@ -182,11 +133,12 @@ pixman_arm_read_auxv_or_cpu_features ()
 #include <string.h>
 #include <elf.h>
 
-static void
-pixman_arm_read_auxv_or_cpu_features ()
+static arm_cpu_features_t
+detect_cpu_features (void)
 {
-    int fd;
+    arm_cpu_features_t features = 0;
     Elf32_auxv_t aux;
+    int fd;
 
     fd = open ("/proc/self/auxv", O_RDONLY);
     if (fd >= 0)
@@ -196,79 +148,58 @@ pixman_arm_read_auxv_or_cpu_features ()
 	    if (aux.a_type == AT_HWCAP)
 	    {
 		uint32_t hwcap = aux.a_un.a_val;
+
 		/* hardcode these values to avoid depending on specific
 		 * versions of the hwcap header, e.g. HWCAP_NEON
 		 */
-		arm_has_vfp = (hwcap & 64) != 0;
-		arm_has_iwmmxt = (hwcap & 512) != 0;
+		if ((hwcap & 64) != 0)
+		    features |= ARM_VFP;
+		if ((hwcap & 512) != 0)
+		    features |= ARM_IWMMXT;
 		/* this flag is only present on kernel 2.6.29 */
-		arm_has_neon = (hwcap & 4096) != 0;
+		if ((hwcap & 4096) != 0)
+		    features |= ARM_NEON;
 	    }
 	    else if (aux.a_type == AT_PLATFORM)
 	    {
 		const char *plat = (const char*) aux.a_un.a_val;
+
 		if (strncmp (plat, "v7l", 3) == 0)
-		{
-		    arm_has_v7 = TRUE;
-		    arm_has_v6 = TRUE;
-		}
+		    features |= (ARM_V7 | ARM_V6);
 		else if (strncmp (plat, "v6l", 3) == 0)
-		{
-		    arm_has_v6 = TRUE;
-		}
+		    features |= ARM_V6;
 	    }
 	}
 	close (fd);
     }
 
-    arm_tests_initialized = TRUE;
+    return features;
+}
+
+#else /* Unknown */
+
+static arm_cpu_features_t
+detect_cpu_features (void)
+{
+    return 0;
 }
 
 #endif /* Linux elf */
 
-#if defined(USE_ARM_SIMD)
-pixman_bool_t
-pixman_have_arm_simd (void)
+static pixman_bool_t
+have_feature (arm_cpu_features_t feature)
 {
-    if (!arm_tests_initialized)
-	pixman_arm_read_auxv_or_cpu_features ();
+    static pixman_bool_t initialized;
+    static arm_cpu_features_t features;
 
-    return arm_has_v6;
+    if (!initialized)
+    {
+	features = detect_cpu_features();
+	initialized = TRUE;
+    }
+
+    return (features & feature) == feature;
 }
-
-#endif /* USE_ARM_SIMD */
-
-#if defined(USE_ARM_NEON)
-pixman_bool_t
-pixman_have_arm_neon (void)
-{
-    if (!arm_tests_initialized)
-	pixman_arm_read_auxv_or_cpu_features ();
-
-    return arm_has_neon;
-}
-
-#endif /* USE_ARM_NEON */
-
-#if defined(USE_ARM_IWMMXT)
-pixman_bool_t
-pixman_have_arm_iwmmxt (void)
-{
-    if (!arm_tests_initialized)
-	pixman_arm_read_auxv_or_cpu_features ();
-
-    return arm_has_iwmmxt;
-}
-
-#endif /* USE_ARM_IWMMXT */
-
-#else /* !_MSC_VER && !Linux elf && !Android */
-
-#define pixman_have_arm_simd() FALSE
-#define pixman_have_arm_neon() FALSE
-#define pixman_have_arm_iwmmxt() FALSE
-
-#endif
 
 #endif /* USE_ARM_SIMD || USE_ARM_NEON || USE_ARM_IWMMXT */
 
@@ -276,20 +207,19 @@ pixman_implementation_t *
 _pixman_arm_get_implementations (pixman_implementation_t *imp)
 {
 #ifdef USE_ARM_SIMD
-    if (!_pixman_disabled ("arm-simd") && pixman_have_arm_simd ())
+    if (!_pixman_disabled ("arm-simd") && have_feature (ARM_V6))
 	imp = _pixman_implementation_create_arm_simd (imp);
 #endif
 
 #ifdef USE_ARM_IWMMXT
-    if (!_pixman_disabled ("arm-iwmmxt") && pixman_have_arm_iwmmxt ())
+    if (!_pixman_disabled ("arm-iwmmxt") && have_feature (ARM_IWMMXT))
 	imp = _pixman_implementation_create_mmx (imp);
 #endif
 
 #ifdef USE_ARM_NEON
-    if (!_pixman_disabled ("arm-neon") && pixman_have_arm_neon ())
+    if (!_pixman_disabled ("arm-neon") && have_feature (ARM_NEON))
 	imp = _pixman_implementation_create_arm_neon (imp);
 #endif
 
     return imp;
 }
-
