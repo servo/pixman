@@ -1599,9 +1599,7 @@ mmx_composite_over_8888_n_8888 (pixman_implementation_t *imp,
     PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint32_t, src_stride, src_line, 1);
 
     mask = _pixman_image_get_solid (imp, mask_image, dest_image->bits.format);
-    mask &= 0xff000000;
-    mask = mask | mask >> 8 | mask >> 16 | mask >> 24;
-    vmask = load8888 (&mask);
+    vmask = expand_alpha (load8888 (&mask));
 
     while (height--)
     {
@@ -1670,9 +1668,7 @@ mmx_composite_over_x888_n_8888 (pixman_implementation_t *imp,
     PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint32_t, src_stride, src_line, 1);
     mask = _pixman_image_get_solid (imp, mask_image, dest_image->bits.format);
 
-    mask &= 0xff000000;
-    mask = mask | mask >> 8 | mask >> 16 | mask >> 24;
-    vmask = load8888 (&mask);
+    vmask = expand_alpha (load8888 (&mask));
     srca = MC (4x00ff);
 
     while (height--)
