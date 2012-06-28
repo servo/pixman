@@ -31,26 +31,20 @@
  * "-maltivec -mabi=altivec", as gcc would try to save vector register
  * across function calls causing SIGILL on cpus without Altivec/vmx.
  */
-static pixman_bool_t initialized = FALSE;
-static volatile pixman_bool_t have_vmx = TRUE;
-
 #ifdef __APPLE__
 #include <sys/sysctl.h>
 
 static pixman_bool_t
 pixman_have_vmx (void)
 {
-    if (!initialized)
-    {
-	size_t length = sizeof(have_vmx);
-	int error =
-	    sysctlbyname ("hw.optional.altivec", &have_vmx, &length, NULL, 0);
+    size_t length = sizeof(have_vmx);
+    int error, have_mmx;
 
-	if (error)
-	    have_vmx = FALSE;
+    sysctlbyname ("hw.optional.altivec", &have_vmx, &length, NULL, 0);
 
-	initialized = TRUE;
-    }
+    if (error)
+	return FALSE;
+
     return have_vmx;
 }
 
@@ -62,22 +56,20 @@ pixman_have_vmx (void)
 static pixman_bool_t
 pixman_have_vmx (void)
 {
-    if (!initialized)
-    {
-	int mib[2] = { CTL_MACHDEP, CPU_ALTIVEC };
-	size_t length = sizeof(have_vmx);
-	int error =
-	    sysctl (mib, 2, &have_vmx, &length, NULL, 0);
+    int mib[2] = { CTL_MACHDEP, CPU_ALTIVEC };
+    size_t length = sizeof(have_vmx);
+    int error, have_vmx;
 
-	if (error != 0)
-	    have_vmx = FALSE;
+    error = sysctl (mib, 2, &have_vmx, &length, NULL, 0);
 
-	initialized = TRUE;
-    }
+    if (error != 0)
+	return FALSE;
+
     return have_vmx;
 }
 
 #elif defined (__linux__)
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -89,51 +81,27 @@ pixman_have_vmx (void)
 static pixman_bool_t
 pixman_have_vmx (void)
 {
-    if (!initialized)
+    int have_vmx = FALSE;
+    int fd;
+    struct
     {
-	char fname[64];
-	unsigned long buf[64];
-	ssize_t count = 0;
-	pid_t pid;
-	int fd, i;
+	unsigned long type;
+	unsigned long value;
+    } aux;
 
-	pid = getpid ();
-	snprintf (fname, sizeof(fname) - 1, "/proc/%d/auxv", pid);
-
-	fd = open (fname, O_RDONLY);
-	if (fd >= 0)
+    fd = open ("/proc/self/auxv", O_RDONLY);
+    if (fd >= 0)
+    {
+	while (read (fd, &aux, sizeof (aux)) == sizeof (aux))
 	{
-	    for (i = 0; i <= (count / sizeof(unsigned long)); i += 2)
+	    if (aux.type == AT_HWCAP && (aux.value & PPC_FEATURE_HAS_ALTIVEC))
 	    {
-		/* Read more if buf is empty... */
-		if (i == (count / sizeof(unsigned long)))
-		{
-		    count = read (fd, buf, sizeof(buf));
-		    if (count <= 0)
-			break;
-		    i = 0;
-		}
-
-		if (buf[i] == AT_HWCAP)
-		{
-		    have_vmx = !!(buf[i + 1] & PPC_FEATURE_HAS_ALTIVEC);
-		    initialized = TRUE;
-		    break;
-		}
-		else if (buf[i] == AT_NULL)
-		{
-		    break;
-		}
+		have_vmx = TRUE;
+		break;
 	    }
-	    close (fd);
 	}
-    }
-    if (!initialized)
-    {
-	/* Something went wrong. Assume 'no' rather than playing
-	   fragile tricks with catching SIGILL. */
-	have_vmx = FALSE;
-	initialized = TRUE;
+
+	close (fd);
     }
 
     return have_vmx;
@@ -159,22 +127,17 @@ pixman_have_vmx (void)
     struct sigaction sa, osa;
     int jmp_result;
 
-    if (!initialized)
+    sa.sa_flags = SA_SIGINFO;
+    sigemptyset (&sa.sa_mask);
+    sa.sa_sigaction = vmx_test;
+    sigaction (SIGILL, &sa, &osa);
+    jmp_result = setjmp (jump_env);
+    if (jmp_result == 0)
     {
-	sa.sa_flags = SA_SIGINFO;
-	sigemptyset (&sa.sa_mask);
-	sa.sa_sigaction = vmx_test;
-	sigaction (SIGILL, &sa, &osa);
-	jmp_result = setjmp (jump_env);
-	if (jmp_result == 0)
-	{
-	    asm volatile ( "vor 0, 0, 0" );
-	}
-	sigaction (SIGILL, &osa, NULL);
-	have_vmx = (jmp_result == 0);
-	initialized = TRUE;
+	asm volatile ( "vor 0, 0, 0" );
     }
-    return have_vmx;
+    sigaction (SIGILL, &osa, NULL);
+    return (jmp_result == 0);
 }
 
 #endif /* __APPLE__ */
