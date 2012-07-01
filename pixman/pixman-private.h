@@ -6,7 +6,7 @@
  */
 
 /* bilinear interpolation precision (must be <= 8) */
-#define BILINEAR_INTERPOLATION_BITS 8
+#define BILINEAR_INTERPOLATION_BITS 7
 #define BILINEAR_INTERPOLATION_RANGE (1 << BILINEAR_INTERPOLATION_BITS)
 
 /*
