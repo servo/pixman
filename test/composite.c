@@ -524,17 +524,8 @@ composite_test (image_t *dst,
 		pixman_bool_t component_alpha,
 		int testno)
 {
-    pixman_color_t fill;
     color_t expected, tdst, tsrc, tmsk;
     pixel_checker_t checker;
-    pixman_image_t *solid;
-
-    /* Initialize dst */
-    compute_pixman_color (dst->color, &fill);
-    solid = pixman_image_create_solid_fill (&fill);
-    pixman_image_composite32 (PIXMAN_OP_SRC, solid, NULL, dst->image,
-			      0, 0, 0, 0, 0, 0, dst->size, dst->size);
-    pixman_image_unref (solid);
 
     if (mask)
     {
