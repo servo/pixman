@@ -36,6 +36,7 @@ demos/gradient-test
 demos/quad2quad
 demos/radial-test
 demos/screen-test
+demos/srgb-test
 demos/trap-test
 demos/tri-test
 pixman/pixman-combine32.c
