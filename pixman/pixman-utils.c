@@ -162,6 +162,113 @@ pixman_expand (uint64_t *           dst,
     }
 }
 
+static force_inline uint16_t
+float_to_unorm (float f, int n_bits)
+{
+    uint32_t u;
+
+    if (f > 1.0)
+	f = 1.0;
+    if (f < 0.0)
+	f = 0.0;
+
+    u = f * (1 << n_bits);
+    u -= (u >> n_bits);
+
+    return u;
+}
+
+static force_inline float
+unorm_to_float (uint16_t u, int n_bits)
+{
+    uint32_t m = ((1 << n_bits) - 1);
+
+    return (u & m) * (1.f / (float)m);
+}
+
+/*
+ * This function expands images from a8r8g8b8 to argb_t.  To preserve
+ * precision, it needs to know from which source format the a8r8g8b8 pixels
+ * originally came.
+ *
+ * For example, if the source was PIXMAN_x1r5g5b5 and the red component
+ * contained bits 12345, then the 8-bit value is 12345123.  To correctly
+ * expand this to floating point, it should be 12345 / 31.0 and not
+ * 12345123 / 255.0.
+ */
+void
+pixman_expand_to_float (argb_t               *dst,
+			const uint32_t       *src,
+			pixman_format_code_t  format,
+			int                   width)
+{
+    int a_size, r_size, g_size, b_size;
+    int a_shift, r_shift, g_shift, b_shift;
+    int i;
+
+    if (!PIXMAN_FORMAT_VIS (format))
+	format = PIXMAN_a8r8g8b8;
+
+    /*
+     * Determine the sizes of each component and the masks and shifts
+     * required to extract them from the source pixel.
+     */
+    a_size = PIXMAN_FORMAT_A (format);
+    r_size = PIXMAN_FORMAT_R (format);
+    g_size = PIXMAN_FORMAT_G (format);
+    b_size = PIXMAN_FORMAT_B (format);
+
+    a_shift = 32 - a_size;
+    r_shift = 24 - r_size;
+    g_shift = 16 - g_size;
+    b_shift =  8 - b_size;
+
+    /* Start at the end so that we can do the expansion in place
+     * when src == dst
+     */
+    for (i = width - 1; i >= 0; i--)
+    {
+	const uint32_t pixel = src[i];
+
+	dst[i].a = a_size? unorm_to_float (pixel >> a_shift, a_size) : 1.0;
+	dst[i].r = r_size? unorm_to_float (pixel >> r_shift, r_size) : 0.0;
+	dst[i].g = g_size? unorm_to_float (pixel >> g_shift, g_size) : 0.0;
+	dst[i].b = b_size? unorm_to_float (pixel >> b_shift, b_size) : 0.0;
+    }
+}
+
+uint16_t
+pixman_float_to_unorm (float f, int n_bits)
+{
+    return float_to_unorm (f, n_bits);
+}
+
+float
+pixman_unorm_to_float (uint16_t u, int n_bits)
+{
+    return unorm_to_float (u, n_bits);
+}
+
+void
+pixman_contract_from_float (uint32_t     *dst,
+			    const argb_t *src,
+			    int           width)
+{
+    int i;
+
+    for (i = 0; i < width; ++i)
+    {
+	uint8_t a, r, g, b;
+
+	a = float_to_unorm (src[i].a, 8);
+	r = float_to_unorm (src[i].r, 8);
+	g = float_to_unorm (src[i].g, 8);
+	b = float_to_unorm (src[i].b, 8);
+
+	dst[i] = (a << 24) | (r << 16) | (g << 8) | (b << 0);
+    }
+}
+
 /*
  * Contracting is easier than expanding.  We just need to truncate the
  * components.

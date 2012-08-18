@@ -45,6 +45,16 @@ typedef struct radial_gradient radial_gradient_t;
 typedef struct bits_image bits_image_t;
 typedef struct circle circle_t;
 
+typedef struct argb_t argb_t;
+
+struct argb_t
+{
+    float a;
+    float r;
+    float g;
+    float b;
+};
+
 typedef void (*fetch_scanline_t) (pixman_image_t *image,
 				  int             x,
 				  int             y,
@@ -792,11 +802,21 @@ pixman_expand (uint64_t *           dst,
                const uint32_t *     src,
                pixman_format_code_t format,
                int                  width);
+void
+pixman_expand_to_float (argb_t               *dst,
+			const uint32_t       *src,
+			pixman_format_code_t  format,
+			int                   width);
 
 void
 pixman_contract (uint32_t *      dst,
                  const uint64_t *src,
                  int             width);
+
+void
+pixman_contract_from_float (uint32_t     *dst,
+			    const argb_t *src,
+			    int           width);
 
 /* Region Helpers */
 pixman_bool_t
@@ -956,6 +976,9 @@ unorm_to_unorm (uint32_t val, int from_bits, int to_bits)
 
     return result;
 }
+
+uint16_t pixman_float_to_unorm (float f, int n_bits);
+float pixman_unorm_to_float (uint16_t u, int n_bits);
 
 /*
  * Various debugging code
