@@ -36,6 +36,20 @@
 #include "pixman-combine32.h"
 #include "pixman-inlines.h"
 
+static uint32_t *
+_pixman_image_get_scanline_generic_float (pixman_iter_t * iter,
+					  const uint32_t *mask)
+{
+    pixman_iter_get_scanline_t fetch_32 = iter->data;
+    uint32_t *buffer = iter->buffer;
+
+    fetch_32 (iter, NULL);
+
+    pixman_expand_to_float ((argb_t *)buffer, buffer, PIXMAN_a8r8g8b8, iter->width);
+
+    return iter->buffer;
+}
+
 /*
  * By default, just evaluate the image at 32bpp and expand.  Individual image
  * types can plug in a better scanline getter if they want to. For example
@@ -1129,6 +1143,7 @@ typedef struct
     uint32_t			flags;
     pixman_iter_get_scanline_t	get_scanline_32;
     pixman_iter_get_scanline_t	get_scanline_64;
+    pixman_iter_get_scanline_t  get_scanline_float;
 } fetcher_info_t;
 
 static const fetcher_info_t fetcher_info[] =
@@ -1140,7 +1155,8 @@ static const fetcher_info_t fetcher_info[] =
        FAST_PATH_NO_PAD_REPEAT			|
        FAST_PATH_NO_REFLECT_REPEAT),
       bits_image_fetch_untransformed_32,
-      bits_image_fetch_untransformed_64
+      bits_image_fetch_untransformed_64,
+      _pixman_image_get_scanline_generic_float
     },
 
 #define FAST_BILINEAR_FLAGS						\
@@ -1156,13 +1172,15 @@ static const fetcher_info_t fetcher_info[] =
     { PIXMAN_a8r8g8b8,
       FAST_BILINEAR_FLAGS,
       bits_image_fetch_bilinear_no_repeat_8888,
-      _pixman_image_get_scanline_generic_64
+      _pixman_image_get_scanline_generic_64,
+      _pixman_image_get_scanline_generic_float
     },
 
     { PIXMAN_x8r8g8b8,
       FAST_BILINEAR_FLAGS,
       bits_image_fetch_bilinear_no_repeat_8888,
-      _pixman_image_get_scanline_generic_64
+      _pixman_image_get_scanline_generic_64,
+      _pixman_image_get_scanline_generic_float
     },
 
 #define GENERAL_BILINEAR_FLAGS						\
@@ -1183,14 +1201,16 @@ static const fetcher_info_t fetcher_info[] =
     { PIXMAN_ ## format,						\
       GENERAL_BILINEAR_FLAGS | FAST_PATH_ ## repeat ## _REPEAT,		\
       bits_image_fetch_bilinear_affine_ ## name,			\
-      _pixman_image_get_scanline_generic_64				\
+      _pixman_image_get_scanline_generic_64,				\
+      _pixman_image_get_scanline_generic_float				\
     },
 
 #define NEAREST_AFFINE_FAST_PATH(name, format, repeat)			\
     { PIXMAN_ ## format,						\
       GENERAL_NEAREST_FLAGS | FAST_PATH_ ## repeat ## _REPEAT,		\
       bits_image_fetch_nearest_affine_ ## name,			\
-      _pixman_image_get_scanline_generic_64				\
+      _pixman_image_get_scanline_generic_64,				\
+      _pixman_image_get_scanline_generic_float				\
     },
 
 #define AFFINE_FAST_PATHS(name, format, repeat)				\
@@ -1218,11 +1238,17 @@ static const fetcher_info_t fetcher_info[] =
     { PIXMAN_any,
       (FAST_PATH_NO_ALPHA_MAP | FAST_PATH_HAS_TRANSFORM | FAST_PATH_AFFINE_TRANSFORM),
       bits_image_fetch_affine_no_alpha,
-      _pixman_image_get_scanline_generic_64
+      _pixman_image_get_scanline_generic_64,
+      _pixman_image_get_scanline_generic_float
     },
 
     /* General */
-    { PIXMAN_any, 0, bits_image_fetch_general, _pixman_image_get_scanline_generic_64 },
+    { PIXMAN_any,
+      0,
+      bits_image_fetch_general,
+      _pixman_image_get_scanline_generic_64,
+      _pixman_image_get_scanline_generic_float
+    },
 
     { PIXMAN_null },
 };

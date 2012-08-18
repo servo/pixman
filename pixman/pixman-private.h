@@ -70,6 +70,10 @@ typedef uint64_t (*fetch_pixel_64_t) (bits_image_t *image,
 				      int           x,
 				      int           y);
 
+typedef argb_t (*fetch_pixel_float_t) (bits_image_t *image,
+				       int           x,
+				       int           y);
+
 typedef void (*store_scanline_t) (bits_image_t *  image,
 				  int             x,
 				  int             y,
@@ -186,6 +190,10 @@ struct bits_image
     fetch_scanline_t           fetch_scanline_64;
     fetch_pixel_64_t	       fetch_pixel_64;
     store_scanline_t           store_scanline_64;
+
+    fetch_scanline_t	       fetch_scanline_float;
+    fetch_pixel_float_t	       fetch_pixel_float;
+    store_scanline_t           store_scanline_float;
 
     /* Used for indirect access to the bits */
     pixman_read_memory_func_t  read_func;
