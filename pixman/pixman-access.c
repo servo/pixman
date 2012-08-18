@@ -507,135 +507,6 @@ MAKE_ACCESSORS(a1);
 MAKE_ACCESSORS(g1);
 
 /********************************** Fetch ************************************/
-
-/* Expects a uint64_t buffer */
-static void
-fetch_scanline_a2r10g10b10 (pixman_image_t *image,
-                            int             x,
-                            int             y,
-                            int             width,
-                            uint32_t *      b,
-                            const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    const uint32_t *pixel = bits + x;
-    const uint32_t *end = pixel + width;
-    uint64_t *buffer = (uint64_t *)b;
-
-    while (pixel < end)
-    {
-	uint32_t p = READ (image, pixel++);
-	uint64_t a = p >> 30;
-	uint64_t r = (p >> 20) & 0x3ff;
-	uint64_t g = (p >> 10) & 0x3ff;
-	uint64_t b = p & 0x3ff;
-
-	r = r << 6 | r >> 4;
-	g = g << 6 | g >> 4;
-	b = b << 6 | b >> 4;
-
-	a <<= 14;
-	a |= a >> 2;
-	a |= a >> 4;
-	a |= a >> 8;
-
-	*buffer++ = a << 48 | r << 32 | g << 16 | b;
-    }
-}
-
-/* Expects a uint64_t buffer */
-static void
-fetch_scanline_x2r10g10b10 (pixman_image_t *image,
-                            int             x,
-                            int             y,
-                            int             width,
-                            uint32_t *      b,
-                            const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    const uint32_t *pixel = (uint32_t *)bits + x;
-    const uint32_t *end = pixel + width;
-    uint64_t *buffer = (uint64_t *)b;
-    
-    while (pixel < end)
-    {
-	uint32_t p = READ (image, pixel++);
-	uint64_t r = (p >> 20) & 0x3ff;
-	uint64_t g = (p >> 10) & 0x3ff;
-	uint64_t b = p & 0x3ff;
-	
-	r = r << 6 | r >> 4;
-	g = g << 6 | g >> 4;
-	b = b << 6 | b >> 4;
-	
-	*buffer++ = 0xffffULL << 48 | r << 32 | g << 16 | b;
-    }
-}
-
-/* Expects a uint64_t buffer */
-static void
-fetch_scanline_a2b10g10r10 (pixman_image_t *image,
-                            int             x,
-                            int             y,
-                            int             width,
-                            uint32_t *      b,
-                            const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    const uint32_t *pixel = bits + x;
-    const uint32_t *end = pixel + width;
-    uint64_t *buffer = (uint64_t *)b;
-    
-    while (pixel < end)
-    {
-	uint32_t p = READ (image, pixel++);
-	uint64_t a = p >> 30;
-	uint64_t b = (p >> 20) & 0x3ff;
-	uint64_t g = (p >> 10) & 0x3ff;
-	uint64_t r = p & 0x3ff;
-	
-	r = r << 6 | r >> 4;
-	g = g << 6 | g >> 4;
-	b = b << 6 | b >> 4;
-	
-	a <<= 14;
-	a |= a >> 2;
-	a |= a >> 4;
-	a |= a >> 8;
-
-	*buffer++ = a << 48 | r << 32 | g << 16 | b;
-    }
-}
-
-/* Expects a uint64_t buffer */
-static void
-fetch_scanline_x2b10g10r10 (pixman_image_t *image,
-                            int             x,
-                            int             y,
-                            int             width,
-                            uint32_t *      b,
-                            const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    const uint32_t *pixel = (uint32_t *)bits + x;
-    const uint32_t *end = pixel + width;
-    uint64_t *buffer = (uint64_t *)b;
-    
-    while (pixel < end)
-    {
-	uint32_t p = READ (image, pixel++);
-	uint64_t b = (p >> 20) & 0x3ff;
-	uint64_t g = (p >> 10) & 0x3ff;
-	uint64_t r = p & 0x3ff;
-	
-	r = r << 6 | r >> 4;
-	g = g << 6 | g >> 4;
-	b = b << 6 | b >> 4;
-	
-	*buffer++ = 0xffffULL << 48 | r << 32 | g << 16 | b;
-    }
-}
-
 /* Table mapping sRGB-encoded 8 bit numbers to linearly encoded
  * floating point numbers. We assume that single precision
  * floating point follows the IEEE 754 format.
@@ -934,94 +805,6 @@ fetch_scanline_yv12 (pixman_image_t *image,
 
 /**************************** Pixel wise fetching *****************************/
 
-/* Despite the type, expects a uint64_t buffer */
-static uint64_t
-fetch_pixel_a2r10g10b10 (bits_image_t *image,
-			 int		  offset,
-			 int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t p = READ (image, bits + offset);
-    uint64_t a = p >> 30;
-    uint64_t r = (p >> 20) & 0x3ff;
-    uint64_t g = (p >> 10) & 0x3ff;
-    uint64_t b = p & 0x3ff;
-
-    r = r << 6 | r >> 4;
-    g = g << 6 | g >> 4;
-    b = b << 6 | b >> 4;
-
-    a <<= 14;
-    a |= a >> 2;
-    a |= a >> 4;
-    a |= a >> 8;
-
-    return a << 48 | r << 32 | g << 16 | b;
-}
-
-/* Despite the type, this function expects a uint64_t buffer */
-static uint64_t
-fetch_pixel_x2r10g10b10 (bits_image_t *image,
-			 int	   offset,
-			 int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t p = READ (image, bits + offset);
-    uint64_t r = (p >> 20) & 0x3ff;
-    uint64_t g = (p >> 10) & 0x3ff;
-    uint64_t b = p & 0x3ff;
-    
-    r = r << 6 | r >> 4;
-    g = g << 6 | g >> 4;
-    b = b << 6 | b >> 4;
-    
-    return 0xffffULL << 48 | r << 32 | g << 16 | b;
-}
-
-/* Despite the type, expects a uint64_t buffer */
-static uint64_t
-fetch_pixel_a2b10g10r10 (bits_image_t *image,
-			 int           offset,
-			 int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t p = READ (image, bits + offset);
-    uint64_t a = p >> 30;
-    uint64_t b = (p >> 20) & 0x3ff;
-    uint64_t g = (p >> 10) & 0x3ff;
-    uint64_t r = p & 0x3ff;
-    
-    r = r << 6 | r >> 4;
-    g = g << 6 | g >> 4;
-    b = b << 6 | b >> 4;
-    
-    a <<= 14;
-    a |= a >> 2;
-    a |= a >> 4;
-    a |= a >> 8;
-    
-    return a << 48 | r << 32 | g << 16 | b;
-}
-
-/* Despite the type, this function expects a uint64_t buffer */
-static uint64_t
-fetch_pixel_x2b10g10r10 (bits_image_t *image,
-			 int           offset,
-			 int           line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t p = READ (image, bits + offset);
-    uint64_t b = (p >> 20) & 0x3ff;
-    uint64_t g = (p >> 10) & 0x3ff;
-    uint64_t r = p & 0x3ff;
-    
-    r = r << 6 | r >> 4;
-    g = g << 6 | g >> 4;
-    b = b << 6 | b >> 4;
-    
-    return 0xffffULL << 48 | r << 32 | g << 16 | b;
-}
-
 static argb_t
 fetch_pixel_x2r10g10b10_float (bits_image_t *image,
 			       int	   offset,
@@ -1180,93 +963,6 @@ fetch_pixel_yv12 (bits_image_t *image,
 /*********************************** Store ************************************/
 
 static void
-store_scanline_a2r10g10b10 (bits_image_t *  image,
-                            int             x,
-                            int             y,
-                            int             width,
-                            const uint32_t *v)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    uint32_t *pixel = bits + x;
-    uint64_t *values = (uint64_t *)v;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	WRITE (image, pixel++,
-	       ((values[i] >> 32) & 0xc0000000) |
-	       ((values[i] >> 18) & 0x3ff00000) |
-	       ((values[i] >> 12) & 0xffc00) | 
-	       ((values[i] >> 6) & 0x3ff));    
-    }
-}
-
-static void
-store_scanline_x2r10g10b10 (bits_image_t *  image,
-                            int             x,
-                            int             y,
-                            int             width,
-                            const uint32_t *v)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    uint64_t *values = (uint64_t *)v;
-    uint32_t *pixel = bits + x;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	WRITE (image, pixel++,
-	       ((values[i] >> 18) & 0x3ff00000) | 
-	       ((values[i] >> 12) & 0xffc00) |
-	       ((values[i] >> 6) & 0x3ff));
-    }
-}
-
-static void
-store_scanline_a2b10g10r10 (bits_image_t *  image,
-                            int             x,
-                            int             y,
-                            int             width,
-                            const uint32_t *v)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    uint32_t *pixel = bits + x;
-    uint64_t *values = (uint64_t *)v;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	WRITE (image, pixel++,
-	       ((values[i] >> 32) & 0xc0000000) |
-	       ((values[i] >> 38) & 0x3ff) |
-	       ((values[i] >> 12) & 0xffc00) |
-	       ((values[i] << 14) & 0x3ff00000));
-    }
-}
-
-static void
-store_scanline_x2b10g10r10 (bits_image_t *  image,
-                            int             x,
-                            int             y,
-                            int             width,
-                            const uint32_t *v)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    uint64_t *values = (uint64_t *)v;
-    uint32_t *pixel = bits + x;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	WRITE (image, pixel++,
-	       ((values[i] >> 38) & 0x3ff) |
-	       ((values[i] >> 12) & 0xffc00) |
-	       ((values[i] << 14) & 0x3ff00000));
-    }
-}
-
-
-static void
 store_scanline_a2r10g10b10_float (bits_image_t *  image,
 				  int             x,
 				  int             y,
@@ -1395,35 +1091,6 @@ store_scanline_a8r8g8b8_sRGB_float (bits_image_t *  image,
 }
 
 /*
- * Contracts a 64bpp image to 32bpp and then stores it using a regular 32-bit
- * store proc. Despite the type, this function expects a uint64_t buffer.
- */
-static void
-store_scanline_generic_64 (bits_image_t *  image,
-                           int             x,
-                           int             y,
-                           int             width,
-                           const uint32_t *values)
-{
-    uint32_t *argb8_pixels;
-    
-    assert (image->common.type == BITS);
-    
-    argb8_pixels = pixman_malloc_ab (width, sizeof(uint32_t));
-    if (!argb8_pixels)
-	return;
-    
-    /* Contract the scanline.  We could do this in place if values weren't
-     * const.
-     */
-    pixman_contract (argb8_pixels, (uint64_t *)values, width);
-    
-    image->store_scanline_32 (image, x, y, width, argb8_pixels);
-    
-    free (argb8_pixels);
-}
-
-/*
  * Contracts a floating point image to 32bpp and then stores it using a
  * regular 32-bit store proc. Despite the type, this function expects an
  * argb_t buffer.
@@ -1453,39 +1120,6 @@ store_scanline_generic_float (bits_image_t *  image,
     free (argb8_pixels);
 }
 
-/* Despite the type, this function expects both buffer
- * and mask to be uint64_t
- */
-static void
-fetch_scanline_generic_64 (pixman_image_t *image,
-                           int             x,
-                           int             y,
-                           int             width,
-                           uint32_t *      buffer,
-                           const uint32_t *mask)
-{
-    pixman_format_code_t format;
-
-    /* Fetch the pixels into the first half of buffer and then expand them in
-     * place.
-     */
-    image->bits.fetch_scanline_32 (image, x, y, width, buffer, NULL);
-
-    format = image->bits.format;
-    if (PIXMAN_FORMAT_TYPE (format) == PIXMAN_TYPE_COLOR	||
-	PIXMAN_FORMAT_TYPE (format) == PIXMAN_TYPE_GRAY)
-    {
-	/* Indexed formats are mapped to a8r8g8b8 with full
-	 * precision, so when expanding we shouldn't correct
-	 * for the width of the channels
-	 */
-
-	format = PIXMAN_a8r8g8b8;
-    }
-
-    pixman_expand ((uint64_t *)buffer, buffer, format, width);
-}
-
 static void
 fetch_scanline_generic_float (pixman_image_t *image,
 			      int	      x,
@@ -1497,33 +1131,6 @@ fetch_scanline_generic_float (pixman_image_t *image,
     image->bits.fetch_scanline_32 (image, x, y, width, buffer, NULL);
 
     pixman_expand_to_float ((argb_t *)buffer, buffer, image->bits.format, width);
-}
-
-/* Despite the type, this function expects a uint64_t *buffer */
-static uint64_t
-fetch_pixel_generic_64 (bits_image_t *image,
-			int	      offset,
-			int           line)
-{
-    uint32_t pixel32 = image->fetch_pixel_32 (image, offset, line);
-    uint64_t result;
-    pixman_format_code_t format;
-
-    format = image->format;
-    if (PIXMAN_FORMAT_TYPE (format) == PIXMAN_TYPE_COLOR	||
-	PIXMAN_FORMAT_TYPE (format) == PIXMAN_TYPE_GRAY)
-    {
-	/* Indexed formats are mapped to a8r8g8b8 with full
-	 * precision, so when expanding we shouldn't correct
-	 * for the width of the channels
-	 */
-
-	format = PIXMAN_a8r8g8b8;
-    }
-
-    pixman_expand ((uint64_t *)&result, &pixel32, format, 1);
-
-    return result;
 }
 
 /* The 32_sRGB paths should be deleted after narrow processing
@@ -1561,30 +1168,6 @@ fetch_scanline_a8r8g8b8_32_sRGB (pixman_image_t *image,
     }
 }
 
-static void
-fetch_scanline_a8r8g8b8_64_sRGB (pixman_image_t *image,
-                                 int             x,
-                                 int             y,
-                                 int             width,
-                                 uint32_t       *b,
-                                 const uint32_t *mask)
-{
-    const uint32_t *bits = image->bits.bits + y * image->bits.rowstride;
-    const uint32_t *pixel = (uint32_t *)bits + x;
-    const uint32_t *end = pixel + width;
-    uint64_t *buffer = (uint64_t *)b;
-    uint32_t tmp;
-    
-    while (pixel < end)
-    {
-	tmp = READ (image, pixel++);
-	*buffer++ = (uint64_t)               ((tmp >> 24) * 257)  << 48
-		  | (uint64_t) srgb_to_linear[(tmp >> 16) & 0xff] << 32
-		  | (uint64_t) srgb_to_linear[(tmp >>  8) & 0xff] << 16
-		  | (uint64_t) srgb_to_linear[(tmp >>  0) & 0xff] <<  0;
-    }
-}
-
 static uint32_t
 fetch_pixel_a8r8g8b8_32_sRGB (bits_image_t *image,
 			      int           offset,
@@ -1604,19 +1187,6 @@ fetch_pixel_a8r8g8b8_32_sRGB (bits_image_t *image,
     b = to_linear[b] * 255.0f + 0.5f;
 
     return (a << 24) | (r << 16) | (g << 8) | (b << 0);
-}
-
-static uint64_t
-fetch_pixel_a8r8g8b8_64_sRGB (bits_image_t *image,
-			      int           offset,
-			      int	    line)
-{
-    uint32_t *bits = image->bits + line * image->rowstride;
-    uint32_t tmp = READ (image, bits + offset);
-    return (uint64_t)               ((tmp >> 24) * 257)  << 48
-	 | (uint64_t) srgb_to_linear[(tmp >> 16) & 0xff] << 32
-	 | (uint64_t) srgb_to_linear[(tmp >>  8) & 0xff] << 16
-	 | (uint64_t) srgb_to_linear[(tmp >>  0) & 0xff] <<  0;
 }
 
 static void
@@ -1651,30 +1221,6 @@ store_scanline_a8r8g8b8_32_sRGB (bits_image_t   *image,
     }
 }
 
-static void
-store_scanline_a8r8g8b8_64_sRGB (bits_image_t  *image,
-                                int             x,
-                                int             y,
-                                int             width,
-                                const uint32_t *v)
-{
-    uint32_t *bits = image->bits + image->rowstride * y;
-    uint64_t *values = (uint64_t *)v;
-    uint32_t *pixel = bits + x;
-    uint64_t tmp;
-    int i;
-    
-    for (i = 0; i < width; ++i)
-    {
-	tmp = values[i];
-	WRITE (image, pixel++,
-		  ((uint32_t)     (tmp >> 56)          << 24)
-		| (linear_to_srgb[(tmp >> 36) & 0xfff] << 16)
-		| (linear_to_srgb[(tmp >> 20) & 0xfff] <<  8)
-		| (linear_to_srgb[(tmp >>  4) & 0xfff] <<  0));
-    }
-}
-
 static argb_t
 fetch_pixel_generic_float (bits_image_t *image,
 			   int		 offset,
@@ -1699,10 +1245,10 @@ fetch_pixel_generic_lossy_32 (bits_image_t *image,
 			      int           offset,
 			      int           line)
 {
-    uint64_t pixel64 = image->fetch_pixel_64 (image, offset, line);
+    argb_t pixel64 = image->fetch_pixel_float (image, offset, line);
     uint32_t result;
 
-    pixman_contract (&result, &pixel64, 1);
+    pixman_contract_from_float (&result, &pixel64, 1);
 
     return result;
 }
@@ -1711,13 +1257,10 @@ typedef struct
 {
     pixman_format_code_t	format;
     fetch_scanline_t		fetch_scanline_32;
-    fetch_scanline_t		fetch_scanline_64;
     fetch_scanline_t		fetch_scanline_float;
     fetch_pixel_32_t		fetch_pixel_32;
-    fetch_pixel_64_t		fetch_pixel_64;
     fetch_pixel_float_t		fetch_pixel_float;
     store_scanline_t		store_scanline_32;
-    store_scanline_t		store_scanline_64;
     store_scanline_t		store_scanline_float;
 } format_info_t;
 
@@ -1725,13 +1268,10 @@ typedef struct
     {									\
 	PIXMAN_ ## format,						\
 	    fetch_scanline_ ## format,					\
-	    fetch_scanline_generic_64,					\
 	    fetch_scanline_generic_float,				\
 	    fetch_pixel_ ## format,					\
-	    fetch_pixel_generic_64,					\
 	    fetch_pixel_generic_float,					\
 	    store_scanline_ ## format,					\
-	    store_scanline_generic_64,					\
 	    store_scanline_generic_float				\
     }
 
@@ -1750,9 +1290,9 @@ static const format_info_t accessors[] =
 
 /* sRGB formats */
   { PIXMAN_a8r8g8b8_sRGB,
-    fetch_scanline_a8r8g8b8_32_sRGB, fetch_scanline_a8r8g8b8_64_sRGB, fetch_scanline_a8r8g8b8_sRGB_float,
-    fetch_pixel_a8r8g8b8_32_sRGB, fetch_pixel_a8r8g8b8_64_sRGB, fetch_pixel_a8r8g8b8_sRGB_float,
-    store_scanline_a8r8g8b8_32_sRGB, store_scanline_a8r8g8b8_64_sRGB, store_scanline_a8r8g8b8_sRGB_float,
+    fetch_scanline_a8r8g8b8_32_sRGB, fetch_scanline_a8r8g8b8_sRGB_float,
+    fetch_pixel_a8r8g8b8_32_sRGB, fetch_pixel_a8r8g8b8_sRGB_float,
+    store_scanline_a8r8g8b8_32_sRGB, store_scanline_a8r8g8b8_sRGB_float,
   },
 
 /* 24bpp formats */
@@ -1813,34 +1353,34 @@ static const format_info_t accessors[] =
 /* Wide formats */
     
     { PIXMAN_a2r10g10b10,
-      NULL, fetch_scanline_a2r10g10b10, fetch_scanline_a2r10g10b10_float,
-      fetch_pixel_generic_lossy_32, fetch_pixel_a2r10g10b10, fetch_pixel_a2r10g10b10_float,
-      NULL, store_scanline_a2r10g10b10, store_scanline_a2r10g10b10_float },
-    
+      NULL, fetch_scanline_a2r10g10b10_float,
+      fetch_pixel_generic_lossy_32, fetch_pixel_a2r10g10b10_float,
+      NULL, store_scanline_a2r10g10b10_float },
+
     { PIXMAN_x2r10g10b10,
-      NULL, fetch_scanline_x2r10g10b10, fetch_scanline_x2r10g10b10_float,
-      fetch_pixel_generic_lossy_32, fetch_pixel_x2r10g10b10, fetch_pixel_x2r10g10b10_float,
-      NULL, store_scanline_x2r10g10b10, store_scanline_x2r10g10b10_float },
-    
+      NULL, fetch_scanline_x2r10g10b10_float,
+      fetch_pixel_generic_lossy_32, fetch_pixel_x2r10g10b10_float,
+      NULL, store_scanline_x2r10g10b10_float },
+
     { PIXMAN_a2b10g10r10,
-      NULL, fetch_scanline_a2b10g10r10, fetch_scanline_a2b10g10r10_float,
-      fetch_pixel_generic_lossy_32, fetch_pixel_a2b10g10r10, fetch_pixel_a2b10g10r10_float,
-      NULL, store_scanline_a2b10g10r10, store_scanline_a2b10g10r10_float },
-    
+      NULL, fetch_scanline_a2b10g10r10_float,
+      fetch_pixel_generic_lossy_32, fetch_pixel_a2b10g10r10_float,
+      NULL, store_scanline_a2b10g10r10_float },
+
     { PIXMAN_x2b10g10r10,
-      NULL, fetch_scanline_x2b10g10r10, fetch_scanline_x2b10g10r10_float,
-      fetch_pixel_generic_lossy_32, fetch_pixel_x2b10g10r10, fetch_pixel_x2b10g10r10_float,
-      NULL, store_scanline_x2b10g10r10, store_scanline_x2b10g10r10_float },
-    
+      NULL, fetch_scanline_x2b10g10r10_float,
+      fetch_pixel_generic_lossy_32, fetch_pixel_x2b10g10r10_float,
+      NULL, store_scanline_x2b10g10r10_float },
+
 /* YUV formats */
     { PIXMAN_yuy2,
-      fetch_scanline_yuy2, fetch_scanline_generic_64, fetch_scanline_generic_float,
-      fetch_pixel_yuy2, fetch_pixel_generic_64, fetch_pixel_generic_float,
-      NULL, NULL, NULL },
-    
+      fetch_scanline_yuy2, fetch_scanline_generic_float,
+      fetch_pixel_yuy2, fetch_pixel_generic_float,
+      NULL, NULL },
+
     { PIXMAN_yv12,
-      fetch_scanline_yv12, fetch_scanline_generic_64, fetch_scanline_generic_float,
-      fetch_pixel_yv12, fetch_pixel_generic_64, fetch_pixel_generic_float,
+      fetch_scanline_yv12, fetch_scanline_generic_float,
+      fetch_pixel_yv12, fetch_pixel_generic_float,
       NULL, NULL },
     
     { PIXMAN_null },
@@ -1856,13 +1396,10 @@ setup_accessors (bits_image_t *image)
 	if (info->format == image->format)
 	{
 	    image->fetch_scanline_32 = info->fetch_scanline_32;
-	    image->fetch_scanline_64 = info->fetch_scanline_64;
 	    image->fetch_scanline_float = info->fetch_scanline_float;
 	    image->fetch_pixel_32 = info->fetch_pixel_32;
-	    image->fetch_pixel_64 = info->fetch_pixel_64;
 	    image->fetch_pixel_float = info->fetch_pixel_float;
 	    image->store_scanline_32 = info->store_scanline_32;
-	    image->store_scanline_64 = info->store_scanline_64;
 	    image->store_scanline_float = info->store_scanline_float;
 	    
 	    return;

@@ -61,14 +61,17 @@ color_to_uint32 (const pixman_color_t *color)
         (color->blue >> 8);
 }
 
-static uint64_t
-color_to_uint64 (const pixman_color_t *color)
+static argb_t
+color_to_float (const pixman_color_t *color)
 {
-    return
-        ((uint64_t)color->alpha << 48) |
-        ((uint64_t)color->red << 32) |
-        ((uint64_t)color->green << 16) |
-        ((uint64_t)color->blue);
+    argb_t result;
+
+    result.a = pixman_unorm_to_float (color->alpha, 16);
+    result.r = pixman_unorm_to_float (color->red, 16);
+    result.g = pixman_unorm_to_float (color->green, 16);
+    result.b = pixman_unorm_to_float (color->blue, 16);
+
+    return result;
 }
 
 PIXMAN_EXPORT pixman_image_t *
@@ -82,11 +85,7 @@ pixman_image_create_solid_fill (const pixman_color_t *color)
     img->type = SOLID;
     img->solid.color = *color;
     img->solid.color_32 = color_to_uint32 (color);
-    img->solid.color_64 = color_to_uint64 (color);
-    img->solid.color_float.a = pixman_unorm_to_float (color->alpha, 16);
-    img->solid.color_float.r = pixman_unorm_to_float (color->red, 16);
-    img->solid.color_float.g = pixman_unorm_to_float (color->green, 16);
-    img->solid.color_float.b = pixman_unorm_to_float (color->blue, 16);
+    img->solid.color_float = color_to_float (color);
 
     return img;
 }

@@ -50,45 +50,6 @@ _pixman_image_get_scanline_generic_float (pixman_iter_t * iter,
     return iter->buffer;
 }
 
-/*
- * By default, just evaluate the image at 32bpp and expand.  Individual image
- * types can plug in a better scanline getter if they want to. For example
- * we  could produce smoother gradients by evaluating them at higher color
- * depth, but that's a project for the future.
- */
-static uint32_t *
-_pixman_image_get_scanline_generic_64 (pixman_iter_t * iter,
-                                       const uint32_t *mask)
-{
-    int             width  = iter->width;
-    uint32_t *      buffer = iter->buffer;
-
-    pixman_iter_get_scanline_t fetch_32 = iter->data;
-    uint32_t *mask8 = NULL;
-
-    /* Contract the mask image, if one exists, so that the 32-bit fetch
-     * function can use it.
-     */
-    if (mask)
-    {
-	mask8 = pixman_malloc_ab (width, sizeof(uint32_t));
-	if (!mask8)
-	    return buffer;
-
-	pixman_contract (mask8, (uint64_t *)mask, width);
-    }
-
-    /* Fetch the source image into the first half of buffer. */
-    fetch_32 (iter, mask8);
-
-    /* Expand from 32bpp to 64bpp in place. */
-    pixman_expand ((uint64_t *)buffer, buffer, PIXMAN_a8r8g8b8, width);
-
-    free (mask8);
-
-    return buffer;
-}
-
 /* Fetch functions */
 
 static force_inline uint32_t
@@ -1141,7 +1102,6 @@ typedef struct
     pixman_format_code_t	format;
     uint32_t			flags;
     pixman_iter_get_scanline_t	get_scanline_32;
-    pixman_iter_get_scanline_t	get_scanline_64;
     pixman_iter_get_scanline_t  get_scanline_float;
 } fetcher_info_t;
 
@@ -1154,7 +1114,6 @@ static const fetcher_info_t fetcher_info[] =
        FAST_PATH_NO_PAD_REPEAT			|
        FAST_PATH_NO_REFLECT_REPEAT),
       bits_image_fetch_untransformed_32,
-      NULL,
       bits_image_fetch_untransformed_float
     },
 
@@ -1171,14 +1130,12 @@ static const fetcher_info_t fetcher_info[] =
     { PIXMAN_a8r8g8b8,
       FAST_BILINEAR_FLAGS,
       bits_image_fetch_bilinear_no_repeat_8888,
-      _pixman_image_get_scanline_generic_64,
       _pixman_image_get_scanline_generic_float
     },
 
     { PIXMAN_x8r8g8b8,
       FAST_BILINEAR_FLAGS,
       bits_image_fetch_bilinear_no_repeat_8888,
-      _pixman_image_get_scanline_generic_64,
       _pixman_image_get_scanline_generic_float
     },
 
@@ -1200,15 +1157,13 @@ static const fetcher_info_t fetcher_info[] =
     { PIXMAN_ ## format,						\
       GENERAL_BILINEAR_FLAGS | FAST_PATH_ ## repeat ## _REPEAT,		\
       bits_image_fetch_bilinear_affine_ ## name,			\
-      _pixman_image_get_scanline_generic_64,				\
       _pixman_image_get_scanline_generic_float				\
     },
 
 #define NEAREST_AFFINE_FAST_PATH(name, format, repeat)			\
     { PIXMAN_ ## format,						\
       GENERAL_NEAREST_FLAGS | FAST_PATH_ ## repeat ## _REPEAT,		\
-      bits_image_fetch_nearest_affine_ ## name,			\
-      _pixman_image_get_scanline_generic_64,				\
+      bits_image_fetch_nearest_affine_ ## name,				\
       _pixman_image_get_scanline_generic_float				\
     },
 
@@ -1237,7 +1192,6 @@ static const fetcher_info_t fetcher_info[] =
     { PIXMAN_any,
       (FAST_PATH_NO_ALPHA_MAP | FAST_PATH_HAS_TRANSFORM | FAST_PATH_AFFINE_TRANSFORM),
       bits_image_fetch_affine_no_alpha,
-      _pixman_image_get_scanline_generic_64,
       _pixman_image_get_scanline_generic_float
     },
 
@@ -1245,7 +1199,6 @@ static const fetcher_info_t fetcher_info[] =
     { PIXMAN_any,
       0,
       bits_image_fetch_general,
-      _pixman_image_get_scanline_generic_64,
       _pixman_image_get_scanline_generic_float
     },
 

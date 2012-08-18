@@ -71,97 +71,6 @@ pixman_malloc_abc (unsigned int a,
 	return malloc (a * b * c);
 }
 
-static void
-unorm_to_unorm_params (int in_width, int out_width, uint32_t *factor, int *shift)
-{
-    int w = 0;
-
-    *factor = 0;
-    while (in_width != 0 && w < out_width)
-    {
-	*factor |= 1 << w;
-	w += in_width;
-    }
-
-    /* Did we generate too many bits? */
-    *shift = w - out_width;
-}
-
-/*
- * This function expands images from ARGB8 format to ARGB16.  To preserve
- * precision, it needs to know the original source format.  For example, if the
- * source was PIXMAN_x1r5g5b5 and the red component contained bits 12345, then
- * the expanded value is 12345123.  To correctly expand this to 16 bits, it
- * should be 1234512345123451 and not 1234512312345123.
- */
-void
-pixman_expand (uint64_t *           dst,
-               const uint32_t *     src,
-               pixman_format_code_t format,
-               int                  width)
-{
-    /*
-     * Determine the sizes of each component and the masks and shifts
-     * required to extract them from the source pixel.
-     */
-    const int a_size = PIXMAN_FORMAT_A (format),
-              r_size = PIXMAN_FORMAT_R (format),
-              g_size = PIXMAN_FORMAT_G (format),
-              b_size = PIXMAN_FORMAT_B (format);
-    const int a_shift = 32 - a_size,
-              r_shift = 24 - r_size,
-              g_shift = 16 - g_size,
-              b_shift =  8 - b_size;
-    const uint8_t a_mask = ~(~0 << a_size),
-                  r_mask = ~(~0 << r_size),
-                  g_mask = ~(~0 << g_size),
-                  b_mask = ~(~0 << b_size);
-    uint32_t au_factor, ru_factor, gu_factor, bu_factor;
-    int au_shift, ru_shift, gu_shift, bu_shift;
-    int i;
-
-    unorm_to_unorm_params (a_size, 16, &au_factor, &au_shift);
-    unorm_to_unorm_params (r_size, 16, &ru_factor, &ru_shift);
-    unorm_to_unorm_params (g_size, 16, &gu_factor, &gu_shift);
-    unorm_to_unorm_params (b_size, 16, &bu_factor, &bu_shift);
-
-    /* Start at the end so that we can do the expansion in place
-     * when src == dst
-     */
-    for (i = width - 1; i >= 0; i--)
-    {
-	const uint32_t pixel = src[i];
-	uint8_t a, r, g, b;
-	uint64_t a16, r16, g16, b16;
-
-	if (a_size)
-	{
-	    a = (pixel >> a_shift) & a_mask;
-            a16 = a * au_factor >> au_shift;
-	}
-	else
-	{
-	    a16 = 0xffff;
-	}
-
-	if (r_size)
-	{
-	    r = (pixel >> r_shift) & r_mask;
-	    g = (pixel >> g_shift) & g_mask;
-	    b = (pixel >> b_shift) & b_mask;
-            r16 = r * ru_factor >> ru_shift;
-            g16 = g * gu_factor >> gu_shift;
-            b16 = b * bu_factor >> bu_shift;
-	}
-	else
-	{
-	    r16 = g16 = b16 = 0;
-	}
-	
-	dst[i] = a16 << 48 | r16 << 32 | g16 << 16 | b16;
-    }
-}
-
 static force_inline uint16_t
 float_to_unorm (float f, int n_bits)
 {
@@ -266,31 +175,6 @@ pixman_contract_from_float (uint32_t     *dst,
 	b = float_to_unorm (src[i].b, 8);
 
 	dst[i] = (a << 24) | (r << 16) | (g << 8) | (b << 0);
-    }
-}
-
-/*
- * Contracting is easier than expanding.  We just need to truncate the
- * components.
- */
-void
-pixman_contract (uint32_t *      dst,
-                 const uint64_t *src,
-                 int             width)
-{
-    int i;
-
-    /* Start at the beginning so that we can do the contraction in
-     * place when src == dst
-     */
-    for (i = 0; i < width; i++)
-    {
-	const uint8_t a = src[i] >> 56,
-	              r = src[i] >> 40,
-	              g = src[i] >> 24,
-	              b = src[i] >> 8;
-
-	dst[i] = a << 24 | r << 16 | g << 8 | b;
     }
 }
 
