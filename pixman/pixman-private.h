@@ -126,9 +126,10 @@ struct solid_fill
 {
     image_common_t common;
     pixman_color_t color;
-    
+
     uint32_t	   color_32;
     uint64_t	   color_64;
+    argb_t	   color_float;
 };
 
 struct gradient

@@ -979,17 +979,17 @@ replicate_pixel_32 (bits_image_t *   bits,
 }
 
 static void
-replicate_pixel_64 (bits_image_t *   bits,
-		    int              x,
-		    int              y,
-		    int              width,
-		    uint32_t *       b)
+replicate_pixel_float (bits_image_t *   bits,
+		       int              x,
+		       int              y,
+		       int              width,
+		       uint32_t *       b)
 {
-    uint64_t color;
-    uint64_t *buffer = (uint64_t *)b;
-    uint64_t *end;
+    argb_t color;
+    argb_t *buffer = (argb_t *)b;
+    argb_t *end;
 
-    color = bits->fetch_pixel_64 (bits, x, y);
+    color = bits->fetch_pixel_float (bits, x, y);
 
     end = buffer + width;
     while (buffer < end)
@@ -1008,7 +1008,7 @@ bits_image_fetch_untransformed_repeat_none (bits_image_t *image,
 
     if (y < 0 || y >= image->height)
     {
-	memset (buffer, 0, width * (wide? 8 : 4));
+	memset (buffer, 0, width * (wide? sizeof (argb_t) : 4));
 	return;
     }
 
@@ -1016,10 +1016,10 @@ bits_image_fetch_untransformed_repeat_none (bits_image_t *image,
     {
 	w = MIN (width, -x);
 
-	memset (buffer, 0, w * (wide ? 8 : 4));
+	memset (buffer, 0, w * (wide ? sizeof (argb_t) : 4));
 
 	width -= w;
-	buffer += w * (wide? 2 : 1);
+	buffer += w * (wide? 4 : 1);
 	x += w;
     }
 
@@ -1028,16 +1028,16 @@ bits_image_fetch_untransformed_repeat_none (bits_image_t *image,
 	w = MIN (width, image->width - x);
 
 	if (wide)
-	    image->fetch_scanline_64 ((pixman_image_t *)image, x, y, w, buffer, NULL);
+	    image->fetch_scanline_float ((pixman_image_t *)image, x, y, w, buffer, NULL);
 	else
 	    image->fetch_scanline_32 ((pixman_image_t *)image, x, y, w, buffer, NULL);
 
 	width -= w;
-	buffer += w * (wide? 2 : 1);
+	buffer += w * (wide? 4 : 1);
 	x += w;
     }
 
-    memset (buffer, 0, width * (wide ? 8 : 4));
+    memset (buffer, 0, width * (wide ? sizeof (argb_t) : 4));
 }
 
 static void
@@ -1059,7 +1059,7 @@ bits_image_fetch_untransformed_repeat_normal (bits_image_t *image,
     if (image->width == 1)
     {
 	if (wide)
-	    replicate_pixel_64 (image, 0, y, width, buffer);
+	    replicate_pixel_float (image, 0, y, width, buffer);
 	else
 	    replicate_pixel_32 (image, 0, y, width, buffer);
 
@@ -1076,11 +1076,11 @@ bits_image_fetch_untransformed_repeat_normal (bits_image_t *image,
 	w = MIN (width, image->width - x);
 
 	if (wide)
-	    image->fetch_scanline_64 ((pixman_image_t *)image, x, y, w, buffer, NULL);
+	    image->fetch_scanline_float ((pixman_image_t *)image, x, y, w, buffer, NULL);
 	else
 	    image->fetch_scanline_32 ((pixman_image_t *)image, x, y, w, buffer, NULL);
 
-	buffer += w * (wide? 2 : 1);
+	buffer += w * (wide? 4 : 1);
 	x += w;
 	width -= w;
     }
@@ -1112,9 +1112,8 @@ bits_image_fetch_untransformed_32 (pixman_iter_t * iter,
 }
 
 static uint32_t *
-bits_image_fetch_untransformed_64 (pixman_iter_t * iter,
-                                   const uint32_t *mask)
-				   
+bits_image_fetch_untransformed_float (pixman_iter_t * iter,
+				      const uint32_t *mask)
 {
     pixman_image_t *image  = iter->image;
     int             x      = iter->x;
@@ -1155,8 +1154,8 @@ static const fetcher_info_t fetcher_info[] =
        FAST_PATH_NO_PAD_REPEAT			|
        FAST_PATH_NO_REFLECT_REPEAT),
       bits_image_fetch_untransformed_32,
-      bits_image_fetch_untransformed_64,
-      _pixman_image_get_scanline_generic_float
+      NULL,
+      bits_image_fetch_untransformed_float
     },
 
 #define FAST_BILINEAR_FLAGS						\
@@ -1278,7 +1277,7 @@ _pixman_bits_image_src_iter_init (pixman_image_t *image, pixman_iter_t *iter)
 	    else
 	    {
 		iter->data = info->get_scanline_32;
-		iter->get_scanline = info->get_scanline_64;
+		iter->get_scanline = info->get_scanline_float;
 	    }
 	    return;
 	}
@@ -1333,30 +1332,27 @@ dest_get_scanline_wide (pixman_iter_t *iter, const uint32_t *mask)
     int             x      = iter->x;
     int             y      = iter->y;
     int             width  = iter->width;
-    uint64_t *	    buffer = (uint64_t *)iter->buffer;
+    argb_t *	    buffer = (argb_t *)iter->buffer;
 
-    image->fetch_scanline_64 (
+    image->fetch_scanline_float (
 	(pixman_image_t *)image, x, y, width, (uint32_t *)buffer, mask);
     if (image->common.alpha_map)
     {
-	uint64_t *alpha;
+	argb_t *alpha;
 
-	if ((alpha = malloc (width * sizeof (uint64_t))))
+	if ((alpha = malloc (width * sizeof (argb_t))))
 	{
 	    int i;
 
 	    x -= image->common.alpha_origin_x;
 	    y -= image->common.alpha_origin_y;
 
-	    image->common.alpha_map->fetch_scanline_64 (
+	    image->common.alpha_map->fetch_scanline_float (
 		(pixman_image_t *)image->common.alpha_map,
 		x, y, width, (uint32_t *)alpha, mask);
 
 	    for (i = 0; i < width; ++i)
-	    {
-		buffer[i] &= ~0xffff000000000000ULL;
-		buffer[i] |= (alpha[i] & 0xffff000000000000ULL);
-	    }
+		buffer[i].a = alpha[i].a;
 
 	    free (alpha);
 	}
@@ -1397,14 +1393,14 @@ dest_write_back_wide (pixman_iter_t *iter)
     int             width  = iter->width;
     const uint32_t *buffer = iter->buffer;
 
-    image->store_scanline_64 (image, x, y, width, buffer);
+    image->store_scanline_float (image, x, y, width, buffer);
 
     if (image->common.alpha_map)
     {
 	x -= image->common.alpha_origin_x;
 	y -= image->common.alpha_origin_y;
 
-	image->common.alpha_map->store_scanline_64 (
+	image->common.alpha_map->store_scanline_float (
 	    image->common.alpha_map, x, y, width, buffer);
     }
 

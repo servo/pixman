@@ -130,7 +130,7 @@ general_composite_rect  (pixman_implementation_t *imp,
     else
     {
 	narrow = 0;
-	Bpp = 8;
+	Bpp = 16;
     }
 
     if (width * Bpp > SCANLINE_BUFFER_LENGTH)
@@ -145,6 +145,14 @@ general_composite_rect  (pixman_implementation_t *imp,
     mask_buffer = src_buffer + width * Bpp;
     dest_buffer = mask_buffer + width * Bpp;
 
+    if (!narrow)
+    {
+	/* To make sure there aren't any NANs in the buffers */
+	memset (src_buffer, 0, width * Bpp);
+	memset (mask_buffer, 0, width * Bpp);
+	memset (dest_buffer, 0, width * Bpp);
+    }
+    
     /* src iter */
     src_iter_flags = narrow | op_flags[op].src;
 
