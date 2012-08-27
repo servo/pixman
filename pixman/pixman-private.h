@@ -263,9 +263,6 @@ void
 _pixman_bits_image_dest_iter_init (pixman_image_t *image, pixman_iter_t *iter);
 
 void
-_pixman_solid_fill_iter_init (pixman_image_t *image, pixman_iter_t  *iter);
-
-void
 _pixman_linear_gradient_iter_init (pixman_image_t *image, pixman_iter_t  *iter);
 
 void
