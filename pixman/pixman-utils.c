@@ -262,6 +262,15 @@ pixman_region32_copy_from_region16 (pixman_region32_t *dst,
     return retval;
 }
 
+/* This function is exported for the sake of the test suite and not part
+ * of the ABI.
+ */
+PIXMAN_EXPORT pixman_implementation_t *
+_pixman_internal_only_get_implementation (void)
+{
+    return get_implementation ();
+}
+
 #ifdef DEBUG
 
 void

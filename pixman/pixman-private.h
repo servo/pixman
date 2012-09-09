@@ -764,6 +764,12 @@ get_implementation (void)
     return global_implementation;
 }
 
+/* This function is exported for the sake of the test suite and not part
+ * of the ABI.
+ */
+PIXMAN_EXPORT pixman_implementation_t *
+_pixman_internal_only_get_implementation (void);
+
 /* Memory allocation helpers */
 void *
 pixman_malloc_ab (unsigned int n, unsigned int b);
