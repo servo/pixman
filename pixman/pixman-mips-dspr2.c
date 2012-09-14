@@ -62,10 +62,14 @@ PIXMAN_MIPS_BIND_FAST_PATH_SRC_N_DST (SKIP_ZERO_MASK, over_8888_n_8888,
                                       uint32_t, 1, uint32_t, 1)
 PIXMAN_MIPS_BIND_FAST_PATH_SRC_N_DST (SKIP_ZERO_MASK, over_8888_n_0565,
                                       uint32_t, 1, uint16_t, 1)
+PIXMAN_MIPS_BIND_FAST_PATH_SRC_N_DST (SKIP_ZERO_MASK, over_0565_n_0565,
+                                      uint16_t, 1, uint16_t, 1)
 
 PIXMAN_MIPS_BIND_FAST_PATH_SRC_MASK_DST (over_8888_8_8888, uint32_t, 1,
                                          uint8_t, 1, uint32_t, 1)
 PIXMAN_MIPS_BIND_FAST_PATH_SRC_MASK_DST (over_8888_8_0565, uint32_t, 1,
+                                         uint8_t, 1, uint16_t, 1)
+PIXMAN_MIPS_BIND_FAST_PATH_SRC_MASK_DST (over_0565_8_0565, uint16_t, 1,
                                          uint8_t, 1, uint16_t, 1)
 
 PIXMAN_MIPS_BIND_SCALED_BILINEAR_SRC_DST (0, 8888_8888, SRC,
@@ -248,12 +252,16 @@ static const pixman_fast_path_t mips_dspr2_fast_paths[] =
     PIXMAN_STD_FAST_PATH (OVER, a8r8g8b8, solid,    x8r8g8b8, mips_composite_over_8888_n_8888),
     PIXMAN_STD_FAST_PATH (OVER, a8r8g8b8, solid,    r5g6b5,   mips_composite_over_8888_n_0565),
     PIXMAN_STD_FAST_PATH (OVER, a8b8g8r8, solid,    b5g6r5,   mips_composite_over_8888_n_0565),
+    PIXMAN_STD_FAST_PATH (OVER, r5g6b5,   solid,    r5g6b5,   mips_composite_over_0565_n_0565),
+    PIXMAN_STD_FAST_PATH (OVER, b5g6r5,   solid,    b5g6r5,   mips_composite_over_0565_n_0565),
     PIXMAN_STD_FAST_PATH (OVER, a8r8g8b8, a8,       a8r8g8b8, mips_composite_over_8888_8_8888),
     PIXMAN_STD_FAST_PATH (OVER, a8r8g8b8, a8,       x8r8g8b8, mips_composite_over_8888_8_8888),
     PIXMAN_STD_FAST_PATH (OVER, a8b8g8r8, a8,       a8b8g8r8, mips_composite_over_8888_8_8888),
     PIXMAN_STD_FAST_PATH (OVER, a8b8g8r8, a8,       x8b8g8r8, mips_composite_over_8888_8_8888),
     PIXMAN_STD_FAST_PATH (OVER, a8r8g8b8, a8,       r5g6b5,   mips_composite_over_8888_8_0565),
     PIXMAN_STD_FAST_PATH (OVER, a8b8g8r8, a8,       b5g6r5,   mips_composite_over_8888_8_0565),
+    PIXMAN_STD_FAST_PATH (OVER, r5g6b5,   a8,       r5g6b5,   mips_composite_over_0565_8_0565),
+    PIXMAN_STD_FAST_PATH (OVER, b5g6r5,   a8,       b5g6r5,   mips_composite_over_0565_8_0565),
 
     SIMPLE_BILINEAR_FAST_PATH (SRC, a8r8g8b8, a8r8g8b8, mips_8888_8888),
     SIMPLE_BILINEAR_FAST_PATH (SRC, a8r8g8b8, x8r8g8b8, mips_8888_8888),
