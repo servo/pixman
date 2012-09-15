@@ -28,7 +28,7 @@
 #include "pixman-private.h"
 
 pixman_implementation_t *
-_pixman_implementation_create (pixman_implementation_t *delegate,
+_pixman_implementation_create (pixman_implementation_t *fallback,
 			       const pixman_fast_path_t *fast_paths)
 {
     pixman_implementation_t *imp;
@@ -41,11 +41,11 @@ _pixman_implementation_create (pixman_implementation_t *delegate,
 
 	memset (imp, 0, sizeof *imp);
 
-	imp->delegate = delegate;
+	imp->fallback = fallback;
 	imp->fast_paths = fast_paths;
 	
-	/* Make sure the whole delegate chain has the right toplevel */
-	for (d = imp; d != NULL; d = d->delegate)
+	/* Make sure the whole fallback chain has the right toplevel */
+	for (d = imp; d != NULL; d = d->fallback)
 	    d->toplevel = imp;
     }
 
@@ -109,7 +109,7 @@ _pixman_implementation_lookup_composite (pixman_implementation_t  *toplevel,
 	}
     }
 
-    for (imp = toplevel; imp != NULL; imp = imp->delegate)
+    for (imp = toplevel; imp != NULL; imp = imp->fallback)
     {
 	const pixman_fast_path_t *info = imp->fast_paths;
 
@@ -196,7 +196,7 @@ _pixman_implementation_lookup_combiner (pixman_implementation_t *imp,
 	if (f)
 	    return f;
 
-	imp = imp->delegate;
+	imp = imp->fallback;
     }
 
     return NULL;
@@ -227,7 +227,7 @@ _pixman_implementation_blt (pixman_implementation_t * imp,
 	    return TRUE;
 	}
 
-	imp = imp->delegate;
+	imp = imp->fallback;
     }
 
     return FALSE;
@@ -252,7 +252,7 @@ _pixman_implementation_fill (pixman_implementation_t *imp,
 	    return TRUE;
 	}
 
-	imp = imp->delegate;
+	imp = imp->fallback;
     }
 
     return FALSE;
@@ -284,7 +284,7 @@ _pixman_implementation_src_iter_init (pixman_implementation_t	*imp,
 	if (imp->src_iter_init && (*imp->src_iter_init) (imp, iter))
 	    return TRUE;
 
-	imp = imp->delegate;
+	imp = imp->fallback;
     }
 
     return FALSE;
@@ -316,7 +316,7 @@ _pixman_implementation_dest_iter_init (pixman_implementation_t	*imp,
 	if (imp->dest_iter_init && (*imp->dest_iter_init) (imp, iter))
 	    return TRUE;
 
-	imp = imp->delegate;
+	imp = imp->fallback;
     }
 
     return FALSE;

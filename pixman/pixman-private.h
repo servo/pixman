@@ -466,7 +466,7 @@ typedef struct
 struct pixman_implementation_t
 {
     pixman_implementation_t *	toplevel;
-    pixman_implementation_t *	delegate;
+    pixman_implementation_t *	fallback;
     const pixman_fast_path_t *	fast_paths;
 
     pixman_blt_func_t		blt;
@@ -486,7 +486,7 @@ _pixman_image_get_solid (pixman_implementation_t *imp,
                          pixman_format_code_t     format);
 
 pixman_implementation_t *
-_pixman_implementation_create (pixman_implementation_t *delegate,
+_pixman_implementation_create (pixman_implementation_t *fallback,
 			       const pixman_fast_path_t *fast_paths);
 
 pixman_bool_t
