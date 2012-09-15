@@ -1258,7 +1258,7 @@ fast_composite_tiled_repeat (pixman_implementation_t *imp,
 	mask_flags = FAST_PATH_IS_OPAQUE;
     }
 
-    if (_pixman_lookup_composite_function (
+    if (_pixman_implementation_lookup_composite (
 	    imp->toplevel, info->op,
 	    src_image->common.extended_format_code, src_flags,
 	    mask_format, mask_flags,

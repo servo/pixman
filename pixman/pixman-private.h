@@ -489,6 +489,18 @@ pixman_implementation_t *
 _pixman_implementation_create (pixman_implementation_t *delegate,
 			       const pixman_fast_path_t *fast_paths);
 
+pixman_bool_t
+_pixman_implementation_lookup_composite (pixman_implementation_t  *toplevel,
+					 pixman_op_t               op,
+					 pixman_format_code_t      src_format,
+					 uint32_t                  src_flags,
+					 pixman_format_code_t      mask_format,
+					 uint32_t                  mask_flags,
+					 pixman_format_code_t      dest_format,
+					 uint32_t                  dest_flags,
+					 pixman_implementation_t **out_imp,
+					 pixman_composite_func_t  *out_func);
+
 pixman_combine_32_func_t
 _pixman_implementation_lookup_combiner (pixman_implementation_t *imp,
 					pixman_op_t		 op,
@@ -769,18 +781,6 @@ void
 pixman_contract (uint32_t *      dst,
                  const uint64_t *src,
                  int             width);
-
-pixman_bool_t
-_pixman_lookup_composite_function (pixman_implementation_t     *toplevel,
-				   pixman_op_t			op,
-				   pixman_format_code_t		src_format,
-				   uint32_t			src_flags,
-				   pixman_format_code_t		mask_format,
-				   uint32_t			mask_flags,
-				   pixman_format_code_t		dest_format,
-				   uint32_t			dest_flags,
-				   pixman_implementation_t    **out_imp,
-				   pixman_composite_func_t     *out_func);
 
 /* Region Helpers */
 pixman_bool_t
