@@ -130,18 +130,19 @@ pixman_fill_mips (uint32_t *bits,
 }
 
 static pixman_bool_t
-pixman_blt_mips (uint32_t *src_bits,
-                 uint32_t *dst_bits,
-                 int       src_stride,
-                 int       dst_stride,
-                 int       src_bpp,
-                 int       dst_bpp,
-                 int       src_x,
-                 int       src_y,
-                 int       dest_x,
-                 int       dest_y,
-                 int       width,
-                 int       height)
+mips_dspr2_blt (pixman_implementation_t *imp,
+                uint32_t *               src_bits,
+                uint32_t *               dst_bits,
+                int                      src_stride,
+                int                      dst_stride,
+                int                      src_bpp,
+                int                      dst_bpp,
+                int                      src_x,
+                int                      src_y,
+                int                      dest_x,
+                int                      dest_y,
+                int                      width,
+                int                      height)
 {
     if (src_bpp != dst_bpp)
         return FALSE;
@@ -265,35 +266,6 @@ static const pixman_fast_path_t mips_dspr2_fast_paths[] =
     SIMPLE_BILINEAR_A8_MASK_FAST_PATH (ADD, a8r8g8b8, x8r8g8b8, mips_8888_8_8888),
     { PIXMAN_OP_NONE },
 };
-
-static pixman_bool_t
-mips_dspr2_blt (pixman_implementation_t *imp,
-                uint32_t *               src_bits,
-                uint32_t *               dst_bits,
-                int                      src_stride,
-                int                      dst_stride,
-                int                      src_bpp,
-                int                      dst_bpp,
-                int                      src_x,
-                int                      src_y,
-                int                      dest_x,
-                int                      dest_y,
-                int                      width,
-                int                      height)
-{
-    if (!pixman_blt_mips (
-            src_bits, dst_bits, src_stride, dst_stride, src_bpp, dst_bpp,
-            src_x, src_y, dest_x, dest_y, width, height))
-
-    {
-        return _pixman_implementation_blt (
-            imp->delegate,
-            src_bits, dst_bits, src_stride, dst_stride, src_bpp, dst_bpp,
-            src_x, src_y, dest_x, dest_y, width, height);
-    }
-
-    return TRUE;
-}
 
 static pixman_bool_t
 mips_dspr2_fill (pixman_implementation_t *imp,

@@ -201,26 +201,6 @@ static const pixman_fast_path_t general_fast_path[] =
 };
 
 static pixman_bool_t
-general_blt (pixman_implementation_t *imp,
-             uint32_t *               src_bits,
-             uint32_t *               dst_bits,
-             int                      src_stride,
-             int                      dst_stride,
-             int                      src_bpp,
-             int                      dst_bpp,
-             int                      src_x,
-             int                      src_y,
-             int                      dest_x,
-             int                      dest_y,
-             int                      width,
-             int                      height)
-{
-    /* We can't blit unless we have sse2 or mmx */
-
-    return FALSE;
-}
-
-static pixman_bool_t
 general_fill (pixman_implementation_t *imp,
               uint32_t *               bits,
               int                      stride,
@@ -242,7 +222,6 @@ _pixman_implementation_create_general (void)
     _pixman_setup_combiner_functions_32 (imp);
     _pixman_setup_combiner_functions_64 (imp);
 
-    imp->blt = general_blt;
     imp->fill = general_fill;
     imp->src_iter_init = general_src_iter_init;
     imp->dest_iter_init = general_dest_iter_init;
