@@ -31,35 +31,22 @@ pixman_implementation_t *
 _pixman_implementation_create (pixman_implementation_t *delegate,
 			       const pixman_fast_path_t *fast_paths)
 {
-    pixman_implementation_t *imp = malloc (sizeof (pixman_implementation_t));
-    pixman_implementation_t *d;
-    int i;
-
-    if (!imp)
-	return NULL;
+    pixman_implementation_t *imp;
 
     assert (fast_paths);
 
-    /* Make sure the whole delegate chain has the right toplevel */
-    imp->delegate = delegate;
-    for (d = imp; d != NULL; d = d->delegate)
-	d->toplevel = imp;
-
-    /* Fill out function pointers with ones that just delegate
-     */
-    imp->blt = NULL;
-    imp->fill = NULL;
-    imp->src_iter_init = NULL;
-    imp->dest_iter_init = NULL;
-
-    imp->fast_paths = fast_paths;
-
-    for (i = 0; i < PIXMAN_N_OPERATORS; ++i)
+    if ((imp = malloc (sizeof (pixman_implementation_t))))
     {
-	imp->combine_32[i] = NULL;
-	imp->combine_64[i] = NULL;
-	imp->combine_32_ca[i] = NULL;
-	imp->combine_64_ca[i] = NULL;
+	pixman_implementation_t *d;
+
+	memset (imp, 0, sizeof *imp);
+
+	imp->delegate = delegate;
+	imp->fast_paths = fast_paths;
+	
+	/* Make sure the whole delegate chain has the right toplevel */
+	for (d = imp; d != NULL; d = d->delegate)
+	    d->toplevel = imp;
     }
 
     return imp;
