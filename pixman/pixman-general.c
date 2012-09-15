@@ -37,7 +37,7 @@
 #include <string.h>
 #include "pixman-private.h"
 
-static void
+static pixman_bool_t
 general_src_iter_init (pixman_implementation_t *imp, pixman_iter_t *iter)
 {
     pixman_image_t *image = iter->image;
@@ -54,18 +54,24 @@ general_src_iter_init (pixman_implementation_t *imp, pixman_iter_t *iter)
 	_pixman_bits_image_src_iter_init (image, iter);
     else
 	_pixman_log_error (FUNC, "Pixman bug: unknown image type\n");
+
+    return TRUE;
 }
 
-static void
+static pixman_bool_t
 general_dest_iter_init (pixman_implementation_t *imp, pixman_iter_t *iter)
 {
     if (iter->image->type == BITS)
     {
 	_pixman_bits_image_dest_iter_init (iter->image, iter);
+
+	return TRUE;
     }
     else
     {
 	_pixman_log_error (FUNC, "Trying to write to a non-writable image");
+
+	return FALSE;
     }
 }
 

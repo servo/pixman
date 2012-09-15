@@ -3915,7 +3915,7 @@ static const fetcher_info_t fetchers[] =
     { PIXMAN_null }
 };
 
-static void
+static pixman_bool_t
 mmx_src_iter_init (pixman_implementation_t *imp, pixman_iter_t *iter)
 {
     pixman_image_t *image = iter->image;
@@ -3940,12 +3940,12 @@ mmx_src_iter_init (pixman_implementation_t *imp, pixman_iter_t *iter)
 		iter->stride = s;
 
 		iter->get_scanline = f->get_scanline;
-		return;
+		return TRUE;
 	    }
 	}
     }
 
-    imp->delegate->src_iter_init (imp->delegate, iter);
+    return FALSE;
 }
 
 static const pixman_fast_path_t mmx_fast_paths[] =

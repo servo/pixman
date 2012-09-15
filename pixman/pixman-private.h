@@ -445,8 +445,8 @@ typedef pixman_bool_t (*pixman_fill_func_t) (pixman_implementation_t *imp,
 					     int                      width,
 					     int                      height,
 					     uint32_t                 xor);
-typedef void (*pixman_iter_init_func_t) (pixman_implementation_t *imp,
-                                         pixman_iter_t           *iter);
+typedef pixman_bool_t (*pixman_iter_init_func_t) (pixman_implementation_t *imp,
+						  pixman_iter_t           *iter);
 
 void _pixman_setup_combiner_functions_32 (pixman_implementation_t *imp);
 void _pixman_setup_combiner_functions_64 (pixman_implementation_t *imp);
@@ -521,7 +521,7 @@ _pixman_implementation_fill (pixman_implementation_t *imp,
                              int                      height,
                              uint32_t                 xor);
 
-void
+pixman_bool_t
 _pixman_implementation_src_iter_init (pixman_implementation_t       *imp,
 				      pixman_iter_t                 *iter,
 				      pixman_image_t                *image,
@@ -533,7 +533,7 @@ _pixman_implementation_src_iter_init (pixman_implementation_t       *imp,
 				      iter_flags_t                   flags,
 				      uint32_t                       image_flags);
 
-void
+pixman_bool_t
 _pixman_implementation_dest_iter_init (pixman_implementation_t       *imp,
 				       pixman_iter_t                 *iter,
 				       pixman_image_t                *image,

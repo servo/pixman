@@ -27,20 +27,6 @@
 #include <stdlib.h>
 #include "pixman-private.h"
 
-static void
-delegate_src_iter_init (pixman_implementation_t *imp,
-			pixman_iter_t *	         iter)
-{
-    imp->delegate->src_iter_init (imp->delegate, iter);
-}
-
-static void
-delegate_dest_iter_init (pixman_implementation_t *imp,
-			 pixman_iter_t *	  iter)
-{
-    imp->delegate->dest_iter_init (imp->delegate, iter);
-}
-
 pixman_implementation_t *
 _pixman_implementation_create (pixman_implementation_t *delegate,
 			       const pixman_fast_path_t *fast_paths)
@@ -63,8 +49,8 @@ _pixman_implementation_create (pixman_implementation_t *delegate,
      */
     imp->blt = NULL;
     imp->fill = NULL;
-    imp->src_iter_init = delegate_src_iter_init;
-    imp->dest_iter_init = delegate_dest_iter_init;
+    imp->src_iter_init = NULL;
+    imp->dest_iter_init = NULL;
 
     imp->fast_paths = fast_paths;
 
@@ -173,7 +159,7 @@ _pixman_implementation_fill (pixman_implementation_t *imp,
     return FALSE;
 }
 
-void
+pixman_bool_t
 _pixman_implementation_src_iter_init (pixman_implementation_t	*imp,
 				      pixman_iter_t             *iter,
 				      pixman_image_t		*image,
@@ -194,10 +180,18 @@ _pixman_implementation_src_iter_init (pixman_implementation_t	*imp,
     iter->iter_flags = iter_flags;
     iter->image_flags = image_flags;
 
-    (*imp->src_iter_init) (imp, iter);
+    while (imp)
+    {
+	if (imp->src_iter_init && (*imp->src_iter_init) (imp, iter))
+	    return TRUE;
+
+	imp = imp->delegate;
+    }
+
+    return FALSE;
 }
 
-void
+pixman_bool_t
 _pixman_implementation_dest_iter_init (pixman_implementation_t	*imp,
 				       pixman_iter_t            *iter,
 				       pixman_image_t		*image,
@@ -218,7 +212,15 @@ _pixman_implementation_dest_iter_init (pixman_implementation_t	*imp,
     iter->iter_flags = iter_flags;
     iter->image_flags = image_flags;
 
-    (*imp->dest_iter_init) (imp, iter);
+    while (imp)
+    {
+	if (imp->dest_iter_init && (*imp->dest_iter_init) (imp, iter))
+	    return TRUE;
+
+	imp = imp->delegate;
+    }
+
+    return FALSE;
 }
 
 pixman_bool_t
