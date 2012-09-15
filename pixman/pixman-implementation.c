@@ -121,25 +121,36 @@ _pixman_implementation_lookup_combiner (pixman_implementation_t *imp,
 					pixman_bool_t		 component_alpha,
 					pixman_bool_t		 narrow)
 {
-    pixman_combine_32_func_t f;
-
-    do
+    while (imp)
     {
-	pixman_combine_32_func_t (*combiners[]) =
-	{
-	    (pixman_combine_32_func_t *)imp->combine_64,
-	    (pixman_combine_32_func_t *)imp->combine_64_ca,
-	    imp->combine_32,
-	    imp->combine_32_ca,
-	};
+	pixman_combine_32_func_t f = NULL;
 
-	f = combiners[component_alpha | (narrow << 1)][op];
+	switch ((narrow << 1) | component_alpha)
+	{
+	case 0: /* not narrow, not component alpha */
+	    f = (pixman_combine_32_func_t)imp->combine_64[op];
+	    break;
+	    
+	case 1: /* not narrow, component_alpha */
+	    f = (pixman_combine_32_func_t)imp->combine_64_ca[op];
+	    break;
+
+	case 2: /* narrow, not component alpha */
+	    f = imp->combine_32[op];
+	    break;
+
+	case 3: /* narrow, component_alpha */
+	    f = imp->combine_32_ca[op];
+	    break;
+	}
+
+	if (f)
+	    return f;
 
 	imp = imp->delegate;
     }
-    while (!f);
 
-    return f;
+    return NULL;
 }
 
 pixman_bool_t
