@@ -2055,15 +2055,16 @@ mmx_composite_over_n_8_8888 (pixman_implementation_t *imp,
     _mm_empty ();
 }
 
-pixman_bool_t
-pixman_fill_mmx (uint32_t *bits,
-                 int       stride,
-                 int       bpp,
-                 int       x,
-                 int       y,
-                 int       width,
-                 int       height,
-                 uint32_t xor)
+static pixman_bool_t
+mmx_fill (pixman_implementation_t *imp,
+          uint32_t *               bits,
+          int                      stride,
+          int                      bpp,
+          int                      x,
+          int                      y,
+          int                      width,
+          int                      height,
+          uint32_t		   xor)
 {
     uint64_t fill;
     __m64 vfill;
@@ -2281,9 +2282,9 @@ mmx_composite_src_n_8_8888 (pixman_implementation_t *imp,
     srca = src >> 24;
     if (src == 0)
     {
-	pixman_fill_mmx (dest_image->bits.bits, dest_image->bits.rowstride,
-			 PIXMAN_FORMAT_BPP (dest_image->bits.format),
-	                 dest_x, dest_y, width, height, 0);
+	mmx_fill (imp, dest_image->bits.bits, dest_image->bits.rowstride,
+		  PIXMAN_FORMAT_BPP (dest_image->bits.format),
+		  dest_x, dest_y, width, height, 0);
 	return;
     }
 
@@ -4042,26 +4043,6 @@ static const pixman_fast_path_t mmx_fast_paths[] =
 
     { PIXMAN_OP_NONE },
 };
-
-static pixman_bool_t
-mmx_fill (pixman_implementation_t *imp,
-          uint32_t *               bits,
-          int                      stride,
-          int                      bpp,
-          int                      x,
-          int                      y,
-          int                      width,
-          int                      height,
-          uint32_t xor)
-{
-    if (!pixman_fill_mmx (bits, stride, bpp, x, y, width, height, xor))
-    {
-	return _pixman_implementation_fill (
-	    imp->delegate, bits, stride, bpp, x, y, width, height, xor);
-    }
-
-    return TRUE;
-}
 
 pixman_implementation_t *
 _pixman_implementation_create_mmx (pixman_implementation_t *fallback)

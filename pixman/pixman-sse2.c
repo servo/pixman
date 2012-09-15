@@ -3309,18 +3309,22 @@ sse2_composite_over_n_8_8888 (pixman_implementation_t *imp,
 
 }
 
+#if defined(__GNUC__) && !defined(__x86_64__) && !defined(__amd64__)
+__attribute__((__force_align_arg_pointer__))
+#endif
 static pixman_bool_t
-pixman_fill_sse2 (uint32_t *bits,
-                  int       stride,
-                  int       bpp,
-                  int       x,
-                  int       y,
-                  int       width,
-                  int       height,
-                  uint32_t  data)
+sse2_fill (pixman_implementation_t *imp,
+           uint32_t *               bits,
+           int                      stride,
+           int                      bpp,
+           int                      x,
+           int                      y,
+           int                      width,
+           int                      height,
+           uint32_t		    xor)
 {
     uint32_t byte_width;
-    uint8_t         *byte_line;
+    uint8_t *byte_line;
 
     __m128i xmm_def;
 
@@ -3334,9 +3338,9 @@ pixman_fill_sse2 (uint32_t *bits,
 	byte_width = width;
 	stride *= 1;
 
-	b = data & 0xff;
+	b = xor & 0xff;
 	w = (b << 8) | b;
-	data = (w << 16) | w;
+	xor = (w << 16) | w;
     }
     else if (bpp == 16)
     {
@@ -3345,7 +3349,7 @@ pixman_fill_sse2 (uint32_t *bits,
 	byte_width = 2 * width;
 	stride *= 2;
 
-        data = (data & 0xffff) * 0x00010001;
+        xor = (xor & 0xffff) * 0x00010001;
     }
     else if (bpp == 32)
     {
@@ -3359,7 +3363,7 @@ pixman_fill_sse2 (uint32_t *bits,
 	return FALSE;
     }
 
-    xmm_def = create_mask_2x32_128 (data, data);
+    xmm_def = create_mask_2x32_128 (xor, xor);
 
     while (height--)
     {
@@ -3370,21 +3374,21 @@ pixman_fill_sse2 (uint32_t *bits,
 
 	if (w >= 1 && ((unsigned long)d & 1))
 	{
-	    *(uint8_t *)d = data;
+	    *(uint8_t *)d = xor;
 	    w -= 1;
 	    d += 1;
 	}
 
 	while (w >= 2 && ((unsigned long)d & 3))
 	{
-	    *(uint16_t *)d = data;
+	    *(uint16_t *)d = xor;
 	    w -= 2;
 	    d += 2;
 	}
 
 	while (w >= 4 && ((unsigned long)d & 15))
 	{
-	    *(uint32_t *)d = data;
+	    *(uint32_t *)d = xor;
 
 	    w -= 4;
 	    d += 4;
@@ -3435,7 +3439,7 @@ pixman_fill_sse2 (uint32_t *bits,
 
 	while (w >= 4)
 	{
-	    *(uint32_t *)d = data;
+	    *(uint32_t *)d = xor;
 
 	    w -= 4;
 	    d += 4;
@@ -3443,14 +3447,14 @@ pixman_fill_sse2 (uint32_t *bits,
 
 	if (w >= 2)
 	{
-	    *(uint16_t *)d = data;
+	    *(uint16_t *)d = xor;
 	    w -= 2;
 	    d += 2;
 	}
 
 	if (w >= 1)
 	{
-	    *(uint8_t *)d = data;
+	    *(uint8_t *)d = xor;
 	    w -= 1;
 	    d += 1;
 	}
@@ -3479,9 +3483,9 @@ sse2_composite_src_n_8_8888 (pixman_implementation_t *imp,
     srca = src >> 24;
     if (src == 0)
     {
-	pixman_fill_sse2 (dest_image->bits.bits, dest_image->bits.rowstride,
-	                  PIXMAN_FORMAT_BPP (dest_image->bits.format),
-	                  dest_x, dest_y, width, height, 0);
+	sse2_fill (imp, dest_image->bits.bits, dest_image->bits.rowstride,
+		   PIXMAN_FORMAT_BPP (dest_image->bits.format),
+		   dest_x, dest_y, width, height, 0);
 	return;
     }
 
@@ -5877,29 +5881,6 @@ static const pixman_fast_path_t sse2_fast_paths[] =
 
     { PIXMAN_OP_NONE },
 };
-
-#if defined(__GNUC__) && !defined(__x86_64__) && !defined(__amd64__)
-__attribute__((__force_align_arg_pointer__))
-#endif
-static pixman_bool_t
-sse2_fill (pixman_implementation_t *imp,
-           uint32_t *               bits,
-           int                      stride,
-           int                      bpp,
-           int                      x,
-           int                      y,
-           int                      width,
-           int                      height,
-           uint32_t xor)
-{
-    if (!pixman_fill_sse2 (bits, stride, bpp, x, y, width, height, xor))
-    {
-	return _pixman_implementation_fill (
-	    imp->delegate, bits, stride, bpp, x, y, width, height, xor);
-    }
-
-    return TRUE;
-}
 
 static uint32_t *
 sse2_fetch_x8r8g8b8 (pixman_iter_t *iter, const uint32_t *mask)

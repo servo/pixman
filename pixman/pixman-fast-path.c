@@ -2192,9 +2192,7 @@ fast_path_fill (pixman_implementation_t *imp,
 	break;
 
     default:
-	return _pixman_implementation_fill (
-	    imp->delegate, bits, stride, bpp, x, y, width, height, xor);
-	break;
+	return FALSE;
     }
 
     return TRUE;

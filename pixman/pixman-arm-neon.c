@@ -183,14 +183,15 @@ pixman_composite_src_n_8888_asm_neon (int32_t   w,
                                       uint32_t  src);
 
 static pixman_bool_t
-pixman_fill_neon (uint32_t *bits,
-                  int       stride,
-                  int       bpp,
-                  int       x,
-                  int       y,
-                  int       width,
-                  int       height,
-                  uint32_t  _xor)
+arm_neon_fill (pixman_implementation_t *imp,
+               uint32_t *               bits,
+               int                      stride,
+               int                      bpp,
+               int                      x,
+               int                      y,
+               int                      width,
+               int                      height,
+	       uint32_t                 _xor)
 {
     /* stride is always multiple of 32bit units in pixman */
     uint32_t byte_stride = stride * sizeof(uint32_t);
@@ -422,24 +423,6 @@ static const pixman_fast_path_t arm_neon_fast_paths[] =
 
     { PIXMAN_OP_NONE },
 };
-
-static pixman_bool_t
-arm_neon_fill (pixman_implementation_t *imp,
-               uint32_t *               bits,
-               int                      stride,
-               int                      bpp,
-               int                      x,
-               int                      y,
-               int                      width,
-               int                      height,
-               uint32_t xor)
-{
-    if (pixman_fill_neon (bits, stride, bpp, x, y, width, height, xor))
-	return TRUE;
-
-    return _pixman_implementation_fill (
-	imp->delegate, bits, stride, bpp, x, y, width, height, xor);
-}
 
 #define BIND_COMBINE_U(name)                                             \
 void                                                                     \

@@ -27,21 +27,6 @@
 #include <stdlib.h>
 #include "pixman-private.h"
 
-static pixman_bool_t
-delegate_fill (pixman_implementation_t *imp,
-               uint32_t *               bits,
-               int                      stride,
-               int                      bpp,
-               int                      x,
-               int                      y,
-               int                      width,
-               int                      height,
-               uint32_t                 xor)
-{
-    return _pixman_implementation_fill (
-	imp->delegate, bits, stride, bpp, x, y, width, height, xor);
-}
-
 static void
 delegate_src_iter_init (pixman_implementation_t *imp,
 			pixman_iter_t *	         iter)
@@ -77,7 +62,7 @@ _pixman_implementation_create (pixman_implementation_t *delegate,
     /* Fill out function pointers with ones that just delegate
      */
     imp->blt = NULL;
-    imp->fill = delegate_fill;
+    imp->fill = NULL;
     imp->src_iter_init = delegate_src_iter_init;
     imp->dest_iter_init = delegate_dest_iter_init;
 
@@ -174,7 +159,18 @@ _pixman_implementation_fill (pixman_implementation_t *imp,
                              int                      height,
                              uint32_t                 xor)
 {
-    return (*imp->fill) (imp, bits, stride, bpp, x, y, width, height, xor);
+    while (imp)
+    {
+	if (imp->fill &&
+	    ((*imp->fill) (imp, bits, stride, bpp, x, y, width, height, xor)))
+	{
+	    return TRUE;
+	}
+
+	imp = imp->delegate;
+    }
+
+    return FALSE;
 }
 
 void
