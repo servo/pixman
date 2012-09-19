@@ -489,7 +489,7 @@ combine_multiply_ca (pixman_implementation_t *imp,
 	comp4_t r = d;
 	comp4_t dest_ia = ALPHA_c (~d);
 
-	combine_mask_value_ca (&s, &m);
+	combine_mask_ca (&s, &m);
 
 	UNcx4_MUL_UNcx4_ADD_UNcx4_MUL_UNc (r, ~m, s, dest_ia);
 	UNcx4_MUL_UNcx4 (d, s);
@@ -546,7 +546,7 @@ combine_multiply_ca (pixman_implementation_t *imp,
 	    comp1_t ida = ~da;						\
 	    comp4_t result;						\
             								\
-	    combine_mask_value_ca (&s, &m);				\
+	    combine_mask_ca (&s, &m);					\
             								\
 	    result = d;							\
 	    UNcx4_MUL_UNcx4_ADD_UNcx4_MUL_UNc (result, ~m, s, ida);     \
