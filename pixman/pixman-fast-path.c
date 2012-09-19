@@ -1458,7 +1458,7 @@ fetch_nearest (pixman_repeat_t src_repeat,
 {
     if (repeat (src_repeat, &x, src_width))
     {
-	if (format == PIXMAN_x8r8g8b8)
+	if (format == PIXMAN_x8r8g8b8 || format == PIXMAN_x8b8g8r8)
 	    return *(src + x) | 0xff000000;
 	else
 	    return *(src + x);
