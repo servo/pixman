@@ -5,6 +5,7 @@ TESTPROGRAMS =			\
 	region-test		\
 	region-translate-test	\
 	fetch-test		\
+	rotate-test		\
 	oob-test		\
 	trap-crasher		\
 	alpha-loop		\
