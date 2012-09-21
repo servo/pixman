@@ -146,7 +146,7 @@ pack_565_2packedx128_128 (__m128i lo, __m128i hi)
     return _mm_packs_epi32 (t0, t1);
 }
 
-__m128i
+static force_inline __m128i
 pack_565_2x128_128 (__m128i lo, __m128i hi)
 {
     __m128i data;
