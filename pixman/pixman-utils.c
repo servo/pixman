@@ -111,8 +111,28 @@ pixman_expand_to_float (argb_t               *dst,
 			pixman_format_code_t  format,
 			int                   width)
 {
+    static const float multipliers[16] = {
+	0.0f,
+	1.0f / ((1 <<  1) - 1),
+	1.0f / ((1 <<  2) - 1),
+	1.0f / ((1 <<  3) - 1),
+	1.0f / ((1 <<  4) - 1),
+	1.0f / ((1 <<  5) - 1),
+	1.0f / ((1 <<  6) - 1),
+	1.0f / ((1 <<  7) - 1),
+	1.0f / ((1 <<  8) - 1),
+	1.0f / ((1 <<  9) - 1),
+	1.0f / ((1 << 10) - 1),
+	1.0f / ((1 << 11) - 1),
+	1.0f / ((1 << 12) - 1),
+	1.0f / ((1 << 13) - 1),
+	1.0f / ((1 << 14) - 1),
+	1.0f / ((1 << 15) - 1),
+    };
     int a_size, r_size, g_size, b_size;
     int a_shift, r_shift, g_shift, b_shift;
+    float a_mul, r_mul, g_mul, b_mul;
+    uint32_t a_mask, r_mask, g_mask, b_mask;
     int i;
 
     if (!PIXMAN_FORMAT_VIS (format))
@@ -132,6 +152,16 @@ pixman_expand_to_float (argb_t               *dst,
     g_shift = 16 - g_size;
     b_shift =  8 - b_size;
 
+    a_mask = ((1 << a_size) - 1);
+    r_mask = ((1 << r_size) - 1);
+    g_mask = ((1 << g_size) - 1);
+    b_mask = ((1 << b_size) - 1);
+
+    a_mul = multipliers[a_size];
+    r_mul = multipliers[r_size];
+    g_mul = multipliers[g_size];
+    b_mul = multipliers[b_size];
+
     /* Start at the end so that we can do the expansion in place
      * when src == dst
      */
@@ -139,10 +169,10 @@ pixman_expand_to_float (argb_t               *dst,
     {
 	const uint32_t pixel = src[i];
 
-	dst[i].a = a_size? unorm_to_float (pixel >> a_shift, a_size) : 1.0;
-	dst[i].r = r_size? unorm_to_float (pixel >> r_shift, r_size) : 0.0;
-	dst[i].g = g_size? unorm_to_float (pixel >> g_shift, g_size) : 0.0;
-	dst[i].b = b_size? unorm_to_float (pixel >> b_shift, b_size) : 0.0;
+	dst[i].a = a_mask? ((pixel >> a_shift) & a_mask) * a_mul : 1.0f;
+	dst[i].r = ((pixel >> r_shift) & r_mask) * r_mul;
+	dst[i].g = ((pixel >> g_shift) & g_mask) * g_mul;
+	dst[i].b = ((pixel >> b_shift) & b_mask) * b_mul;
     }
 }
 
