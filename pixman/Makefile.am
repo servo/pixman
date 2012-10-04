@@ -16,8 +16,6 @@ EXTRA_DIST =				\
 	solaris-hwcap.mapfile		\
 	$(NULL)
 
-DISTCLEANFILES = $(BUILT_SOURCES)
-
 # mmx code
 if USE_X86_MMX
 noinst_LTLIBRARIES += libpixman-mmx.la
@@ -123,5 +121,5 @@ libpixman_1_la_LDFLAGS += $(LS_LDFLAGS)
 libpixman_1_la_LIBADD += libpixman-loongson-mmi.la
 endif
 
-.c.s : $(libpixmaninclude_HEADERS) $(BUILT_SOURCES)
+.c.s : $(libpixmaninclude_HEADERS)
 	$(CC) $(CFLAGS) $(ASM_CFLAGS_$(@:pixman-%.s=%)) $(ASM_CFLAGS_$(@:pixman-arm-%.s=arm_%)) -DHAVE_CONFIG_H -I$(srcdir) -I$(builddir) -I$(top_builddir) -S -o $@ $<
