@@ -1517,9 +1517,7 @@ quick_sort_rects (
                 r++;
                 i++;
 	    }
-
-            while (i != numRects && (r->y1 < y1 || (r->y1 == y1 && r->x1 < x1)))
-		;
+	    while (i != numRects && (r->y1 < y1 || (r->y1 == y1 && r->x1 < x1)));
 
 	    r = &(rects[j]);
             do
