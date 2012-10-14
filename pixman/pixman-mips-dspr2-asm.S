@@ -1631,6 +1631,208 @@ LEAF_MIPS_DSPR2(pixman_composite_add_8888_n_8888_asm_mips)
 
 END(pixman_composite_add_8888_n_8888_asm_mips)
 
+LEAF_MIPS_DSPR2(pixman_composite_add_8888_8888_8888_asm_mips)
+/*
+ * a0 - dst  (a8r8g8b8)
+ * a1 - src  (a8r8g8b8)
+ * a2 - mask (a8r8g8b8)
+ * a3 - w
+ */
+
+    SAVE_REGS_ON_STACK 0, s0, s1, s2
+    li       t4, 0x00ff00ff
+    beqz     a3, 3f
+     nop
+    addiu    t1, a3, -1
+    beqz     t1, 2f
+     nop
+1:
+    lw       t0, 0(a1) /* t0 = source      (a8r8g8b8) */
+    lw       t1, 4(a1) /* t1 = source      (a8r8g8b8) */
+    lw       t2, 0(a2) /* t2 = mask        (a8r8g8b8) */
+    lw       t3, 4(a2) /* t3 = mask        (a8r8g8b8) */
+    lw       t5, 0(a0) /* t5 = destination (a8r8g8b8) */
+    lw       t6, 4(a0) /* t6 = destination (a8r8g8b8) */
+    addiu    a1, a1, 8
+    addiu    a2, a2, 8
+    srl      t2, t2, 24
+    srl      t3, t3, 24
+
+    MIPS_2xUN8x4_MUL_2xUN8_ADD_2xUN8x4 t0, t1, \
+                                       t2, t3, \
+                                       t5, t6, \
+                                       t7, t8, \
+                                       t4, t9, s0, s1, s2, t0, t1
+
+    sw       t7, 0(a0)
+    sw       t8, 4(a0)
+    addiu    a3, a3, -2
+    addiu    t1, a3, -1
+    bgtz     t1, 1b
+     addiu   a0, a0, 8
+2:
+    beqz     a3, 3f
+     nop
+    lw       t0, 0(a1) /* t0 = source      (a8r8g8b8) */
+    lw       t1, 0(a2) /* t1 = mask        (a8r8g8b8) */
+    lw       t2, 0(a0) /* t2 = destination (a8r8g8b8) */
+    srl      t1, t1, 24
+
+    MIPS_UN8x4_MUL_UN8_ADD_UN8x4 t0, t1, t2, t3, t4, t5, t6, t7
+
+    sw       t3, 0(a0)
+3:
+    RESTORE_REGS_FROM_STACK 0, s0, s1, s2
+    j        ra
+     nop
+
+END(pixman_composite_add_8888_8888_8888_asm_mips)
+
+LEAF_MIPS_DSPR2(pixman_composite_add_8_8_asm_mips)
+/*
+ * a0 - dst  (a8)
+ * a1 - src  (a8)
+ * a2 - w
+ */
+
+    beqz              a2, 3f
+     nop
+    srl               t9, a2, 2   /* t9 = how many multiples of 4 dst pixels */
+    beqz              t9, 1f      /* branch if less than 4 src pixels */
+     nop
+
+0:
+    beqz              t9, 1f
+     addiu            t9, t9, -1
+    lbu               t0, 0(a1)
+    lbu               t1, 1(a1)
+    lbu               t2, 2(a1)
+    lbu               t3, 3(a1)
+    lbu               t4, 0(a0)
+    lbu               t5, 1(a0)
+    lbu               t6, 2(a0)
+    lbu               t7, 3(a0)
+
+    addiu             a1, a1, 4
+
+    precr_sra.ph.w    t1, t0, 0
+    precr_sra.ph.w    t3, t2, 0
+    precr_sra.ph.w    t5, t4, 0
+    precr_sra.ph.w    t7, t6, 0
+
+    precr.qb.ph       t0, t3, t1
+    precr.qb.ph       t1, t7, t5
+
+    addu_s.qb         t2, t0, t1
+
+    sb                t2, 0(a0)
+    srl               t2, t2, 8
+    sb                t2, 1(a0)
+    srl               t2, t2, 8
+    sb                t2, 2(a0)
+    srl               t2, t2, 8
+    sb                t2, 3(a0)
+    addiu             a2, a2, -4
+    b                 0b
+     addiu            a0, a0, 4
+
+1:
+    beqz              a2, 3f
+     nop
+2:
+    lbu               t0, 0(a1)
+    lbu               t1, 0(a0)
+    addiu             a1, a1, 1
+
+    addu_s.qb         t2, t0, t1
+    sb                t2, 0(a0)
+    addiu             a2, a2, -1
+    bnez              a2, 2b
+     addiu            a0, a0, 1
+
+3:
+    j                 ra
+     nop
+
+END(pixman_composite_add_8_8_asm_mips)
+
+LEAF_MIPS_DSPR2(pixman_composite_add_8888_8888_asm_mips)
+/*
+ * a0 - dst (a8r8g8b8)
+ * a1 - src (a8r8g8b8)
+ * a2 - w
+ */
+
+    beqz         a2, 4f
+     nop
+
+    srl          t9, a2, 2      /* t1 = how many multiples of 4 src pixels */
+    beqz         t9, 3f         /* branch if less than 4 src pixels */
+     nop
+1:
+    addiu        t9, t9, -1
+    beqz         t9, 2f
+     addiu       a2, a2, -4
+
+    lw           t0, 0(a1)
+    lw           t1, 4(a1)
+    lw           t2, 8(a1)
+    lw           t3, 12(a1)
+    lw           t4, 0(a0)
+    lw           t5, 4(a0)
+    lw           t6, 8(a0)
+    lw           t7, 12(a0)
+    addiu        a1, a1, 16
+
+    addu_s.qb    t4, t4, t0
+    addu_s.qb    t5, t5, t1
+    addu_s.qb    t6, t6, t2
+    addu_s.qb    t7, t7, t3
+
+    sw           t4, 0(a0)
+    sw           t5, 4(a0)
+    sw           t6, 8(a0)
+    sw           t7, 12(a0)
+    b            1b
+     addiu       a0, a0, 16
+2:
+    lw           t0, 0(a1)
+    lw           t1, 4(a1)
+    lw           t2, 8(a1)
+    lw           t3, 12(a1)
+    lw           t4, 0(a0)
+    lw           t5, 4(a0)
+    lw           t6, 8(a0)
+    lw           t7, 12(a0)
+    addiu        a1, a1, 16
+
+    addu_s.qb    t4, t4, t0
+    addu_s.qb    t5, t5, t1
+    addu_s.qb    t6, t6, t2
+    addu_s.qb    t7, t7, t3
+
+    sw           t4, 0(a0)
+    sw           t5, 4(a0)
+    sw           t6, 8(a0)
+    sw           t7, 12(a0)
+
+    beqz         a2, 4f
+     addiu       a0, a0, 16
+3:
+    lw           t0, 0(a1)
+    lw           t1, 0(a0)
+    addiu        a1, a1, 4
+    addiu        a2, a2, -1
+    addu_s.qb    t1, t1, t0
+    sw           t1, 0(a0)
+    bnez         a2, 3b
+     addiu       a0, a0, 4
+4:
+    jr           ra
+     nop
+
+END(pixman_composite_add_8888_8888_asm_mips)
+
 LEAF_MIPS_DSPR2(pixman_scaled_bilinear_scanline_8888_8888_SRC_asm_mips)
 /*
  * a0     - *dst
