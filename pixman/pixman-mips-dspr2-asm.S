@@ -1342,6 +1342,140 @@ LEAF_MIPS_DSPR2(pixman_composite_over_8888_8888_asm_mips)
 
 END(pixman_composite_over_8888_8888_asm_mips)
 
+LEAF_MIPS_DSPR2(pixman_composite_over_n_0565_asm_mips)
+/*
+ * a0 - dst  (r5g6b5)
+ * a1 - src  (32bit constant)
+ * a2 - w
+ */
+
+    beqz         a2, 5f
+     nop
+
+    not          t0, a1
+    srl          t0, t0, 24
+    bgtz         t0, 1f
+     nop
+    CONVERT_1x8888_TO_1x0565 a1, t1, t2, t3
+0:
+    sh           t1, 0(a0)
+    addiu        a2, a2, -1
+    bgtz         a2, 0b
+     addiu       a0, a0, 2
+    j            ra
+     nop
+
+1:
+    SAVE_REGS_ON_STACK 0, s0, s1, s2
+    li           t4, 0x00ff00ff
+    li           t5, 0xf800f800
+    li           t6, 0x07e007e0
+    li           t7, 0x001F001F
+    addiu        t1, a2, -1
+    beqz         t1, 3f
+     nop
+2:
+    lhu          t1, 0(a0) /* t1 = destination (r5g6b5) */
+    lhu          t2, 2(a0) /* t2 = destination (r5g6b5) */
+
+    CONVERT_2x0565_TO_2x8888 t1, t2, t3, t8, t6, t7, t9, s0, s1, s2
+    MIPS_2xUN8x4_MUL_2xUN8   t3, t8, t0, t0, t1, t2, t4, t9, s0, s1, s2, t3, t8
+    addu_s.qb                t1, t1, a1
+    addu_s.qb                t2, t2, a1
+    CONVERT_2x8888_TO_2x0565 t1, t2, t3, t8, t5, t6, t7, s0, s1
+
+    sh           t3, 0(a0)
+    sh           t8, 2(a0)
+
+    addiu        a2, a2, -2
+    addiu        t1, a2, -1
+    bgtz         t1, 2b
+     addiu       a0, a0, 4
+3:
+    beqz         a2, 4f
+     nop
+
+    lhu          t1, 0(a0) /* t1 = destination (r5g6b5) */
+
+    CONVERT_1x0565_TO_1x8888 t1, t2, s0, s1
+    MIPS_UN8x4_MUL_UN8       t2, t0, t1, t4, s0, s1, s2
+    addu_s.qb                t1, t1, a1
+    CONVERT_1x8888_TO_1x0565 t1, t2, s0, s1
+
+    sh           t2, 0(a0)
+
+4:
+    RESTORE_REGS_FROM_STACK 0, s0, s1, s2
+5:
+    j            ra
+     nop
+
+END(pixman_composite_over_n_0565_asm_mips)
+
+LEAF_MIPS_DSPR2(pixman_composite_over_n_8888_asm_mips)
+/*
+ * a0 - dst  (a8r8g8b8)
+ * a1 - src  (32bit constant)
+ * a2 - w
+ */
+
+    beqz         a2, 5f
+     nop
+
+    not          t0, a1
+    srl          t0, t0, 24
+    bgtz         t0, 1f
+     nop
+0:
+    sw           a1, 0(a0)
+    addiu        a2, a2, -1
+    bgtz         a2, 0b
+     addiu       a0, a0, 4
+    j            ra
+     nop
+
+1:
+    SAVE_REGS_ON_STACK 0, s0, s1, s2
+    li           t4, 0x00ff00ff
+    addiu        t1, a2, -1
+    beqz         t1, 3f
+     nop
+2:
+    lw           t2, 0(a0) /* t2 = destination (a8r8g8b8) */
+    lw           t3, 4(a0) /* t3 = destination (a8r8g8b8) */
+
+    MIPS_2xUN8x4_MUL_2xUN8 t2, t3, t0, t0, t7, t8, t4, t9, s0, s1, s2, t2, t3
+
+    addu_s.qb    t7, t7, a1
+    addu_s.qb    t8, t8, a1
+
+    sw           t7, 0(a0)
+    sw           t8, 4(a0)
+
+    addiu        a2, a2, -2
+    addiu        t1, a2, -1
+    bgtz         t1, 2b
+     addiu       a0, a0, 8
+3:
+    beqz         a2, 4f
+     nop
+
+    lw           t1, 0(a0) /* t1 = destination (a8r8g8b8) */
+
+    MIPS_UN8x4_MUL_UN8 t1, t0, t3, t4, t5, t6, t7
+
+    addu_s.qb    t3, t3, a1
+
+    sw           t3, 0(a0)
+
+4:
+    RESTORE_REGS_FROM_STACK 0, s0, s1, s2
+5:
+    j            ra
+     nop
+
+END(pixman_composite_over_n_8888_asm_mips)
+
 LEAF_MIPS_DSPR2(pixman_composite_add_8_8_8_asm_mips)
 /*
  * a0 - dst  (a8)
