@@ -116,6 +116,11 @@ PIXMAN_MIPS_BIND_SCALED_BILINEAR_SRC_DST (SKIP_ZERO_SRC, 8888_8888, OVER,
 PIXMAN_MIPS_BIND_SCALED_BILINEAR_SRC_DST (SKIP_ZERO_SRC, 8888_8888, ADD,
                                           uint32_t, uint32_t)
 
+PIXMAN_MIPS_BIND_SCALED_NEAREST_SRC_A8_DST (SKIP_ZERO_SRC, 8888_8_0565,
+                                            OVER, uint32_t, uint16_t)
+PIXMAN_MIPS_BIND_SCALED_NEAREST_SRC_A8_DST (SKIP_ZERO_SRC, 0565_8_0565,
+                                            OVER, uint16_t, uint16_t)
+
 PIXMAN_MIPS_BIND_SCALED_BILINEAR_SRC_A8_DST (0, 8888_8_8888, SRC,
                                              uint32_t, uint32_t)
 PIXMAN_MIPS_BIND_SCALED_BILINEAR_SRC_A8_DST (0, 8888_8_0565, SRC,
@@ -319,6 +324,12 @@ static const pixman_fast_path_t mips_dspr2_fast_paths[] =
     PIXMAN_STD_FAST_PATH (ADD,  a8,       null,     a8,       mips_composite_add_8_8),
     PIXMAN_STD_FAST_PATH (ADD,  a8r8g8b8, null,     a8r8g8b8, mips_composite_add_8888_8888),
     PIXMAN_STD_FAST_PATH (ADD,  a8b8g8r8, null,     a8b8g8r8, mips_composite_add_8888_8888),
+
+    PIXMAN_MIPS_SIMPLE_NEAREST_A8_MASK_FAST_PATH (OVER, a8r8g8b8, r5g6b5, mips_8888_8_0565),
+    PIXMAN_MIPS_SIMPLE_NEAREST_A8_MASK_FAST_PATH (OVER, a8b8g8r8, b5g6r5, mips_8888_8_0565),
+
+    PIXMAN_MIPS_SIMPLE_NEAREST_A8_MASK_FAST_PATH (OVER, r5g6b5, r5g6b5, mips_0565_8_0565),
+    PIXMAN_MIPS_SIMPLE_NEAREST_A8_MASK_FAST_PATH (OVER, b5g6r5, b5g6r5, mips_0565_8_0565),
 
     SIMPLE_BILINEAR_FAST_PATH (SRC, a8r8g8b8, a8r8g8b8, mips_8888_8888),
     SIMPLE_BILINEAR_FAST_PATH (SRC, a8r8g8b8, x8r8g8b8, mips_8888_8888),
