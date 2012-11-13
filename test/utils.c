@@ -377,7 +377,7 @@ fence_malloc (int64_t len)
 	return NULL;
     }
 
-    initial_page = (uint8_t *)(((unsigned long)addr + page_mask) & ~page_mask);
+    initial_page = (uint8_t *)(((uintptr_t)addr + page_mask) & ~page_mask);
     leading_protected = initial_page + page_size;
     payload = leading_protected + N_LEADING_PROTECTED * page_size;
     trailing_protected = payload + n_payload_bytes;
