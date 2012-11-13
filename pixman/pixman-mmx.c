@@ -62,7 +62,7 @@ _mm_empty (void)
 #endif
 
 #ifdef USE_X86_MMX
-# if (defined(__SUNPRO_C) || defined(_MSC_VER))
+# if (defined(__SUNPRO_C) || defined(_MSC_VER) || defined(_WIN64))
 #  include <xmmintrin.h>
 # else
 /* We have to compile with -msse to use xmmintrin.h, but that causes SSE
