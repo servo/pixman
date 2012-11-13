@@ -694,6 +694,8 @@ get_random_seed (void)
     return lcg_rand_u32 ();
 }
 
+#ifdef HAVE_SIGACTION
+#ifdef HAVE_ALARM
 static const char *global_msg;
 
 static void
@@ -702,6 +704,8 @@ on_alarm (int signo)
     printf ("%s\n", global_msg);
     exit (1);
 }
+#endif
+#endif
 
 void
 fail_after (int seconds, const char *msg)
