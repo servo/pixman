@@ -292,7 +292,28 @@ typedef enum
     PIXMAN_FILTER_BEST,
     PIXMAN_FILTER_NEAREST,
     PIXMAN_FILTER_BILINEAR,
-    PIXMAN_FILTER_CONVOLUTION
+    PIXMAN_FILTER_CONVOLUTION,
+
+    /* The SEPARABLE_CONVOLUTION filter takes the following parameters:
+     *
+     *         width:           integer given as 16.16 fixpoint number
+     *         height:          integer given as 16.16 fixpoint number
+     *         x_phase_bits:	integer given as 16.16 fixpoint
+     *         y_phase_bits:	integer given as 16.16 fixpoint
+     *         xtables:         (1 << x_phase_bits) tables of size width
+     *         ytables:         (1 << y_phase_bits) tables of size height
+     *
+     * When sampling at (x, y), the location is first rounded to one of
+     * n_x_phases * n_y_phases subpixel positions. These subpixel positions
+     * determine an xtable and a ytable to use.
+     *
+     * Conceptually a width x height matrix is then formed in which each entry
+     * is the product of the corresponding entries in the x and y tables.
+     * This matrix is then aligned with the image pixels such that its center
+     * is as close as possible to the subpixel location chosen earlier. Then
+     * the image is convolved with the matrix and the resulting pixel returned.
+     */
+    PIXMAN_FILTER_SEPARABLE_CONVOLUTION
 } pixman_filter_t;
 
 typedef enum
