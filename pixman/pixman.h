@@ -831,6 +831,33 @@ int             pixman_image_get_height              (pixman_image_t            
 int		pixman_image_get_stride              (pixman_image_t               *image); /* in bytes */
 int		pixman_image_get_depth               (pixman_image_t		   *image);
 pixman_format_code_t pixman_image_get_format	     (pixman_image_t		   *image);
+
+typedef enum
+{
+    PIXMAN_KERNEL_IMPULSE,
+    PIXMAN_KERNEL_BOX,
+    PIXMAN_KERNEL_LINEAR,
+    PIXMAN_KERNEL_CUBIC,
+    PIXMAN_KERNEL_GAUSSIAN,
+    PIXMAN_KERNEL_LANCZOS2,
+    PIXMAN_KERNEL_LANCZOS3,
+    PIXMAN_KERNEL_LANCZOS3_STRETCHED       /* Jim Blinn's 'nice' filter */
+} pixman_kernel_t;
+
+/* Create the parameter list for a SEPARABLE_CONVOLUTION filter
+ * with the given kernels and scale parameters.
+ */
+pixman_fixed_t *
+pixman_filter_create_separable_convolution (int             *n_values,
+					    pixman_fixed_t   scale_x,
+					    pixman_fixed_t   scale_y,
+					    pixman_kernel_t  reconstruct_x,
+					    pixman_kernel_t  reconstruct_y,
+					    pixman_kernel_t  sample_x,
+					    pixman_kernel_t  sample_y,
+					    int              subsample_bits_x,
+					    int              subsample_bits_y);
+
 pixman_bool_t	pixman_image_fill_rectangles	     (pixman_op_t		    op,
 						      pixman_image_t		   *image,
 						      const pixman_color_t	   *color,

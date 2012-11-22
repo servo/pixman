@@ -427,7 +427,7 @@ bits_image_fetch_pixel_convolution (bits_image_t   *image,
 }
 
 static uint32_t
-bits_image_fetch_pixel_convolution_separable (bits_image_t *image,
+bits_image_fetch_pixel_separable_convolution (bits_image_t *image,
                                               pixman_fixed_t x,
                                               pixman_fixed_t y,
                                               get_pixel_t    get_pixel)
@@ -548,7 +548,7 @@ bits_image_fetch_pixel_filtered (bits_image_t *image,
 	break;
 
     case PIXMAN_FILTER_SEPARABLE_CONVOLUTION:
-        return bits_image_fetch_pixel_convolution_separable (image, x, y, get_pixel);
+        return bits_image_fetch_pixel_separable_convolution (image, x, y, get_pixel);
         break;
 
     default:
