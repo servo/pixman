@@ -69,8 +69,12 @@ compute_crc32_for_image (uint32_t        in_crc32,
 
 /* Returns TRUE if running on a little endian system
  */
-pixman_bool_t
-is_little_endian (void);
+static force_inline pixman_bool_t
+is_little_endian (void)
+{
+    unsigned long endian_check_var = 1;
+    return *(unsigned char *)&endian_check_var == 1;
+}
 
 /* perform endian conversion of pixel data
  */

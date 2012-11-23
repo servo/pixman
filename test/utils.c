@@ -237,14 +237,6 @@ compute_crc32_for_image (uint32_t        crc32,
     return crc32;
 }
 
-pixman_bool_t
-is_little_endian (void)
-{
-    volatile uint16_t endian_check_var = 0x1234;
-
-    return (*(volatile uint8_t *)&endian_check_var == 0x34);
-}
-
 /* perform endian conversion of pixel data
  */
 void
