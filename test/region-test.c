@@ -91,10 +91,10 @@ main ()
 	/* Add some random rectangles */
 	for (j = 0; j < 64; j++)
 	    pixman_region32_union_rect (&r1, &r1,
-					lcg_rand_n (image_size),
-					lcg_rand_n (image_size),
-					lcg_rand_n (25),
-					lcg_rand_n (25));
+					prng_rand_n (image_size),
+					prng_rand_n (image_size),
+					prng_rand_n (25),
+					prng_rand_n (25));
 
 	/* Clip to image size */
 	pixman_region32_init_rect (&r2, 0, 0, image_size, image_size);

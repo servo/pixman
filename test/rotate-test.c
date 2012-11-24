@@ -43,13 +43,13 @@ static const pixman_transform_t transforms[] =
 };
 
 #define RANDOM_FORMAT()							\
-    (formats[lcg_rand_n (ARRAY_LENGTH (formats))])
+    (formats[prng_rand_n (ARRAY_LENGTH (formats))])
 
 #define RANDOM_OP()							\
-    (ops[lcg_rand_n (ARRAY_LENGTH (ops))])
+    (ops[prng_rand_n (ARRAY_LENGTH (ops))])
 
 #define RANDOM_TRANSFORM()						\
-    (&(transforms[lcg_rand_n (ARRAY_LENGTH (transforms))]))
+    (&(transforms[prng_rand_n (ARRAY_LENGTH (transforms))]))
 
 static void
 on_destroy (pixman_image_t *image, void *data)
@@ -66,7 +66,7 @@ make_image (void)
     int i;
 
     for (i = 0; i < WIDTH * HEIGHT * 4; ++i)
-	((uint8_t *)bytes)[i] = lcg_rand_n (256);
+	((uint8_t *)bytes)[i] = prng_rand_n (256);
 
     image = pixman_image_create_bits (
 	format, WIDTH, HEIGHT, bytes, WIDTH * 4);
@@ -86,7 +86,7 @@ test_transform (int testnum, int verbose)
     pixman_image_t *src, *dest;
     uint32_t crc;
 
-    lcg_srand (testnum);
+    prng_srand (testnum);
     
     src = make_image ();
     dest = make_image ();

@@ -11,47 +11,47 @@
  * taken from POSIX.1-2001 example
  */
 
-extern uint32_t lcg_seed;
+extern uint32_t prng_seed;
 #ifdef USE_OPENMP
-#pragma omp threadprivate(lcg_seed)
+#pragma omp threadprivate(prng_seed)
 #endif
 
 static inline uint32_t
-lcg_rand (void)
+prng_rand (void)
 {
-    lcg_seed = lcg_seed * 1103515245 + 12345;
-    return ((uint32_t)(lcg_seed / 65536) % 32768);
+    prng_seed = prng_seed * 1103515245 + 12345;
+    return ((uint32_t)(prng_seed / 65536) % 32768);
 }
 
 static inline void
-lcg_srand (uint32_t seed)
+prng_srand (uint32_t seed)
 {
-    lcg_seed = seed;
+    prng_seed = seed;
 }
 
 static inline uint32_t
-lcg_rand_n (int max)
+prng_rand_n (int max)
 {
-    return lcg_rand () % max;
+    return prng_rand () % max;
 }
 
 static inline uint32_t
-lcg_rand_N (int max)
+prng_rand_N (int max)
 {
-    uint32_t lo = lcg_rand ();
-    uint32_t hi = lcg_rand () << 15;
+    uint32_t lo = prng_rand ();
+    uint32_t hi = prng_rand () << 15;
     return (lo | hi) % max;
 }
 
 static inline uint32_t
-lcg_rand_u32 (void)
+prng_rand_u32 (void)
 {
     /* This uses the 10/11 most significant bits from the 3 lcg results
      * (and mixes them with the low from the adjacent one).
      */
-    uint32_t lo = lcg_rand() >> -(32 - 15 - 11 * 2);
-    uint32_t mid = lcg_rand() << (32 - 15 - 11 * 1);
-    uint32_t hi = lcg_rand() << (32 - 15 - 11 * 0);
+    uint32_t lo = prng_rand() >> -(32 - 15 - 11 * 2);
+    uint32_t mid = prng_rand() << (32 - 15 - 11 * 1);
+    uint32_t hi = prng_rand() << (32 - 15 - 11 * 0);
 
     return (hi ^ mid ^ lo);
 }

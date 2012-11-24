@@ -30,7 +30,7 @@
 /* Random number seed
  */
 
-uint32_t lcg_seed;
+uint32_t prng_seed;
 
 /*----------------------------------------------------------------------------*\
  *  CRC-32 version 2.0.0 by Craig Bruce, 2006-04-29.
@@ -429,7 +429,7 @@ make_random_bytes (int n_bytes)
 	return NULL;
 
     for (i = 0; i < n_bytes; ++i)
-	bytes[i] = lcg_rand () & 0xff;
+	bytes[i] = prng_rand () & 0xff;
 
     return bytes;
 }
@@ -681,9 +681,9 @@ get_random_seed (void)
 {
     union { double d; uint32_t u32; } t;
     t.d = gettime();
-    lcg_srand (t.u32);
+    prng_srand (t.u32);
 
-    return lcg_rand_u32 ();
+    return prng_rand_u32 ();
 }
 
 #ifdef HAVE_SIGACTION
@@ -777,7 +777,7 @@ initialize_palette (pixman_indexed_t *palette, uint32_t depth, int is_rgb)
     uint32_t mask = (1 << depth) - 1;
 
     for (i = 0; i < 32768; ++i)
-	palette->ent[i] = lcg_rand() & mask;
+	palette->ent[i] = prng_rand() & mask;
 
     memset (palette->rgba, 0, sizeof (palette->rgba));
 
@@ -797,7 +797,7 @@ initialize_palette (pixman_indexed_t *palette, uint32_t depth, int is_rgb)
 	{
 	    uint32_t old_idx;
 
-	    rgba24 = lcg_rand();
+	    rgba24 = prng_rand();
 	    i15 = CONVERT_15 (rgba24, is_rgb);
 
 	    old_idx = palette->ent[i15];

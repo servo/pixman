@@ -33,14 +33,14 @@ create_random_image (pixman_format_code_t *allowed_formats,
     while (allowed_formats[n] != PIXMAN_null)
 	n++;
 
-    if (n > N_MOST_LIKELY_FORMATS && lcg_rand_n (4) != 0)
+    if (n > N_MOST_LIKELY_FORMATS && prng_rand_n (4) != 0)
 	n = N_MOST_LIKELY_FORMATS;
-    fmt = allowed_formats[lcg_rand_n (n)];
+    fmt = allowed_formats[prng_rand_n (n)];
 
-    width = lcg_rand_n (max_width) + 1;
-    height = lcg_rand_n (max_height) + 1;
+    width = prng_rand_n (max_width) + 1;
+    height = prng_rand_n (max_height) + 1;
     stride = (width * PIXMAN_FORMAT_BPP (fmt) + 7) / 8 +
-	lcg_rand_n (max_extra_stride + 1);
+	prng_rand_n (max_extra_stride + 1);
     stride = (stride + 3) & ~3;
 
     /* do the allocation */
@@ -52,8 +52,8 @@ create_random_image (pixman_format_code_t *allowed_formats,
 	/* generation is biased to having more 0 or 255 bytes as
 	 * they are more likely to be special-cased in code
 	 */
-	*((uint8_t *)buf + i) = lcg_rand_n (4) ? lcg_rand_n (256) :
-	    (lcg_rand_n (2) ? 0 : 255);
+	*((uint8_t *)buf + i) = prng_rand_n (4) ? prng_rand_n (256) :
+	    (prng_rand_n (2) ? 0 : 255);
     }
 
     img = pixman_image_create_bits (fmt, width, height, buf, stride);
@@ -67,7 +67,7 @@ create_random_image (pixman_format_code_t *allowed_formats,
 	pixman_image_set_indexed (img, &(y_palette[PIXMAN_FORMAT_BPP (fmt)]));
     }
 
-    if (lcg_rand_n (16) == 0)
+    if (prng_rand_n (16) == 0)
 	pixman_image_set_filter (img, PIXMAN_FILTER_BILINEAR, NULL, 0);
 
     image_endian_swap (img);
@@ -251,11 +251,11 @@ test_composite (int testnum, int verbose)
     if (max_extra_stride > 8)
 	max_extra_stride = 8;
 
-    lcg_srand (testnum);
+    prng_srand (testnum);
 
-    op = op_list[lcg_rand_n (ARRAY_LENGTH (op_list))];
+    op = op_list[prng_rand_n (ARRAY_LENGTH (op_list))];
 
-    if (lcg_rand_n (8))
+    if (prng_rand_n (8))
     {
 	/* normal image */
 	src_img = create_random_image (img_fmt_list, max_width, max_height,
@@ -284,10 +284,10 @@ test_composite (int testnum, int verbose)
     dstbuf = pixman_image_get_data (dst_img);
     srcbuf = pixman_image_get_data (src_img);
 
-    src_x = lcg_rand_n (src_width);
-    src_y = lcg_rand_n (src_height);
-    dst_x = lcg_rand_n (dst_width);
-    dst_y = lcg_rand_n (dst_height);
+    src_x = prng_rand_n (src_width);
+    src_y = prng_rand_n (src_height);
+    dst_x = prng_rand_n (dst_width);
+    dst_y = prng_rand_n (dst_height);
 
     mask_img = NULL;
     mask_fmt = PIXMAN_null;
@@ -296,10 +296,10 @@ test_composite (int testnum, int verbose)
     maskbuf = NULL;
 
     if ((src_fmt == PIXMAN_x8r8g8b8 || src_fmt == PIXMAN_x8b8g8r8) &&
-	(lcg_rand_n (4) == 0))
+	(prng_rand_n (4) == 0))
     {
 	/* PIXBUF */
-	mask_fmt = lcg_rand_n (2) ? PIXMAN_a8r8g8b8 : PIXMAN_a8b8g8r8;
+	mask_fmt = prng_rand_n (2) ? PIXMAN_a8r8g8b8 : PIXMAN_a8b8g8r8;
 	mask_img = pixman_image_create_bits (mask_fmt,
 	                                     src_width,
 	                                     src_height,
@@ -309,9 +309,9 @@ test_composite (int testnum, int verbose)
 	mask_y = src_y;
 	maskbuf = srcbuf;
     }
-    else if (lcg_rand_n (2))
+    else if (prng_rand_n (2))
     {
-	if (lcg_rand_n (2))
+	if (prng_rand_n (2))
 	{
 	    mask_img = create_random_image (mask_fmt_list, max_width, max_height,
 					   max_extra_stride, &mask_fmt);
@@ -324,16 +324,16 @@ test_composite (int testnum, int verbose)
 	    pixman_image_set_repeat (mask_img, PIXMAN_REPEAT_NORMAL);
 	}
 
-	if (lcg_rand_n (2))
+	if (prng_rand_n (2))
 	    pixman_image_set_component_alpha (mask_img, 1);
 
-	mask_x = lcg_rand_n (pixman_image_get_width (mask_img));
-	mask_y = lcg_rand_n (pixman_image_get_height (mask_img));
+	mask_x = prng_rand_n (pixman_image_get_width (mask_img));
+	mask_y = prng_rand_n (pixman_image_get_height (mask_img));
     }
 
 
-    w = lcg_rand_n (dst_width - dst_x + 1);
-    h = lcg_rand_n (dst_height - dst_y + 1);
+    w = prng_rand_n (dst_width - dst_x + 1);
+    h = prng_rand_n (dst_height - dst_y + 1);
 
     if (verbose)
     {
