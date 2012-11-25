@@ -251,6 +251,6 @@ test_composite (int      testnum,
 int
 main (int argc, const char *argv[])
 {
-    return fuzzer_test_main("composite traps", 40000, 0x33BFAA55,
+    return fuzzer_test_main("composite traps", 40000, 0x749BCC57,
 			    test_composite, argc, argv);
 }

@@ -140,14 +140,9 @@ test_composite (int      testnum,
     maskbuf = (uint32_t *)malloc (mask_stride * mask_height);
     dstbuf = (uint32_t *)malloc (dst_stride * dst_height);
 
-    for (i = 0; i < src_stride * src_height; i++)
-	*((uint8_t *)srcbuf + i) = prng_rand_n (256);
-
-    for (i = 0; i < mask_stride * mask_height; i++)
-	*((uint8_t *)maskbuf + i) = prng_rand_n (256);
-
-    for (i = 0; i < dst_stride * dst_height; i++)
-	*((uint8_t *)dstbuf + i) = prng_rand_n (256);
+    prng_randmemset (srcbuf, src_stride * src_height, 0);
+    prng_randmemset (maskbuf, mask_stride * mask_height, 0);
+    prng_randmemset (dstbuf, dst_stride * dst_height, 0);
 
     src_fmt = get_format (src_bpp);
     dst_fmt = get_format (dst_bpp);
@@ -380,11 +375,11 @@ test_composite (int      testnum,
 }
 
 #if BILINEAR_INTERPOLATION_BITS == 8
-#define CHECKSUM 0x107B67ED
+#define CHECKSUM 0x9096E6B6
 #elif BILINEAR_INTERPOLATION_BITS == 7
-#define CHECKSUM 0x30EC0CF0
+#define CHECKSUM 0xCE8EC6BA
 #elif BILINEAR_INTERPOLATION_BITS == 4
-#define CHECKSUM 0x87B496BC
+#define CHECKSUM 0xAB1D39BE
 #else
 #define CHECKSUM 0x00000000
 #endif

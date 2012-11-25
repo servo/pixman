@@ -77,11 +77,8 @@ test_composite (int      testnum,
     srcbuf = (uint32_t *)malloc (src_stride * src_height);
     dstbuf = (uint32_t *)malloc (dst_stride * dst_height);
 
-    for (i = 0; i < src_stride * src_height; i++)
-	*((uint8_t *)srcbuf + i) = prng_rand_n (256);
-
-    for (i = 0; i < dst_stride * dst_height; i++)
-	*((uint8_t *)dstbuf + i) = prng_rand_n (256);
+    prng_randmemset (srcbuf, src_stride * src_height, 0);
+    prng_randmemset (dstbuf, dst_stride * dst_height, 0);
 
     src_fmt = src_bpp == 4 ? (prng_rand_n (2) == 0 ?
                               PIXMAN_a8r8g8b8 : PIXMAN_x8r8g8b8) : PIXMAN_r5g6b5;
@@ -310,11 +307,11 @@ test_composite (int      testnum,
 }
 
 #if BILINEAR_INTERPOLATION_BITS == 8
-#define CHECKSUM 0x344413F0
+#define CHECKSUM 0x97097336
 #elif BILINEAR_INTERPOLATION_BITS == 7
-#define CHECKSUM 0xC8181A76
+#define CHECKSUM 0x31D2DC21
 #elif BILINEAR_INTERPOLATION_BITS == 4
-#define CHECKSUM 0xD672A457
+#define CHECKSUM 0x8B925154
 #else
 #define CHECKSUM 0x00000000
 #endif

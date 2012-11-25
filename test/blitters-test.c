@@ -25,7 +25,7 @@ create_random_image (pixman_format_code_t *allowed_formats,
 		     int                   max_extra_stride,
 		     pixman_format_code_t *used_fmt)
 {
-    int n = 0, i, width, height, stride;
+    int n = 0, width, height, stride;
     pixman_format_code_t fmt;
     uint32_t *buf;
     pixman_image_t *img;
@@ -46,15 +46,7 @@ create_random_image (pixman_format_code_t *allowed_formats,
     /* do the allocation */
     buf = aligned_malloc (64, stride * height);
 
-    /* initialize image with random data */
-    for (i = 0; i < stride * height; i++)
-    {
-	/* generation is biased to having more 0 or 255 bytes as
-	 * they are more likely to be special-cased in code
-	 */
-	*((uint8_t *)buf + i) = prng_rand_n (4) ? prng_rand_n (256) :
-	    (prng_rand_n (2) ? 0 : 255);
-    }
+    prng_randmemset (buf, stride * height, RANDMEMSET_MORE_00_AND_FF);
 
     img = pixman_image_create_bits (fmt, width, height, buf, stride);
 
@@ -390,6 +382,8 @@ main (int argc, const char *argv[])
 {
     int i;
 
+    prng_srand (0);
+
     for (i = 1; i <= 8; i++)
     {
 	initialize_palette (&(rgb_palette[i]), i, TRUE);
@@ -397,6 +391,6 @@ main (int argc, const char *argv[])
     }
 
     return fuzzer_test_main("blitters", 2000000,
-			    0x46136E0A,
+			    0xD8265D5E,
 			    test_composite, argc, argv);
 }

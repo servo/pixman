@@ -27,10 +27,11 @@
 #include <png.h>
 #endif
 
-/* Random number seed
+/* Random number generator state
  */
 
-uint32_t prng_seed;
+prng_t prng_state_data;
+prng_t *prng_state;
 
 /*----------------------------------------------------------------------------*\
  *  CRC-32 version 2.0.0 by Craig Bruce, 2006-04-29.
@@ -423,13 +424,11 @@ uint8_t *
 make_random_bytes (int n_bytes)
 {
     uint8_t *bytes = fence_malloc (n_bytes);
-    int i;
 
     if (!bytes)
 	return NULL;
 
-    for (i = 0; i < n_bytes; ++i)
-	bytes[i] = prng_rand () & 0xff;
+    prng_randmemset (bytes, n_bytes, 0);
 
     return bytes;
 }

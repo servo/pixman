@@ -63,10 +63,8 @@ make_image (void)
     pixman_format_code_t format = RANDOM_FORMAT();
     uint32_t *bytes = malloc (WIDTH * HEIGHT * 4);
     pixman_image_t *image;
-    int i;
 
-    for (i = 0; i < WIDTH * HEIGHT * 4; ++i)
-	((uint8_t *)bytes)[i] = prng_rand_n (256);
+    prng_randmemset (bytes, WIDTH * HEIGHT * 4, 0);
 
     image = pixman_image_create_bits (
 	format, WIDTH, HEIGHT, bytes, WIDTH * 4);
@@ -108,6 +106,6 @@ int
 main (int argc, const char *argv[])
 {
     return fuzzer_test_main ("rotate", 15000,
-			     0x5236FD9F,
+			     0xECF5E426,
 			     test_transform, argc, argv);
 }

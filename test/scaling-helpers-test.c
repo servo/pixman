@@ -52,6 +52,7 @@ int
 main (void)
 {
     int i;
+    prng_srand (0);
     for (i = 0; i < 10000; i++)
     {
 	int32_t left_pad1, left_tz1, width1, right_tz1, right_pad1;

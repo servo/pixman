@@ -163,7 +163,7 @@ main (int argc, const char *argv[])
 {
     return fuzzer_test_main ("region_contains",
 			     1000000,
-			     0xD2BF8C73,
+			     0x548E0F3F,
 			     test_region_contains_rectangle,
 			     argc, argv);
 }

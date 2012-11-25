@@ -32,6 +32,8 @@ main ()
 	0xffff
     };
 
+    prng_srand (0);
+
     /* This used to go into an infinite loop before pixman-region.c
      * was fixed to not use explict "short" variables
      */
