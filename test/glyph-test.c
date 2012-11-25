@@ -126,10 +126,10 @@ create_image (int max_size, const pixman_format_code_t *formats, uint32_t flags)
     {
 	pixman_color_t color;
 
-	color.alpha = prng_rand_u32();
-	color.red = prng_rand_u32();
-	color.green = prng_rand_u32();
-	color.blue = prng_rand_u32();
+	color.alpha = prng_rand();
+	color.red = prng_rand();
+	color.green = prng_rand();
+	color.blue = prng_rand();
 
 	return pixman_image_create_solid_fill (&color);
     }

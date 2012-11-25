@@ -15,10 +15,10 @@ make_random_region (pixman_region32_t *region)
 	int32_t x, y;
 	uint32_t w, h;
 
-	x = (int32_t)prng_rand_u32() >> 2;
-	y = (int32_t)prng_rand_u32() >> 2;
-	w = prng_rand_u32() >> 2;
-	h = prng_rand_u32() >> 2;
+	x = (int32_t)prng_rand() >> 2;
+	y = (int32_t)prng_rand() >> 2;
+	w = prng_rand() >> 2;
+	h = prng_rand() >> 2;
 
 	pixman_region32_union_rect (region, region, x, y, w, h);
     }
@@ -65,9 +65,9 @@ random_coord (pixman_region32_t *region, pixman_bool_t x)
     switch (prng_rand_n (5))
     {
     case 0:
-	return begin - prng_rand_u32();
+	return begin - prng_rand();
     case 1:
-	return end + prng_rand_u32 ();
+	return end + prng_rand ();
     case 2:
 	return end;
     case 3:
@@ -116,9 +116,9 @@ test_region_contains_rectangle (int i, int verbose)
     make_random_region (&region);
 
     box.x1 = random_coord (&region, TRUE);
-    box.x2 = box.x1 + prng_rand_u32 ();
+    box.x2 = box.x1 + prng_rand ();
     box.y1 = random_coord (&region, FALSE);
-    box.y2 = box.y1 + prng_rand_u32 ();
+    box.y2 = box.y1 + prng_rand ();
 
     if (verbose)
     {

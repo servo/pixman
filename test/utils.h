@@ -46,18 +46,6 @@ prng_rand_n (int max)
     return prng_rand () % max;
 }
 
-static inline uint32_t
-prng_rand_N (int max)
-{
-    return prng_rand () % max;
-}
-
-static inline uint32_t
-prng_rand_u32 (void)
-{
-    return prng_rand ();
-}
-
 static inline void
 prng_randmemset (void *buffer, size_t size, prng_randmemset_flags_t flags)
 {

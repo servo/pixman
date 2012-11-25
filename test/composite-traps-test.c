@@ -37,7 +37,7 @@ destroy_bits (pixman_image_t *image, void *data)
 static pixman_fixed_t
 random_fixed (int n)
 {
-    return prng_rand_N (n << 16);
+    return prng_rand_n (n << 16);
 }
 
 /*

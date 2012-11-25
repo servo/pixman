@@ -161,10 +161,10 @@ test_composite (int      testnum,
 
     if (prng_rand_n (4) > 0)
     {
-	scale_x = -32768 * 3 + prng_rand_N (65536 * 5);
-	scale_y = -32768 * 3 + prng_rand_N (65536 * 5);
-	translate_x = prng_rand_N (65536);
-	translate_y = prng_rand_N (65536);
+	scale_x = -32768 * 3 + prng_rand_n (65536 * 5);
+	scale_y = -32768 * 3 + prng_rand_n (65536 * 5);
+	translate_x = prng_rand_n (65536);
+	translate_y = prng_rand_n (65536);
 	pixman_transform_init_scale (&transform, scale_x, scale_y);
 	pixman_transform_translate (&transform, NULL, translate_x, translate_y);
 	pixman_image_set_transform (src_img, &transform);
@@ -172,10 +172,10 @@ test_composite (int      testnum,
 
     if (prng_rand_n (2) > 0)
     {
-	mask_scale_x = -32768 * 3 + prng_rand_N (65536 * 5);
-	mask_scale_y = -32768 * 3 + prng_rand_N (65536 * 5);
-	mask_translate_x = prng_rand_N (65536);
-	mask_translate_y = prng_rand_N (65536);
+	mask_scale_x = -32768 * 3 + prng_rand_n (65536 * 5);
+	mask_scale_y = -32768 * 3 + prng_rand_n (65536 * 5);
+	mask_translate_x = prng_rand_n (65536);
+	mask_translate_y = prng_rand_n (65536);
 	pixman_transform_init_scale (&transform, mask_scale_x, mask_scale_y);
 	pixman_transform_translate (&transform, NULL, mask_translate_x, mask_translate_y);
 	pixman_image_set_transform (mask_img, &transform);

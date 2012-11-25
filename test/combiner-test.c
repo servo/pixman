@@ -67,7 +67,7 @@ static const pixman_op_t op_list[] =
 static float
 rand_float (void)
 {
-    uint32_t u = prng_rand_u32();
+    uint32_t u = prng_rand();
 
     return *(float *)&u;
 }

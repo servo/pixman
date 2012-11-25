@@ -99,18 +99,18 @@ test_composite (int      testnum,
 
     if (prng_rand_n (3) > 0)
     {
-	scale_x = -65536 * 3 + prng_rand_N (65536 * 6);
+	scale_x = -65536 * 3 + prng_rand_n (65536 * 6);
 	if (prng_rand_n (2))
-	    scale_y = -65536 * 3 + prng_rand_N (65536 * 6);
+	    scale_y = -65536 * 3 + prng_rand_n (65536 * 6);
 	else
 	    scale_y = scale_x;
 	pixman_transform_init_scale (&transform, scale_x, scale_y);
     }
     if (prng_rand_n (3) > 0)
     {
-	translate_x = -65536 * 3 + prng_rand_N (6 * 65536);
+	translate_x = -65536 * 3 + prng_rand_n (6 * 65536);
 	if (prng_rand_n (2))
-	    translate_y = -65536 * 3 + prng_rand_N (6 * 65536);
+	    translate_y = -65536 * 3 + prng_rand_n (6 * 65536);
 	else
 	    translate_y = translate_x;
 	pixman_transform_translate (&transform, NULL, translate_x, translate_y);
@@ -142,8 +142,8 @@ test_composite (int      testnum,
 	    break;
 	default:
 	    /* arbitrary rotation */
-	    c = prng_rand_N (2 * 65536) - 65536;
-	    s = prng_rand_N (2 * 65536) - 65536;
+	    c = prng_rand_n (2 * 65536) - 65536;
+	    s = prng_rand_n (2 * 65536) - 65536;
 	    break;
 	}
 	pixman_transform_rotate (&transform, NULL, c, s);

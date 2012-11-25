@@ -96,7 +96,7 @@ get_size (void)
 	return 65536;
 
     case 7:
-	return prng_rand_N (64000) + 63000;
+	return prng_rand_n (64000) + 63000;
     }
 }
 
@@ -164,7 +164,7 @@ real_writer (void *src, uint32_t value, int size)
 static uint32_t
 fake_reader (const void *src, int size)
 {
-    uint32_t r = prng_rand_u32 ();
+    uint32_t r = prng_rand ();
 
     assert (size == 1 || size == 2 || size == 4);
 
@@ -184,7 +184,7 @@ log_rand (void)
 
     mask = (1 << prng_rand_n (10)) - 1;
 
-    return (prng_rand_u32 () & mask) - (mask >> 1);
+    return (prng_rand () & mask) - (mask >> 1);
 }
 
 static int32_t
@@ -334,7 +334,7 @@ create_random_bits_image (void)
 	    int i;
 
 	    for (i = 0; i < width * height; ++i)
-		coefficients[i + 2] = prng_rand_u32();
+		coefficients[i + 2] = prng_rand();
 
 	    coefficients[0] = width << 16;
 	    coefficients[1] = height << 16;
@@ -508,22 +508,22 @@ set_general_properties (pixman_image_t *image, pixman_bool_t allow_alpha_map)
 	    {
 	    case 0:
 		/* rotation */
-		c = prng_rand_N (2 * 65536) - 65536;
-		s = prng_rand_N (2 * 65536) - 65536;
+		c = prng_rand_n (2 * 65536) - 65536;
+		s = prng_rand_n (2 * 65536) - 65536;
 		pixman_transform_rotate (&xform, NULL, c, s);
 		break;
 
 	    case 1:
 		/* translation */
-		tx = prng_rand_u32();
-		ty = prng_rand_u32();
+		tx = prng_rand();
+		ty = prng_rand();
 		pixman_transform_translate (&xform, NULL, tx, ty);
 		break;
 
 	    case 2:
 		/* scale */
-		sx = prng_rand_u32();
-		sy = prng_rand_u32();
+		sx = prng_rand();
+		sy = prng_rand();
 		pixman_transform_scale (&xform, NULL, sx, sy);
 		break;
 
@@ -533,7 +533,7 @@ set_general_properties (pixman_image_t *image, pixman_bool_t allow_alpha_map)
 		    /* random */
 		    for (i = 0; i < 3; ++i)
 			for (j = 0; j < 3; ++j)
-			    xform.matrix[i][j] = prng_rand_u32();
+			    xform.matrix[i][j] = prng_rand();
 		    break;
 		}
 		else if (prng_rand_n (16) == 0)

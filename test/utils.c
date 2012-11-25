@@ -682,7 +682,7 @@ get_random_seed (void)
     t.d = gettime();
     prng_srand (t.u32);
 
-    return prng_rand_u32 ();
+    return prng_rand ();
 }
 
 #ifdef HAVE_SIGACTION
