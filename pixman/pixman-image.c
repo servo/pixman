@@ -371,7 +371,10 @@ compute_image_info (pixman_image_t *image)
 	break;
 
     case PIXMAN_FILTER_CONVOLUTION:
+	break;
+
     case PIXMAN_FILTER_SEPARABLE_CONVOLUTION:
+	flags |= FAST_PATH_SEPARABLE_CONVOLUTION_FILTER;
 	break;
 
     default:
