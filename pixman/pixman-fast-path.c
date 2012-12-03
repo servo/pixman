@@ -2186,17 +2186,49 @@ fast_dest_fetch_noop (pixman_iter_t *iter, const uint32_t *mask)
     return iter->buffer;
 }
 
+/* Helper function for a workaround, which tries to ensure that 0x1F001F
+ * constant is always allocated in a register on RISC architectures.
+ */
+static force_inline uint32_t
+convert_8888_to_0565_workaround (uint32_t s, uint32_t x1F001F)
+{
+    uint32_t a, b;
+    a = (s >> 3) & x1F001F;
+    b = s & 0xFC00;
+    a |= a >> 5;
+    a |= b >> 5;
+    return a;
+}
+
 static void
 fast_write_back_r5g6b5 (pixman_iter_t *iter)
 {
     int32_t w = iter->width;
     uint16_t *dst = (uint16_t *)(iter->bits - iter->stride);
     const uint32_t *src = iter->buffer;
+    /* Workaround to ensure that x1F001F variable is allocated in a register */
+    static volatile uint32_t volatile_x1F001F = 0x1F001F;
+    uint32_t x1F001F = volatile_x1F001F;
 
-    while (w > 0)
+    while ((w -= 4) >= 0)
     {
-	*dst++ = convert_8888_to_0565 (*src++);
-	w--;
+	uint32_t s1 = *src++;
+	uint32_t s2 = *src++;
+	uint32_t s3 = *src++;
+	uint32_t s4 = *src++;
+	*dst++ = convert_8888_to_0565_workaround (s1, x1F001F);
+	*dst++ = convert_8888_to_0565_workaround (s2, x1F001F);
+	*dst++ = convert_8888_to_0565_workaround (s3, x1F001F);
+	*dst++ = convert_8888_to_0565_workaround (s4, x1F001F);
+    }
+    if (w & 2)
+    {
+	*dst++ = convert_8888_to_0565_workaround (*src++, x1F001F);
+	*dst++ = convert_8888_to_0565_workaround (*src++, x1F001F);
+    }
+    if (w & 1)
+    {
+	*dst = convert_8888_to_0565_workaround (*src, x1F001F);
     }
 }
 
