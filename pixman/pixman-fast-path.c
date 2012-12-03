@@ -2170,10 +2170,39 @@ fast_fetch_r5g6b5 (pixman_iter_t *iter, const uint32_t *mask)
 
     iter->bits += iter->stride;
 
-    while (w > 0)
+    /* Align the source buffer at 4 bytes boundary */
+    if (w > 0 && ((uintptr_t)src & 3))
     {
 	*dst++ = convert_0565_to_8888 (*src++);
 	w--;
+    }
+    /* Process two pixels per iteration */
+    while ((w -= 2) >= 0)
+    {
+	uint32_t sr, sb, sg, t0, t1;
+	uint32_t s = *(const uint32_t *)src;
+	src += 2;
+	sr = (s >> 8) & 0x00F800F8;
+	sb = (s << 3) & 0x00F800F8;
+	sg = (s >> 3) & 0x00FC00FC;
+	sr |= sr >> 5;
+	sb |= sb >> 5;
+	sg |= sg >> 6;
+	t0 = ((sr << 16) & 0x00FF0000) | ((sg << 8) & 0x0000FF00) |
+	     (sb & 0xFF) | 0xFF000000;
+	t1 = (sr & 0x00FF0000) | ((sg >> 8) & 0x0000FF00) |
+	     (sb >> 16) | 0xFF000000;
+#ifdef WORDS_BIGENDIAN
+	*dst++ = t1;
+	*dst++ = t0;
+#else
+	*dst++ = t0;
+	*dst++ = t1;
+#endif
+    }
+    if (w & 1)
+    {
+	*dst = convert_0565_to_8888 (*src);
     }
 
     return iter->buffer;
