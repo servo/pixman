@@ -2230,7 +2230,7 @@ mmx_composite_src_x888_0565 (pixman_implementation_t *imp,
 	while (w && (uintptr_t)dst & 7)
 	{
 	    s = *src++;
-	    *dst = CONVERT_8888_TO_0565 (s);
+	    *dst = convert_8888_to_0565 (s);
 	    dst++;
 	    w--;
 	}
@@ -2253,7 +2253,7 @@ mmx_composite_src_x888_0565 (pixman_implementation_t *imp,
 	while (w)
 	{
 	    s = *src++;
-	    *dst = CONVERT_8888_TO_0565 (s);
+	    *dst = convert_8888_to_0565 (s);
 	    dst++;
 	    w--;
 	}
@@ -3136,13 +3136,13 @@ mmx_composite_add_0565_0565 (pixman_implementation_t *imp,
 	    if (s)
 	    {
 		d = *dst;
-		s = CONVERT_0565_TO_8888 (s);
+		s = convert_0565_to_8888 (s);
 		if (d)
 		{
-		    d = CONVERT_0565_TO_8888 (d);
+		    d = convert_0565_to_8888 (d);
 		    UN8x4_ADD_UN8x4 (s, d);
 		}
-		*dst = CONVERT_8888_TO_0565 (s);
+		*dst = convert_8888_to_0565 (s);
 	    }
 	    dst++;
 	    w--;
@@ -3174,13 +3174,13 @@ mmx_composite_add_0565_0565 (pixman_implementation_t *imp,
 	    if (s)
 	    {
 		d = *dst;
-		s = CONVERT_0565_TO_8888 (s);
+		s = convert_0565_to_8888 (s);
 		if (d)
 		{
-		    d = CONVERT_0565_TO_8888 (d);
+		    d = convert_0565_to_8888 (d);
 		    UN8x4_ADD_UN8x4 (s, d);
 		}
-		*dst = CONVERT_8888_TO_0565 (s);
+		*dst = convert_8888_to_0565 (s);
 	    }
 	    dst++;
 	}
@@ -3824,7 +3824,7 @@ mmx_fetch_r5g6b5 (pixman_iter_t *iter, const uint32_t *mask)
     {
 	uint16_t s = *src++;
 
-	*dst++ = CONVERT_0565_TO_8888 (s);
+	*dst++ = convert_0565_to_8888 (s);
 	w--;
     }
 
@@ -3847,7 +3847,7 @@ mmx_fetch_r5g6b5 (pixman_iter_t *iter, const uint32_t *mask)
     {
 	uint16_t s = *src++;
 
-	*dst++ = CONVERT_0565_TO_8888 (s);
+	*dst++ = convert_0565_to_8888 (s);
 	w--;
     }
 

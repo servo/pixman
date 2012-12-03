@@ -2881,7 +2881,7 @@ sse2_composite_src_x888_0565 (pixman_implementation_t *imp,
 	while (w && (uintptr_t)dst & 15)
 	{
 	    s = *src++;
-	    *dst = CONVERT_8888_TO_0565 (s);
+	    *dst = convert_8888_to_0565 (s);
 	    dst++;
 	    w--;
 	}
@@ -2901,7 +2901,7 @@ sse2_composite_src_x888_0565 (pixman_implementation_t *imp,
 	while (w)
 	{
 	    s = *src++;
-	    *dst = CONVERT_8888_TO_0565 (s);
+	    *dst = convert_8888_to_0565 (s);
 	    dst++;
 	    w--;
 	}
@@ -5970,7 +5970,7 @@ sse2_fetch_r5g6b5 (pixman_iter_t *iter, const uint32_t *mask)
     {
 	uint16_t s = *src++;
 
-	*dst++ = CONVERT_0565_TO_8888 (s);
+	*dst++ = convert_0565_to_8888 (s);
 	w--;
     }
 
@@ -5995,7 +5995,7 @@ sse2_fetch_r5g6b5 (pixman_iter_t *iter, const uint32_t *mask)
     {
 	uint16_t s = *src++;
 
-	*dst++ = CONVERT_0565_TO_8888 (s);
+	*dst++ = convert_0565_to_8888 (s);
 	w--;
     }
 
