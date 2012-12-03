@@ -739,36 +739,6 @@ fast_composite_over_8888_0565 (pixman_implementation_t *imp,
 }
 
 static void
-fast_composite_src_x888_0565 (pixman_implementation_t *imp,
-                              pixman_composite_info_t *info)
-{
-    PIXMAN_COMPOSITE_ARGS (info);
-    uint16_t    *dst_line, *dst;
-    uint32_t    *src_line, *src, s;
-    int dst_stride, src_stride;
-    int32_t w;
-
-    PIXMAN_IMAGE_GET_LINE (src_image, src_x, src_y, uint32_t, src_stride, src_line, 1);
-    PIXMAN_IMAGE_GET_LINE (dest_image, dest_x, dest_y, uint16_t, dst_stride, dst_line, 1);
-
-    while (height--)
-    {
-	dst = dst_line;
-	dst_line += dst_stride;
-	src = src_line;
-	src_line += src_stride;
-	w = width;
-
-	while (w--)
-	{
-	    s = *src++;
-	    *dst = convert_8888_to_0565 (s);
-	    dst++;
-	}
-    }
-}
-
-static void
 fast_composite_add_8_8 (pixman_implementation_t *imp,
 			pixman_composite_info_t *info)
 {
@@ -1907,10 +1877,6 @@ static const pixman_fast_path_t c_fast_paths[] =
     PIXMAN_STD_FAST_PATH (SRC, x1r5g5b5, null, x1r5g5b5, fast_composite_src_memcpy),
     PIXMAN_STD_FAST_PATH (SRC, a1r5g5b5, null, x1r5g5b5, fast_composite_src_memcpy),
     PIXMAN_STD_FAST_PATH (SRC, a8, null, a8, fast_composite_src_memcpy),
-    PIXMAN_STD_FAST_PATH (SRC, a8r8g8b8, null, r5g6b5, fast_composite_src_x888_0565),
-    PIXMAN_STD_FAST_PATH (SRC, x8r8g8b8, null, r5g6b5, fast_composite_src_x888_0565),
-    PIXMAN_STD_FAST_PATH (SRC, a8b8g8r8, null, b5g6r5, fast_composite_src_x888_0565),
-    PIXMAN_STD_FAST_PATH (SRC, x8b8g8r8, null, b5g6r5, fast_composite_src_x888_0565),
     PIXMAN_STD_FAST_PATH (IN, a8, null, a8, fast_composite_in_8_8),
     PIXMAN_STD_FAST_PATH (IN, solid, a8, a8, fast_composite_in_n_8_8),
 
@@ -2193,12 +2159,139 @@ fast_path_fill (pixman_implementation_t *imp,
     return TRUE;
 }
 
+/*****************************************************************************/
+
+static uint32_t *
+fast_fetch_r5g6b5 (pixman_iter_t *iter, const uint32_t *mask)
+{
+    int32_t w = iter->width;
+    uint32_t *dst = iter->buffer;
+    const uint16_t *src = (const uint16_t *)iter->bits;
+
+    iter->bits += iter->stride;
+
+    while (w > 0)
+    {
+	*dst++ = convert_0565_to_8888 (*src++);
+	w--;
+    }
+
+    return iter->buffer;
+}
+
+static uint32_t *
+fast_dest_fetch_noop (pixman_iter_t *iter, const uint32_t *mask)
+{
+    iter->bits += iter->stride;
+    return iter->buffer;
+}
+
+static void
+fast_write_back_r5g6b5 (pixman_iter_t *iter)
+{
+    int32_t w = iter->width;
+    uint16_t *dst = (uint16_t *)(iter->bits - iter->stride);
+    const uint32_t *src = iter->buffer;
+
+    while (w > 0)
+    {
+	*dst++ = convert_8888_to_0565 (*src++);
+	w--;
+    }
+}
+
+typedef struct
+{
+    pixman_format_code_t	format;
+    pixman_iter_get_scanline_t	get_scanline;
+    pixman_iter_write_back_t	write_back;
+} fetcher_info_t;
+
+static const fetcher_info_t fetchers[] =
+{
+    { PIXMAN_r5g6b5, fast_fetch_r5g6b5, fast_write_back_r5g6b5 },
+    { PIXMAN_null }
+};
+
+static pixman_bool_t
+fast_src_iter_init (pixman_implementation_t *imp, pixman_iter_t *iter)
+{
+    pixman_image_t *image = iter->image;
+
+#define FLAGS								\
+    (FAST_PATH_STANDARD_FLAGS | FAST_PATH_ID_TRANSFORM |		\
+     FAST_PATH_BITS_IMAGE | FAST_PATH_SAMPLES_COVER_CLIP_NEAREST)
+
+    if ((iter->iter_flags & ITER_NARROW)			&&
+	(iter->image_flags & FLAGS) == FLAGS)
+    {
+	const fetcher_info_t *f;
+
+	for (f = &fetchers[0]; f->format != PIXMAN_null; f++)
+	{
+	    if (image->common.extended_format_code == f->format)
+	    {
+		uint8_t *b = (uint8_t *)image->bits.bits;
+		int s = image->bits.rowstride * 4;
+
+		iter->bits = b + s * iter->y + iter->x * PIXMAN_FORMAT_BPP (f->format) / 8;
+		iter->stride = s;
+
+		iter->get_scanline = f->get_scanline;
+		return TRUE;
+	    }
+	}
+    }
+
+    return FALSE;
+}
+
+static pixman_bool_t
+fast_dest_iter_init (pixman_implementation_t *imp, pixman_iter_t *iter)
+{
+    pixman_image_t *image = iter->image;
+
+    if ((iter->iter_flags & ITER_NARROW)		&&
+	(iter->image_flags & FAST_PATH_STD_DEST_FLAGS) == FAST_PATH_STD_DEST_FLAGS)
+    {
+	const fetcher_info_t *f;
+
+	for (f = &fetchers[0]; f->format != PIXMAN_null; f++)
+	{
+	    if (image->common.extended_format_code == f->format)
+	    {
+		uint8_t *b = (uint8_t *)image->bits.bits;
+		int s = image->bits.rowstride * 4;
+
+		iter->bits = b + s * iter->y + iter->x * PIXMAN_FORMAT_BPP (f->format) / 8;
+		iter->stride = s;
+
+		if ((iter->iter_flags & (ITER_IGNORE_RGB | ITER_IGNORE_ALPHA)) ==
+		    (ITER_IGNORE_RGB | ITER_IGNORE_ALPHA))
+		{
+		    iter->get_scanline = fast_dest_fetch_noop;
+		}
+		else
+		{
+		    iter->get_scanline = f->get_scanline;
+		}
+		iter->write_back = f->write_back;
+		return TRUE;
+	    }
+	}
+    }
+    return FALSE;
+}
+
+
 pixman_implementation_t *
 _pixman_implementation_create_fast_path (pixman_implementation_t *fallback)
 {
     pixman_implementation_t *imp = _pixman_implementation_create (fallback, c_fast_paths);
 
     imp->fill = fast_path_fill;
+    imp->src_iter_init = fast_src_iter_init;
+    imp->dest_iter_init = fast_dest_iter_init;
 
     return imp;
 }
