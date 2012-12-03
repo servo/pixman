@@ -887,9 +887,13 @@ pixman_list_move_to_front (pixman_list_t *list, pixman_link_t *link)
 static force_inline uint16_t
 convert_8888_to_0565 (uint32_t s)
 {
-    return ((((s) >> 3) & 0x001f) |
-            (((s) >> 5) & 0x07e0) |
-            (((s) >> 8) & 0xf800));
+    /* The following code can be compiled into just 4 instructions on ARM */
+    uint32_t a, b;
+    a = (s >> 3) & 0x1F001F;
+    b = s & 0xFC00;
+    a |= a >> 5;
+    a |= b >> 5;
+    return (uint16_t)a;
 }
 
 static force_inline uint32_t
