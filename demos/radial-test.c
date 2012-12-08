@@ -147,6 +147,8 @@ main (int argc, char **argv)
 					 WIDTH, HEIGHT,
 					 NULL, 0);
 
+    draw_checkerboard (dest_img, 25, 0xffaaaaaa, 0xffbbbbbb);
+    
     pixman_transform_init_identity (&transform);
 
     /*
