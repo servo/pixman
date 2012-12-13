@@ -491,6 +491,8 @@ pixman_composite_trapezoids (pixman_op_t		op,
 {
     int i;
 
+    return_if_fail (PIXMAN_FORMAT_TYPE (mask_format) == PIXMAN_TYPE_A);
+    
     if (n_traps <= 0)
 	return;
 
