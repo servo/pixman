@@ -1078,6 +1078,27 @@ _pixman_log_error (const char *function, const char *message);
 #endif
 
 /*
+ * Matrix
+ */
+
+typedef struct { pixman_fixed_48_16_t v[3]; } pixman_vector_48_16_t;
+
+pixman_bool_t
+pixman_transform_point_31_16 (const pixman_transform_t    *t,
+                              const pixman_vector_48_16_t *v,
+                              pixman_vector_48_16_t       *result);
+
+void
+pixman_transform_point_31_16_3d (const pixman_transform_t    *t,
+                                 const pixman_vector_48_16_t *v,
+                                 pixman_vector_48_16_t       *result);
+
+void
+pixman_transform_point_31_16_affine (const pixman_transform_t    *t,
+                                     const pixman_vector_48_16_t *v,
+                                     pixman_vector_48_16_t       *result);
+
+/*
  * Timers
  */
 
