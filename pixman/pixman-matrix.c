@@ -382,69 +382,41 @@ PIXMAN_EXPORT pixman_bool_t
 pixman_transform_point_3d (const struct pixman_transform *transform,
                            struct pixman_vector *         vector)
 {
-    struct pixman_vector result;
-    pixman_fixed_32_32_t partial;
-    pixman_fixed_48_16_t v;
-    int i, j;
+    pixman_vector_48_16_t tmp;
+    tmp.v[0] = vector->vector[0];
+    tmp.v[1] = vector->vector[1];
+    tmp.v[2] = vector->vector[2];
 
-    for (j = 0; j < 3; j++)
-    {
-	v = 0;
-	for (i = 0; i < 3; i++)
-	{
-	    partial = ((pixman_fixed_48_16_t) transform->matrix[j][i] *
-	               (pixman_fixed_48_16_t) vector->vector[i]);
-	    v += (partial + 0x8000) >> 16;
-	}
-	
-	if (v > pixman_max_fixed_48_16 || v < pixman_min_fixed_48_16)
-	    return FALSE;
-	
-	result.vector[j] = (pixman_fixed_t) v;
-    }
-    
-    *vector = result;
+    pixman_transform_point_31_16_3d (transform, &tmp, &tmp);
 
-    if (!result.vector[2])
-	return FALSE;
+    vector->vector[0] = tmp.v[0];
+    vector->vector[1] = tmp.v[1];
+    vector->vector[2] = tmp.v[2];
 
-    return TRUE;
+    return vector->vector[0] == tmp.v[0] &&
+           vector->vector[1] == tmp.v[1] &&
+           vector->vector[2] == tmp.v[2];
 }
 
 PIXMAN_EXPORT pixman_bool_t
 pixman_transform_point (const struct pixman_transform *transform,
                         struct pixman_vector *         vector)
 {
-    pixman_fixed_32_32_t partial;
-    pixman_fixed_34_30_t v[3];
-    pixman_fixed_48_16_t quo;
-    int i, j;
+    pixman_vector_48_16_t tmp;
+    tmp.v[0] = vector->vector[0];
+    tmp.v[1] = vector->vector[1];
+    tmp.v[2] = vector->vector[2];
 
-    for (j = 0; j < 3; j++)
-    {
-	v[j] = 0;
-	
-	for (i = 0; i < 3; i++)
-	{
-	    partial = ((pixman_fixed_32_32_t) transform->matrix[j][i] *
-	               (pixman_fixed_32_32_t) vector->vector[i]);
-	    v[j] += (partial + 2) >> 2;
-	}
-    }
-    
-    if (!((v[2] + 0x8000) >> 16))
-	return FALSE;
+    if (!pixman_transform_point_31_16 (transform, &tmp, &tmp))
+        return FALSE;
 
-    for (j = 0; j < 2; j++)
-    {
-	quo = v[j] / ((v[2] + 0x8000) >> 16);
-	if (quo > pixman_max_fixed_48_16 || quo < pixman_min_fixed_48_16)
-	    return FALSE;
-	vector->vector[j] = (pixman_fixed_t) quo;
-    }
-    
-    vector->vector[2] = pixman_fixed_1;
-    return TRUE;
+    vector->vector[0] = tmp.v[0];
+    vector->vector[1] = tmp.v[1];
+    vector->vector[2] = tmp.v[2];
+
+    return vector->vector[0] == tmp.v[0] &&
+           vector->vector[1] == tmp.v[1] &&
+           vector->vector[2] == tmp.v[2];
 }
 
 PIXMAN_EXPORT pixman_bool_t
