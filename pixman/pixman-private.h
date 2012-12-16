@@ -455,7 +455,7 @@ typedef pixman_bool_t (*pixman_fill_func_t) (pixman_implementation_t *imp,
 					     int                      y,
 					     int                      width,
 					     int                      height,
-					     uint32_t                 xor);
+					     uint32_t                 filler);
 typedef pixman_bool_t (*pixman_iter_init_func_t) (pixman_implementation_t *imp,
 						  pixman_iter_t           *iter);
 
@@ -542,7 +542,7 @@ _pixman_implementation_fill (pixman_implementation_t *imp,
                              int                      y,
                              int                      width,
                              int                      height,
-                             uint32_t                 xor);
+                             uint32_t                 filler);
 
 pixman_bool_t
 _pixman_implementation_src_iter_init (pixman_implementation_t       *imp,

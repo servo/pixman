@@ -766,10 +766,10 @@ pixman_fill (uint32_t *bits,
              int       y,
              int       width,
              int       height,
-             uint32_t xor)
+             uint32_t  filler)
 {
     return _pixman_implementation_fill (
-	get_implementation(), bits, stride, bpp, x, y, width, height, xor);
+	get_implementation(), bits, stride, bpp, x, y, width, height, filler);
 }
 
 static uint32_t

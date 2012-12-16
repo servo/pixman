@@ -2067,12 +2067,12 @@ pixman_fill1 (uint32_t *bits,
               int       y,
               int       width,
               int       height,
-              uint32_t  xor)
+              uint32_t  filler)
 {
     uint32_t *dst = bits + y * stride + (x >> 5);
     int offs = x & 31;
 
-    if (xor & 1)
+    if (filler & 1)
     {
 	while (height--)
 	{
@@ -2097,11 +2097,11 @@ pixman_fill8 (uint32_t *bits,
               int       y,
               int       width,
               int       height,
-              uint32_t xor)
+              uint32_t  filler)
 {
     int byte_stride = stride * (int) sizeof (uint32_t);
     uint8_t *dst = (uint8_t *) bits;
-    uint8_t v = xor & 0xff;
+    uint8_t v = filler & 0xff;
     int i;
 
     dst = dst + y * byte_stride + x;
@@ -2122,12 +2122,12 @@ pixman_fill16 (uint32_t *bits,
                int       y,
                int       width,
                int       height,
-               uint32_t xor)
+               uint32_t  filler)
 {
     int short_stride =
 	(stride * (int)sizeof (uint32_t)) / (int)sizeof (uint16_t);
     uint16_t *dst = (uint16_t *)bits;
-    uint16_t v = xor & 0xffff;
+    uint16_t v = filler & 0xffff;
     int i;
 
     dst = dst + y * short_stride + x;
@@ -2148,7 +2148,7 @@ pixman_fill32 (uint32_t *bits,
                int       y,
                int       width,
                int       height,
-               uint32_t  xor)
+               uint32_t  filler)
 {
     int i;
 
@@ -2157,7 +2157,7 @@ pixman_fill32 (uint32_t *bits,
     while (height--)
     {
 	for (i = 0; i < width; ++i)
-	    bits[i] = xor;
+	    bits[i] = filler;
 
 	bits += stride;
     }
@@ -2172,24 +2172,24 @@ fast_path_fill (pixman_implementation_t *imp,
                 int                      y,
                 int                      width,
                 int                      height,
-                uint32_t		 xor)
+                uint32_t		 filler)
 {
     switch (bpp)
     {
     case 1:
-	pixman_fill1 (bits, stride, x, y, width, height, xor);
+	pixman_fill1 (bits, stride, x, y, width, height, filler);
 	break;
 
     case 8:
-	pixman_fill8 (bits, stride, x, y, width, height, xor);
+	pixman_fill8 (bits, stride, x, y, width, height, filler);
 	break;
 
     case 16:
-	pixman_fill16 (bits, stride, x, y, width, height, xor);
+	pixman_fill16 (bits, stride, x, y, width, height, filler);
 	break;
 
     case 32:
-	pixman_fill32 (bits, stride, x, y, width, height, xor);
+	pixman_fill32 (bits, stride, x, y, width, height, filler);
 	break;
 
     default:
