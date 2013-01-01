@@ -4523,8 +4523,69 @@ sse2_composite_add_8888_8888 (pixman_implementation_t *imp,
 
 	sse2_combine_add_u (imp, op, dst, src, NULL, width);
     }
-
 }
+
+static void
+sse2_composite_add_n_8888 (pixman_implementation_t *imp,
+			   pixman_composite_info_t *info)
+{
+    PIXMAN_COMPOSITE_ARGS (info);
+    uint32_t *dst_line, *dst, src;
+    int dst_stride;
+
+    __m128i xmm_src;
+
+    PIXMAN_IMAGE_GET_LINE (dest_image, dest_x, dest_y, uint32_t, dst_stride, dst_line, 1);
+
+    src = _pixman_image_get_solid (imp, src_image, dest_image->bits.format);
+    if (src == 0)
+	return;
+
+    if (src == ~0)
+    {
+	pixman_fill (dest_image->bits.bits, dest_image->bits.rowstride, 32,
+		     dest_x, dest_y, width, height, ~0);
+
+	return;
+    }
+
+    xmm_src = _mm_set_epi32 (src, src, src, src);
+    while (height--)
+    {
+	int w = width;
+	uint32_t d;
+
+	dst = dst_line;
+	dst_line += dst_stride;
+
+	while (w && (unsigned long)dst & 15)
+	{
+	    d = *dst;
+	    *dst++ =
+		_mm_cvtsi128_si32 ( _mm_adds_epu8 (xmm_src, _mm_cvtsi32_si128 (d)));
+	    w--;
+	}
+
+	while (w >= 4)
+	{
+	    save_128_aligned
+		((__m128i*)dst,
+		 _mm_adds_epu8 (xmm_src, load_128_aligned ((__m128i*)dst)));
+
+	    dst += 4;
+	    w -= 4;
+	}
+
+	while (w--)
+	{
+	    d = *dst;
+	    *dst++ =
+		_mm_cvtsi128_si32 (_mm_adds_epu8 (xmm_src,
+						  _mm_cvtsi32_si128 (d)));
+	}
+    }
+}
+
 
 static pixman_bool_t
 sse2_blt (pixman_implementation_t *imp,
@@ -5848,6 +5909,10 @@ static const pixman_fast_path_t sse2_fast_paths[] =
     PIXMAN_STD_FAST_PATH (ADD, a8b8g8r8, null, a8b8g8r8, sse2_composite_add_8888_8888),
     PIXMAN_STD_FAST_PATH (ADD, solid, a8, a8, sse2_composite_add_n_8_8),
     PIXMAN_STD_FAST_PATH (ADD, solid, null, a8, sse2_composite_add_n_8),
+    PIXMAN_STD_FAST_PATH (ADD, solid, null, x8r8g8b8, sse2_composite_add_n_8888),
+    PIXMAN_STD_FAST_PATH (ADD, solid, null, a8r8g8b8, sse2_composite_add_n_8888),
+    PIXMAN_STD_FAST_PATH (ADD, solid, null, x8b8g8r8, sse2_composite_add_n_8888),
+    PIXMAN_STD_FAST_PATH (ADD, solid, null, a8b8g8r8, sse2_composite_add_n_8888),
 
     /* PIXMAN_OP_SRC */
     PIXMAN_STD_FAST_PATH (SRC, solid, a8, a8r8g8b8, sse2_composite_src_n_8_8888),
