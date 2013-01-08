@@ -5942,6 +5942,121 @@ FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_8_8888_normal_OVER,
 			       uint32_t, uint8_t, uint32_t,
 			       NORMAL, FLAG_HAVE_NON_SOLID_MASK)
 
+static force_inline void
+scaled_bilinear_scanline_sse2_8888_n_8888_OVER (uint32_t *       dst,
+						const uint32_t * mask,
+						const uint32_t * src_top,
+						const uint32_t * src_bottom,
+						int32_t          w,
+						int              wt,
+						int              wb,
+						pixman_fixed_t   vx,
+						pixman_fixed_t   unit_x,
+						pixman_fixed_t   max_vx,
+						pixman_bool_t    zero_src)
+{
+    BILINEAR_DECLARE_VARIABLES;
+    uint32_t pix1, pix2, pix3, pix4;
+    __m128i xmm_mask;
+
+    if (zero_src || (*mask >> 24) == 0)
+	return;
+
+    xmm_mask = create_mask_16_128 (*mask >> 24);
+
+    while (w && ((uintptr_t)dst & 15))
+    {
+	BILINEAR_INTERPOLATE_ONE_PIXEL (pix1);
+	if (pix1)
+	{
+		uint32_t d = *dst;
+
+		__m128i ms = unpack_32_1x128 (pix1);
+		__m128i alpha     = expand_alpha_1x128 (ms);
+		__m128i dest      = xmm_mask;
+		__m128i alpha_dst = unpack_32_1x128 (d);
+
+		*dst = pack_1x128_32
+			(in_over_1x128 (&ms, &alpha, &dest, &alpha_dst));
+	}
+
+	dst++;
+	w--;
+    }
+
+    while (w >= 4)
+    {
+	BILINEAR_INTERPOLATE_ONE_PIXEL (pix1);
+	BILINEAR_INTERPOLATE_ONE_PIXEL (pix2);
+	BILINEAR_INTERPOLATE_ONE_PIXEL (pix3);
+	BILINEAR_INTERPOLATE_ONE_PIXEL (pix4);
+
+	if (pix1 | pix2 | pix3 | pix4)
+	{
+	    __m128i xmm_src, xmm_src_lo, xmm_src_hi;
+	    __m128i xmm_dst, xmm_dst_lo, xmm_dst_hi;
+	    __m128i xmm_alpha_lo, xmm_alpha_hi;
+
+	    xmm_src = _mm_set_epi32 (pix4, pix3, pix2, pix1);
+
+	    xmm_dst = load_128_aligned ((__m128i*)dst);
+
+	    unpack_128_2x128 (xmm_src, &xmm_src_lo, &xmm_src_hi);
+	    unpack_128_2x128 (xmm_dst, &xmm_dst_lo, &xmm_dst_hi);
+	    expand_alpha_2x128 (xmm_src_lo, xmm_src_hi,
+				&xmm_alpha_lo, &xmm_alpha_hi);
+
+	    in_over_2x128 (&xmm_src_lo, &xmm_src_hi,
+			   &xmm_alpha_lo, &xmm_alpha_hi,
+			   &xmm_mask, &xmm_mask,
+			   &xmm_dst_lo, &xmm_dst_hi);
+
+	    save_128_aligned
+		((__m128i*)dst, pack_2x128_128 (xmm_dst_lo, xmm_dst_hi));
+	}
+
+	dst += 4;
+	w -= 4;
+    }
+
+    while (w)
+    {
+	BILINEAR_INTERPOLATE_ONE_PIXEL (pix1);
+	if (pix1)
+	{
+		uint32_t d = *dst;
+
+		__m128i ms = unpack_32_1x128 (pix1);
+		__m128i alpha     = expand_alpha_1x128 (ms);
+		__m128i dest      = xmm_mask;
+		__m128i alpha_dst = unpack_32_1x128 (d);
+
+		*dst = pack_1x128_32
+			(in_over_1x128 (&ms, &alpha, &dest, &alpha_dst));
+	}
+
+	dst++;
+	w--;
+    }
+}
+
+FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_n_8888_cover_OVER,
+			       scaled_bilinear_scanline_sse2_8888_n_8888_OVER,
+			       uint32_t, uint32_t, uint32_t,
+			       COVER, FLAG_HAVE_SOLID_MASK)
+FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_n_8888_pad_OVER,
+			       scaled_bilinear_scanline_sse2_8888_n_8888_OVER,
+			       uint32_t, uint32_t, uint32_t,
+			       PAD, FLAG_HAVE_SOLID_MASK)
+FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_n_8888_none_OVER,
+			       scaled_bilinear_scanline_sse2_8888_n_8888_OVER,
+			       uint32_t, uint32_t, uint32_t,
+			       NONE, FLAG_HAVE_SOLID_MASK)
+FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_n_8888_normal_OVER,
+			       scaled_bilinear_scanline_sse2_8888_n_8888_OVER,
+			       uint32_t, uint32_t, uint32_t,
+			       NORMAL, FLAG_HAVE_SOLID_MASK)
+
 static const pixman_fast_path_t sse2_fast_paths[] =
 {
     /* PIXMAN_OP_OVER */
@@ -6075,6 +6190,11 @@ static const pixman_fast_path_t sse2_fast_paths[] =
     SIMPLE_BILINEAR_FAST_PATH (OVER, a8b8g8r8, x8b8g8r8, sse2_8888_8888),
     SIMPLE_BILINEAR_FAST_PATH (OVER, a8r8g8b8, a8r8g8b8, sse2_8888_8888),
     SIMPLE_BILINEAR_FAST_PATH (OVER, a8b8g8r8, a8b8g8r8, sse2_8888_8888),
+
+    SIMPLE_BILINEAR_SOLID_MASK_FAST_PATH (OVER, a8r8g8b8, x8r8g8b8, sse2_8888_n_8888),
+    SIMPLE_BILINEAR_SOLID_MASK_FAST_PATH (OVER, a8b8g8r8, x8b8g8r8, sse2_8888_n_8888),
+    SIMPLE_BILINEAR_SOLID_MASK_FAST_PATH (OVER, a8r8g8b8, a8r8g8b8, sse2_8888_n_8888),
+    SIMPLE_BILINEAR_SOLID_MASK_FAST_PATH (OVER, a8b8g8r8, a8b8g8r8, sse2_8888_n_8888),
 
     SIMPLE_BILINEAR_A8_MASK_FAST_PATH (OVER, a8r8g8b8, x8r8g8b8, sse2_8888_8_8888),
     SIMPLE_BILINEAR_A8_MASK_FAST_PATH (OVER, a8b8g8r8, x8b8g8r8, sse2_8888_8_8888),
