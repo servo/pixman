@@ -497,7 +497,7 @@ pixman_implementation_t *
 _pixman_implementation_create (pixman_implementation_t *fallback,
 			       const pixman_fast_path_t *fast_paths);
 
-pixman_bool_t
+void
 _pixman_implementation_lookup_composite (pixman_implementation_t  *toplevel,
 					 pixman_op_t               op,
 					 pixman_format_code_t      src_format,
@@ -1052,7 +1052,7 @@ _pixman_log_error (const char *function, const char *message);
 
 #else
 
-#define _pixman_log_error(f,m) do { } while (0)				\
+#define _pixman_log_error(f,m) do { } while (0)
 
 #define return_if_fail(expr)						\
     do                                                                  \

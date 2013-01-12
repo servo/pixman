@@ -586,6 +586,9 @@ pixman_image_composite32 (pixman_op_t      op,
     pixman_box32_t extents;
     pixman_implementation_t *imp;
     pixman_composite_func_t func;
+    pixman_composite_info_t info;
+    const pixman_box32_t *pbox;
+    int n;
 
     _pixman_image_validate (src);
     if (mask)
@@ -678,40 +681,35 @@ pixman_image_composite32 (pixman_op_t      op,
      */
     op = optimize_operator (op, src_flags, mask_flags, dest_flags);
 
-    if (_pixman_implementation_lookup_composite (
-	    get_implementation (), op,
-	    src_format, src_flags, mask_format, mask_flags, dest_format, dest_flags,
-	    &imp, &func))
+    _pixman_implementation_lookup_composite (
+	get_implementation (), op,
+	src_format, src_flags, mask_format, mask_flags, dest_format, dest_flags,
+	&imp, &func);
+
+    info.op = op;
+    info.src_image = src;
+    info.mask_image = mask;
+    info.dest_image = dest;
+    info.src_flags = src_flags;
+    info.mask_flags = mask_flags;
+    info.dest_flags = dest_flags;
+
+    pbox = pixman_region32_rectangles (&region, &n);
+
+    while (n--)
     {
-	pixman_composite_info_t info;
-	const pixman_box32_t *pbox;
-	int n;
+	info.src_x = pbox->x1 + src_x - dest_x;
+	info.src_y = pbox->y1 + src_y - dest_y;
+	info.mask_x = pbox->x1 + mask_x - dest_x;
+	info.mask_y = pbox->y1 + mask_y - dest_y;
+	info.dest_x = pbox->x1;
+	info.dest_y = pbox->y1;
+	info.width = pbox->x2 - pbox->x1;
+	info.height = pbox->y2 - pbox->y1;
 
-	info.op = op;
-	info.src_image = src;
-	info.mask_image = mask;
-	info.dest_image = dest;
-	info.src_flags = src_flags;
-	info.mask_flags = mask_flags;
-	info.dest_flags = dest_flags;
+	func (imp, &info);
 
-	pbox = pixman_region32_rectangles (&region, &n);
-
-	while (n--)
-	{
-	    info.src_x = pbox->x1 + src_x - dest_x;
-	    info.src_y = pbox->y1 + src_y - dest_y;
-	    info.mask_x = pbox->x1 + mask_x - dest_x;
-	    info.mask_y = pbox->y1 + mask_y - dest_y;
-	    info.dest_x = pbox->x1;
-	    info.dest_y = pbox->y1;
-	    info.width = pbox->x2 - pbox->x1;
-	    info.height = pbox->y2 - pbox->y1;
-
-	    func (imp, &info);
-
-	    pbox++;
-	}
+	pbox++;
     }
 
 out:

@@ -1243,6 +1243,18 @@ fast_composite_tiled_repeat (pixman_implementation_t *imp,
     pixman_composite_func_t func;
     pixman_format_code_t mask_format;
     uint32_t src_flags, mask_flags;
+    int32_t sx, sy;
+    int32_t width_remain;
+    int32_t num_pixels;
+    int32_t src_width;
+    int32_t i, j;
+    pixman_image_t extended_src_image;
+    uint32_t extended_src[REPEAT_MIN_WIDTH * 2];
+    pixman_bool_t need_src_extension;
+    uint32_t *src_line;
+    int32_t src_stride;
+    int32_t src_bpp;
+    pixman_composite_info_t info2 = *info;
 
     src_flags = (info->src_flags & ~FAST_PATH_NORMAL_REPEAT) |
 		    FAST_PATH_SAMPLES_COVER_CLIP_NEAREST;
@@ -1258,149 +1270,131 @@ fast_composite_tiled_repeat (pixman_implementation_t *imp,
 	mask_flags = FAST_PATH_IS_OPAQUE;
     }
 
-    if (_pixman_implementation_lookup_composite (
-	    imp->toplevel, info->op,
-	    src_image->common.extended_format_code, src_flags,
-	    mask_format, mask_flags,
-	    dest_image->common.extended_format_code, info->dest_flags,
-	    &imp, &func))
+    _pixman_implementation_lookup_composite (
+	imp->toplevel, info->op,
+	src_image->common.extended_format_code, src_flags,
+	mask_format, mask_flags,
+	dest_image->common.extended_format_code, info->dest_flags,
+	&imp, &func);
+
+    src_bpp = PIXMAN_FORMAT_BPP (src_image->bits.format);
+
+    if (src_image->bits.width < REPEAT_MIN_WIDTH		&&
+	(src_bpp == 32 || src_bpp == 16 || src_bpp == 8)	&&
+	!src_image->bits.indexed)
     {
-	int32_t sx, sy;
-	int32_t width_remain;
-	int32_t num_pixels;
-	int32_t src_width;
-	int32_t i, j;
-	pixman_image_t extended_src_image;
-	uint32_t extended_src[REPEAT_MIN_WIDTH * 2];
-	pixman_bool_t need_src_extension;
-	uint32_t *src_line;
-	int32_t src_stride;
-	int32_t src_bpp;
-	pixman_composite_info_t info2 = *info;
-
-	src_bpp = PIXMAN_FORMAT_BPP (src_image->bits.format);
-
-	if (src_image->bits.width < REPEAT_MIN_WIDTH		&&
-	    (src_bpp == 32 || src_bpp == 16 || src_bpp == 8)	&&
-	    !src_image->bits.indexed)
-	{
-	    sx = src_x;
-	    sx = MOD (sx, src_image->bits.width);
-	    sx += width;
-	    src_width = 0;
-
-	    while (src_width < REPEAT_MIN_WIDTH && src_width <= sx)
-		src_width += src_image->bits.width;
-
-	    src_stride = (src_width * (src_bpp >> 3) + 3) / (int) sizeof (uint32_t);
-
-	    /* Initialize/validate stack-allocated temporary image */
-	    _pixman_bits_image_init (&extended_src_image, src_image->bits.format,
-				     src_width, 1, &extended_src[0], src_stride,
-				     FALSE);
-	    _pixman_image_validate (&extended_src_image);
-
-	    info2.src_image = &extended_src_image;
-	    need_src_extension = TRUE;
-	}
-	else
-	{
-	    src_width = src_image->bits.width;
-	    need_src_extension = FALSE;
-	}
-
 	sx = src_x;
-	sy = src_y;
+	sx = MOD (sx, src_image->bits.width);
+	sx += width;
+	src_width = 0;
 
-	while (--height >= 0)
-	{
-	    sx = MOD (sx, src_width);
-	    sy = MOD (sy, src_image->bits.height);
+	while (src_width < REPEAT_MIN_WIDTH && src_width <= sx)
+	    src_width += src_image->bits.width;
 
-	    if (need_src_extension)
-	    {
-		if (src_bpp == 32)
-		{
-		    PIXMAN_IMAGE_GET_LINE (src_image, 0, sy, uint32_t, src_stride, src_line, 1);
+	src_stride = (src_width * (src_bpp >> 3) + 3) / (int) sizeof (uint32_t);
 
-		    for (i = 0; i < src_width; )
-		    {
-			for (j = 0; j < src_image->bits.width; j++, i++)
-			    extended_src[i] = src_line[j];
-		    }
-		}
-		else if (src_bpp == 16)
-		{
-		    uint16_t *src_line_16;
+	/* Initialize/validate stack-allocated temporary image */
+	_pixman_bits_image_init (&extended_src_image, src_image->bits.format,
+				 src_width, 1, &extended_src[0], src_stride,
+				 FALSE);
+	_pixman_image_validate (&extended_src_image);
 
-		    PIXMAN_IMAGE_GET_LINE (src_image, 0, sy, uint16_t, src_stride,
-					   src_line_16, 1);
-		    src_line = (uint32_t*)src_line_16;
-
-		    for (i = 0; i < src_width; )
-		    {
-			for (j = 0; j < src_image->bits.width; j++, i++)
-			    ((uint16_t*)extended_src)[i] = ((uint16_t*)src_line)[j];
-		    }
-		}
-		else if (src_bpp == 8)
-		{
-		    uint8_t *src_line_8;
-
-		    PIXMAN_IMAGE_GET_LINE (src_image, 0, sy, uint8_t, src_stride,
-					   src_line_8, 1);
-		    src_line = (uint32_t*)src_line_8;
-
-		    for (i = 0; i < src_width; )
-		    {
-			for (j = 0; j < src_image->bits.width; j++, i++)
-			    ((uint8_t*)extended_src)[i] = ((uint8_t*)src_line)[j];
-		    }
-		}
-
-		info2.src_y = 0;
-	    }
-	    else
-	    {
-		info2.src_y = sy;
-	    }
-
-	    width_remain = width;
-
-	    while (width_remain > 0)
-	    {
-		num_pixels = src_width - sx;
-
-		if (num_pixels > width_remain)
-		    num_pixels = width_remain;
-
-		info2.src_x = sx;
-		info2.width = num_pixels;
-		info2.height = 1;
-
-		func (imp, &info2);
-
-		width_remain -= num_pixels;
-		info2.mask_x += num_pixels;
-		info2.dest_x += num_pixels;
-		sx = 0;
-	    }
-
-	    sx = src_x;
-	    sy++;
-	    info2.mask_x = info->mask_x;
-	    info2.mask_y++;
-	    info2.dest_x = info->dest_x;
-	    info2.dest_y++;
-	}
-
-	if (need_src_extension)
-	    _pixman_image_fini (&extended_src_image);
+	info2.src_image = &extended_src_image;
+	need_src_extension = TRUE;
     }
     else
     {
-	_pixman_log_error (FUNC, "Didn't find a suitable function ");
+	src_width = src_image->bits.width;
+	need_src_extension = FALSE;
     }
+
+    sx = src_x;
+    sy = src_y;
+
+    while (--height >= 0)
+    {
+	sx = MOD (sx, src_width);
+	sy = MOD (sy, src_image->bits.height);
+
+	if (need_src_extension)
+	{
+	    if (src_bpp == 32)
+	    {
+		PIXMAN_IMAGE_GET_LINE (src_image, 0, sy, uint32_t, src_stride, src_line, 1);
+
+		for (i = 0; i < src_width; )
+		{
+		    for (j = 0; j < src_image->bits.width; j++, i++)
+			extended_src[i] = src_line[j];
+		}
+	    }
+	    else if (src_bpp == 16)
+	    {
+		uint16_t *src_line_16;
+
+		PIXMAN_IMAGE_GET_LINE (src_image, 0, sy, uint16_t, src_stride,
+				       src_line_16, 1);
+		src_line = (uint32_t*)src_line_16;
+
+		for (i = 0; i < src_width; )
+		{
+		    for (j = 0; j < src_image->bits.width; j++, i++)
+			((uint16_t*)extended_src)[i] = ((uint16_t*)src_line)[j];
+		}
+	    }
+	    else if (src_bpp == 8)
+	    {
+		uint8_t *src_line_8;
+
+		PIXMAN_IMAGE_GET_LINE (src_image, 0, sy, uint8_t, src_stride,
+				       src_line_8, 1);
+		src_line = (uint32_t*)src_line_8;
+
+		for (i = 0; i < src_width; )
+		{
+		    for (j = 0; j < src_image->bits.width; j++, i++)
+			((uint8_t*)extended_src)[i] = ((uint8_t*)src_line)[j];
+		}
+	    }
+
+	    info2.src_y = 0;
+	}
+	else
+	{
+	    info2.src_y = sy;
+	}
+
+	width_remain = width;
+
+	while (width_remain > 0)
+	{
+	    num_pixels = src_width - sx;
+
+	    if (num_pixels > width_remain)
+		num_pixels = width_remain;
+
+	    info2.src_x = sx;
+	    info2.width = num_pixels;
+	    info2.height = 1;
+
+	    func (imp, &info2);
+
+	    width_remain -= num_pixels;
+	    info2.mask_x += num_pixels;
+	    info2.dest_x += num_pixels;
+	    sx = 0;
+	}
+
+	sx = src_x;
+	sy++;
+	info2.mask_x = info->mask_x;
+	info2.mask_y++;
+	info2.dest_x = info->dest_x;
+	info2.dest_y++;
+    }
+
+    if (need_src_extension)
+	_pixman_image_fini (&extended_src_image);
 }
 
 /* Use more unrolling for src_0565_0565 because it is typically CPU bound */
