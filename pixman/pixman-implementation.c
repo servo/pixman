@@ -172,6 +172,16 @@ update_cache:
     }
 }
 
+static void
+dummy_combine (pixman_implementation_t *imp,
+	       pixman_op_t              op,
+	       uint32_t *               pd,
+	       const uint32_t *         ps,
+	       const uint32_t *         pm,
+	       int                      w)
+{
+}
+
 pixman_combine_32_func_t
 _pixman_implementation_lookup_combiner (pixman_implementation_t *imp,
 					pixman_op_t		 op,
@@ -207,7 +217,9 @@ _pixman_implementation_lookup_combiner (pixman_implementation_t *imp,
 	imp = imp->fallback;
     }
 
-    return NULL;
+    /* We should never reach this point */
+    _pixman_log_error (FUNC, "No known combine function\n");
+    return dummy_combine;
 }
 
 pixman_bool_t
