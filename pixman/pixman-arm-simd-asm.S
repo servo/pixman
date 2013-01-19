@@ -303,3 +303,311 @@ generate_composite_function \
 
 /******************************************************************************/
 
+.macro add_8_8_8pixels  cond, dst1, dst2
+        uqadd8&cond  WK&dst1, WK&dst1, MASK
+        uqadd8&cond  WK&dst2, WK&dst2, STRIDE_M
+.endm
+
+.macro add_8_8_4pixels  cond, dst
+        uqadd8&cond  WK&dst, WK&dst, MASK
+.endm
+
+.macro add_8_8_process_head  cond, numbytes, firstreg, unaligned_src, unaligned_mask, preload
+    WK4     .req    MASK
+    WK5     .req    STRIDE_M
+ .if numbytes == 16
+        pixld   cond, 8, 4, SRC, unaligned_src
+        pixld   cond, 16, firstreg, DST, 0
+        add_8_8_8pixels cond, firstreg, %(firstreg+1)
+        pixld   cond, 8, 4, SRC, unaligned_src
+ .else
+        pixld   cond, numbytes, 4, SRC, unaligned_src
+        pixld   cond, numbytes, firstreg, DST, 0
+ .endif
+    .unreq  WK4
+    .unreq  WK5
+.endm
+
+.macro add_8_8_process_tail  cond, numbytes, firstreg
+ .if numbytes == 16
+        add_8_8_8pixels cond, %(firstreg+2), %(firstreg+3)
+ .elseif numbytes == 8
+        add_8_8_8pixels cond, firstreg, %(firstreg+1)
+ .else
+        add_8_8_4pixels cond, firstreg
+ .endif
+.endm
+
+generate_composite_function \
+    pixman_composite_add_8_8_asm_armv6, 8, 0, 8, \
+    FLAG_DST_READWRITE | FLAG_BRANCH_OVER | FLAG_PROCESS_PRESERVES_SCRATCH, \
+    2, /* prefetch distance */ \
+    nop_macro, /* init */ \
+    nop_macro, /* newline */ \
+    nop_macro, /* cleanup */ \
+    add_8_8_process_head, \
+    add_8_8_process_tail
+
+/******************************************************************************/
+
+.macro over_8888_8888_init
+        /* Hold loop invariant in MASK */
+        ldr     MASK, =0x00800080
+        /* Set GE[3:0] to 0101 so SEL instructions do what we want */
+        uadd8   SCRATCH, MASK, MASK
+        line_saved_regs STRIDE_D, STRIDE_S, ORIG_W
+.endm
+
+.macro over_8888_8888_process_head  cond, numbytes, firstreg, unaligned_src, unaligned_mask, preload
+    WK4     .req    STRIDE_D
+    WK5     .req    STRIDE_S
+    WK6     .req    STRIDE_M
+    WK7     .req    ORIG_W
+        pixld   , numbytes, %(4+firstreg), SRC, unaligned_src
+        pixld   , numbytes, firstreg, DST, 0
+    .unreq  WK4
+    .unreq  WK5
+    .unreq  WK6
+    .unreq  WK7
+.endm
+
+.macro over_8888_8888_check_transparent  numbytes, reg0, reg1, reg2, reg3
+        /* Since these colours a premultiplied by alpha, only 0 indicates transparent (any other colour with 0 in the alpha byte is luminous) */
+        teq     WK&reg0, #0
+ .if numbytes > 4
+        teqeq   WK&reg1, #0
+  .if numbytes > 8
+        teqeq   WK&reg2, #0
+        teqeq   WK&reg3, #0
+  .endif
+ .endif
+.endm
+
+.macro over_8888_8888_prepare  next
+        mov     WK&next, WK&next, lsr #24
+.endm
+
+.macro over_8888_8888_1pixel src, dst, offset, next
+        /* src = destination component multiplier */
+        rsb     WK&src, WK&src, #255
+        /* Split even/odd bytes of dst into SCRATCH/dst */
+        uxtb16  SCRATCH, WK&dst
+        uxtb16  WK&dst, WK&dst, ror #8
+        /* Multiply through, adding 0.5 to the upper byte of result for rounding */
+        mla     SCRATCH, SCRATCH, WK&src, MASK
+        mla     WK&dst, WK&dst, WK&src, MASK
+        /* Where we would have had a stall between the result of the first MLA and the shifter input,
+         * reload the complete source pixel */
+        ldr     WK&src, [SRC, #offset]
+        /* Multiply by 257/256 to approximate 256/255 */
+        uxtab16 SCRATCH, SCRATCH, SCRATCH, ror #8
+        /* In this stall, start processing the next pixel */
+ .if offset < -4
+        mov     WK&next, WK&next, lsr #24
+ .endif
+        uxtab16 WK&dst, WK&dst, WK&dst, ror #8
+        /* Recombine even/odd bytes of multiplied destination */
+        mov     SCRATCH, SCRATCH, ror #8
+        sel     WK&dst, SCRATCH, WK&dst
+        /* Saturated add of source to multiplied destination */
+        uqadd8  WK&dst, WK&dst, WK&src
+.endm
+
+.macro over_8888_8888_process_tail  cond, numbytes, firstreg
+    WK4     .req    STRIDE_D
+    WK5     .req    STRIDE_S
+    WK6     .req    STRIDE_M
+    WK7     .req    ORIG_W
+        over_8888_8888_check_transparent numbytes, %(4+firstreg), %(5+firstreg), %(6+firstreg), %(7+firstreg)
+        beq     10f
+        over_8888_8888_prepare  %(4+firstreg)
+ .set PROCESS_REG, firstreg
+ .set PROCESS_OFF, -numbytes
+ .rept numbytes / 4
+        over_8888_8888_1pixel %(4+PROCESS_REG), %(0+PROCESS_REG), PROCESS_OFF, %(5+PROCESS_REG)
+  .set PROCESS_REG, PROCESS_REG+1
+  .set PROCESS_OFF, PROCESS_OFF+4
+ .endr
+        pixst   , numbytes, firstreg, DST
+10:
+    .unreq  WK4
+    .unreq  WK5
+    .unreq  WK6
+    .unreq  WK7
+.endm
+
+generate_composite_function \
+    pixman_composite_over_8888_8888_asm_armv6, 32, 0, 32 \
+    FLAG_DST_READWRITE | FLAG_BRANCH_OVER | FLAG_PROCESS_CORRUPTS_PSR | FLAG_PROCESS_DOES_STORE | FLAG_SPILL_LINE_VARS \
+    2, /* prefetch distance */ \
+    over_8888_8888_init, \
+    nop_macro, /* newline */ \
+    nop_macro, /* cleanup */ \
+    over_8888_8888_process_head, \
+    over_8888_8888_process_tail
+
+/******************************************************************************/
+
+/* Multiply each byte of a word by a byte.
+ * Useful when there aren't any obvious ways to fill the stalls with other instructions.
+ * word  Register containing 4 bytes
+ * byte  Register containing byte multiplier (bits 8-31 must be 0)
+ * tmp   Scratch register
+ * half  Register containing the constant 0x00800080
+ * GE[3:0] bits must contain 0101
+ */
+.macro mul_8888_8  word, byte, tmp, half
+        /* Split even/odd bytes of word apart */
+        uxtb16  tmp, word
+        uxtb16  word, word, ror #8
+        /* Multiply bytes together with rounding, then by 257/256 */
+        mla     tmp, tmp, byte, half
+        mla     word, word, byte, half /* 1 stall follows */
+        uxtab16 tmp, tmp, tmp, ror #8  /* 1 stall follows */
+        uxtab16 word, word, word, ror #8
+        /* Recombine bytes */
+        mov     tmp, tmp, ror #8
+        sel     word, tmp, word
+.endm
+
+/******************************************************************************/
+
+.macro over_8888_n_8888_init
+        /* Mask is constant */
+        ldr     MASK, [sp, #ARGS_STACK_OFFSET+8]
+        /* Hold loop invariant in STRIDE_M */
+        ldr     STRIDE_M, =0x00800080
+        /* We only want the alpha bits of the constant mask */
+        mov     MASK, MASK, lsr #24
+        /* Set GE[3:0] to 0101 so SEL instructions do what we want */
+        uadd8   SCRATCH, STRIDE_M, STRIDE_M
+        line_saved_regs Y, STRIDE_D, STRIDE_S, ORIG_W
+.endm
+
+.macro over_8888_n_8888_process_head  cond, numbytes, firstreg, unaligned_src, unaligned_mask, preload
+    WK4     .req    Y
+    WK5     .req    STRIDE_D
+    WK6     .req    STRIDE_S
+    WK7     .req    ORIG_W
+        pixld   , numbytes, %(4+(firstreg%2)), SRC, unaligned_src
+        pixld   , numbytes, firstreg, DST, 0
+    .unreq  WK4
+    .unreq  WK5
+    .unreq  WK6
+    .unreq  WK7
+.endm
+
+.macro over_8888_n_8888_1pixel src, dst
+        mul_8888_8  WK&src, MASK, SCRATCH, STRIDE_M
+        sub     WK7, WK6, WK&src, lsr #24
+        mul_8888_8  WK&dst, WK7, SCRATCH, STRIDE_M
+        uqadd8  WK&dst, WK&dst, WK&src
+.endm
+
+.macro over_8888_n_8888_process_tail  cond, numbytes, firstreg
+    WK4     .req    Y
+    WK5     .req    STRIDE_D
+    WK6     .req    STRIDE_S
+    WK7     .req    ORIG_W
+        over_8888_8888_check_transparent numbytes, %(4+(firstreg%2)), %(5+(firstreg%2)), %(6+firstreg), %(7+firstreg)
+        beq     10f
+        mov     WK6, #255
+ .set PROCESS_REG, firstreg
+ .rept numbytes / 4
+  .if numbytes == 16 && PROCESS_REG == 2
+        /* We're using WK6 and WK7 as temporaries, so half way through
+         * 4 pixels, reload the second two source pixels but this time
+         * into WK4 and WK5 */
+        ldmdb   SRC, {WK4, WK5}
+  .endif
+        over_8888_n_8888_1pixel  %(4+(PROCESS_REG%2)), %(PROCESS_REG)
+  .set PROCESS_REG, PROCESS_REG+1
+ .endr
+        pixst   , numbytes, firstreg, DST
+10:
+    .unreq  WK4
+    .unreq  WK5
+    .unreq  WK6
+    .unreq  WK7
+.endm
+
+generate_composite_function \
+    pixman_composite_over_8888_n_8888_asm_armv6, 32, 0, 32 \
+    FLAG_DST_READWRITE | FLAG_BRANCH_OVER | FLAG_PROCESS_CORRUPTS_PSR | FLAG_PROCESS_DOES_STORE | FLAG_SPILL_LINE_VARS \
+    2, /* prefetch distance */ \
+    over_8888_n_8888_init, \
+    nop_macro, /* newline */ \
+    nop_macro, /* cleanup */ \
+    over_8888_n_8888_process_head, \
+    over_8888_n_8888_process_tail
+
+/******************************************************************************/
+
+.macro over_n_8_8888_init
+        /* Source is constant, but splitting it into even/odd bytes is a loop invariant */
+        ldr     SRC, [sp, #ARGS_STACK_OFFSET]
+        /* Not enough registers to hold this constant, but we still use it here to set GE[3:0] */
+        ldr     SCRATCH, =0x00800080
+        uxtb16  STRIDE_S, SRC
+        uxtb16  SRC, SRC, ror #8
+        /* Set GE[3:0] to 0101 so SEL instructions do what we want */
+        uadd8   SCRATCH, SCRATCH, SCRATCH
+        line_saved_regs Y, STRIDE_D, STRIDE_M, ORIG_W
+.endm
+
+.macro over_n_8_8888_newline
+        ldr     STRIDE_D, =0x00800080
+        b       1f
+ .ltorg
+1:
+.endm
+
+.macro over_n_8_8888_process_head  cond, numbytes, firstreg, unaligned_src, unaligned_mask, preload
+    WK4     .req    STRIDE_M
+        pixld   , numbytes/4, 4, MASK, unaligned_mask
+        pixld   , numbytes, firstreg, DST, 0
+    .unreq  WK4
+.endm
+
+.macro over_n_8_8888_1pixel src, dst
+        uxtb    Y, WK4, ror #src*8
+        /* Trailing part of multiplication of source */
+        mla     SCRATCH, STRIDE_S, Y, STRIDE_D
+        mla     Y, SRC, Y, STRIDE_D
+        mov     ORIG_W, #255
+        uxtab16 SCRATCH, SCRATCH, SCRATCH, ror #8
+        uxtab16 Y, Y, Y, ror #8
+        mov     SCRATCH, SCRATCH, ror #8
+        sub     ORIG_W, ORIG_W, Y, lsr #24
+        sel     Y, SCRATCH, Y
+        /* Then multiply the destination */
+        mul_8888_8  WK&dst, ORIG_W, SCRATCH, STRIDE_D
+        uqadd8  WK&dst, WK&dst, Y
+.endm
+
+.macro over_n_8_8888_process_tail  cond, numbytes, firstreg
+    WK4     .req    STRIDE_M
+        teq     WK4, #0
+        beq     10f
+ .set PROCESS_REG, firstreg
+ .rept numbytes / 4
+        over_n_8_8888_1pixel  %(PROCESS_REG-firstreg), %(PROCESS_REG)
+  .set PROCESS_REG, PROCESS_REG+1
+ .endr
+        pixst   , numbytes, firstreg, DST
+10:
+    .unreq  WK4
+.endm
+
+generate_composite_function \
+    pixman_composite_over_n_8_8888_asm_armv6, 0, 8, 32 \
+    FLAG_DST_READWRITE | FLAG_BRANCH_OVER | FLAG_PROCESS_CORRUPTS_PSR | FLAG_PROCESS_DOES_STORE | FLAG_SPILL_LINE_VARS \
+    2, /* prefetch distance */ \
+    over_n_8_8888_init, \
+    over_n_8_8888_newline, \
+    nop_macro, /* cleanup */ \
+    over_n_8_8888_process_head, \
+    over_n_8_8888_process_tail
+
+/******************************************************************************/
+
