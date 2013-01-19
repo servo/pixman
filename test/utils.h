@@ -180,6 +180,9 @@ initialize_palette (pixman_indexed_t *palette, uint32_t depth, int is_rgb);
 const char *
 operator_name (pixman_op_t op);
 
+const char *
+format_name (pixman_format_code_t format);
+
 typedef struct
 {
     double r, g, b, a;
