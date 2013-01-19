@@ -240,8 +240,8 @@ test_composite (int      testnum,
     if (verbose)
     {
 	printf ("src_fmt=%08X, dst_fmt=%08X\n", src_fmt, dst_fmt);
-	printf ("op=%d, scale_x=%d, scale_y=%d, repeat=%d\n",
-	        op, scale_x, scale_y, repeat);
+	printf ("op=%s, scale_x=%d, scale_y=%d, repeat=%d\n",
+	        operator_name (op), scale_x, scale_y, repeat);
 	printf ("translate_x=%d, translate_y=%d\n",
 	        translate_x, translate_y);
 	printf ("src_width=%d, src_height=%d, dst_width=%d, dst_height=%d\n",
