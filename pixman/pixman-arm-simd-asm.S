@@ -180,3 +180,126 @@ generate_composite_function \
 
 /******************************************************************************/
 
+.macro src_x888_8888_pixel, cond, reg
+        orr&cond WK&reg, WK&reg, #0xFF000000
+.endm
+
+.macro pixman_composite_src_x888_8888_process_head   cond, numbytes, firstreg, unaligned_src, unaligned_mask, preload
+        pixld   cond, numbytes, firstreg, SRC, unaligned_src
+.endm
+
+.macro pixman_composite_src_x888_8888_process_tail   cond, numbytes, firstreg
+        src_x888_8888_pixel cond, %(firstreg+0)
+ .if numbytes >= 8
+        src_x888_8888_pixel cond, %(firstreg+1)
+  .if numbytes == 16
+        src_x888_8888_pixel cond, %(firstreg+2)
+        src_x888_8888_pixel cond, %(firstreg+3)
+  .endif
+ .endif
+.endm
+
+generate_composite_function \
+    pixman_composite_src_x888_8888_asm_armv6, 32, 0, 32, \
+    FLAG_DST_WRITEONLY | FLAG_COND_EXEC | FLAG_PROCESS_PRESERVES_SCRATCH, \
+    3, /* prefetch distance */ \
+    nop_macro, /* init */ \
+    nop_macro, /* newline */ \
+    nop_macro, /* cleanup */ \
+    pixman_composite_src_x888_8888_process_head, \
+    pixman_composite_src_x888_8888_process_tail
+
+/******************************************************************************/
+
+.macro src_0565_8888_init
+        /* Hold loop invariants in MASK and STRIDE_M */
+        ldr     MASK, =0x07E007E0
+        mov     STRIDE_M, #0xFF000000
+        /* Set GE[3:0] to 1010 so SEL instructions do what we want */
+        ldr     SCRATCH, =0x80008000
+        uadd8   SCRATCH, SCRATCH, SCRATCH
+.endm
+
+.macro src_0565_8888_2pixels, reg1, reg2
+        and     SCRATCH, WK&reg1, MASK             @ 00000GGGGGG0000000000gggggg00000
+        bic     WK&reg2, WK&reg1, MASK             @ RRRRR000000BBBBBrrrrr000000bbbbb
+        orr     SCRATCH, SCRATCH, SCRATCH, lsr #6  @ 00000GGGGGGGGGGGG0000ggggggggggg
+        mov     WK&reg1, WK&reg2, lsl #16          @ rrrrr000000bbbbb0000000000000000
+        mov     SCRATCH, SCRATCH, ror #19          @ GGGG0000ggggggggggg00000GGGGGGGG
+        bic     WK&reg2, WK&reg2, WK&reg1, lsr #16 @ RRRRR000000BBBBB0000000000000000
+        orr     WK&reg1, WK&reg1, WK&reg1, lsr #5  @ rrrrrrrrrr0bbbbbbbbbb00000000000
+        orr     WK&reg2, WK&reg2, WK&reg2, lsr #5  @ RRRRRRRRRR0BBBBBBBBBB00000000000
+        pkhtb   WK&reg1, WK&reg1, WK&reg1, asr #5  @ rrrrrrrr--------bbbbbbbb--------
+        sel     WK&reg1, WK&reg1, SCRATCH          @ rrrrrrrrggggggggbbbbbbbb--------
+        mov     SCRATCH, SCRATCH, ror #16          @ ggg00000GGGGGGGGGGGG0000gggggggg
+        pkhtb   WK&reg2, WK&reg2, WK&reg2, asr #5  @ RRRRRRRR--------BBBBBBBB--------
+        sel     WK&reg2, WK&reg2, SCRATCH          @ RRRRRRRRGGGGGGGGBBBBBBBB--------
+        orr     WK&reg1, STRIDE_M, WK&reg1, lsr #8 @ 11111111rrrrrrrrggggggggbbbbbbbb
+        orr     WK&reg2, STRIDE_M, WK&reg2, lsr #8 @ 11111111RRRRRRRRGGGGGGGGBBBBBBBB
+.endm
+
+/* This version doesn't need STRIDE_M, but is one instruction longer.
+   It would however be preferable for an XRGB target, since we could knock off the last 2 instructions, but is that a common case?
+        and     SCRATCH, WK&reg1, MASK             @ 00000GGGGGG0000000000gggggg00000
+        bic     WK&reg1, WK&reg1, MASK             @ RRRRR000000BBBBBrrrrr000000bbbbb
+        orr     SCRATCH, SCRATCH, SCRATCH, lsr #6  @ 00000GGGGGGGGGGGG0000ggggggggggg
+        mov     WK&reg2, WK&reg1, lsr #16          @ 0000000000000000RRRRR000000BBBBB
+        mov     SCRATCH, SCRATCH, ror #27          @ GGGGGGGGGGGG0000ggggggggggg00000
+        bic     WK&reg1, WK&reg1, WK&reg2, lsl #16 @ 0000000000000000rrrrr000000bbbbb
+        mov     WK&reg2, WK&reg2, lsl #3           @ 0000000000000RRRRR000000BBBBB000
+        mov     WK&reg1, WK&reg1, lsl #3           @ 0000000000000rrrrr000000bbbbb000
+        orr     WK&reg2, WK&reg2, WK&reg2, lsr #5  @ 0000000000000RRRRRRRRRR0BBBBBBBB
+        orr     WK&reg1, WK&reg1, WK&reg1, lsr #5  @ 0000000000000rrrrrrrrrr0bbbbbbbb
+        pkhbt   WK&reg2, WK&reg2, WK&reg2, lsl #5  @ --------RRRRRRRR--------BBBBBBBB
+        pkhbt   WK&reg1, WK&reg1, WK&reg1, lsl #5  @ --------rrrrrrrr--------bbbbbbbb
+        sel     WK&reg2, SCRATCH, WK&reg2          @ --------RRRRRRRRGGGGGGGGBBBBBBBB
+        sel     WK&reg1, SCRATCH, WK&reg1          @ --------rrrrrrrrggggggggbbbbbbbb
+        orr     WK&reg2, WK&reg2, #0xFF000000      @ 11111111RRRRRRRRGGGGGGGGBBBBBBBB
+        orr     WK&reg1, WK&reg1, #0xFF000000      @ 11111111rrrrrrrrggggggggbbbbbbbb
+*/
+
+.macro src_0565_8888_1pixel, reg
+        bic     SCRATCH, WK&reg, MASK              @ 0000000000000000rrrrr000000bbbbb
+        and     WK&reg, WK&reg, MASK               @ 000000000000000000000gggggg00000
+        mov     SCRATCH, SCRATCH, lsl #3           @ 0000000000000rrrrr000000bbbbb000
+        mov     WK&reg, WK&reg, lsl #5             @ 0000000000000000gggggg0000000000
+        orr     SCRATCH, SCRATCH, SCRATCH, lsr #5  @ 0000000000000rrrrrrrrrr0bbbbbbbb
+        orr     WK&reg, WK&reg, WK&reg, lsr #6     @ 000000000000000gggggggggggg00000
+        pkhbt   SCRATCH, SCRATCH, SCRATCH, lsl #5  @ --------rrrrrrrr--------bbbbbbbb
+        sel     WK&reg, WK&reg, SCRATCH            @ --------rrrrrrrrggggggggbbbbbbbb
+        orr     WK&reg, WK&reg, #0xFF000000        @ 11111111rrrrrrrrggggggggbbbbbbbb
+.endm
+
+.macro src_0565_8888_process_head   cond, numbytes, firstreg, unaligned_src, unaligned_mask, preload
+ .if numbytes == 16
+        pixldst ld,, 8, firstreg, %(firstreg+2),,, SRC, unaligned_src
+ .elseif numbytes == 8
+        pixld   , 4, firstreg, SRC, unaligned_src
+ .elseif numbytes == 4
+        pixld   , 2, firstreg, SRC, unaligned_src
+ .endif
+.endm
+
+.macro src_0565_8888_process_tail   cond, numbytes, firstreg
+ .if numbytes == 16
+        src_0565_8888_2pixels firstreg, %(firstreg+1)
+        src_0565_8888_2pixels %(firstreg+2), %(firstreg+3)
+ .elseif numbytes == 8
+        src_0565_8888_2pixels firstreg, %(firstreg+1)
+ .else
+        src_0565_8888_1pixel firstreg
+ .endif
+.endm
+
+generate_composite_function \
+    pixman_composite_src_0565_8888_asm_armv6, 16, 0, 32, \
+    FLAG_DST_WRITEONLY | FLAG_BRANCH_OVER, \
+    3, /* prefetch distance */ \
+    src_0565_8888_init, \
+    nop_macro, /* newline */ \
+    nop_macro, /* cleanup */ \
+    src_0565_8888_process_head, \
+    src_0565_8888_process_tail
+
+/******************************************************************************/
+
