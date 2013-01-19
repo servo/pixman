@@ -392,6 +392,72 @@ PIXMAN_ARM_BIND_SCALED_NEAREST_SRC_DST (armv6, 0565_0565, SRC,
 PIXMAN_ARM_BIND_SCALED_NEAREST_SRC_DST (armv6, 8888_8888, SRC,
                                         uint32_t, uint32_t)
 
+void
+pixman_composite_src_n_8888_asm_armv6 (int32_t   w,
+                                       int32_t   h,
+                                       uint32_t *dst,
+                                       int32_t   dst_stride,
+                                       uint32_t  src);
+
+void
+pixman_composite_src_n_0565_asm_armv6 (int32_t   w,
+                                       int32_t   h,
+                                       uint16_t *dst,
+                                       int32_t   dst_stride,
+                                       uint16_t  src);
+
+void
+pixman_composite_src_n_8_asm_armv6 (int32_t   w,
+                                    int32_t   h,
+                                    uint8_t  *dst,
+                                    int32_t   dst_stride,
+                                    uint8_t  src);
+
+static pixman_bool_t
+arm_simd_fill (pixman_implementation_t *imp,
+               uint32_t *               bits,
+               int                      stride, /* in 32-bit words */
+               int                      bpp,
+               int                      x,
+               int                      y,
+               int                      width,
+               int                      height,
+               uint32_t                 _xor)
+{
+    /* stride is always multiple of 32bit units in pixman */
+    uint32_t byte_stride = stride * sizeof(uint32_t);
+
+    switch (bpp)
+    {
+    case 8:
+	pixman_composite_src_n_8_asm_armv6 (
+		width,
+		height,
+		(uint8_t *)(((char *) bits) + y * byte_stride + x),
+		byte_stride,
+		_xor & 0xff);
+	return TRUE;
+    case 16:
+	pixman_composite_src_n_0565_asm_armv6 (
+		width,
+		height,
+		(uint16_t *)(((char *) bits) + y * byte_stride + x * 2),
+		byte_stride / 2,
+		_xor & 0xffff);
+	return TRUE;
+    case 32:
+	pixman_composite_src_n_8888_asm_armv6 (
+		width,
+		height,
+		(uint32_t *)(((char *) bits) + y * byte_stride + x * 4),
+		byte_stride / 4,
+		_xor);
+	return TRUE;
+    default:
+	return FALSE;
+    }
+}
+
 static const pixman_fast_path_t arm_simd_fast_paths[] =
 {
     PIXMAN_STD_FAST_PATH (OVER, a8r8g8b8, null, a8r8g8b8, armv6_composite_over_8888_8888),
@@ -427,6 +493,8 @@ pixman_implementation_t *
 _pixman_implementation_create_arm_simd (pixman_implementation_t *fallback)
 {
     pixman_implementation_t *imp = _pixman_implementation_create (fallback, arm_simd_fast_paths);
+
+    imp->fill = arm_simd_fill;
 
     return imp;
 }
