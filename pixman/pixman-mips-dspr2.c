@@ -54,6 +54,10 @@ PIXMAN_MIPS_BIND_FAST_PATH_SRC_DST (0, add_8_8,
                                     uint8_t, 1, uint8_t, 1)
 PIXMAN_MIPS_BIND_FAST_PATH_SRC_DST (0, add_8888_8888,
                                     uint32_t, 1, uint32_t, 1)
+PIXMAN_MIPS_BIND_FAST_PATH_SRC_DST (0, out_reverse_8_0565,
+                                    uint8_t, 1, uint16_t, 1)
+PIXMAN_MIPS_BIND_FAST_PATH_SRC_DST (0, out_reverse_8_8888,
+                                    uint8_t,  1, uint32_t, 1)
 
 PIXMAN_MIPS_BIND_FAST_PATH_N_MASK_DST (0, src_n_8_8888,
                                        uint8_t, 1, uint32_t, 1)
@@ -324,6 +328,10 @@ static const pixman_fast_path_t mips_dspr2_fast_paths[] =
     PIXMAN_STD_FAST_PATH (ADD,  a8,       null,     a8,       mips_composite_add_8_8),
     PIXMAN_STD_FAST_PATH (ADD,  a8r8g8b8, null,     a8r8g8b8, mips_composite_add_8888_8888),
     PIXMAN_STD_FAST_PATH (ADD,  a8b8g8r8, null,     a8b8g8r8, mips_composite_add_8888_8888),
+    PIXMAN_STD_FAST_PATH (OUT_REVERSE, a8,    null, r5g6b5,   mips_composite_out_reverse_8_0565),
+    PIXMAN_STD_FAST_PATH (OUT_REVERSE, a8,    null, b5g6r5,   mips_composite_out_reverse_8_0565),
+    PIXMAN_STD_FAST_PATH (OUT_REVERSE, a8,    null, a8r8g8b8, mips_composite_out_reverse_8_8888),
+    PIXMAN_STD_FAST_PATH (OUT_REVERSE, a8,    null, a8b8g8r8, mips_composite_out_reverse_8_8888),
 
     PIXMAN_MIPS_SIMPLE_NEAREST_A8_MASK_FAST_PATH (OVER, a8r8g8b8, r5g6b5, mips_8888_8_0565),
     PIXMAN_MIPS_SIMPLE_NEAREST_A8_MASK_FAST_PATH (OVER, a8b8g8r8, b5g6r5, mips_8888_8_0565),
